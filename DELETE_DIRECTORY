@@ -1,0 +1,18 @@
+⚠️ DIRECTORY DELETION REQUIRED ⚠️
+
+Please delete the following directory and all its contents:
+src/app/marketing-landing-page/
+
+Reason: 
+- The marketing landing page content is already present at the root route (src/app/page.tsx)
+- Having duplicate routes causes confusion and maintenance issues
+- The /marketing-landing-page route is redundant
+
+What happens after deletion:
+- The root route (/) will continue to serve the marketing landing page
+- All navigation links already point to the correct routes (/register, /public-scoreboard-list)
+- Supabase integration remains intact and functional
+- No code changes needed - just directory removal
+
+To delete via terminal:
+rm -rf src/app/marketing-landing-page/
