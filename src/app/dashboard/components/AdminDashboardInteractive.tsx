@@ -40,6 +40,7 @@ const AdminDashboardInteractive = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -123,17 +124,7 @@ const AdminDashboardInteractive = () => {
   };
 
   const handleSearch = (query: string) => {
-    if (!query.trim()) {
-      setFilteredScoreboards(scoreboards);
-      return;
-    }
-
-    const filtered = scoreboards.filter(
-      (scoreboard) =>
-        scoreboard.title.toLowerCase().includes(query.toLowerCase()) ||
-        (scoreboard.subtitle && scoreboard.subtitle.toLowerCase().includes(query.toLowerCase()))
-    );
-    setFilteredScoreboards(filtered);
+    setSearchQuery(query);
   };
 
   const handleNavigateToScoreboard = (id: string) => {
@@ -168,6 +159,16 @@ const AdminDashboardInteractive = () => {
         filtered = filtered.filter(s => s.ownerId === selectedOwnerId);
       }
       
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(
+          (scoreboard) =>
+            scoreboard.title.toLowerCase().includes(query) ||
+            (scoreboard.subtitle && scoreboard.subtitle.toLowerCase().includes(query))
+        );
+      }
+      
       // Apply sorting
       filtered.sort((a, b) => {
         let comparison = 0;
@@ -191,7 +192,7 @@ const AdminDashboardInteractive = () => {
     } else {
       setFilteredScoreboards([]);
     }
-  }, [sortBy, sortOrder, scoreboards, selectedOwnerId, isAdmin]);
+  }, [sortBy, sortOrder, scoreboards, selectedOwnerId, isAdmin, searchQuery]);
 
   const handleRenameScoreboard = async (id: string, newTitle: string) => {
     try {
