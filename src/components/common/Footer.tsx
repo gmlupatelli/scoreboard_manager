@@ -39,17 +39,17 @@ export default function Footer() {
             <h4 className="font-semibold text-text-primary mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-text-secondary">
               <li>
-                <Link href="#" className="hover:text-primary transition-colors">
+                <Link href="/about" className="hover:text-primary transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-primary transition-colors">
+                <Link href="/contact" className="hover:text-primary transition-colors">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-primary transition-colors">
+                <Link href="/support" className="hover:text-primary transition-colors">
                   Support
                 </Link>
               </li>
@@ -59,17 +59,17 @@ export default function Footer() {
             <h4 className="font-semibold text-text-primary mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-text-secondary">
               <li>
-                <Link href="#" className="hover:text-primary transition-colors">
+                <Link href="/privacy" className="hover:text-primary transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-primary transition-colors">
+                <Link href="/terms" className="hover:text-primary transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="#" className="hover:text-primary transition-colors">
+                <Link href="/cookies" className="hover:text-primary transition-colors">
                   Cookie Policy
                 </Link>
               </li>
