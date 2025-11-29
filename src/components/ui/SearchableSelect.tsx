@@ -80,8 +80,7 @@ export default function SearchableSelect({
         </div>
 
         <ComboboxOptions 
-          anchor="bottom start"
-          className="absolute z-50 mt-1 max-h-60 w-[var(--input-width)] overflow-auto rounded-md bg-background border border-border shadow-lg focus:outline-none empty:invisible [--anchor-gap:4px]"
+          className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white border border-border shadow-lg focus:outline-none"
         >
           {filteredOptions.length === 0 && query !== '' ? (
             <div className="px-4 py-3 text-sm text-text-secondary">

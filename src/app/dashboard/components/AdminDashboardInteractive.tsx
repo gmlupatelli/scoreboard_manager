@@ -158,12 +158,13 @@ const AdminDashboardInteractive = () => {
     : [];
 
   // Filter and sort scoreboards
+  const isAdmin = isSystemAdmin();
   useEffect(() => {
     if (scoreboards.length > 0) {
       let filtered = [...scoreboards];
       
       // Apply owner filter (admin only)
-      if (isSystemAdmin() && selectedOwnerId !== 'all') {
+      if (isAdmin && selectedOwnerId !== 'all') {
         filtered = filtered.filter(s => s.ownerId === selectedOwnerId);
       }
       
@@ -190,7 +191,7 @@ const AdminDashboardInteractive = () => {
     } else {
       setFilteredScoreboards([]);
     }
-  }, [sortBy, sortOrder, scoreboards, selectedOwnerId]);
+  }, [sortBy, sortOrder, scoreboards, selectedOwnerId, isAdmin]);
 
   const handleRenameScoreboard = async (id: string, newTitle: string) => {
     try {
