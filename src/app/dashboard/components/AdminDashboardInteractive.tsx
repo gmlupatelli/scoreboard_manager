@@ -38,6 +38,7 @@ const AdminDashboardInteractive = () => {
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'entries'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>('all');
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -144,11 +145,29 @@ const AdminDashboardInteractive = () => {
     ? Math.round(totalEntries / scoreboards.length) 
     : 0;
 
-  // Remove localStorage effects
+  // Get unique owners for the filter dropdown (admin only)
+  const uniqueOwners = isSystemAdmin() 
+    ? Array.from(
+        new Map(
+          scoreboards
+            .filter(s => s.owner)
+            .map(s => [s.owner!.id, s.owner!])
+        ).values()
+      ).sort((a, b) => a.fullName.localeCompare(b.fullName))
+    : [];
 
+  // Filter and sort scoreboards
   useEffect(() => {
     if (scoreboards.length > 0) {
-      const sorted = [...scoreboards].sort((a, b) => {
+      let filtered = [...scoreboards];
+      
+      // Apply owner filter (admin only)
+      if (isSystemAdmin() && selectedOwnerId !== 'all') {
+        filtered = filtered.filter(s => s.ownerId === selectedOwnerId);
+      }
+      
+      // Apply sorting
+      filtered.sort((a, b) => {
         let comparison = 0;
         
         switch (sortBy) {
@@ -159,16 +178,18 @@ const AdminDashboardInteractive = () => {
             comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
             break;
           case 'entries':
-            comparison = 0; // TODO: Compare by entry count when available
+            comparison = (a.entryCount || 0) - (b.entryCount || 0);
             break;
         }
         
         return sortOrder === 'asc' ? comparison : -comparison;
       });
       
-      setFilteredScoreboards(sorted);
+      setFilteredScoreboards(filtered);
+    } else {
+      setFilteredScoreboards([]);
     }
-  }, [sortBy, sortOrder, scoreboards]);
+  }, [sortBy, sortOrder, scoreboards, selectedOwnerId]);
 
   const handleRenameScoreboard = async (id: string, newTitle: string) => {
     try {
@@ -264,7 +285,28 @@ const AdminDashboardInteractive = () => {
                     className="w-full lg:w-96"
                   />
 
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-wrap items-center gap-4">
+                    {isSystemAdmin() && uniqueOwners.length > 0 && (
+                      <div className="flex items-center space-x-2">
+                        <label htmlFor="ownerFilter" className="text-sm font-medium text-text-secondary">
+                          Owner:
+                        </label>
+                        <select
+                          id="ownerFilter"
+                          value={selectedOwnerId}
+                          onChange={(e) => setSelectedOwnerId(e.target.value)}
+                          className="px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[180px]"
+                        >
+                          <option value="all">All Users ({uniqueOwners.length})</option>
+                          {uniqueOwners.map((owner) => (
+                            <option key={owner.id} value={owner.id}>
+                              {owner.fullName} ({scoreboards.filter(s => s.ownerId === owner.id).length})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
                     <div className="flex items-center space-x-2">
                       <label htmlFor="sortBy" className="text-sm font-medium text-text-secondary">
                         Sort by:
@@ -306,6 +348,7 @@ const AdminDashboardInteractive = () => {
                       description={scoreboard.subtitle || ''}
                       entryCount={scoreboard.entryCount || 0}
                       createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
+                      ownerName={isSystemAdmin() ? scoreboard.owner?.fullName : undefined}
                       onRename={handleRenameScoreboard}
                       onDelete={() => handleDeleteConfirmation(scoreboard)}
                       onNavigate={handleNavigateToScoreboard}
