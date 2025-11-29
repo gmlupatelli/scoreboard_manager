@@ -25,7 +25,7 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
   const publicNavItems: any[] = [];
 
   const adminNavItems = [
-    { label: 'Dashboard', path: '/admin-dashboard', icon: 'HomeIcon' },
+    { label: 'Dashboard', path: '/dashboard', icon: 'HomeIcon' },
     { label: 'Manage Scoreboards', path: '/scoreboard-management', icon: 'Cog6ToothIcon' },
   ];
 
@@ -46,7 +46,7 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
       <nav className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link href={isAuthenticated ? '/admin-dashboard' : '/'} className="flex items-center space-x-3 hover-lift">
+            <Link href={isAuthenticated ? '/dashboard' : '/'} className="flex items-center space-x-3 hover-lift">
               <Logo size={40} />
               <span className="text-2xl font-bold text-text-primary hidden sm:block tracking-tight" style={{ fontWeight: 700 }}>
                 Scoreboard Manager
@@ -82,6 +82,14 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                         >
                           <Icon name="UserCircleIcon" size={18} className="mr-3" />
                           Profile
+                        </Link>
+                        <Link
+                          href="/dashboard"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                        >
+                          <Icon name="ClipboardDocumentListIcon" size={18} className="mr-3" />
+                          My Boards
                         </Link>
                         <button
                           onClick={handleLogout}
@@ -185,6 +193,14 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                   >
                     <Icon name="UserCircleIcon" size={20} className="mr-3" />
                     Profile
+                  </Link>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                  >
+                    <Icon name="ClipboardDocumentListIcon" size={20} className="mr-3" />
+                    My Boards
                   </Link>
                   <button
                     onClick={handleLogout}

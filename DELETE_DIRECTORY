@@ -1,18 +1,65 @@
-⚠️ DIRECTORY DELETION REQUIRED ⚠️
+⚠️ CRITICAL DIRECTORY DELETION REQUIRED ⚠️
 
-Please delete the following directory and all its contents:
-src/app/marketing-landing-page/
+The following directories MUST be deleted immediately to remove duplicate routes:
 
-Reason: 
-- The marketing landing page content is already present at the root route (src/app/page.tsx)
-- Having duplicate routes causes confusion and maintenance issues
-- The /marketing-landing-page route is redundant
+📁 DIRECTORY TO DELETE:
+src/app/admin-dashboard/
 
-What happens after deletion:
-- The root route (/) will continue to serve the marketing landing page
-- All navigation links already point to the correct routes (/register, /public-scoreboard-list)
-- Supabase integration remains intact and functional
-- No code changes needed - just directory removal
+🎯 WHY THIS IS CRITICAL:
+- Next.js automatically creates routes from directories in src/app/
+- The admin-dashboard folder creates the /admin-dashboard route
+- This route is a duplicate of /dashboard (which is the correct route)
+- All functionality already exists in src/app/dashboard/
+- All navigation links already point to /dashboard
 
-To delete via terminal:
-rm -rf src/app/marketing-landing-page/
+🔧 HOW TO DELETE:
+
+**Option 1: Using Terminal/Command Line**
+```bash
+rm -rf src/app/admin-dashboard/
+```
+
+**Option 2: Using File Explorer**
+1. Navigate to: src/app/
+2. Find the "admin-dashboard" folder
+3. Delete the entire folder and all its contents
+
+**Option 3: Using VS Code**
+1. Open the project in VS Code
+2. In the Explorer panel, navigate to src/app/
+3. Right-click on "admin-dashboard" folder 4. Select"Delete" and confirm
+
+✅ WHAT HAPPENS AFTER DELETION:
+- /admin-dashboard route will no longer be accessible (404 error)
+- /dashboard route continues to work perfectly
+- All user authentication and features remain intact
+- No code changes needed - navigation already uses /dashboard
+- Supabase integration remains fully functional
+
+⚠️ FILES BEING REMOVED:
+- src/app/admin-dashboard/page.tsx
+- src/app/admin-dashboard/components/StatsCard.tsx
+- src/app/admin-dashboard/components/EmptyState.tsx
+- src/app/admin-dashboard/components/ScoreboardCard.tsx
+- src/app/admin-dashboard/components/ToastNotification.tsx
+- src/app/admin-dashboard/components/AdminDashboardInteractive.tsx
+- src/app/admin-dashboard/components/DeleteConfirmationModal.tsx
+- src/app/admin-dashboard/components/CreateScoreboardModal.tsx
+
+🔍 VERIFY DELETION SUCCESS:
+1. After deletion, try visiting http://localhost:3000/admin-dashboard
+2. You should see a 404 error page
+3. Visit http://localhost:3000/dashboard - this should work normally
+4. Check the file structure - admin-dashboard folder should be gone
+
+📝 NOTE FOR ROCKET PLATFORM:
+This is a manual deletion task that requires direct file system access.
+The Rocket platform cannot automatically delete directories.
+Please use one of the deletion methods above to complete this step.
+
+🚨 DO NOT SKIP THIS STEP
+The presence of this duplicate route can cause:
+- User confusion (two dashboard URLs)
+- SEO issues (duplicate content)
+- Maintenance overhead (two places to update)
+- Potential bugs from outdated duplicate code

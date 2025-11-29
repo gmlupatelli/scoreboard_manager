@@ -6,6 +6,6 @@ export const metadata: Metadata = {
   description: 'Central management hub for administrators to oversee all scoreboards, create new competitions, and perform administrative tasks with comprehensive scoreboard management tools.',
 };
 
-export default function AdminDashboardPage() {
+export default function DashboardPage() {
   return <AdminDashboardInteractive />;
 }

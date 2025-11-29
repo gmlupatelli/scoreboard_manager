@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+
 import { usePathname } from 'next/navigation';
-import Icon from '@/components/ui/AppIcon';
+
 
 interface BreadcrumbItem {
   label: string;
@@ -45,32 +45,7 @@ const Breadcrumb = ({ items, className = '' }: BreadcrumbProps) => {
 
   if (breadcrumbs.length <= 1) return null;
 
-  return (
-    <nav aria-label="Breadcrumb" className={`flex items-center space-x-2 text-sm ${className}`}>
-      {breadcrumbs.map((item, index) => {
-        const isLast = index === breadcrumbs.length - 1;
-        const isFirst = index === 0;
-
-        return (
-          <div key={item.path} className="flex items-center">
-            {!isFirst && <Icon name="ChevronRightIcon" size={16} className="text-muted-foreground mx-2" />}
-            {isLast ? (
-              <span className="font-medium text-text-primary" aria-current="page">
-                {item.label}
-              </span>
-            ) : (
-              <Link
-                href={item.path}
-                className="text-text-secondary hover:text-text-primary transition-smooth duration-150 hover:underline"
-              >
-                {item.label}
-              </Link>
-            )}
-          </div>
-        );
-      })}
-    </nav>
-  );
+  return null;
 };
 
 export default Breadcrumb;
