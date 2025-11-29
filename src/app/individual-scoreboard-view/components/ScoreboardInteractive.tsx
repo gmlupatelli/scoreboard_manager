@@ -40,33 +40,26 @@ const ScoreboardInteractive: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Load scoreboard and entries from Supabase
-  useEffect(() => {
-    if (!isHydrated || !scoreboardId) {
-      if (isHydrated && !scoreboardId) {
-        setError('No scoreboard ID provided');
-        setIsLoading(false);
-      }
-      return;
-    }
+  // Load only entries (for real-time updates - no flash)
+  const loadEntriesOnly = async () => {
+    if (!scoreboardId) return;
     
-    loadScoreboardData();
-
-    // Set up real-time subscription
-    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
-      scoreboardId,
-      () => {
-        console.log('Real-time update detected, refreshing data...');
-        loadScoreboardData();
+    try {
+      const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
+      
+      if (entriesError) {
+        console.error('Failed to refresh entries:', entriesError);
+        return;
       }
-    );
 
-    // Cleanup subscription on unmount or when scoreboardId changes
-    return () => {
-      unsubscribe();
-    };
-  }, [isHydrated, scoreboardId]);
+      setEntries(entriesData || []);
+      console.log('Entries refreshed silently');
+    } catch (err) {
+      console.error('Error refreshing entries:', err);
+    }
+  };
 
+  // Load full scoreboard data (initial load or scoreboard metadata changes)
   const loadScoreboardData = async () => {
     if (!scoreboardId) return;
     
@@ -74,7 +67,6 @@ const ScoreboardInteractive: React.FC = () => {
     setError(null);
     
     try {
-      // Fetch scoreboard details
       const { data: scoreboardData, error: scoreboardError } = await scoreboardService.getScoreboard(scoreboardId);
       
       if (scoreboardError) {
@@ -91,7 +83,6 @@ const ScoreboardInteractive: React.FC = () => {
 
       setScoreboard(scoreboardData);
 
-      // Fetch scoreboard entries
       const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
       
       if (entriesError) {
@@ -109,6 +100,39 @@ const ScoreboardInteractive: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  // Load scoreboard and entries from Supabase
+  useEffect(() => {
+    if (!isHydrated || !scoreboardId) {
+      if (isHydrated && !scoreboardId) {
+        setError('No scoreboard ID provided');
+        setIsLoading(false);
+      }
+      return;
+    }
+    
+    loadScoreboardData();
+
+    // Set up real-time subscription with separate callbacks
+    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
+      scoreboardId,
+      {
+        onScoreboardChange: () => {
+          console.log('Scoreboard metadata changed, refreshing all...');
+          loadScoreboardData();
+        },
+        onEntriesChange: () => {
+          console.log('Entries changed, refreshing table only...');
+          loadEntriesOnly();
+        }
+      }
+    );
+
+    // Cleanup subscription on unmount or when scoreboardId changes
+    return () => {
+      unsubscribe();
+    };
+  }, [isHydrated, scoreboardId]);
 
   const sortedEntries = useMemo(() => {
     const sorted = [...entries].sort((a, b) => {

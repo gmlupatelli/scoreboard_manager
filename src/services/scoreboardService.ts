@@ -33,8 +33,14 @@ const rowToEntry = (row: EntryRow): ScoreboardEntry => ({
 });
 
 export const scoreboardService = {
-  // Subscribe to real-time updates for a scoreboard
-  subscribeToScoreboardChanges(scoreboardId: string, callback: () => void) {
+  // Subscribe to real-time updates for a scoreboard with separate callbacks
+  subscribeToScoreboardChanges(
+    scoreboardId: string, 
+    callbacks: {
+      onScoreboardChange?: () => void;
+      onEntriesChange?: () => void;
+    }
+  ) {
     console.log('Subscribing to real-time updates for scoreboard:', scoreboardId);
     
     // Create a single channel for both scoreboard and entries changes
@@ -49,8 +55,8 @@ export const scoreboardService = {
           filter: `id=eq.${scoreboardId}`,
         },
         (payload) => {
-          console.log('Scoreboard changed:', payload.eventType, payload);
-          callback();
+          console.log('Scoreboard metadata changed:', payload.eventType);
+          callbacks.onScoreboardChange?.();
         }
       )
       .on(
@@ -62,8 +68,8 @@ export const scoreboardService = {
           filter: `scoreboard_id=eq.${scoreboardId}`,
         },
         (payload) => {
-          console.log('Entry changed:', payload.eventType, payload);
-          callback();
+          console.log('Entry changed:', payload.eventType, payload.new);
+          callbacks.onEntriesChange?.();
         }
       )
       .subscribe((status, err) => {
