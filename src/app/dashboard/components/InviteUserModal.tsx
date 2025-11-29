@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
 import Icon from '@/components/ui/AppIcon';
 
 interface InviteUserModalProps {
@@ -16,15 +17,27 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
 
   if (!isOpen) return null;
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { 'Authorization': `Bearer ${session.access_token}` };
+    }
+    return {};
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
+      const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/invitations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
         credentials: 'include',
         body: JSON.stringify({ email: email.toLowerCase().trim() })
       });

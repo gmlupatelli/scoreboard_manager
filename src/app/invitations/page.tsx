@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase/client';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
@@ -25,10 +26,20 @@ export default function InvitationsPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { 'Authorization': `Bearer ${session.access_token}` };
+    }
+    return {};
+  };
+
   const fetchInvitations = useCallback(async () => {
     try {
+      const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/invitations', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: authHeaders
       });
       if (response.ok) {
         const data = await response.json();
@@ -53,9 +64,11 @@ export default function InvitationsPage() {
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(`/api/invitations/${invitationId}`, {
         method: 'DELETE',
-        credentials: 'include'
+        credentials: 'include',
+        headers: authHeaders
       });
 
       if (response.ok) {
