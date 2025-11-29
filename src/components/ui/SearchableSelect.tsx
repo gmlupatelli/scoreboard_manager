@@ -16,6 +16,8 @@ interface SearchableSelectProps {
   placeholder?: string;
   emptyMessage?: string;
   className?: string;
+  id?: string;
+  ariaLabel?: string;
 }
 
 export default function SearchableSelect({
@@ -25,6 +27,8 @@ export default function SearchableSelect({
   placeholder = 'Search...',
   emptyMessage = 'No results found',
   className = '',
+  id,
+  ariaLabel,
 }: SearchableSelectProps) {
   const [query, setQuery] = useState('');
 
@@ -54,6 +58,8 @@ export default function SearchableSelect({
       <div className={`relative ${className}`}>
         <div className="relative">
           <ComboboxInput
+            id={id}
+            aria-label={ariaLabel}
             className="w-full px-3 py-2 pr-10 bg-background border border-border rounded-md text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             displayValue={(option: SelectOption | null) => option?.label || ''}
             onChange={(event) => setQuery(event.target.value)}
@@ -64,7 +70,10 @@ export default function SearchableSelect({
           </ComboboxButton>
         </div>
 
-        <ComboboxOptions className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-background border border-border shadow-lg focus:outline-none">
+        <ComboboxOptions 
+          anchor="bottom start"
+          className="absolute z-50 mt-1 max-h-60 w-[var(--input-width)] overflow-auto rounded-md bg-background border border-border shadow-lg focus:outline-none empty:invisible [--anchor-gap:4px]"
+        >
           {filteredOptions.length === 0 && query !== '' ? (
             <div className="px-4 py-3 text-sm text-text-secondary">
               {emptyMessage}
@@ -74,22 +83,16 @@ export default function SearchableSelect({
               <ComboboxOption
                 key={option.value}
                 value={option}
-                className={({ active, selected }) =>
-                  `relative cursor-pointer select-none px-4 py-2 text-sm ${
-                    active ? 'bg-primary/10 text-primary' : 'text-text-primary'
-                  } ${selected ? 'font-medium' : ''}`
-                }
+                className="group relative cursor-pointer select-none px-4 py-2 text-sm text-text-primary data-[focus]:bg-primary/10 data-[focus]:text-primary data-[selected]:font-medium"
               >
-                {({ selected }) => (
-                  <div className="flex items-center justify-between">
-                    <span className={selected ? 'font-medium' : ''}>
-                      {option.label}
-                    </span>
-                    {selected && (
-                      <Icon name="CheckIcon" size={16} className="text-primary" />
-                    )}
-                  </div>
-                )}
+                <div className="flex items-center justify-between">
+                  <span>{option.label}</span>
+                  <Icon 
+                    name="CheckIcon" 
+                    size={16} 
+                    className="text-primary opacity-0 group-data-[selected]:opacity-100" 
+                  />
+                </div>
               </ComboboxOption>
             ))
           )}

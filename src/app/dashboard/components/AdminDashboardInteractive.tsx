@@ -14,6 +14,7 @@ import ToastNotification from './ToastNotification';
 import EmptyState from './EmptyState';
 import StatsCard from './StatsCard';
 import Icon from '@/components/ui/AppIcon';
+import SearchableSelect from '@/components/ui/SearchableSelect';
 
 interface ToastState {
   message: string;
@@ -291,19 +292,22 @@ const AdminDashboardInteractive = () => {
                         <label htmlFor="ownerFilter" className="text-sm font-medium text-text-secondary">
                           Owner:
                         </label>
-                        <select
+                        <SearchableSelect
                           id="ownerFilter"
+                          ariaLabel="Filter scoreboards by owner"
+                          options={[
+                            { value: 'all', label: `All Users (${uniqueOwners.length})` },
+                            ...uniqueOwners.map((owner) => ({
+                              value: owner.id,
+                              label: `${owner.fullName} (${scoreboards.filter(s => s.ownerId === owner.id).length})`,
+                            })),
+                          ]}
                           value={selectedOwnerId}
-                          onChange={(e) => setSelectedOwnerId(e.target.value)}
-                          className="px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring min-w-[180px]"
-                        >
-                          <option value="all">All Users ({uniqueOwners.length})</option>
-                          {uniqueOwners.map((owner) => (
-                            <option key={owner.id} value={owner.id}>
-                              {owner.fullName} ({scoreboards.filter(s => s.ownerId === owner.id).length})
-                            </option>
-                          ))}
-                        </select>
+                          onChange={setSelectedOwnerId}
+                          placeholder="Filter by owner..."
+                          emptyMessage="No owners found"
+                          className="min-w-[220px]"
+                        />
                       </div>
                     )}
 
