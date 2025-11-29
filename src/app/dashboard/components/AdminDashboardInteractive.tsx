@@ -112,8 +112,8 @@ const AdminDashboardInteractive = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
     router.push('/public-scoreboard-list');
+    await signOut();
   };
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
