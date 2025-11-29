@@ -11,6 +11,14 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+### November 29, 2025 - Infinite Scrolling Implementation
+- Added paginated service functions with limit/offset support (30 items per page)
+- Created reusable `useInfiniteScroll` hook with IntersectionObserver
+- Implemented infinite scrolling in PublicScoreboardInteractive component
+- Implemented infinite scrolling in AdminDashboardInteractive component
+- Added "X of Y items loaded" stats display
+- Fixed observer re-attachment issue using state-based node tracking
+
 ### November 29, 2025 - Initial Replit Setup
 - Installed Node.js dependencies
 - Fixed middleware.ts circular dependency by implementing proper Supabase SSR middleware
