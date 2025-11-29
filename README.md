@@ -1,97 +1,178 @@
-# Next.js
+# Scoreboard Manager
 
-A modern Next.js 14 application built with TypeScript and Tailwind CSS.
+## Overview
+A modern Next.js 14 scoreboard management application with TypeScript, Tailwind CSS, and Supabase authentication. This app provides a comprehensive platform for creating, managing, and viewing scoreboards with real-time updates optimized for TV displays.
 
-## 🚀 Features
+## Project Status
+- **Current State**: Fully configured and running on Replit
+- **Last Updated**: November 29, 2025
+- **Framework**: Next.js 14.2.0 with React 18.2.0
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth with SSR support
 
-- **Next.js 14** - Latest version with improved performance and features
-- **React 18** - Latest React version with enhanced capabilities
-- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
+## Recent Changes
 
-## 📋 Prerequisites
+### November 29, 2025 - Visibility Toggle & UI Standardization
+- Added ability to change scoreboard visibility (public/private) when editing
+- Standardized visibility icons (GlobeAltIcon for public, LockClosedIcon for private)
+- Added visibility indicator to scoreboard cards in dashboard
 
-- Node.js (v14.x or higher)
-- npm or yarn
+### November 29, 2025 - Code Cleanup & Search Fix
+- Fixed Dashboard search bug caused by double debouncing
+- Removed all console.log/console.error statements from services
+- Removed unused state variables from components
 
+### November 29, 2025 - Server-Side Search & Infinite Scrolling
+- Added server-side search with 300ms debounce for all scoreboard lists
+- Implemented infinite scrolling with 30 items per page
+- Created reusable `useInfiniteScroll` hook with IntersectionObserver
 
-## 🛠️ Installation
+### November 29, 2025 - Initial Replit Setup
+- Fixed middleware.ts circular dependency with proper Supabase SSR middleware
+- Configured Next.js to run on 0.0.0.0:5000 for Replit proxy compatibility
+- Added Cache-Control headers to prevent caching issues
 
-1. Install dependencies:
-  ```bash
-  npm install
-  # or
-  yarn install
-  ```
+## Project Architecture
 
-2. Start the development server:
-  ```bash
-  npm run dev
-  # or
-  yarn dev
-  ```
-3. Open [http://localhost:4028](http://localhost:4028) with your browser to see the result.
+### Frontend
+- **Framework**: Next.js 14 with App Router
+- **Styling**: Tailwind CSS with custom theme (coral #f77174, orange #eba977, navy #38385e/#20203e)
+- **Components**: React components with TypeScript
+- **State Management**: React Context (AuthContext)
 
-## 📁 Project Structure
+### Backend Integration
+- **Database**: Supabase PostgreSQL
+- **Authentication**: Supabase Auth with email/password
+- **Real-time**: Supabase Realtime for live scoreboard updates (optimized for TV displays)
+- **Session Management**: Server-side session handling with middleware
 
-```
-nextjs-js-tailwind/
-├── public/             # Static assets
-├── src/
-│   ├── app/            # App router components
-│   │   ├── layout.tsx  # Root layout component
-│   │   └── page.tsx    # Main page component
-│   ├── components/     # Reusable UI components
-│   ├── styles/         # Global styles and Tailwind configuration
-├── next.config.mjs     # Next.js configuration
-├── package.json        # Project dependencies and scripts
-├── postcss.config.js   # PostCSS configuration
-└── tailwind.config.js  # Tailwind CSS configuration
+### Key Features
+1. Public scoreboard browsing with infinite scroll
+2. User authentication (login/register/forgot password)
+3. Scoreboard creation and management with public/private visibility
+4. System admin dashboard (oversight only, no scoreboard creation)
+5. Real-time score updates without screen flashing
+6. Server-side search across all scoreboards
+7. Owner filtering for admin users
+8. CSV import for scoreboard entries
 
-```
+## Environment Configuration
 
-## 🧩 Page Editing
+### Required Environment Variables
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
 
-You can start editing the page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-## 🎨 Styling
+### Running the Application
+The application runs automatically via the configured workflow:
+- **Command**: `npm run dev`
+- **Port**: 5000
+- **Host**: 0.0.0.0 (for Replit proxy)
 
-This project uses Tailwind CSS for styling with the following features:
-- Utility-first approach for rapid development
-- Custom theme configuration
-- Responsive design utilities
-- PostCSS and Autoprefixer integration
-
-## 📦 Available Scripts
-
-- `npm run dev` - Start development server on port 4028
-- `npm run build` - Build the application for production
-- `npm run start` - Start the development server
-- `npm run serve` - Start the production server
-- `npm run lint` - Run ESLint to check code quality
-- `npm run lint:fix` - Fix ESLint issues automatically
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run serve` - Start production server (alias)
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Fix ESLint issues
 - `npm run format` - Format code with Prettier
 
-## 📱 Deployment
+## Deployment
+The application is configured for Replit deployment with:
+- **Target**: Autoscale
+- **Build Command**: `npm run build`
+- **Run Command**: `npm run serve`
 
-Build the application for production:
+## File Structure
+```
+├── src/
+│   ├── app/                          # Next.js App Router pages
+│   │   ├── about/                    # About page
+│   │   ├── admin/seed/               # Admin seed data tool
+│   │   ├── auth/callback/            # Auth callback route
+│   │   ├── contact/                  # Contact page
+│   │   ├── cookies/                  # Cookie policy
+│   │   ├── dashboard/                # User/Admin dashboard
+│   │   │   └── components/           # Dashboard components
+│   │   ├── forgot-password/          # Password reset request
+│   │   ├── individual-scoreboard-view/  # Single scoreboard display
+│   │   │   └── components/           # Scoreboard view components
+│   │   ├── login/                    # Login page
+│   │   ├── marketing-landing-page/   # Landing page
+│   │   ├── privacy/                  # Privacy policy
+│   │   ├── public-scoreboard-list/   # Public scoreboard browsing
+│   │   │   └── components/           # Public list components
+│   │   ├── register/                 # Registration page
+│   │   ├── reset-password/           # Password reset
+│   │   ├── scoreboard-management/    # Scoreboard editing
+│   │   │   └── components/           # Management components
+│   │   ├── support/                  # Support page
+│   │   ├── system-admin/             # System admin page
+│   │   ├── terms/                    # Terms of service
+│   │   ├── user-profile-management/  # User profile settings
+│   │   │   └── components/           # Profile components
+│   │   ├── layout.tsx                # Root layout
+│   │   ├── not-found.tsx             # 404 page
+│   │   ├── page.tsx                  # Home page
+│   │   └── providers.tsx             # Context providers
+│   ├── components/
+│   │   ├── common/                   # Shared components
+│   │   │   ├── AuthStatusIndicator.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── Header.tsx
+│   │   │   └── SearchInterface.tsx
+│   │   └── ui/                       # UI primitives
+│   │       ├── AppIcon.tsx
+│   │       ├── AppImage.tsx
+│   │       ├── Logo.tsx
+│   │       └── SearchableSelect.tsx
+│   ├── contexts/
+│   │   └── AuthContext.tsx           # Authentication context
+│   ├── hooks/
+│   │   └── useInfiniteScroll.ts      # Infinite scroll hook
+│   ├── lib/
+│   │   └── supabase/
+│   │       ├── client.ts             # Browser Supabase client
+│   │       └── server.tsx            # Server Supabase client
+│   ├── services/
+│   │   ├── profileService.ts         # User profile API
+│   │   └── scoreboardService.ts      # Scoreboard API
+│   ├── styles/
+│   │   ├── index.css
+│   │   └── tailwind.css
+│   ├── types/
+│   │   ├── database.types.ts         # Supabase types
+│   │   └── models.ts                 # App models
+│   └── utils/
+│       └── storage.ts                # Local storage utils
+├── public/                           # Static assets
+├── supabase/                         # Database migrations
+├── docs/                             # Documentation
+├── middleware.ts                     # Next.js auth middleware
+├── next.config.mjs                   # Next.js configuration
+├── tailwind.config.js                # Tailwind configuration
+├── tsconfig.json                     # TypeScript configuration
+└── package.json                      # Dependencies
+```
 
-  ```bash
-  npm run build
-  ```
+## Database Schema
+The Supabase database includes:
+- `user_profiles` - User profile information with roles
+- `scoreboards` - Scoreboard metadata with owner references and visibility
+- `scoreboard_entries` - Individual scoreboard entries
+- Row Level Security (RLS) policies for secure data access
 
-## 📚 Learn More
+## User Preferences & Design Notes
+- Brand colors: Coral (#f77174), Orange (#eba977), Navy (#38385e, #20203e)
+- System admin role is for oversight only - admins cannot create scoreboards
+- Real-time updates optimized for TV displays (no screen flashing)
+- Infinite scroll with 30 items per page for performance
+- Server-side search with 300ms debounce to reduce API calls
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial
-
-You can check out the [Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## 🙏 Acknowledgments
-
-- Built with [Rocket.new](https://rocket.new)
-- Powered by Next.js and React
-- Styled with Tailwind CSS
-
-Built with ❤️ on Rocket.new
+## Technical Notes
+- Uses state-based node tracking in useInfiniteScroll hook for proper observer re-attachment
+- Debounced search uses direct state control (not SearchInterface component) to avoid double-debouncing
+- All database functions have SET search_path = public, pg_temp for security
+- Cache-Control headers prevent stale content in Replit's iframe proxy
