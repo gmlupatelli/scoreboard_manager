@@ -214,17 +214,23 @@ const AdminDashboardInteractive = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-text-primary mb-2">
-                {isSystemAdmin() ? 'System Admin Dashboard' : 'Dashboard'}
+                {isSystemAdmin() ? 'System Admin Dashboard' : 'My Scoreboards'}
               </h1>
-              <p className="text-text-secondary">Manage all scoreboards and competition entries</p>
+              <p className="text-text-secondary">
+                {isSystemAdmin() 
+                  ? 'Oversee all scoreboards and manage system-wide content' 
+                  : 'Manage your scoreboards and competition entries'}
+              </p>
             </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="mt-4 sm:mt-0 flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
-            >
-              <Icon name="PlusIcon" size={20} />
-              <span>Create New Scoreboard</span>
-            </button>
+            {!isSystemAdmin() && (
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="mt-4 sm:mt-0 flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
+              >
+                <Icon name="PlusIcon" size={20} />
+                <span>Create New Scoreboard</span>
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
