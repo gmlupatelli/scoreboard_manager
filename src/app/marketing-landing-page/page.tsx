@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
 import Logo from '@/components/ui/Logo';
+import Footer from '@/components/common/Footer';
 
 interface FeatureCardProps {
   icon: string;
@@ -365,56 +366,7 @@ export default function MarketingLandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-accent text-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <Logo size={36} />
-                <span className="text-lg font-bold">Scoreboard Manager</span>
-              </div>
-              <p className="text-white/70 text-sm">
-                Professional scoreboard management for tournaments, leagues, and competitions.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li><Link href="/public-scoreboard-list" className="hover:text-white transition-smooth">Features</Link></li>
-                <li><Link href="/register" className="hover:text-white transition-smooth">Pricing</Link></li>
-                <li><Link href="/public-scoreboard-list" className="hover:text-white transition-smooth">Boards</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li><Link href="#" className="hover:text-white transition-smooth">About Us</Link></li>
-                <li><Link href="#" className="hover:text-white transition-smooth">Contact</Link></li>
-                <li><Link href="#" className="hover:text-white transition-smooth">Support</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-white/70">
-                <li><Link href="#" className="hover:text-white transition-smooth">Privacy Policy</Link></li>
-                <li><Link href="#" className="hover:text-white transition-smooth">Terms of Service</Link></li>
-                <li><Link href="#" className="hover:text-white transition-smooth">Cookie Policy</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-white/20 flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-sm text-white/70">
-              © 2025 Scoreboard Manager. All rights reserved.
-            </p>
-            <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-              <Link href="#" className="text-white/70 hover:text-white transition-smooth">
-                <Icon name="GlobeAltIcon" size={20} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
