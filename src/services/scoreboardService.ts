@@ -33,6 +33,53 @@ const rowToEntry = (row: EntryRow): ScoreboardEntry => ({
 });
 
 export const scoreboardService = {
+  // Subscribe to real-time updates for a scoreboard
+  subscribeToScoreboardChanges(scoreboardId: string, callback: () => void) {
+    console.log('Subscribing to real-time updates for scoreboard:', scoreboardId);
+    
+    // Subscribe to scoreboard changes
+    const scoreboardSubscription = supabase
+      .channel(`scoreboard:${scoreboardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'scoreboards',
+          filter: `id=eq.${scoreboardId}`,
+        },
+        () => {
+          console.log('Scoreboard changed, refreshing...');
+          callback();
+        }
+      )
+      .subscribe();
+
+    // Subscribe to entries changes
+    const entriesSubscription = supabase
+      .channel(`entries:${scoreboardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'scoreboard_entries',
+          filter: `scoreboard_id=eq.${scoreboardId}`,
+        },
+        () => {
+          console.log('Entries changed, refreshing...');
+          callback();
+        }
+      )
+      .subscribe();
+
+    // Return unsubscribe function
+    return () => {
+      scoreboardSubscription.unsubscribe();
+      entriesSubscription.unsubscribe();
+    };
+  },
+
   // Get all public scoreboards
   async getPublicScoreboards(): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
     console.log('Fetching public scoreboards...');
