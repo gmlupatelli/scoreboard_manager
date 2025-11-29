@@ -141,13 +141,14 @@ export const scoreboardService = {
     return { data: scoreboards, error: null };
   },
 
-  // Get all scoreboards (system admin only)
+  // Get all scoreboards with owner info (system admin only)
   async getAllScoreboards(): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
     const { data, error } = await supabase
       .from('scoreboards')
       .select(`
         *,
-        scoreboard_entries(count)
+        scoreboard_entries(count),
+        user_profiles!owner_id(id, email, full_name, role)
       `)
       .order('created_at', { ascending: false });
 
@@ -155,7 +156,20 @@ export const scoreboardService = {
     
     const scoreboards = (data || []).map((row: any) => {
       const entryCount = row.scoreboard_entries?.[0]?.count || 0;
-      return rowToScoreboard(row, entryCount);
+      const scoreboard = rowToScoreboard(row, entryCount);
+      
+      if (row.user_profiles) {
+        scoreboard.owner = {
+          id: row.user_profiles.id,
+          email: row.user_profiles.email,
+          fullName: row.user_profiles.full_name,
+          role: row.user_profiles.role,
+          createdAt: '',
+          updatedAt: '',
+        };
+      }
+      
+      return scoreboard;
     });
     
     return { data: scoreboards, error: null };

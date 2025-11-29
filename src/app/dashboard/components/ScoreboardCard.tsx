@@ -7,6 +7,7 @@ interface ScoreboardCardProps {
   description: string;
   entryCount: number;
   createdAt: string;
+  ownerName?: string;
   onRename: (id: string, newTitle: string) => void;
   onDelete: () => void;
   onNavigate: (id: string) => void;
@@ -18,6 +19,7 @@ const ScoreboardCard = ({
   description,
   entryCount,
   createdAt,
+  ownerName,
   onRename,
   onDelete,
   onNavigate,
@@ -99,7 +101,13 @@ const ScoreboardCard = ({
 
       <div className="flex-1" />
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col gap-2 mb-4">
+        {ownerName && (
+          <div className="flex items-center space-x-1 text-sm text-text-secondary">
+            <Icon name="UserIcon" size={16} />
+            <span className="truncate">{ownerName}</span>
+          </div>
+        )}
         <div className="flex items-center space-x-4 text-sm text-text-secondary">
           <div className="flex items-center space-x-1">
             <Icon name="UsersIcon" size={16} />
