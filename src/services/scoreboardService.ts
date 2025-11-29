@@ -56,9 +56,6 @@ export const scoreboardService = {
       onEntriesChange?: () => void;
     }
   ) {
-    console.log('Subscribing to real-time updates for scoreboard:', scoreboardId);
-    
-    // Create a single channel for both scoreboard and entries changes
     const channel = supabase
       .channel(`realtime-scoreboard-${scoreboardId}`)
       .on(
@@ -69,8 +66,7 @@ export const scoreboardService = {
           table: 'scoreboards',
           filter: `id=eq.${scoreboardId}`,
         },
-        (payload) => {
-          console.log('Scoreboard metadata changed:', payload.eventType);
+        () => {
           callbacks.onScoreboardChange?.();
         }
       )
@@ -82,57 +78,15 @@ export const scoreboardService = {
           table: 'scoreboard_entries',
           filter: `scoreboard_id=eq.${scoreboardId}`,
         },
-        (payload) => {
-          console.log('Entry changed:', payload.eventType, payload.new);
+        () => {
           callbacks.onEntriesChange?.();
         }
       )
-      .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Successfully subscribed to real-time updates for scoreboard:', scoreboardId);
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('Failed to subscribe to real-time updates:', err);
-        } else if (status === 'TIMED_OUT') {
-          console.error('Subscription timed out for scoreboard:', scoreboardId);
-        } else {
-          console.log('Subscription status:', status);
-        }
-      });
+      .subscribe();
 
-    // Return unsubscribe function
     return () => {
-      console.log('Unsubscribing from real-time updates for scoreboard:', scoreboardId);
       supabase.removeChannel(channel);
     };
-  },
-
-  // Get all public scoreboards (legacy - no pagination)
-  async getPublicScoreboards(): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
-    console.log('Fetching public scoreboards...');
-    try {
-      const { data, error } = await supabase
-        .from('scoreboards')
-        .select(`
-          *,
-          scoreboard_entries(count)
-        `)
-        .eq('visibility', 'public')
-        .order('created_at', { ascending: false });
-
-      console.log('Supabase response:', { data, error });
-
-      if (error) return { data: null, error };
-      
-      const scoreboards = (data || []).map((row: any) => {
-        const entryCount = row.scoreboard_entries?.[0]?.count || 0;
-        return rowToScoreboard(row, entryCount);
-      });
-      
-      return { data: scoreboards, error: null };
-    } catch (e) {
-      console.error('Error in getPublicScoreboards:', e);
-      return { data: null, error: e as Error };
-    }
   },
 
   // Get public scoreboards with pagination
@@ -188,7 +142,6 @@ export const scoreboardService = {
       
       return { data: scoreboards, error: null, hasMore, totalCount: totalCount || 0 };
     } catch (e) {
-      console.error('Error in getPublicScoreboardsPaginated:', e);
       return { data: null, error: e as Error, hasMore: false, totalCount: 0 };
     }
   },
@@ -268,7 +221,6 @@ export const scoreboardService = {
       
       return { data: scoreboards, error: null, hasMore, totalCount: totalCount || 0 };
     } catch (e) {
-      console.error('Error in getUserScoreboardsPaginated:', e);
       return { data: null, error: e as Error, hasMore: false, totalCount: 0 };
     }
   },
@@ -380,7 +332,6 @@ export const scoreboardService = {
       
       return { data: scoreboards, error: null, hasMore, totalCount: totalCount || 0 };
     } catch (e) {
-      console.error('Error in getAllScoreboardsPaginated:', e);
       return { data: null, error: e as Error, hasMore: false, totalCount: 0 };
     }
   },
@@ -423,7 +374,6 @@ export const scoreboardService = {
         error: null 
       };
     } catch (e) {
-      console.error('Error in getAllScoreboardOwners:', e);
       return { data: null, error: e as Error };
     }
   },

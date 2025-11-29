@@ -48,14 +48,11 @@ const ScoreboardInteractive: React.FC = () => {
       const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
       
       if (entriesError) {
-        console.error('Failed to refresh entries:', entriesError);
         return;
       }
 
       setEntries(entriesData || []);
-      console.log('Entries refreshed silently');
-    } catch (err) {
-      console.error('Error refreshing entries:', err);
+    } catch {
     }
   };
 
@@ -95,7 +92,6 @@ const ScoreboardInteractive: React.FC = () => {
       setError(null);
     } catch (err) {
       setError('Failed to load scoreboard data');
-      console.error('Error loading scoreboard:', err);
     } finally {
       setIsLoading(false);
     }
@@ -118,11 +114,9 @@ const ScoreboardInteractive: React.FC = () => {
       scoreboardId,
       {
         onScoreboardChange: () => {
-          console.log('Scoreboard metadata changed, refreshing all...');
           loadScoreboardData();
         },
         onEntriesChange: () => {
-          console.log('Entries changed, refreshing table only...');
           loadEntriesOnly();
         }
       }
