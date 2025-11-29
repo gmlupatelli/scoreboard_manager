@@ -138,6 +138,16 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                           <Icon name="ClipboardDocumentListIcon" size={18} className="mr-3" />
                           My Boards
                         </Link>
+                        {userProfile?.role === 'system_admin' && (
+                          <Link
+                            href="/system-admin/settings"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                          >
+                            <Icon name="Cog6ToothIcon" size={18} className="mr-3" />
+                            System Settings
+                          </Link>
+                        )}
                         <button
                           onClick={handleLogout}
                           className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
@@ -254,6 +264,16 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                     <Icon name="ClipboardDocumentListIcon" size={20} className="mr-3" />
                     My Boards
                   </Link>
+                  {userProfile?.role === 'system_admin' && (
+                    <Link
+                      href="/system-admin/settings"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                    >
+                      <Icon name="Cog6ToothIcon" size={20} className="mr-3" />
+                      System Settings
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
