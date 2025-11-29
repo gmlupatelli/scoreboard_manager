@@ -2,7 +2,7 @@
 
 ## Overview
 
-Scoreboard Manager is a modern Next.js 14 application for creating, managing, and displaying real-time scoreboards for competitions, tournaments, and events. The platform supports both public and private scoreboards with live updates optimized for TV displays, comprehensive administrative controls, and user-friendly interfaces for participants and spectators.
+Scoreboard Manager is a modern web application built with Next.js 14 that enables users to create, manage, and display scoreboards for competitions, tournaments, and events. The platform features real-time updates optimized for TV displays, comprehensive scoreboard management tools, and public/private visibility controls. Users can create scoreboards, add entries, import data from CSV files, and share live rankings with participants and spectators.
 
 ## User Preferences
 
@@ -12,137 +12,95 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-**Framework**: Next.js 14 with App Router
-- Server-side rendering (SSR) for improved performance and SEO
-- Client components for interactive features with 'use client' directive
-- TypeScript for type safety across the application
-- Custom path aliases (`@/*`) for cleaner imports
+**Framework & Routing**
+- Next.js 14 with App Router for file-based routing and server-side rendering
+- React 18 for UI components with TypeScript for type safety
+- Client-side navigation using Next.js router for seamless transitions
 
-**Styling System**:
-- Tailwind CSS with custom theme configuration
-- CSS variables for theming (coral #f77174, orange #eba977, navy #38385e/#20203e)
-- Custom utility classes for animations, elevations, and transitions
+**Styling & UI Components**
+- Tailwind CSS for utility-first styling with custom theme configuration
+- Custom color palette: coral (#f77174), orange (#eba977), navy (#38385e/#20203e)
+- Headless UI for accessible component primitives (comboboxes, modals)
+- Heroicons for consistent iconography with outline and solid variants
 - Responsive design with mobile-first approach
-- Google Fonts integration (Nunito Sans, JetBrains Mono)
 
-**Component Architecture**:
-- Reusable UI components (Icon, Logo, SearchableSelect, AppImage)
-- Feature-specific components organized by route
-- Common components (Header, Footer, SearchInterface, AuthStatusIndicator)
-- Modal components for user interactions
-- Custom hooks for shared logic (useInfiniteScroll)
+**State Management**
+- React Context API for authentication state (AuthContext)
+- Local component state using React hooks (useState, useEffect, useCallback)
+- Custom hooks for reusable logic (useInfiniteScroll for pagination)
 
-**State Management**:
-- React Context API for global authentication state (AuthContext)
-- Local component state using useState
-- Derived state with useMemo for performance optimization
-- URL-based state via Next.js searchParams for shareable views
+**Performance Optimizations**
+- Infinite scrolling with IntersectionObserver for efficient large lists
+- Server-side search with 300ms debouncing to reduce API calls
+- Pagination with 30 items per page for dashboard views, 50 for public views
+- Real-time updates using Supabase Realtime subscriptions
 
-### Backend Integration
+### Backend & Data Layer
 
-**Database**: Supabase PostgreSQL
-- Relational database with three main tables:
-  - `user_profiles`: User accounts with role-based access (system_admin, user)
-  - `scoreboards`: Scoreboard metadata with ownership and visibility controls
-  - `scoreboard_entries`: Individual entries with name, score, and ranking data
-- TypeScript database types generated from Supabase schema
+**Database**
+- Supabase PostgreSQL for relational data storage
+- Tables: user_profiles, scoreboards, scoreboard_entries
+- Row Level Security (RLS) policies for access control
 
-**Authentication**:
+**Authentication & Authorization**
 - Supabase Auth with email/password authentication
-- Server-side session management via middleware
-- Cookie-based session persistence
-- Protected routes using middleware pattern
-- Role-based access control (system admin vs regular users)
+- Server-side session management using @supabase/ssr
+- Middleware for session refresh and cookie handling
+- Role-based access: system_admin and user roles
 
-**Real-time Updates**:
-- Supabase Realtime for live scoreboard updates
-- Automatic refresh when entries are modified
-- Optimized for TV display scenarios with minimal flash/flickering
-- Separate load patterns for initial vs. incremental updates
-
-**API Communication**:
+**API Architecture**
 - Service layer pattern (scoreboardService, profileService)
-- Type-safe API calls with TypeScript interfaces
-- Error handling with user-friendly messages
-- Pagination support with infinite scroll capability
+- Type-safe data models mapping database rows to application types
+- Pagination support with limit/offset queries
+- Search functionality with server-side filtering
 
-### Key Architectural Decisions
+**Real-time Features**
+- Supabase Realtime for live scoreboard updates
+- Automatic re-subscription on scoreboard changes
+- Optimized for TV display scenarios with minimal flash
 
-**Server-Side Rendering (SSR)**:
-- **Problem**: Need for SEO-friendly pages and faster initial page loads
-- **Solution**: Next.js 14 App Router with SSR for public pages
-- **Rationale**: Improves discoverability and performance for public scoreboards while maintaining interactivity
+### Data Models
 
-**Infinite Scroll Implementation**:
-- **Problem**: Large scoreboard lists causing performance issues
-- **Solution**: Custom useInfiniteScroll hook with IntersectionObserver
-- **Details**: 30 items per page, server-side pagination, 300ms debounced search
-- **Pros**: Better performance, reduced server load, smooth user experience
-- **Cons**: More complex state management, requires careful loading state handling
+**User Profile**
+- Fields: id, email, fullName, role, timestamps
+- Linked to Supabase auth.users table
 
-**Middleware Authentication**:
-- **Problem**: Session management across client and server components
-- **Solution**: Supabase SSR with middleware.ts for session handling
-- **Details**: Cookie-based session with automatic refresh, avoiding circular dependencies
-- **Pros**: Seamless auth across app, server and client compatibility
-- **Cons**: Additional middleware complexity, careful cookie management required
+**Scoreboard**
+- Fields: id, ownerId, title, subtitle, sortOrder (asc/desc), visibility (public/private), timestamps
+- Computed field: entryCount (populated via join)
 
-**Service Layer Pattern**:
-- **Problem**: Scattered API logic and duplicate code across components
-- **Solution**: Centralized service modules (scoreboardService, profileService)
-- **Pros**: Single source of truth, easier testing, consistent error handling
-- **Alternatives Considered**: Direct Supabase calls in components (rejected due to code duplication)
-
-**Component-Based Modals**:
-- **Problem**: Need for user confirmations and forms without route navigation
-- **Solution**: Dedicated modal components with local state management
-- **Pros**: Better UX, no route changes, easy to reuse
-- **Cons**: Manage multiple modal states in parent components
-
-**Real-time Update Strategy**:
-- **Problem**: Multiple devices viewing same scoreboard need live updates
-- **Solution**: Supabase Realtime subscriptions with optimistic UI updates
-- **Details**: Load-only-entries pattern to prevent flash on updates
-- **Pros**: True real-time collaboration, minimal perceived latency
-- **Cons**: Connection management complexity, potential race conditions
-
-**CSV Import Feature**:
-- **Problem**: Bulk entry creation for large competitions
-- **Solution**: Client-side CSV parsing with validation
-- **Pros**: No server processing needed, instant feedback
-- **Cons**: Limited to browser memory constraints
+**Scoreboard Entry**
+- Fields: id, scoreboardId, name, score, details, timestamps
+- Computed field: rank (calculated client-side based on score and sortOrder)
 
 ### External Dependencies
 
-**Core Framework Dependencies**:
-- `next@14.2.0` - React framework with App Router
-- `react@18.2.0` & `react-dom@18.2.0` - UI library
-- `typescript@^5` - Type safety and developer experience
+**Third-Party Services**
+- Supabase: PostgreSQL database, authentication, real-time subscriptions
+- Configured via NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables
 
-**Supabase Integration**:
-- `@supabase/supabase-js@^2.86.0` - Supabase client library
-- `@supabase/ssr@^0.8.0` - Server-side rendering support
-- `@supabase/auth-helpers-nextjs@^0.15.0` - Next.js authentication helpers
-- **Purpose**: PostgreSQL database, authentication, and real-time subscriptions
-- **Configuration**: Environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
+**Key NPM Packages**
+- @supabase/supabase-js: Supabase client library
+- @supabase/ssr: Server-side rendering support for Supabase
+- @headlessui/react: Accessible UI components
+- @heroicons/react: Icon library
+- @tailwindcss/forms, @tailwindcss/typography: Tailwind plugins
+- recharts: Charting library (installed but not currently used)
 
-**UI Component Libraries**:
-- `@headlessui/react@^2.2.9` - Unstyled accessible UI components (Combobox, transitions)
-- `@heroicons/react@^2.2.0` - Icon library (outline and solid variants)
-- `tailwindcss@3.4.6` - Utility-first CSS framework
-- `@tailwindcss/forms@^0.5.10` - Form styling plugin
-- `@tailwindcss/typography@^0.5.16` - Typography plugin
-- `tailwindcss-animate@^1.0.7` - Animation utilities
+**Development Tools**
+- TypeScript for type safety
+- ESLint with Next.js, TypeScript, and Prettier configurations
+- Tailwind CSS with custom configuration
+- PostCSS for CSS processing
 
-**Charting & Visualization**:
-- `recharts@^2.15.2` - React charting library (for potential analytics features)
+### Deployment Configuration
 
-**Development Tools**:
-- `eslint@^9` with Next.js config and TypeScript support
-- `prettier@^3.5.3` - Code formatting
-- `autoprefixer@10.4.2` & `postcss@8.4.8` - CSS processing
-
-**Deployment Configuration**:
-- Custom Next.js server binding to `0.0.0.0:5000` for Replit proxy compatibility
+**Environment Setup**
+- Configured to run on 0.0.0.0:5000 for Replit proxy compatibility
 - Cache-Control headers to prevent caching issues
-- Build optimization for production deployment
+- Middleware handles session management without circular dependencies
+
+**Build & Development**
+- Next.js build system with TypeScript compilation
+- Development server with hot reload
+- Production builds with static optimization where possible

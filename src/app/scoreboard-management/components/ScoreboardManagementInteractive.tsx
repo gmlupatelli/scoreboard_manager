@@ -398,7 +398,7 @@ const ScoreboardManagementInteractive = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Icon name="EyeIcon" size={18} />
+                <Icon name={scoreboard.visibility === 'public' ? 'GlobeAltIcon' : 'LockClosedIcon'} size={18} />
                 <span className="capitalize">{scoreboard.visibility}</span>
               </div>
               <div className="flex items-center gap-2">
