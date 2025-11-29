@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { scoreboardService } from '../../../services/scoreboardService';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
@@ -10,6 +10,7 @@ import Header from '../../../components/common/Header';
 import { Scoreboard } from '../../../types/models';
 
 const PAGE_SIZE = 30;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const PublicScoreboardInteractive = () => {
   const router = useRouter();
@@ -18,15 +19,18 @@ const PublicScoreboardInteractive = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [offset, setOffset] = useState(0);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const loadPublicScoreboards = async (isInitial = true) => {
+  const loadPublicScoreboards = useCallback(async (isInitial = true, search = '') => {
     if (isInitial) {
       setLoading(true);
       setOffset(0);
+      setScoreboards([]);
     } else {
       setLoadingMore(true);
     }
@@ -38,6 +42,7 @@ const PublicScoreboardInteractive = () => {
         await scoreboardService.getPublicScoreboardsPaginated({
           limit: PAGE_SIZE,
           offset: currentOffset,
+          search: search || undefined,
         });
       
       if (error) {
@@ -63,17 +68,35 @@ const PublicScoreboardInteractive = () => {
         setLoadingMore(false);
       }
     }
-  };
+  }, [offset]);
 
+  // Debounce search input
   useEffect(() => {
-    loadPublicScoreboards(true);
-  }, []);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Load scoreboards when debounced search changes
+  useEffect(() => {
+    loadPublicScoreboards(true, debouncedSearch);
+  }, [debouncedSearch]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadPublicScoreboards(false);
+      loadPublicScoreboards(false, debouncedSearch);
     }
-  }, [loadingMore, hasMore, offset]);
+  }, [loadingMore, hasMore, debouncedSearch, loadPublicScoreboards]);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasMore,
@@ -81,19 +104,9 @@ const PublicScoreboardInteractive = () => {
     onLoadMore: handleLoadMore,
   });
 
-  const filteredAndSortedScoreboards = useMemo(() => {
-    let filtered = scoreboards;
-
-    if (searchQuery?.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (scoreboard) =>
-          scoreboard?.title?.toLowerCase()?.includes(query) ||
-          scoreboard?.subtitle?.toLowerCase()?.includes(query)
-      );
-    }
-
-    const sorted = [...filtered].sort((a, b) => {
+  // Client-side sorting only (search is now server-side)
+  const sortedScoreboards = useMemo(() => {
+    const sorted = [...scoreboards].sort((a, b) => {
       if (sortBy === 'title') {
         return (a?.title || '').localeCompare(b?.title || '');
       } else if (sortBy === 'newest') {
@@ -104,7 +117,7 @@ const PublicScoreboardInteractive = () => {
     });
 
     return sorted;
-  }, [scoreboards, searchQuery, sortBy]);
+  }, [scoreboards, sortBy]);
 
   return (
     <>
@@ -146,29 +159,26 @@ const PublicScoreboardInteractive = () => {
               <div className="flex items-center space-x-2">
                 <Icon name="ChartBarIcon" size={16} />
                 <span>
-                  {scoreboards.length} of {totalCount} public scoreboards loaded
+                  {scoreboards.length} of {totalCount} scoreboards loaded
+                  {debouncedSearch && ` matching "${debouncedSearch}"`}
                 </span>
               </div>
-              {filteredAndSortedScoreboards.length !== scoreboards.length && (
-                <div className="flex items-center space-x-2">
-                  <Icon name="FunnelIcon" size={16} />
-                  <span>Showing {filteredAndSortedScoreboards.length} of {scoreboards.length}</span>
-                </div>
-              )}
             </div>
           )}
 
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-foreground mt-4">Loading scoreboards...</p>
+              <p className="text-muted-foreground mt-4">
+                {searchQuery ? 'Searching scoreboards...' : 'Loading scoreboards...'}
+              </p>
             </div>
           ) : error ? (
             <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center space-x-2">
               <Icon name="ExclamationTriangleIcon" size={20} />
               <span>{error}</span>
             </div>
-          ) : filteredAndSortedScoreboards.length === 0 ? (
+          ) : sortedScoreboards.length === 0 ? (
             <div className="text-center py-12">
               <Icon name="InboxIcon" size={48} className="mx-auto text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-foreground mb-2">No scoreboards found</p>
@@ -179,7 +189,7 @@ const PublicScoreboardInteractive = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedScoreboards.map((scoreboard) => (
+                {sortedScoreboards.map((scoreboard) => (
                   <PublicScoreboardCard key={scoreboard?.id} scoreboard={scoreboard} />
                 ))}
               </div>
