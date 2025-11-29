@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
@@ -30,6 +30,7 @@ interface Owner {
 }
 
 const PAGE_SIZE = 30;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const AdminDashboardInteractive = () => {
   const router = useRouter();
@@ -49,11 +50,16 @@ const AdminDashboardInteractive = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [offset, setOffset] = useState(0);
   const [allOwners, setAllOwners] = useState<Owner[]>([]);
   const [loadingOwners, setLoadingOwners] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // Cache isSystemAdmin result to avoid function reference changes
+  const isAdmin = isSystemAdmin();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -63,10 +69,10 @@ const AdminDashboardInteractive = () => {
 
   // Load owners for system admin dropdown
   useEffect(() => {
-    if (user && userProfile && isSystemAdmin()) {
+    if (user && userProfile && isAdmin) {
       loadOwners();
     }
-  }, [user, userProfile]);
+  }, [user, userProfile, isAdmin]);
 
   const loadOwners = async () => {
     setLoadingOwners(true);
@@ -82,6 +88,7 @@ const AdminDashboardInteractive = () => {
     }
   };
 
+  // Load scoreboards function - uses isAdmin and user from closure
   const loadScoreboards = useCallback(async (
     isInitial: boolean,
     searchTerm: string,
@@ -90,6 +97,7 @@ const AdminDashboardInteractive = () => {
   ) => {
     if (isInitial) {
       setLoading(true);
+      setScoreboards([]);
     } else {
       setLoadingMore(true);
     }
@@ -98,7 +106,7 @@ const AdminDashboardInteractive = () => {
     try {
       let result;
       
-      if (isSystemAdmin()) {
+      if (isAdmin) {
         result = await scoreboardService.getAllScoreboardsPaginated({
           limit: PAGE_SIZE,
           offset: currentOffset,
@@ -135,20 +143,37 @@ const AdminDashboardInteractive = () => {
         setLoadingMore(false);
       }
     }
-  }, [user, isSystemAdmin]);
+  }, [user, isAdmin]);
 
-  // Initial load and reload when search/owner filter changes
+  // Debounce search query - same pattern as PublicScoreboardInteractive
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  // Initial load and reload when debounced search or owner filter changes
   useEffect(() => {
     if (user && userProfile) {
-      loadScoreboards(true, searchQuery, selectedOwnerId, 0);
+      loadScoreboards(true, debouncedSearch, selectedOwnerId, 0);
     }
-  }, [user, userProfile, searchQuery, selectedOwnerId, loadScoreboards]);
+  }, [debouncedSearch, selectedOwnerId]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadScoreboards(false, searchQuery, selectedOwnerId, offset);
+      loadScoreboards(false, debouncedSearch, selectedOwnerId, offset);
     }
-  }, [loadingMore, hasMore, offset, searchQuery, selectedOwnerId, loadScoreboards]);
+  }, [loadingMore, hasMore, offset, debouncedSearch, selectedOwnerId]);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasMore,
@@ -170,7 +195,7 @@ const AdminDashboardInteractive = () => {
         throw error;
       }
 
-      await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0);
       return { success: true, message: 'Scoreboard created successfully' };
     } catch (err) {
       return { success: false, message: 'Failed to create scoreboard' };
@@ -182,7 +207,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.deleteScoreboard(id);
       if (error) throw error;
       
-      await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0);
       return { success: true };
     } catch (err) {
       return { success: false };
@@ -235,7 +260,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.updateScoreboard(id, { title: newTitle });
       if (error) throw error;
       
-      await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0);
       showToast('Scoreboard renamed successfully', 'success');
     } catch (err) {
       showToast('Failed to rename scoreboard', 'error');
@@ -254,7 +279,7 @@ const AdminDashboardInteractive = () => {
         const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
         if (error) throw error;
         
-        await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
+        await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0);
         showToast('Scoreboard deleted successfully', 'success');
       } catch (err) {
         showToast('Failed to delete scoreboard', 'error');
@@ -274,15 +299,15 @@ const AdminDashboardInteractive = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-text-primary mb-2">
-                {isSystemAdmin() ? 'System Admin Dashboard' : 'My Scoreboards'}
+                {isAdmin ? 'System Admin Dashboard' : 'My Scoreboards'}
               </h1>
               <p className="text-text-secondary">
-                {isSystemAdmin() 
+                {isAdmin 
                   ? 'Oversee all scoreboards and manage system-wide content' 
                   : 'Manage your scoreboards and competition entries'}
               </p>
             </div>
-            {!isSystemAdmin() && (
+            {!isAdmin && (
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="mt-4 sm:mt-0 flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
@@ -330,7 +355,7 @@ const AdminDashboardInteractive = () => {
                   />
 
                   <div className="flex flex-wrap items-center gap-4">
-                    {isSystemAdmin() && (
+                    {isAdmin && (
                       <div className="flex items-center space-x-2">
                         <label htmlFor="ownerFilter" className="text-sm font-medium text-text-secondary">
                           Owner:
@@ -396,7 +421,7 @@ const AdminDashboardInteractive = () => {
                         description={scoreboard.subtitle || ''}
                         entryCount={scoreboard.entryCount || 0}
                         createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
-                        ownerName={isSystemAdmin() ? scoreboard.owner?.fullName : undefined}
+                        ownerName={isAdmin ? scoreboard.owner?.fullName : undefined}
                         onRename={handleRenameScoreboard}
                         onDelete={() => handleDeleteConfirmation(scoreboard)}
                         onNavigate={handleNavigateToScoreboard}
