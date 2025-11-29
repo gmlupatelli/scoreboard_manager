@@ -19,6 +19,7 @@ export default function UserProfileManagementPage() {
 
   const handleLogout = async () => {
     await signOut();
+    router?.push('/public-scoreboard-list');
   };
 
   if (loading) {
