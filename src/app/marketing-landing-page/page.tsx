@@ -1,10 +1,8 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
 import Logo from '@/components/ui/Logo';
 import Footer from '@/components/common/Footer';
+import Header from '@/components/common/Header';
 
 interface FeatureCardProps {
   icon: string;
@@ -67,21 +65,6 @@ const TestimonialCard = ({ quote, author, role }: TestimonialCardProps) => (
 );
 
 export default function MarketingLandingPage() {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    element?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const features = [
     {
       icon: 'BoltIcon',
@@ -153,55 +136,7 @@ export default function MarketingLandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sticky Navigation */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-smooth duration-300 ${
-        isScrolled ? 'bg-surface/95 backdrop-blur-sm elevation-1 border-b border-border' : 'bg-transparent'
-      }`}>
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <Logo size={40} />
-              <span className="text-xl font-bold text-text-primary tracking-tight">
-                Scoreboard Manager
-              </span>
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <button
-                onClick={() => scrollToSection('features')}
-                className="text-text-secondary hover:text-primary transition-smooth duration-150 font-medium"
-              >
-                Features
-              </button>
-              <button
-                onClick={() => scrollToSection('benefits')}
-                className="text-text-secondary hover:text-primary transition-smooth duration-150 font-medium"
-              >
-                Benefits
-              </button>
-              <button
-                onClick={() => scrollToSection('testimonials')}
-                className="text-text-secondary hover:text-primary transition-smooth duration-150 font-medium"
-              >
-                Testimonials
-              </button>
-              <Link
-                href="/register"
-                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 hover-lift border border-border"
-              >
-                <Icon name="UserPlusIcon" size={18} />
-                <span>Sign Up</span>
-              </Link>
-              <Link
-                href="/login"
-                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 hover-lift"
-              >
-                <Icon name="ArrowRightOnRectangleIcon" size={18} />
-                <span>Login</span>
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Header isAuthenticated={false} />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
