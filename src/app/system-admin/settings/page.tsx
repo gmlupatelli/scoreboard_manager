@@ -129,13 +129,22 @@ export default function SystemAdminSettingsPage() {
               <h1 className="text-3xl font-bold text-text-primary">System Settings</h1>
               <p className="text-text-secondary mt-1">Manage application-wide configuration</p>
             </div>
-            <Link
-              href="/dashboard"
-              className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
-            >
-              <Icon name="ArrowLeftIcon" size={18} />
-              <span>Back to Dashboard</span>
-            </Link>
+            <div className="flex items-center space-x-3">
+              <Link
+                href="/invitations"
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+              >
+                <Icon name="EnvelopeIcon" size={18} />
+                <span>Invitations</span>
+              </Link>
+              <Link
+                href="/dashboard"
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+              >
+                <Icon name="ArrowLeftIcon" size={18} />
+                <span>Back to Dashboard</span>
+              </Link>
+            </div>
           </div>
 
           {error && (
