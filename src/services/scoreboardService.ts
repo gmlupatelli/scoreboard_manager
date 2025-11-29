@@ -37,9 +37,9 @@ export const scoreboardService = {
   subscribeToScoreboardChanges(scoreboardId: string, callback: () => void) {
     console.log('Subscribing to real-time updates for scoreboard:', scoreboardId);
     
-    // Subscribe to scoreboard changes
-    const scoreboardSubscription = supabase
-      .channel(`scoreboard:${scoreboardId}`)
+    // Create a single channel for both scoreboard and entries changes
+    const channel = supabase
+      .channel(`realtime-scoreboard-${scoreboardId}`)
       .on(
         'postgres_changes',
         {
@@ -48,16 +48,11 @@ export const scoreboardService = {
           table: 'scoreboards',
           filter: `id=eq.${scoreboardId}`,
         },
-        () => {
-          console.log('Scoreboard changed, refreshing...');
+        (payload) => {
+          console.log('Scoreboard changed:', payload.eventType, payload);
           callback();
         }
       )
-      .subscribe();
-
-    // Subscribe to entries changes
-    const entriesSubscription = supabase
-      .channel(`entries:${scoreboardId}`)
       .on(
         'postgres_changes',
         {
@@ -66,17 +61,27 @@ export const scoreboardService = {
           table: 'scoreboard_entries',
           filter: `scoreboard_id=eq.${scoreboardId}`,
         },
-        () => {
-          console.log('Entries changed, refreshing...');
+        (payload) => {
+          console.log('Entry changed:', payload.eventType, payload);
           callback();
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to real-time updates for scoreboard:', scoreboardId);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('Failed to subscribe to real-time updates:', err);
+        } else if (status === 'TIMED_OUT') {
+          console.error('Subscription timed out for scoreboard:', scoreboardId);
+        } else {
+          console.log('Subscription status:', status);
+        }
+      });
 
     // Return unsubscribe function
     return () => {
-      scoreboardSubscription.unsubscribe();
-      entriesSubscription.unsubscribe();
+      console.log('Unsubscribing from real-time updates for scoreboard:', scoreboardId);
+      supabase.removeChannel(channel);
     };
   },
 
