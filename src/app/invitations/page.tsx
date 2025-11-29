@@ -27,7 +27,9 @@ export default function InvitationsPage() {
 
   const fetchInvitations = useCallback(async () => {
     try {
-      const response = await fetch('/api/invitations');
+      const response = await fetch('/api/invitations', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setInvitations(data);
@@ -52,7 +54,8 @@ export default function InvitationsPage() {
   const handleCancelInvitation = async (invitationId: string) => {
     try {
       const response = await fetch(`/api/invitations/${invitationId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
 
       if (response.ok) {
