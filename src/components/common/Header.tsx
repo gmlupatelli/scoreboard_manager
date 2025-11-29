@@ -61,6 +61,20 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
+            <Link
+              href="/#features"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+            >
+              <Icon name="SparklesIcon" size={18} />
+              <span>Features</span>
+            </Link>
+            <Link
+              href="/public-scoreboard-list"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+            >
+              <Icon name="TrophyIcon" size={18} />
+              <span>Scoreboards</span>
+            </Link>
             {isAuthenticated ? (
               <div className="relative">
                 <button
@@ -146,41 +160,28 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
             <div className="px-2 pt-2 pb-3 space-y-1">
               <Link
                 href="/"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Home
+                <Icon name="HomeIcon" size={20} />
+                <span>Home</span>
+              </Link>
+              <Link
+                href="/#features"
+                className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon name="SparklesIcon" size={20} />
+                <span>Features</span>
               </Link>
               <Link
                 href="/public-scoreboard-list"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                View Scoreboards
+                <Icon name="TrophyIcon" size={20} />
+                <span>Scoreboards</span>
               </Link>
-              <Link
-                href="/login"
-                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Sign Up
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  href="/user-profile-management"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Profile
-                </Link>
-              )}
             </div>
 
             <div className="border-t border-border px-2 pt-4 pb-3">

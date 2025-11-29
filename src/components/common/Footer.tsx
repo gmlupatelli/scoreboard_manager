@@ -24,8 +24,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="hover:text-primary transition-colors">
-                  Sign Up
+                <Link href="/public-scoreboard-list" className="hover:text-primary transition-colors">
+                  Scoreboards
                 </Link>
               </li>
               <li>
@@ -34,8 +34,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/public-scoreboard-list" className="hover:text-primary transition-colors">
-                  Scoreboards
+                <Link href="/register" className="hover:text-primary transition-colors">
+                  Sign Up
                 </Link>
               </li>
             </ul>
