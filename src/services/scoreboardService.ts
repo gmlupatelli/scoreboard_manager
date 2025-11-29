@@ -19,6 +19,7 @@ export interface PaginatedResult<T> {
 export interface PaginationOptions {
   limit?: number;
   offset?: number;
+  search?: string;
 }
 
 const DEFAULT_PAGE_SIZE = 30;
@@ -138,27 +139,39 @@ export const scoreboardService = {
   async getPublicScoreboardsPaginated(
     options: PaginationOptions = {}
   ): Promise<PaginatedResult<Scoreboard>> {
-    const { limit = DEFAULT_PAGE_SIZE, offset = 0 } = options;
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search } = options;
     
     try {
-      // Get total count first
-      const { count: totalCount, error: countError } = await supabase
+      // Build count query with search filter
+      let countQuery = supabase
         .from('scoreboards')
         .select('*', { count: 'exact', head: true })
         .eq('visibility', 'public');
+      
+      if (search?.trim()) {
+        countQuery = countQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
+      }
+
+      const { count: totalCount, error: countError } = await countQuery;
 
       if (countError) {
         return { data: null, error: countError, hasMore: false, totalCount: 0 };
       }
 
-      // Fetch paginated data
-      const { data, error } = await supabase
+      // Build data query with search filter
+      let dataQuery = supabase
         .from('scoreboards')
         .select(`
           *,
           scoreboard_entries(count)
         `)
-        .eq('visibility', 'public')
+        .eq('visibility', 'public');
+      
+      if (search?.trim()) {
+        dataQuery = dataQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
+      }
+
+      const { data, error } = await dataQuery
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
