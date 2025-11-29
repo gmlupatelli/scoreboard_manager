@@ -298,6 +298,27 @@ const ScoreboardManagementInteractive = () => {
     }
   };
 
+  const getPublicViewUrl = () => {
+    if (typeof window === 'undefined' || !scoreboardId) return '';
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/individual-scoreboard-view?id=${scoreboardId}`;
+  };
+
+  const handleCopyUrl = async () => {
+    const url = getPublicViewUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('URL copied to clipboard', 'success');
+    } catch (err) {
+      showToast('Failed to copy URL', 'error');
+    }
+  };
+
+  const handleOpenInNewTab = () => {
+    const url = getPublicViewUrl();
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
   const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
@@ -374,9 +395,29 @@ const ScoreboardManagementInteractive = () => {
               <Icon name="UsersIcon" size={18} />
               <span>Total Entries: {entries.length}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Icon name="EyeIcon" size={18} />
-              <span className="capitalize">{scoreboard.visibility}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Icon name="EyeIcon" size={18} />
+                <span className="capitalize">{scoreboard.visibility}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleOpenInNewTab}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-smooth duration-150"
+                  title="Open public view in new tab"
+                >
+                  <Icon name="ArrowTopRightOnSquareIcon" size={16} />
+                  <span className="hidden sm:inline">View</span>
+                </button>
+                <button
+                  onClick={handleCopyUrl}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-secondary/10 text-secondary hover:bg-secondary/20 transition-smooth duration-150"
+                  title="Copy public URL to clipboard"
+                >
+                  <Icon name="ClipboardDocumentIcon" size={16} />
+                  <span className="hidden sm:inline">Copy URL</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
