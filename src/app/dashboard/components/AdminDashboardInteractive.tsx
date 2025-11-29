@@ -71,13 +71,6 @@ const AdminDashboardInteractive = () => {
     }
   }, [user, userProfile]);
 
-  // Initial load and reload when search/owner filter changes
-  useEffect(() => {
-    if (user && userProfile) {
-      loadScoreboards(true);
-    }
-  }, [user, userProfile, debouncedSearchQuery, selectedOwnerId]);
-
   // Debounce search query
   useEffect(() => {
     if (searchDebounceRef.current) {
@@ -109,31 +102,34 @@ const AdminDashboardInteractive = () => {
     }
   };
 
-  const loadScoreboards = async (isInitial = true) => {
+  const loadScoreboards = useCallback(async (
+    isInitial: boolean,
+    searchTerm: string,
+    ownerFilter: string,
+    currentOffset: number
+  ) => {
     if (isInitial) {
       setLoading(true);
-      setOffset(0);
     } else {
       setLoadingMore(true);
     }
     setError('');
     
     try {
-      const currentOffset = isInitial ? 0 : offset;
       let result;
       
       if (isSystemAdmin()) {
         result = await scoreboardService.getAllScoreboardsPaginated({
           limit: PAGE_SIZE,
           offset: currentOffset,
-          search: debouncedSearchQuery || undefined,
-          ownerId: selectedOwnerId !== 'all' ? selectedOwnerId : undefined,
+          search: searchTerm || undefined,
+          ownerId: ownerFilter !== 'all' ? ownerFilter : undefined,
         });
       } else {
         result = await scoreboardService.getUserScoreboardsPaginated(user!.id, {
           limit: PAGE_SIZE,
           offset: currentOffset,
-          search: debouncedSearchQuery || undefined,
+          search: searchTerm || undefined,
         });
       }
 
@@ -142,12 +138,13 @@ const AdminDashboardInteractive = () => {
       } else {
         if (isInitial) {
           setScoreboards(result.data || []);
+          setOffset(result.data?.length || 0);
         } else {
           setScoreboards(prev => [...prev, ...(result.data || [])]);
+          setOffset(currentOffset + (result.data?.length || 0));
         }
         setHasMore(result.hasMore);
         setTotalCount(result.totalCount);
-        setOffset(currentOffset + (result.data?.length || 0));
       }
     } catch (err) {
       setError('Failed to load scoreboards');
@@ -158,13 +155,20 @@ const AdminDashboardInteractive = () => {
         setLoadingMore(false);
       }
     }
-  };
+  }, [user, isSystemAdmin]);
+
+  // Initial load and reload when search/owner filter changes
+  useEffect(() => {
+    if (user && userProfile) {
+      loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
+    }
+  }, [user, userProfile, debouncedSearchQuery, selectedOwnerId, loadScoreboards]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadScoreboards(false);
+      loadScoreboards(false, debouncedSearchQuery, selectedOwnerId, offset);
     }
-  }, [loadingMore, hasMore, offset]);
+  }, [loadingMore, hasMore, offset, debouncedSearchQuery, selectedOwnerId, loadScoreboards]);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasMore,
@@ -186,7 +190,7 @@ const AdminDashboardInteractive = () => {
         throw error;
       }
 
-      await loadScoreboards(true);
+      await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
       return { success: true, message: 'Scoreboard created successfully' };
     } catch (err) {
       return { success: false, message: 'Failed to create scoreboard' };
@@ -198,7 +202,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.deleteScoreboard(id);
       if (error) throw error;
       
-      await loadScoreboards(true);
+      await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
       return { success: true };
     } catch (err) {
       return { success: false };
@@ -251,7 +255,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.updateScoreboard(id, { title: newTitle });
       if (error) throw error;
       
-      await loadScoreboards(true);
+      await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
       showToast('Scoreboard renamed successfully', 'success');
     } catch (err) {
       showToast('Failed to rename scoreboard', 'error');
@@ -270,7 +274,7 @@ const AdminDashboardInteractive = () => {
         const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
         if (error) throw error;
         
-        await loadScoreboards(true);
+        await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
         showToast('Scoreboard deleted successfully', 'success');
       } catch (err) {
         showToast('Failed to delete scoreboard', 'error');
