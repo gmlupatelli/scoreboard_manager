@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase/client';
 import Icon from '@/components/ui/AppIcon';
 import InviteUserModal from './InviteUserModal';
 
@@ -18,10 +19,20 @@ export default function InvitationsSection() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { 'Authorization': `Bearer ${session.access_token}` };
+    }
+    return {};
+  };
+
   const fetchInvitations = useCallback(async () => {
     try {
+      const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/invitations', {
-        credentials: 'include'
+        credentials: 'include',
+        headers: authHeaders
       });
       if (response.ok) {
         const data = await response.json();
@@ -40,9 +51,11 @@ export default function InvitationsSection() {
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(`/api/invitations/${invitationId}`, {
         method: 'DELETE',
-        credentials: 'include'
+        credentials: 'include',
+        headers: authHeaders
       });
 
       if (response.ok) {

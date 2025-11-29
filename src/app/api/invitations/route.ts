@@ -1,10 +1,33 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
 
-export async function GET() {
+function getSupabaseClient(authHeader?: string | null) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+  }
+  
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const authHeader = request.headers.get('Authorization');
+    
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const supabase = getSupabaseClient(authHeader);
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -46,7 +69,13 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const authHeader = request.headers.get('Authorization');
+    
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const supabase = getSupabaseClient(authHeader);
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -92,7 +121,7 @@ export async function POST(request: NextRequest) {
           invitee_email: normalizedEmail,
           status: 'pending',
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        } as any)
+        })
         .select()
         .single();
 
@@ -107,7 +136,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const adminClient = createAdminClient(
+    const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       serviceRoleKey,
       {
@@ -141,7 +170,7 @@ export async function POST(request: NextRequest) {
         invitee_email: normalizedEmail,
         status: 'pending',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      } as any)
+      })
       .select()
       .single();
 

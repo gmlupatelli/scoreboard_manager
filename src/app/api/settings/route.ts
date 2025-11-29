@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 const DEFAULT_SETTINGS = {
@@ -7,9 +7,28 @@ const DEFAULT_SETTINGS = {
   require_email_verification: true
 };
 
-export async function GET() {
+function getSupabaseClient(authHeader?: string | null) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+  }
+  
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const authHeader = request.headers.get('Authorization');
+    const supabase = getSupabaseClient(authHeader);
     
     const { data, error } = await supabase
       .from('system_settings')
@@ -32,13 +51,18 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const authHeader = request.headers.get('Authorization');
+    
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });
+    }
+    
+    const supabase = getSupabaseClient(authHeader);
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    console.log('PUT /api/settings - Auth check:', { user: user?.id, authError: authError?.message });
     
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized', debug: authError?.message }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { data: profile } = await supabase
@@ -68,7 +92,7 @@ export async function PUT(request: NextRequest) {
           allow_public_registration,
           require_email_verification,
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', 'default')
         .select()
         .single();
@@ -79,7 +103,7 @@ export async function PUT(request: NextRequest) {
           id: 'default',
           allow_public_registration,
           require_email_verification
-        } as any)
+        })
         .select()
         .single();
     }
@@ -90,6 +114,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(result.data);
   } catch (err) {
-    return NextResponse.json({ error: 'Failed to update settings. Please ensure the database migration has been run.' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
   }
 }
