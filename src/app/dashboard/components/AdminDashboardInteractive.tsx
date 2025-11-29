@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
@@ -23,7 +23,14 @@ interface ToastState {
   isVisible: boolean;
 }
 
+interface Owner {
+  id: string;
+  email: string;
+  fullName: string | null;
+}
+
 const PAGE_SIZE = 30;
+const SEARCH_DEBOUNCE_MS = 300;
 
 const AdminDashboardInteractive = () => {
   const router = useRouter();
@@ -32,7 +39,6 @@ const AdminDashboardInteractive = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
-  const [filteredScoreboards, setFilteredScoreboards] = useState<ScoreboardModel[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; scoreboard: ScoreboardModel | null }>({
     isOpen: false,
@@ -44,9 +50,13 @@ const AdminDashboardInteractive = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [offset, setOffset] = useState(0);
+  const [allOwners, setAllOwners] = useState<Owner[]>([]);
+  const [loadingOwners, setLoadingOwners] = useState(false);
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -54,11 +64,50 @@ const AdminDashboardInteractive = () => {
     }
   }, [user, authLoading, router]);
 
+  // Load owners for system admin dropdown
+  useEffect(() => {
+    if (user && userProfile && isSystemAdmin()) {
+      loadOwners();
+    }
+  }, [user, userProfile]);
+
+  // Initial load and reload when search/owner filter changes
   useEffect(() => {
     if (user && userProfile) {
       loadScoreboards(true);
     }
-  }, [user, userProfile]);
+  }, [user, userProfile, debouncedSearchQuery, selectedOwnerId]);
+
+  // Debounce search query
+  useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  const loadOwners = async () => {
+    setLoadingOwners(true);
+    try {
+      const { data, error } = await scoreboardService.getAllScoreboardOwners();
+      if (!error && data) {
+        setAllOwners(data);
+      }
+    } catch (err) {
+      console.error('Failed to load owners:', err);
+    } finally {
+      setLoadingOwners(false);
+    }
+  };
 
   const loadScoreboards = async (isInitial = true) => {
     if (isInitial) {
@@ -77,11 +126,14 @@ const AdminDashboardInteractive = () => {
         result = await scoreboardService.getAllScoreboardsPaginated({
           limit: PAGE_SIZE,
           offset: currentOffset,
+          search: debouncedSearchQuery || undefined,
+          ownerId: selectedOwnerId !== 'all' ? selectedOwnerId : undefined,
         });
       } else {
         result = await scoreboardService.getUserScoreboardsPaginated(user!.id, {
           limit: PAGE_SIZE,
           offset: currentOffset,
+          search: debouncedSearchQuery || undefined,
         });
       }
 
@@ -175,57 +227,24 @@ const AdminDashboardInteractive = () => {
     ? Math.round(totalEntries / scoreboards.length) 
     : 0;
 
-  const uniqueOwners = isSystemAdmin() 
-    ? Array.from(
-        new Map(
-          scoreboards
-            .filter(s => s.owner)
-            .map(s => [s.owner!.id, s.owner!])
-        ).values()
-      ).sort((a, b) => a.fullName.localeCompare(b.fullName))
-    : [];
-
-  const isAdmin = isSystemAdmin();
-  useEffect(() => {
-    if (scoreboards.length > 0) {
-      let filtered = [...scoreboards];
-      
-      if (isAdmin && selectedOwnerId !== 'all') {
-        filtered = filtered.filter(s => s.ownerId === selectedOwnerId);
-      }
-      
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(
-          (scoreboard) =>
-            scoreboard.title.toLowerCase().includes(query) ||
-            (scoreboard.subtitle && scoreboard.subtitle.toLowerCase().includes(query))
-        );
-      }
-      
-      filtered.sort((a, b) => {
-        let comparison = 0;
-        
-        switch (sortBy) {
-          case 'name':
-            comparison = a.title.localeCompare(b.title);
-            break;
-          case 'date':
-            comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-            break;
-          case 'entries':
-            comparison = (a.entryCount || 0) - (b.entryCount || 0);
-            break;
-        }
-        
-        return sortOrder === 'asc' ? comparison : -comparison;
-      });
-      
-      setFilteredScoreboards(filtered);
-    } else {
-      setFilteredScoreboards([]);
+  // Apply client-side sorting only (search and owner filtering is done server-side)
+  const sortedScoreboards = [...scoreboards].sort((a, b) => {
+    let comparison = 0;
+    
+    switch (sortBy) {
+      case 'name':
+        comparison = a.title.localeCompare(b.title);
+        break;
+      case 'date':
+        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        break;
+      case 'entries':
+        comparison = (a.entryCount || 0) - (b.entryCount || 0);
+        break;
     }
-  }, [sortBy, sortOrder, scoreboards, selectedOwnerId, isAdmin, searchQuery]);
+    
+    return sortOrder === 'asc' ? comparison : -comparison;
+  });
 
   const handleRenameScoreboard = async (id: string, newTitle: string) => {
     try {
@@ -327,7 +346,7 @@ const AdminDashboardInteractive = () => {
                   />
 
                   <div className="flex flex-wrap items-center gap-4">
-                    {isSystemAdmin() && uniqueOwners.length > 0 && (
+                    {isSystemAdmin() && (
                       <div className="flex items-center space-x-2">
                         <label htmlFor="ownerFilter" className="text-sm font-medium text-text-secondary">
                           Owner:
@@ -336,15 +355,15 @@ const AdminDashboardInteractive = () => {
                           id="ownerFilter"
                           ariaLabel="Filter scoreboards by owner"
                           options={[
-                            { value: 'all', label: `All Users (${uniqueOwners.length})` },
-                            ...uniqueOwners.map((owner) => ({
+                            { value: 'all', label: `All Owners (${allOwners.length})` },
+                            ...allOwners.map((owner) => ({
                               value: owner.id,
-                              label: `${owner.fullName} (${scoreboards.filter(s => s.ownerId === owner.id).length})`,
+                              label: owner.fullName || owner.email,
                             })),
                           ]}
                           value={selectedOwnerId}
                           onChange={setSelectedOwnerId}
-                          placeholder="Filter by owner..."
+                          placeholder={loadingOwners ? "Loading owners..." : "Filter by owner..."}
                           emptyMessage="No owners found"
                           className="min-w-[220px]"
                         />
@@ -382,10 +401,10 @@ const AdminDashboardInteractive = () => {
                 </div>
               </div>
 
-              {filteredScoreboards.length > 0 ? (
+              {sortedScoreboards.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredScoreboards.map((scoreboard) => (
+                    {sortedScoreboards.map((scoreboard) => (
                       <ScoreboardCard
                         key={scoreboard.id}
                         id={scoreboard.id}
