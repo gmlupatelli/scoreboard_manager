@@ -428,6 +428,7 @@ const AdminDashboardInteractive = () => {
                         entryCount={scoreboard.entryCount || 0}
                         createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
                         ownerName={isAdmin ? scoreboard.owner?.fullName : undefined}
+                        visibility={scoreboard.visibility}
                         onRename={handleRenameScoreboard}
                         onDelete={() => handleDeleteConfirmation(scoreboard)}
                         onNavigate={handleNavigateToScoreboard}

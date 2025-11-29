@@ -150,7 +150,7 @@ const EditScoreboardModal = ({
                     className="w-4 h-4 text-primary border-input focus:ring-primary"
                   />
                   <span className="ml-2 text-sm text-text-primary flex items-center">
-                    <Icon name="GlobeAltIcon" size={16} className="mr-1 text-green-500" />
+                    <Icon name="GlobeAltIcon" size={16} className="mr-1" />
                     Public
                   </span>
                 </label>
@@ -164,7 +164,7 @@ const EditScoreboardModal = ({
                     className="w-4 h-4 text-primary border-input focus:ring-primary"
                   />
                   <span className="ml-2 text-sm text-text-primary flex items-center">
-                    <Icon name="LockClosedIcon" size={16} className="mr-1 text-amber-500" />
+                    <Icon name="LockClosedIcon" size={16} className="mr-1" />
                     Private
                   </span>
                 </label>
