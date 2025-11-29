@@ -219,27 +219,39 @@ export const scoreboardService = {
     userId: string,
     options: PaginationOptions = {}
   ): Promise<PaginatedResult<Scoreboard>> {
-    const { limit = DEFAULT_PAGE_SIZE, offset = 0 } = options;
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search } = options;
     
     try {
-      // Get total count first
-      const { count: totalCount, error: countError } = await supabase
+      // Build count query with search filter
+      let countQuery = supabase
         .from('scoreboards')
         .select('*', { count: 'exact', head: true })
         .eq('owner_id', userId);
+      
+      if (search?.trim()) {
+        countQuery = countQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
+      }
+
+      const { count: totalCount, error: countError } = await countQuery;
 
       if (countError) {
         return { data: null, error: countError, hasMore: false, totalCount: 0 };
       }
 
-      // Fetch paginated data
-      const { data, error } = await supabase
+      // Build data query with search filter
+      let dataQuery = supabase
         .from('scoreboards')
         .select(`
           *,
           scoreboard_entries(count)
         `)
-        .eq('owner_id', userId)
+        .eq('owner_id', userId);
+      
+      if (search?.trim()) {
+        dataQuery = dataQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
+      }
+
+      const { data, error } = await dataQuery
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -297,28 +309,48 @@ export const scoreboardService = {
 
   // Get all scoreboards with pagination (system admin only)
   async getAllScoreboardsPaginated(
-    options: PaginationOptions = {}
+    options: PaginationOptions & { ownerId?: string } = {}
   ): Promise<PaginatedResult<Scoreboard>> {
-    const { limit = DEFAULT_PAGE_SIZE, offset = 0 } = options;
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search, ownerId } = options;
     
     try {
-      // Get total count first
-      const { count: totalCount, error: countError } = await supabase
+      // Build count query with search and owner filters
+      let countQuery = supabase
         .from('scoreboards')
         .select('*', { count: 'exact', head: true });
+      
+      if (search?.trim()) {
+        countQuery = countQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
+      }
+      
+      if (ownerId) {
+        countQuery = countQuery.eq('owner_id', ownerId);
+      }
+
+      const { count: totalCount, error: countError } = await countQuery;
 
       if (countError) {
         return { data: null, error: countError, hasMore: false, totalCount: 0 };
       }
 
-      // Fetch paginated data with owner info
-      const { data, error } = await supabase
+      // Build data query with search and owner filters
+      let dataQuery = supabase
         .from('scoreboards')
         .select(`
           *,
           scoreboard_entries(count),
           user_profiles!owner_id(id, email, full_name, role)
-        `)
+        `);
+      
+      if (search?.trim()) {
+        dataQuery = dataQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
+      }
+      
+      if (ownerId) {
+        dataQuery = dataQuery.eq('owner_id', ownerId);
+      }
+
+      const { data, error } = await dataQuery
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -350,6 +382,49 @@ export const scoreboardService = {
     } catch (e) {
       console.error('Error in getAllScoreboardsPaginated:', e);
       return { data: null, error: e as Error, hasMore: false, totalCount: 0 };
+    }
+  },
+
+  // Get all unique scoreboard owners (for admin dropdown)
+  async getAllScoreboardOwners(): Promise<{ 
+    data: Array<{ id: string; email: string; fullName: string | null }> | null; 
+    error: Error | null 
+  }> {
+    try {
+      // Get distinct owner_ids from scoreboards and join with user_profiles
+      const { data, error } = await supabase
+        .from('scoreboards')
+        .select(`
+          owner_id,
+          user_profiles!owner_id(id, email, full_name)
+        `)
+        .order('owner_id');
+
+      if (error) {
+        return { data: null, error };
+      }
+
+      // Deduplicate owners
+      const ownersMap = new Map<string, { id: string; email: string; fullName: string | null }>();
+      (data || []).forEach((row: any) => {
+        if (row.user_profiles && !ownersMap.has(row.owner_id)) {
+          ownersMap.set(row.owner_id, {
+            id: row.user_profiles.id,
+            email: row.user_profiles.email,
+            fullName: row.user_profiles.full_name,
+          });
+        }
+      });
+
+      return { 
+        data: Array.from(ownersMap.values()).sort((a, b) => 
+          (a.fullName || a.email).localeCompare(b.fullName || b.email)
+        ), 
+        error: null 
+      };
+    } catch (e) {
+      console.error('Error in getAllScoreboardOwners:', e);
+      return { data: null, error: e as Error };
     }
   },
 
