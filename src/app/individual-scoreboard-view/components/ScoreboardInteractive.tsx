@@ -51,6 +51,20 @@ const ScoreboardInteractive: React.FC = () => {
     }
     
     loadScoreboardData();
+
+    // Set up real-time subscription
+    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
+      scoreboardId,
+      () => {
+        console.log('Real-time update detected, refreshing data...');
+        loadScoreboardData();
+      }
+    );
+
+    // Cleanup subscription on unmount or when scoreboardId changes
+    return () => {
+      unsubscribe();
+    };
   }, [isHydrated, scoreboardId]);
 
   const loadScoreboardData = async () => {
