@@ -25,6 +25,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
       const response = await fetch('/api/invitations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: email.toLowerCase().trim() })
       });
 

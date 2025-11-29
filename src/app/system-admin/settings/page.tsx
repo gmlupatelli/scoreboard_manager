@@ -41,7 +41,9 @@ export default function SystemAdminSettingsPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const response = await fetch('/api/settings');
+      const response = await fetch('/api/settings', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setSettings(data);
@@ -53,7 +55,9 @@ export default function SystemAdminSettingsPage() {
 
   const fetchInvitations = useCallback(async () => {
     try {
-      const response = await fetch('/api/invitations');
+      const response = await fetch('/api/invitations', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setInvitations(data);
@@ -93,6 +97,7 @@ export default function SystemAdminSettingsPage() {
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...settings,
           [field]: newValue
@@ -118,7 +123,8 @@ export default function SystemAdminSettingsPage() {
   const handleCancelInvitation = async (invitationId: string) => {
     try {
       const response = await fetch(`/api/invitations/${invitationId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
 
       if (response.ok) {
