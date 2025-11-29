@@ -17,24 +17,10 @@ interface SystemSettings {
   updated_at: string;
 }
 
-interface Invitation {
-  id: string;
-  inviter_id: string | null;
-  invitee_email: string;
-  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
-  expires_at: string;
-  created_at: string;
-  inviter?: {
-    full_name: string;
-    email: string;
-  };
-}
-
 export default function SystemAdminSettingsPage() {
   const router = useRouter();
   const { user, userProfile, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<SystemSettings | null>(null);
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -64,22 +50,6 @@ export default function SystemAdminSettingsPage() {
     }
   }, []);
 
-  const fetchInvitations = useCallback(async () => {
-    try {
-      const authHeaders = await getAuthHeaders();
-      const response = await fetch('/api/invitations', {
-        credentials: 'include',
-        headers: authHeaders
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setInvitations(data);
-      }
-    } catch (err) {
-      // Silently fail for invitations
-    }
-  }, []);
-
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
@@ -91,11 +61,11 @@ export default function SystemAdminSettingsPage() {
         return;
       }
       
-      Promise.all([fetchSettings(), fetchInvitations()]).finally(() => {
+      fetchSettings().finally(() => {
         setLoading(false);
       });
     }
-  }, [user, userProfile, authLoading, router, fetchSettings, fetchInvitations]);
+  }, [user, userProfile, authLoading, router, fetchSettings]);
 
   const handleToggle = async (field: 'allow_public_registration' | 'require_email_verification') => {
     if (!settings) return;
@@ -134,40 +104,6 @@ export default function SystemAdminSettingsPage() {
       setError('Failed to update settings');
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleCancelInvitation = async (invitationId: string) => {
-    try {
-      const authHeaders = await getAuthHeaders();
-      const response = await fetch(`/api/invitations/${invitationId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: authHeaders
-      });
-
-      if (response.ok) {
-        setInvitations(prev => prev.map(inv => 
-          inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
-        ));
-        setSuccess('Invitation cancelled');
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        const data = await response.json();
-        setError(data.error || 'Failed to cancel invitation');
-      }
-    } catch (err) {
-      setError('Failed to cancel invitation');
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-warning/10 text-warning';
-      case 'accepted': return 'bg-success/10 text-success';
-      case 'expired': return 'bg-muted text-text-secondary';
-      case 'cancelled': return 'bg-destructive/10 text-destructive';
-      default: return 'bg-muted text-text-secondary';
     }
   };
 
@@ -279,62 +215,6 @@ export default function SystemAdminSettingsPage() {
                     </p>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-6 elevation-1">
-            <h2 className="text-xl font-semibold text-text-primary mb-6 flex items-center">
-              <Icon name="EnvelopeIcon" size={24} className="mr-2 text-primary" />
-              All Invitations
-            </h2>
-
-            {invitations.length === 0 ? (
-              <div className="text-center py-8">
-                <Icon name="EnvelopeIcon" size={48} className="mx-auto text-text-secondary opacity-50 mb-4" />
-                <p className="text-text-secondary">No invitations have been sent yet.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Email</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Invited By</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Expires</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium text-text-secondary">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invitations.map((invitation) => (
-                      <tr key={invitation.id} className="border-b border-border last:border-b-0">
-                        <td className="py-3 px-4 text-sm text-text-primary">{invitation.invitee_email}</td>
-                        <td className="py-3 px-4 text-sm text-text-secondary">
-                          {invitation.inviter?.full_name || invitation.inviter?.email || 'Unknown'}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(invitation.status)}`}>
-                            {invitation.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-text-secondary">
-                          {new Date(invitation.expires_at).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          {invitation.status === 'pending' && (
-                            <button
-                              onClick={() => handleCancelInvitation(invitation.id)}
-                              className="text-destructive hover:text-destructive/80 text-sm font-medium"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             )}
           </div>
