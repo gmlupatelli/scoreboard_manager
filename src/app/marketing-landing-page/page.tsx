@@ -187,7 +187,7 @@ export default function MarketingLandingPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="bg-surface border border-border rounded-2xl p-8 elevation-2">
+              <div className="bg-surface border border-border rounded-2xl p-6 elevation-2">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -195,8 +195,8 @@ export default function MarketingLandingPage() {
                         <Icon name="TrophyIcon" size={20} className="text-white" />
                       </div>
                       <div>
-                        <p className="font-semibold text-text-primary">Championship Finals</p>
-                        <p className="text-sm text-text-secondary">Live Now</p>
+                        <p className="font-semibold text-text-primary">Q4 Sales Performance</p>
+                        <p className="text-sm text-text-secondary">Top Performers</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 px-3 py-1 bg-success/10 rounded-full">
@@ -204,26 +204,43 @@ export default function MarketingLandingPage() {
                       <span className="text-xs font-semibold text-success">LIVE</span>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 py-6 border-y border-border">
-                    <div className="text-center">
-                      <p className="text-4xl font-bold text-primary">42</p>
-                      <p className="text-sm text-text-secondary mt-1">Team A</p>
-                    </div>
-                    <div className="flex items-center justify-center">
-                      <div className="text-2xl font-bold text-text-secondary">VS</div>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-4xl font-bold text-secondary">38</p>
-                      <p className="text-sm text-text-secondary mt-1">Team B</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {['Player A scored +3', 'Player B scored +2', 'Timeout called'].map((update, index) => (
-                      <div key={index} className="flex items-center space-x-2 text-sm">
-                        <Icon name="ClockIcon" size={14} className="text-text-secondary" />
-                        <span className="text-text-secondary">{update}</span>
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between p-3 bg-warning/10 rounded-lg border border-warning/20">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">1</span>
+                        </div>
+                        <span className="font-medium text-text-primary">Sarah Johnson</span>
                       </div>
-                    ))}
+                      <span className="text-lg font-bold text-primary">98,500</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-text-secondary flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">2</span>
+                        </div>
+                        <span className="font-medium text-text-primary">Michael Chen</span>
+                      </div>
+                      <span className="text-lg font-bold text-text-primary">87,200</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                          <span className="text-sm font-bold text-white">3</span>
+                        </div>
+                        <span className="font-medium text-text-primary">Emily Rodriguez</span>
+                      </div>
+                      <span className="text-lg font-bold text-text-primary">76,800</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-border flex items-center justify-center">
+                          <span className="text-sm font-bold text-text-secondary">4</span>
+                        </div>
+                        <span className="font-medium text-text-secondary">David Kim</span>
+                      </div>
+                      <span className="text-lg font-bold text-text-secondary">65,400</span>
+                    </div>
                   </div>
                 </div>
               </div>
