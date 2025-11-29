@@ -300,13 +300,22 @@ const AdminDashboardInteractive = () => {
             </div>
             <div className="flex items-center space-x-3 mt-4 sm:mt-0">
               {isAdmin && (
-                <button
-                  onClick={() => router.push('/system-admin/settings')}
-                  className="flex items-center space-x-2 px-4 py-2 border border-border text-text-secondary rounded-md hover:bg-muted transition-smooth"
-                >
-                  <Icon name="Cog6ToothIcon" size={20} />
-                  <span>Settings</span>
-                </button>
+                <>
+                  <Link
+                    href="/system-admin/invitations"
+                    className="flex items-center space-x-2 px-4 py-2 border border-border text-text-secondary rounded-md hover:bg-muted transition-smooth"
+                  >
+                    <Icon name="EnvelopeIcon" size={20} />
+                    <span>Invitations</span>
+                  </Link>
+                  <button
+                    onClick={() => router.push('/system-admin/settings')}
+                    className="flex items-center space-x-2 px-4 py-2 border border-border text-text-secondary rounded-md hover:bg-muted transition-smooth"
+                  >
+                    <Icon name="Cog6ToothIcon" size={20} />
+                    <span>Settings</span>
+                  </button>
+                </>
               )}
               {!isAdmin && (
                 <>

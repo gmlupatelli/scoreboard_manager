@@ -12,6 +12,14 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### November 29, 2025 - System Admin Invitations Management Page
+- Created dedicated System Admin Invitations page at /system-admin/invitations
+- Added search by invitee email, filter by status, and filter by inviter
+- Implemented page-based pagination (20 items per page) for performance
+- Added API endpoint for fetching inviters list (/api/invitations/inviters)
+- Updated /api/invitations with optional paginated mode (paginated=true query param)
+- Added navigation link to Invitations page from System Admin Dashboard
+
 ### November 29, 2025 - User Invitation System
 - Added system_settings and invitations database tables with RLS policies
 - Created API routes for invitation management (send, list, check, accept, cancel)

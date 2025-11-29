@@ -40,6 +40,72 @@ export async function GET(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
+    const isSystemAdmin = profile?.role === 'system_admin';
+
+    const { searchParams } = new URL(request.url);
+    const paginated = searchParams.get('paginated') === 'true';
+    const search = searchParams.get('search') || '';
+    const status = searchParams.get('status') || '';
+    const ownerId = searchParams.get('ownerId') || '';
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const offset = (page - 1) * limit;
+
+    if (paginated) {
+      let countQuery = supabase
+        .from('invitations')
+        .select('id', { count: 'exact', head: true });
+
+      let query = supabase
+        .from('invitations')
+        .select(`
+          *,
+          inviter:user_profiles!inviter_id(id, full_name, email)
+        `)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (!isSystemAdmin) {
+        query = query.eq('inviter_id', user.id);
+        countQuery = countQuery.eq('inviter_id', user.id);
+      } else {
+        if (ownerId) {
+          query = query.eq('inviter_id', ownerId);
+          countQuery = countQuery.eq('inviter_id', ownerId);
+        }
+      }
+
+      if (search) {
+        query = query.ilike('invitee_email', `%${search}%`);
+        countQuery = countQuery.ilike('invitee_email', `%${search}%`);
+      }
+
+      if (status) {
+        query = query.eq('status', status);
+        countQuery = countQuery.eq('status', status);
+      }
+
+      const [{ data, error }, { count }] = await Promise.all([
+        query,
+        countQuery
+      ]);
+
+      if (error) {
+        if (error.code === '42P01') {
+          return NextResponse.json({ data: [], totalCount: 0, page, limit, totalPages: 0 });
+        }
+        return NextResponse.json({ data: [], totalCount: 0, page, limit, totalPages: 0 });
+      }
+
+      return NextResponse.json({
+        data: data || [],
+        totalCount: count || 0,
+        page,
+        limit,
+        totalPages: Math.ceil((count || 0) / limit)
+      });
+    }
+
     let query = supabase
       .from('invitations')
       .select(`
@@ -48,7 +114,7 @@ export async function GET(request: NextRequest) {
       `)
       .order('created_at', { ascending: false });
 
-    if (profile?.role !== 'system_admin') {
+    if (!isSystemAdmin) {
       query = query.eq('inviter_id', user.id);
     }
 
