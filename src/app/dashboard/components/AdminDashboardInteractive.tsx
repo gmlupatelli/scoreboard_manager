@@ -15,7 +15,7 @@ import EmptyState from './EmptyState';
 import StatsCard from './StatsCard';
 import Icon from '@/components/ui/AppIcon';
 import SearchableSelect from '@/components/ui/SearchableSelect';
-import InvitationsSection from './InvitationsSection';
+import Link from 'next/link';
 
 interface ToastState {
   message: string;
@@ -309,13 +309,23 @@ const AdminDashboardInteractive = () => {
                 </button>
               )}
               {!isAdmin && (
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
-                >
-                  <Icon name="PlusIcon" size={20} />
-                  <span>Create New Scoreboard</span>
-                </button>
+                <>
+                  <Link
+                    href="/invitations"
+                    className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
+                    title="Invite Users"
+                  >
+                    <Icon name="UserPlusIcon" size={20} />
+                    <span className="hidden sm:inline">Invite</span>
+                  </Link>
+                  <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
+                  >
+                    <Icon name="PlusIcon" size={20} />
+                    <span>Create New Scoreboard</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -339,10 +349,6 @@ const AdminDashboardInteractive = () => {
               icon="ChartBarIcon"
               description="Average participation rate"
             />
-          </div>
-
-          <div className="mb-8">
-            <InvitationsSection />
           </div>
 
           {loading ? (
