@@ -52,9 +52,15 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
       <nav className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link href={isAuthenticated ? '/dashboard' : '/'} className="flex items-center space-x-3 hover-lift">
+            <Link
+              href={isAuthenticated ? '/dashboard' : '/'}
+              className="flex items-center space-x-3 hover-lift"
+            >
               <Logo size={40} />
-              <span className="text-2xl font-bold text-text-primary hidden sm:block tracking-tight" style={{ fontWeight: 700 }}>
+              <span
+                className="text-2xl font-bold text-text-primary hidden sm:block tracking-tight"
+                style={{ fontWeight: 700 }}
+              >
                 Scoreboard Manager
               </span>
             </Link>
@@ -67,6 +73,20 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
             >
               <Icon name="SparklesIcon" size={18} />
               <span>Features</span>
+            </Link>
+            <Link
+              href="/#benefits"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+            >
+              <Icon name="CheckBadgeIcon" size={18} />
+              <span>Benefits</span>
+            </Link>
+            <Link
+              href="/#testimonials"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+            >
+              <Icon name="ChatBubbleLeftRightIcon" size={18} />
+              <span>Testimonials</span>
             </Link>
             <Link
               href="/public-scoreboard-list"
@@ -87,12 +107,19 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                     <Icon name="UserIcon" size={18} className="text-primary-foreground" />
                   </div>
                   <span className="text-sm font-medium">{displayName}</span>
-                  <Icon name="ChevronDownIcon" size={16} className={`transition-transform duration-150 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                  <Icon
+                    name="ChevronDownIcon"
+                    size={16}
+                    className={`transition-transform duration-150 ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
 
                 {isUserMenuOpen && (
                   <>
-                    <div className="fixed inset-0 z-[1009]" onClick={() => setIsUserMenuOpen(false)} />
+                    <div
+                      className="fixed inset-0 z-[1009]"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    />
                     <div className="absolute right-0 mt-2 w-48 bg-popover border border-border rounded-md elevation-2 z-[1010]">
                       <div className="py-1">
                         <Link
@@ -175,6 +202,22 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                 <span>Features</span>
               </Link>
               <Link
+                href="/#benefits"
+                className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon name="CheckBadgeIcon" size={20} />
+                <span>Benefits</span>
+              </Link>
+              <Link
+                href="/#testimonials"
+                className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon name="ChatBubbleLeftRightIcon" size={20} />
+                <span>Testimonials</span>
+              </Link>
+              <Link
                 href="/public-scoreboard-list"
                 className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -191,7 +234,9 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                     <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                       <Icon name="UserIcon" size={20} className="text-primary-foreground" />
                     </div>
-                    <span className="ml-3 text-base font-medium text-text-primary">{displayName}</span>
+                    <span className="ml-3 text-base font-medium text-text-primary">
+                      {displayName}
+                    </span>
                   </div>
                   <Link
                     href="/user-profile-management"
