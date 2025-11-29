@@ -169,20 +169,21 @@ const ScoreboardManagementInteractive = () => {
     setToast({ message, type, isVisible: true });
   };
 
-  const handleEditScoreboard = async (title: string, subtitle: string) => {
+  const handleEditScoreboard = async (title: string, subtitle: string, visibility: 'public' | 'private') => {
     if (!scoreboard) return;
     
     try {
       const { error } = await scoreboardService.updateScoreboard(scoreboard.id, {
         title,
-        subtitle
+        subtitle,
+        visibility
       });
       
       if (error) throw error;
       
       await loadScoreboardData();
       showToast('Scoreboard details updated successfully', 'success');
-    } catch (err) {
+    } catch {
       showToast('Failed to update scoreboard details', 'error');
     }
   };
@@ -594,6 +595,7 @@ const ScoreboardManagementInteractive = () => {
         onSave={handleEditScoreboard}
         currentTitle={scoreboard?.title || ''}
         currentSubtitle={scoreboard?.subtitle || ''}
+        currentVisibility={scoreboard?.visibility || 'public'}
       />
 
       <ConfirmationModal

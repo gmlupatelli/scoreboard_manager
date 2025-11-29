@@ -6,9 +6,10 @@ import Icon from '@/components/ui/AppIcon';
 interface EditScoreboardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, subtitle: string) => void;
+  onSave: (title: string, subtitle: string, visibility: 'public' | 'private') => void;
   currentTitle: string;
   currentSubtitle: string;
+  currentVisibility: 'public' | 'private';
 }
 
 const EditScoreboardModal = ({ 
@@ -16,19 +17,22 @@ const EditScoreboardModal = ({
   onClose, 
   onSave, 
   currentTitle, 
-  currentSubtitle 
+  currentSubtitle,
+  currentVisibility
 }: EditScoreboardModalProps) => {
   const [title, setTitle] = useState(currentTitle);
   const [subtitle, setSubtitle] = useState(currentSubtitle);
+  const [visibility, setVisibility] = useState<'public' | 'private'>(currentVisibility);
   const [errors, setErrors] = useState({ title: '', subtitle: '' });
 
   useEffect(() => {
     if (isOpen) {
       setTitle(currentTitle);
       setSubtitle(currentSubtitle);
+      setVisibility(currentVisibility);
       setErrors({ title: '', subtitle: '' });
     }
-  }, [isOpen, currentTitle, currentSubtitle]);
+  }, [isOpen, currentTitle, currentSubtitle, currentVisibility]);
 
   const validateForm = () => {
     const newErrors = { title: '', subtitle: '' };
@@ -58,7 +62,7 @@ const EditScoreboardModal = ({
     e.preventDefault();
     
     if (validateForm()) {
-      onSave(title.trim(), subtitle.trim());
+      onSave(title.trim(), subtitle.trim(), visibility);
       onClose();
     }
   };
@@ -66,6 +70,7 @@ const EditScoreboardModal = ({
   const handleClose = () => {
     setTitle(currentTitle);
     setSubtitle(currentSubtitle);
+    setVisibility(currentVisibility);
     setErrors({ title: '', subtitle: '' });
     onClose();
   };
@@ -128,6 +133,47 @@ const EditScoreboardModal = ({
               {errors.subtitle && (
                 <p className="mt-1 text-xs text-destructive">{errors.subtitle}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                Visibility
+              </label>
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="public"
+                    checked={visibility === 'public'}
+                    onChange={() => setVisibility('public')}
+                    className="w-4 h-4 text-primary border-input focus:ring-primary"
+                  />
+                  <span className="ml-2 text-sm text-text-primary flex items-center">
+                    <Icon name="GlobeAltIcon" size={16} className="mr-1 text-green-500" />
+                    Public
+                  </span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="private"
+                    checked={visibility === 'private'}
+                    onChange={() => setVisibility('private')}
+                    className="w-4 h-4 text-primary border-input focus:ring-primary"
+                  />
+                  <span className="ml-2 text-sm text-text-primary flex items-center">
+                    <Icon name="LockClosedIcon" size={16} className="mr-1 text-amber-500" />
+                    Private
+                  </span>
+                </label>
+              </div>
+              <p className="mt-1 text-xs text-text-secondary">
+                {visibility === 'public' 
+                  ? 'Anyone can view this scoreboard' 
+                  : 'Only you can view this scoreboard'}
+              </p>
             </div>
 
             <div className="flex items-center justify-end space-x-3 pt-4">
