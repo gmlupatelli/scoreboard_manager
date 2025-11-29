@@ -88,6 +88,61 @@ export interface Database {
           updated_at?: string;
         };
       };
+      system_settings: {
+        Row: {
+          id: string;
+          allow_public_registration: boolean;
+          require_email_verification: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          allow_public_registration?: boolean;
+          require_email_verification?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          allow_public_registration?: boolean;
+          require_email_verification?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      invitations: {
+        Row: {
+          id: string;
+          inviter_id: string | null;
+          invitee_email: string;
+          status: 'pending' | 'accepted' | 'expired' | 'cancelled';
+          accepted_at: string | null;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          inviter_id: string;
+          invitee_email: string;
+          status?: 'pending' | 'accepted' | 'expired' | 'cancelled';
+          accepted_at?: string | null;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          inviter_id?: string | null;
+          invitee_email?: string;
+          status?: 'pending' | 'accepted' | 'expired' | 'cancelled';
+          accepted_at?: string | null;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 }
