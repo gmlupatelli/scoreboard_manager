@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
 import Logo from '@/components/ui/Logo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,7 +16,8 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { userProfile, user } = useAuth();
+  const router = useRouter();
+  const { userProfile, user, signOut } = useAuth();
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -33,9 +34,14 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
 
   const isActivePath = (path: string) => pathname === path;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsUserMenuOpen(false);
-    onLogout?.();
+    if (onLogout) {
+      onLogout();
+    } else {
+      await signOut();
+      router.push('/public-scoreboard-list');
+    }
   };
 
   // Display name logic: prefer fullName, fallback to email, then "User"
