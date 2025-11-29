@@ -1,54 +1,89 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { scoreboardService } from '../../../services/scoreboardService';
+import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import Icon from '@/components/ui/AppIcon';
 import PublicScoreboardCard from './PublicScoreboardCard';
 import Header from '../../../components/common/Header';
 import { Scoreboard } from '../../../types/models';
 
+const PAGE_SIZE = 30;
+
 const PublicScoreboardInteractive = () => {
   const router = useRouter();
   const [scoreboards, setScoreboards] = useState<Scoreboard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest');
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [offset, setOffset] = useState(0);
 
-  useEffect(() => {
-    loadPublicScoreboards();
-  }, []);
-
-  const loadPublicScoreboards = async () => {
-    setLoading(true);
+  const loadPublicScoreboards = async (isInitial = true) => {
+    if (isInitial) {
+      setLoading(true);
+      setOffset(0);
+    } else {
+      setLoadingMore(true);
+    }
     setError('');
 
     try {
-      console.log('Loading scoreboards...');
-      const { data, error } = await scoreboardService.getPublicScoreboards();
-      console.log('Got result:', { data, error });
+      const currentOffset = isInitial ? 0 : offset;
+      const { data, error, hasMore: more, totalCount: count } = 
+        await scoreboardService.getPublicScoreboardsPaginated({
+          limit: PAGE_SIZE,
+          offset: currentOffset,
+        });
       
       if (error) {
         console.error('Error loading scoreboards:', error);
         setError(error.message);
       } else {
-        console.log('Setting scoreboards:', data);
-        setScoreboards(data || []);
+        if (isInitial) {
+          setScoreboards(data || []);
+        } else {
+          setScoreboards(prev => [...prev, ...(data || [])]);
+        }
+        setHasMore(more);
+        setTotalCount(count);
+        setOffset(currentOffset + (data?.length || 0));
       }
     } catch (err) {
       console.error('Caught error:', err);
       setError('Failed to load scoreboards');
     } finally {
-      console.log('Setting loading to false');
-      setLoading(false);
+      if (isInitial) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
   };
+
+  useEffect(() => {
+    loadPublicScoreboards(true);
+  }, []);
+
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      loadPublicScoreboards(false);
+    }
+  }, [loadingMore, hasMore, offset]);
+
+  const { loadMoreRef } = useInfiniteScroll({
+    hasMore,
+    isLoading: loadingMore,
+    onLoadMore: handleLoadMore,
+  });
 
   const filteredAndSortedScoreboards = useMemo(() => {
     let filtered = scoreboards;
 
-    // Filter by search query
     if (searchQuery?.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -58,7 +93,6 @@ const PublicScoreboardInteractive = () => {
       );
     }
 
-    // Sort
     const sorted = [...filtered].sort((a, b) => {
       if (sortBy === 'title') {
         return (a?.title || '').localeCompare(b?.title || '');
@@ -85,7 +119,6 @@ const PublicScoreboardInteractive = () => {
             <p className="text-muted-foreground">Browse and view public scoreboards from the community</p>
           </div>
 
-          {/* Search and filters */}
           <div className="mb-6 flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px] relative">
               <Icon name="MagnifyingGlassIcon" size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -108,12 +141,13 @@ const PublicScoreboardInteractive = () => {
             </select>
           </div>
 
-          {/* Stats Overview */}
           {!loading && !error && (
             <div className="mb-6 flex items-center space-x-6 text-sm text-muted-foreground">
               <div className="flex items-center space-x-2">
                 <Icon name="ChartBarIcon" size={16} />
-                <span>{scoreboards.length} public scoreboards</span>
+                <span>
+                  {scoreboards.length} of {totalCount} public scoreboards loaded
+                </span>
               </div>
               {filteredAndSortedScoreboards.length !== scoreboards.length && (
                 <div className="flex items-center space-x-2">
@@ -124,7 +158,6 @@ const PublicScoreboardInteractive = () => {
             </div>
           )}
 
-          {/* Scoreboards grid */}
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -144,11 +177,28 @@ const PublicScoreboardInteractive = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAndSortedScoreboards.map((scoreboard) => (
-                <PublicScoreboardCard key={scoreboard?.id} scoreboard={scoreboard} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAndSortedScoreboards.map((scoreboard) => (
+                  <PublicScoreboardCard key={scoreboard?.id} scoreboard={scoreboard} />
+                ))}
+              </div>
+              
+              {/* Infinite scroll trigger */}
+              <div ref={loadMoreRef} className="py-8 flex justify-center">
+                {loadingMore && (
+                  <div className="flex items-center space-x-3">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span className="text-muted-foreground">Loading more...</span>
+                  </div>
+                )}
+                {!hasMore && scoreboards.length > 0 && (
+                  <span className="text-muted-foreground text-sm">
+                    All {totalCount} scoreboards loaded
+                  </span>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>
