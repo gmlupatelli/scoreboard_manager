@@ -46,7 +46,6 @@ const AdminDashboardInteractive = () => {
   const [toast, setToast] = useState<ToastState>({ message: '', type: 'info', isVisible: false });
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'entries'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
@@ -80,8 +79,7 @@ const AdminDashboardInteractive = () => {
       if (!error && data) {
         setAllOwners(data);
       }
-    } catch (err) {
-      console.error('Failed to load owners:', err);
+    } catch {
     } finally {
       setLoadingOwners(false);
     }
@@ -268,8 +266,6 @@ const AdminDashboardInteractive = () => {
 
   const confirmDelete = async () => {
     if (deleteModal.scoreboard) {
-      setIsLoading(true);
-      
       try {
         const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
         if (error) throw error;
@@ -280,7 +276,6 @@ const AdminDashboardInteractive = () => {
         showToast('Failed to delete scoreboard', 'error');
       } finally {
         setDeleteModal({ isOpen: false, scoreboard: null });
-        setIsLoading(false);
       }
     }
   };

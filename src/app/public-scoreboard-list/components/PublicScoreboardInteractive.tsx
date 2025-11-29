@@ -46,7 +46,6 @@ const PublicScoreboardInteractive = () => {
         });
       
       if (error) {
-        console.error('Error loading scoreboards:', error);
         setError(error.message);
       } else {
         if (isInitial) {
@@ -58,8 +57,7 @@ const PublicScoreboardInteractive = () => {
         setTotalCount(count);
         setOffset(currentOffset + (data?.length || 0));
       }
-    } catch (err) {
-      console.error('Caught error:', err);
+    } catch {
       setError('Failed to load scoreboards');
     } finally {
       if (isInitial) {
