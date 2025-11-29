@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react';
 import Icon from '@/components/ui/AppIcon';
 
@@ -31,6 +31,13 @@ export default function SearchableSelect({
   ariaLabel,
 }: SearchableSelectProps) {
   const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFocus = () => {
+    if (inputRef.current) {
+      inputRef.current.select();
+    }
+  };
 
   const selectedOption = useMemo(() => {
     return options.find((option) => option.value === value) || null;
@@ -58,11 +65,13 @@ export default function SearchableSelect({
       <div className={`relative ${className}`}>
         <div className="relative">
           <ComboboxInput
+            ref={inputRef}
             id={id}
             aria-label={ariaLabel}
             className="w-full px-3 py-2 pr-10 bg-background border border-border rounded-md text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             displayValue={(option: SelectOption | null) => option?.label || ''}
             onChange={(event) => setQuery(event.target.value)}
+            onFocus={handleFocus}
             placeholder={placeholder}
           />
           <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
