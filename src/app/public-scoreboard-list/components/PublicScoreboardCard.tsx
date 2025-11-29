@@ -2,15 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
+import { Scoreboard } from '../../../types/models';
 
 interface PublicScoreboardCardProps {
-  scoreboard: {
-    id: string;
-    title: string;
-    description: string;
-    entryCount?: number;
-    createdAt: string;
-  };
+  scoreboard: Scoreboard;
 }
 
 const PublicScoreboardCard = ({ scoreboard }: PublicScoreboardCardProps) => {
@@ -25,7 +20,7 @@ const PublicScoreboardCard = ({ scoreboard }: PublicScoreboardCardProps) => {
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-text-primary truncate">{scoreboard.title}</h3>
-          <p className="text-sm text-text-secondary mt-1 line-clamp-2">{scoreboard.description || 'No description available'}</p>
+          <p className="text-sm text-text-secondary mt-1 line-clamp-2">{scoreboard.subtitle || 'No description available'}</p>
         </div>
       </div>
 

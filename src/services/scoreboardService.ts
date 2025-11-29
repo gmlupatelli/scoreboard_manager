@@ -35,23 +35,31 @@ const rowToEntry = (row: EntryRow): ScoreboardEntry => ({
 export const scoreboardService = {
   // Get all public scoreboards
   async getPublicScoreboards(): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
-    const { data, error } = await supabase
-      .from('scoreboards')
-      .select(`
-        *,
-        scoreboard_entries(count)
-      `)
-      .eq('visibility', 'public')
-      .order('created_at', { ascending: false });
+    console.log('Fetching public scoreboards...');
+    try {
+      const { data, error } = await supabase
+        .from('scoreboards')
+        .select(`
+          *,
+          scoreboard_entries(count)
+        `)
+        .eq('visibility', 'public')
+        .order('created_at', { ascending: false });
 
-    if (error) return { data: null, error };
-    
-    const scoreboards = (data || []).map((row: any) => {
-      const entryCount = row.scoreboard_entries?.[0]?.count || 0;
-      return rowToScoreboard(row, entryCount);
-    });
-    
-    return { data: scoreboards, error: null };
+      console.log('Supabase response:', { data, error });
+
+      if (error) return { data: null, error };
+      
+      const scoreboards = (data || []).map((row: any) => {
+        const entryCount = row.scoreboard_entries?.[0]?.count || 0;
+        return rowToScoreboard(row, entryCount);
+      });
+      
+      return { data: scoreboards, error: null };
+    } catch (e) {
+      console.error('Error in getPublicScoreboards:', e);
+      return { data: null, error: e as Error };
+    }
   },
 
   // Get user's scoreboards (both public and private)

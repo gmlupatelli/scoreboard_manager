@@ -6,15 +6,7 @@ import { scoreboardService } from '../../../services/scoreboardService';
 import Icon from '@/components/ui/AppIcon';
 import PublicScoreboardCard from './PublicScoreboardCard';
 import Header from '../../../components/common/Header';
-
-interface Scoreboard {
-  id: string;
-  title: string;
-  description: string;
-  entryCount?: number;
-  createdAt: string;
-  isPublic: boolean;
-}
+import { Scoreboard } from '../../../types/models';
 
 const PublicScoreboardInteractive = () => {
   const router = useRouter();
@@ -33,16 +25,22 @@ const PublicScoreboardInteractive = () => {
     setError('');
 
     try {
+      console.log('Loading scoreboards...');
       const { data, error } = await scoreboardService.getPublicScoreboards();
+      console.log('Got result:', { data, error });
       
       if (error) {
+        console.error('Error loading scoreboards:', error);
         setError(error.message);
       } else {
+        console.log('Setting scoreboards:', data);
         setScoreboards(data || []);
       }
     } catch (err) {
+      console.error('Caught error:', err);
       setError('Failed to load scoreboards');
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -56,7 +54,7 @@ const PublicScoreboardInteractive = () => {
       filtered = filtered.filter(
         (scoreboard) =>
           scoreboard?.title?.toLowerCase()?.includes(query) ||
-          scoreboard?.description?.toLowerCase()?.includes(query)
+          scoreboard?.subtitle?.toLowerCase()?.includes(query)
       );
     }
 
