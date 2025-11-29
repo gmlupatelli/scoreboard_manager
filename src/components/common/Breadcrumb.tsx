@@ -20,7 +20,6 @@ const Breadcrumb = ({ items, className = '' }: BreadcrumbProps) => {
   const routeMap: Record<string, string> = {
     '/public-scoreboard-list': 'Scoreboards',
     '/individual-scoreboard-view': 'Scoreboard View',
-    '/admin-login': 'Admin Login',
     '/admin-dashboard': 'Dashboard',
     '/scoreboard-management': 'Manage Scoreboards',
   };
