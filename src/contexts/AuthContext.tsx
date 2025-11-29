@@ -115,10 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (!error) {
-        // Redirect to public scoreboard list after successful logout
-        router.push('/public-scoreboard-list');
-      }
       return { error };
     } catch (error) {
       return { error: error as Error };
