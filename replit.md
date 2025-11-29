@@ -12,6 +12,15 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### November 29, 2025 - User Invitation System
+- Added system_settings and invitations database tables with RLS policies
+- Created API routes for invitation management (send, list, check, accept, cancel)
+- Built system admin settings page at /system-admin/settings for toggling public registration
+- Added user invite functionality to dashboard with InviteUserModal and InvitationsSection components
+- Created accept-invite page for invited users to complete account setup
+- Updated registration page to check public registration status and validate invitations
+- Uses Supabase's inviteUserByEmail() function for secure email delivery
+
 ### November 29, 2025 - Landing Page & Icon Fixes
 - Made marketing landing page the root page (no redirect needed)
 - Fixed visibility icon on scoreboard management screen to use standardized icons
@@ -59,12 +68,15 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 6. Server-side search across all scoreboards
 7. Owner filtering for admin users
 8. CSV import for scoreboard entries
+9. User invitation system with email notifications
+10. Invite-only registration mode (controllable by system admin)
 
 ## Environment Configuration
 
 ### Required Environment Variables
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY`: Service role key for admin operations (invitation emails)
 
 ## Development
 
@@ -165,6 +177,8 @@ The Supabase database includes:
 - `user_profiles` - User profile information with roles
 - `scoreboards` - Scoreboard metadata with owner references and visibility
 - `scoreboard_entries` - Individual scoreboard entries
+- `system_settings` - App-wide configuration (public registration toggle, email verification)
+- `invitations` - User invitation tracking with status (pending/accepted/expired/cancelled)
 - Row Level Security (RLS) policies for secure data access
 
 ## User Preferences & Design Notes
