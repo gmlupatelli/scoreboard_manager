@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
@@ -30,7 +30,6 @@ interface Owner {
 }
 
 const PAGE_SIZE = 30;
-const SEARCH_DEBOUNCE_MS = 300;
 
 const AdminDashboardInteractive = () => {
   const router = useRouter();
@@ -50,13 +49,11 @@ const AdminDashboardInteractive = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [offset, setOffset] = useState(0);
   const [allOwners, setAllOwners] = useState<Owner[]>([]);
   const [loadingOwners, setLoadingOwners] = useState(false);
-  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -70,23 +67,6 @@ const AdminDashboardInteractive = () => {
       loadOwners();
     }
   }, [user, userProfile]);
-
-  // Debounce search query
-  useEffect(() => {
-    if (searchDebounceRef.current) {
-      clearTimeout(searchDebounceRef.current);
-    }
-
-    searchDebounceRef.current = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, SEARCH_DEBOUNCE_MS);
-
-    return () => {
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current);
-      }
-    };
-  }, [searchQuery]);
 
   const loadOwners = async () => {
     setLoadingOwners(true);
@@ -160,15 +140,15 @@ const AdminDashboardInteractive = () => {
   // Initial load and reload when search/owner filter changes
   useEffect(() => {
     if (user && userProfile) {
-      loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
+      loadScoreboards(true, searchQuery, selectedOwnerId, 0);
     }
-  }, [user, userProfile, debouncedSearchQuery, selectedOwnerId, loadScoreboards]);
+  }, [user, userProfile, searchQuery, selectedOwnerId, loadScoreboards]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadScoreboards(false, debouncedSearchQuery, selectedOwnerId, offset);
+      loadScoreboards(false, searchQuery, selectedOwnerId, offset);
     }
-  }, [loadingMore, hasMore, offset, debouncedSearchQuery, selectedOwnerId, loadScoreboards]);
+  }, [loadingMore, hasMore, offset, searchQuery, selectedOwnerId, loadScoreboards]);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasMore,
@@ -190,7 +170,7 @@ const AdminDashboardInteractive = () => {
         throw error;
       }
 
-      await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
+      await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
       return { success: true, message: 'Scoreboard created successfully' };
     } catch (err) {
       return { success: false, message: 'Failed to create scoreboard' };
@@ -202,7 +182,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.deleteScoreboard(id);
       if (error) throw error;
       
-      await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
+      await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
       return { success: true };
     } catch (err) {
       return { success: false };
@@ -255,7 +235,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.updateScoreboard(id, { title: newTitle });
       if (error) throw error;
       
-      await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
+      await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
       showToast('Scoreboard renamed successfully', 'success');
     } catch (err) {
       showToast('Failed to rename scoreboard', 'error');
@@ -274,7 +254,7 @@ const AdminDashboardInteractive = () => {
         const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
         if (error) throw error;
         
-        await loadScoreboards(true, debouncedSearchQuery, selectedOwnerId, 0);
+        await loadScoreboards(true, searchQuery, selectedOwnerId, 0);
         showToast('Scoreboard deleted successfully', 'success');
       } catch (err) {
         showToast('Failed to delete scoreboard', 'error');
