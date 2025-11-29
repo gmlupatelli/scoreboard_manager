@@ -7,7 +7,6 @@ import { scoreboardService } from '../../../services/scoreboardService';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import { Scoreboard as ScoreboardModel } from '../../../types/models';
 import Header from '@/components/common/Header';
-import SearchInterface from '@/components/common/SearchInterface';
 import ScoreboardCard from './ScoreboardCard';
 import CreateScoreboardModal from './CreateScoreboardModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
@@ -223,10 +222,6 @@ const AdminDashboardInteractive = () => {
     setToast({ message, type, isVisible: true });
   };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-
   const handleNavigateToScoreboard = (id: string) => {
     router.push(`/scoreboard-management?id=${id}`);
   };
@@ -348,11 +343,27 @@ const AdminDashboardInteractive = () => {
             <>
               <div className="bg-card border border-border rounded-lg p-4 mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                  <SearchInterface
-                    placeholder="Search scoreboards by title or description..."
-                    onSearch={handleSearch}
-                    className="w-full lg:w-96"
-                  />
+                  <div className="relative w-full lg:w-96">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <Icon name="MagnifyingGlassIcon" size={20} className="text-muted-foreground" />
+                    </div>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search scoreboards by title or description..."
+                      className="w-full pl-10 pr-10 py-2 border border-input rounded-md bg-surface text-text-primary placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-smooth duration-150"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-text-primary transition-smooth duration-150"
+                        aria-label="Clear search"
+                      >
+                        <Icon name="XMarkIcon" size={20} />
+                      </button>
+                    )}
+                  </div>
 
                   <div className="flex flex-wrap items-center gap-4">
                     {isAdmin && (
