@@ -89,7 +89,7 @@ const ScoreboardCard = ({
         </div>
       </div>
 
-      <p className="text-sm text-text-secondary mb-4 line-clamp-2">{description}</p>
+      {description && <p className="text-sm text-text-secondary mb-4 line-clamp-2">{description}</p>}
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4 text-sm text-text-secondary">
