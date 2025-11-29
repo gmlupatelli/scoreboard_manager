@@ -359,7 +359,7 @@ const ScoreboardManagementInteractive = () => {
                   <Icon name="PencilIcon" size={18} className="text-text-secondary hover:text-primary" />
                 </button>
               </div>
-              <p className="text-sm text-text-secondary">{scoreboard.subtitle || 'No description available'}</p>
+              <p className={`text-sm text-text-secondary ${!scoreboard.subtitle ? 'italic' : ''}`}>{scoreboard.subtitle || 'No description available'}</p>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
