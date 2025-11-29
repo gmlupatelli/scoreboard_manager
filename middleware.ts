@@ -22,6 +22,11 @@ export async function middleware(request: NextRequest) {
             value,
             ...options,
           });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
           response.cookies.set({
             name,
             value,
@@ -34,6 +39,11 @@ export async function middleware(request: NextRequest) {
             value: '',
             ...options,
           });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
           response.cookies.set({
             name,
             value: '',
@@ -44,7 +54,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getSession();
+  await supabase.auth.getUser();
 
   return response;
 }
