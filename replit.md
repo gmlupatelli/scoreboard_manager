@@ -104,7 +104,6 @@ The application is configured for Replit deployment with:
 │   │   ├── individual-scoreboard-view/  # Single scoreboard display
 │   │   │   └── components/           # Scoreboard view components
 │   │   ├── login/                    # Login page
-│   │   ├── marketing-landing-page/   # Landing page
 │   │   ├── privacy/                  # Privacy policy
 │   │   ├── public-scoreboard-list/   # Public scoreboard browsing
 │   │   │   └── components/           # Public list components
