@@ -8,6 +8,7 @@ interface ScoreboardCardProps {
   entryCount: number;
   createdAt: string;
   ownerName?: string;
+  visibility?: 'public' | 'private';
   onRename: (id: string, newTitle: string) => void;
   onDelete: () => void;
   onNavigate: (id: string) => void;
@@ -20,6 +21,7 @@ const ScoreboardCard = ({
   entryCount,
   createdAt,
   ownerName,
+  visibility = 'public',
   onRename,
   onDelete,
   onNavigate,
@@ -109,6 +111,10 @@ const ScoreboardCard = ({
           </div>
         )}
         <div className="flex items-center space-x-4 text-sm text-text-secondary">
+          <div className="flex items-center space-x-1">
+            <Icon name={visibility === 'public' ? 'GlobeAltIcon' : 'LockClosedIcon'} size={16} />
+            <span>{visibility === 'public' ? 'Public' : 'Private'}</span>
+          </div>
           <div className="flex items-center space-x-1">
             <Icon name="UsersIcon" size={16} />
             <span>{entryCount} entries</span>

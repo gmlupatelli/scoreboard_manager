@@ -97,7 +97,7 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">Visibility</label>
               <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
                     value="public"
@@ -106,9 +106,12 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
                     className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
                     disabled={isSubmitting}
                   />
-                  <span className="text-sm text-text-secondary">Public</span>
+                  <span className="ml-2 text-sm text-text-primary flex items-center">
+                    <Icon name="GlobeAltIcon" size={16} className="mr-1" />
+                    Public
+                  </span>
                 </label>
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
                     value="private"
@@ -117,9 +120,17 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
                     className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
                     disabled={isSubmitting}
                   />
-                  <span className="text-sm text-text-secondary">Private</span>
+                  <span className="ml-2 text-sm text-text-primary flex items-center">
+                    <Icon name="LockClosedIcon" size={16} className="mr-1" />
+                    Private
+                  </span>
                 </label>
               </div>
+              <p className="mt-1 text-xs text-text-secondary">
+                {visibility === 'public' 
+                  ? 'Anyone can view this scoreboard' 
+                  : 'Only you can view this scoreboard'}
+              </p>
             </div>
 
             {error && (
