@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
+import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import { Scoreboard as ScoreboardModel } from '../../../types/models';
 import Header from '@/components/common/Header';
 import SearchInterface from '@/components/common/SearchInterface';
@@ -22,13 +23,15 @@ interface ToastState {
   isVisible: boolean;
 }
 
+const PAGE_SIZE = 30;
+
 const AdminDashboardInteractive = () => {
   const router = useRouter();
   const { user, userProfile, loading: authLoading, signOut, isSystemAdmin } = useAuth();
   const [scoreboards, setScoreboards] = useState<ScoreboardModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
-  const [isHydrated, setIsHydrated] = useState(false);
   const [filteredScoreboards, setFilteredScoreboards] = useState<ScoreboardModel[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; scoreboard: ScoreboardModel | null }>({
@@ -41,45 +44,81 @@ const AdminDashboardInteractive = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOwnerId, setSelectedOwnerId] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [offset, setOffset] = useState(0);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
-  // Load scoreboards based on user role
   useEffect(() => {
     if (user && userProfile) {
-      loadScoreboards();
+      loadScoreboards(true);
     }
   }, [user, userProfile]);
 
-  const loadScoreboards = async () => {
-    setLoading(true);
+  const loadScoreboards = async (isInitial = true) => {
+    if (isInitial) {
+      setLoading(true);
+      setOffset(0);
+    } else {
+      setLoadingMore(true);
+    }
     setError('');
     
     try {
+      const currentOffset = isInitial ? 0 : offset;
       let result;
+      
       if (isSystemAdmin()) {
-        result = await scoreboardService.getAllScoreboards();
+        result = await scoreboardService.getAllScoreboardsPaginated({
+          limit: PAGE_SIZE,
+          offset: currentOffset,
+        });
       } else {
-        result = await scoreboardService.getUserScoreboards(user!.id);
+        result = await scoreboardService.getUserScoreboardsPaginated(user!.id, {
+          limit: PAGE_SIZE,
+          offset: currentOffset,
+        });
       }
 
       if (result.error) {
         setError(result.error.message);
       } else {
-        setScoreboards(result.data || []);
-        setFilteredScoreboards(result.data || []);
+        if (isInitial) {
+          setScoreboards(result.data || []);
+        } else {
+          setScoreboards(prev => [...prev, ...(result.data || [])]);
+        }
+        setHasMore(result.hasMore);
+        setTotalCount(result.totalCount);
+        setOffset(currentOffset + (result.data?.length || 0));
       }
     } catch (err) {
       setError('Failed to load scoreboards');
     } finally {
-      setLoading(false);
+      if (isInitial) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
   };
+
+  const handleLoadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      loadScoreboards(false);
+    }
+  }, [loadingMore, hasMore, offset]);
+
+  const { loadMoreRef } = useInfiniteScroll({
+    hasMore,
+    isLoading: loadingMore,
+    onLoadMore: handleLoadMore,
+  });
 
   const handleCreateScoreboard = async (title: string, subtitle: string, visibility: 'public' | 'private') => {
     try {
@@ -95,7 +134,7 @@ const AdminDashboardInteractive = () => {
         throw error;
       }
 
-      await loadScoreboards();
+      await loadScoreboards(true);
       return { success: true, message: 'Scoreboard created successfully' };
     } catch (err) {
       return { success: false, message: 'Failed to create scoreboard' };
@@ -107,7 +146,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.deleteScoreboard(id);
       if (error) throw error;
       
-      await loadScoreboards();
+      await loadScoreboards(true);
       return { success: true };
     } catch (err) {
       return { success: false };
@@ -131,13 +170,11 @@ const AdminDashboardInteractive = () => {
     router.push(`/scoreboard-management?id=${id}`);
   };
 
-  // Calculate total entries and average from scoreboard data
   const totalEntries = scoreboards.reduce((sum, scoreboard) => sum + (scoreboard.entryCount || 0), 0);
   const avgEntriesPerScoreboard = scoreboards.length > 0 
     ? Math.round(totalEntries / scoreboards.length) 
     : 0;
 
-  // Get unique owners for the filter dropdown (admin only)
   const uniqueOwners = isSystemAdmin() 
     ? Array.from(
         new Map(
@@ -148,18 +185,15 @@ const AdminDashboardInteractive = () => {
       ).sort((a, b) => a.fullName.localeCompare(b.fullName))
     : [];
 
-  // Filter and sort scoreboards
   const isAdmin = isSystemAdmin();
   useEffect(() => {
     if (scoreboards.length > 0) {
       let filtered = [...scoreboards];
       
-      // Apply owner filter (admin only)
       if (isAdmin && selectedOwnerId !== 'all') {
         filtered = filtered.filter(s => s.ownerId === selectedOwnerId);
       }
       
-      // Apply search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         filtered = filtered.filter(
@@ -169,7 +203,6 @@ const AdminDashboardInteractive = () => {
         );
       }
       
-      // Apply sorting
       filtered.sort((a, b) => {
         let comparison = 0;
         
@@ -199,7 +232,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.updateScoreboard(id, { title: newTitle });
       if (error) throw error;
       
-      await loadScoreboards();
+      await loadScoreboards(true);
       showToast('Scoreboard renamed successfully', 'success');
     } catch (err) {
       showToast('Failed to rename scoreboard', 'error');
@@ -218,7 +251,7 @@ const AdminDashboardInteractive = () => {
         const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
         if (error) throw error;
         
-        await loadScoreboards();
+        await loadScoreboards(true);
         showToast('Scoreboard deleted successfully', 'success');
       } catch (err) {
         showToast('Failed to delete scoreboard', 'error');
@@ -260,15 +293,15 @@ const AdminDashboardInteractive = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <StatsCard
               title="Total Scoreboards"
-              value={scoreboards.length}
+              value={totalCount || scoreboards.length}
               icon="ClipboardDocumentListIcon"
-              description="Active competition boards"
+              description={`${scoreboards.length} loaded of ${totalCount}`}
             />
             <StatsCard
               title="Total Entries"
               value={totalEntries}
               icon="UsersIcon"
-              description="Across all scoreboards"
+              description="Across loaded scoreboards"
             />
             <StatsCard
               title="Avg. Entries/Board"
@@ -278,7 +311,12 @@ const AdminDashboardInteractive = () => {
             />
           </div>
 
-          {scoreboards.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground mt-4">Loading scoreboards...</p>
+            </div>
+          ) : scoreboards.length > 0 ? (
             <>
               <div className="bg-card border border-border rounded-lg p-4 mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
@@ -345,22 +383,39 @@ const AdminDashboardInteractive = () => {
               </div>
 
               {filteredScoreboards.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredScoreboards.map((scoreboard) => (
-                    <ScoreboardCard
-                      key={scoreboard.id}
-                      id={scoreboard.id}
-                      title={scoreboard.title}
-                      description={scoreboard.subtitle || ''}
-                      entryCount={scoreboard.entryCount || 0}
-                      createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
-                      ownerName={isSystemAdmin() ? scoreboard.owner?.fullName : undefined}
-                      onRename={handleRenameScoreboard}
-                      onDelete={() => handleDeleteConfirmation(scoreboard)}
-                      onNavigate={handleNavigateToScoreboard}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredScoreboards.map((scoreboard) => (
+                      <ScoreboardCard
+                        key={scoreboard.id}
+                        id={scoreboard.id}
+                        title={scoreboard.title}
+                        description={scoreboard.subtitle || ''}
+                        entryCount={scoreboard.entryCount || 0}
+                        createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
+                        ownerName={isSystemAdmin() ? scoreboard.owner?.fullName : undefined}
+                        onRename={handleRenameScoreboard}
+                        onDelete={() => handleDeleteConfirmation(scoreboard)}
+                        onNavigate={handleNavigateToScoreboard}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Infinite scroll trigger */}
+                  <div ref={loadMoreRef} className="py-8 flex justify-center">
+                    {loadingMore && (
+                      <div className="flex items-center space-x-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        <span className="text-muted-foreground">Loading more...</span>
+                      </div>
+                    )}
+                    {!hasMore && scoreboards.length > 0 && (
+                      <span className="text-muted-foreground text-sm">
+                        All {totalCount} scoreboards loaded
+                      </span>
+                    )}
+                  </div>
+                </>
               ) : (
                 <div className="bg-card border border-border rounded-lg p-12 text-center">
                   <Icon name="MagnifyingGlassIcon" size={48} className="text-muted-foreground mx-auto mb-4" />
