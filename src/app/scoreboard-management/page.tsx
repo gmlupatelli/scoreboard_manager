@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Header from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
 import ScoreboardManagementInteractive from './components/ScoreboardManagementInteractive';
 
 export const metadata: Metadata = {
@@ -9,11 +10,12 @@ export const metadata: Metadata = {
 
 export default function ScoreboardManagementPage() {
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header isAuthenticated={true} />
-      <div className="pt-16">
+      <div className="pt-16 flex-1">
         <ScoreboardManagementInteractive />
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }

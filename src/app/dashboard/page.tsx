@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AdminDashboardInteractive from './components/AdminDashboardInteractive';
+import Footer from '@/components/common/Footer';
 
 export const metadata: Metadata = {
   title: 'Dashboard - Scoreboard Manager',
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardPage() {
-  return <AdminDashboardInteractive />;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <AdminDashboardInteractive />
+      <Footer />
+    </div>
+  );
 }

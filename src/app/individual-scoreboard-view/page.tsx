@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Header from '@/components/common/Header';
-
+import Footer from '@/components/common/Footer';
 import ScoreboardInteractive from './components/ScoreboardInteractive';
 import LoadingSkeleton from './components/LoadingSkeleton';
 
@@ -12,22 +12,16 @@ export const metadata: Metadata = {
 
 export default function IndividualScoreboardViewPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header isAuthenticated={false} />
       
-      <main className="pt-16">
+      <main className="pt-16 flex-1">
         <Suspense fallback={<LoadingSkeleton />}>
           <ScoreboardInteractive />
         </Suspense>
       </main>
 
-      <footer className="bg-surface border-t border-border mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-sm text-text-secondary">
-            <p>&copy; {new Date().getFullYear()} Scoreboard Manager. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

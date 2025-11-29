@@ -185,9 +185,17 @@ export default function MarketingLandingPage() {
               </button>
               <Link
                 href="/register"
-                className="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:opacity-90 transition-smooth duration-150 hover-lift"
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 hover-lift border border-border"
               >
-                Get Started
+                <Icon name="UserPlusIcon" size={18} />
+                <span>Sign Up</span>
+              </Link>
+              <Link
+                href="/login"
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 hover-lift"
+              >
+                <Icon name="ArrowRightOnRectangleIcon" size={18} />
+                <span>Login</span>
               </Link>
             </div>
           </div>
@@ -334,18 +342,6 @@ export default function MarketingLandingPage() {
                 </div>
               </div>
             </div>
-            <div className="space-y-4">
-              <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-8 text-white elevation-2">
-                <Icon name="RocketLaunchIcon" size={48} className="mb-4" />
-                <h3 className="text-2xl font-bold mb-2">Quick Setup</h3>
-                <p className="text-white/90">Create your first scoreboard in under 60 seconds. No credit card required for trial.</p>
-              </div>
-              <div className="bg-gradient-to-br from-accent to-accent/80 rounded-2xl p-8 text-white elevation-2">
-                <Icon name="UserGroupIcon" size={48} className="mb-4" />
-                <h3 className="text-2xl font-bold mb-2">24/7 Support</h3>
-                <p className="text-white/90">Our dedicated support team is always here to help you succeed.</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -365,40 +361,6 @@ export default function MarketingLandingPage() {
             {testimonials.map((testimonial, index) => (
               <TestimonialCard key={index} {...testimonial} />
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-gradient-to-br from-primary via-secondary to-primary rounded-2xl p-12 elevation-2">
-            <Icon name="RectangleStackIcon" size={64} className="text-white mx-auto mb-6" />
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Get Started?
-            </h2>
-            <p className="text-xl text-white/90 mb-8">
-              Join 10,000+ event organizers managing their scoreboards with ease
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center space-x-2 px-8 py-4 bg-white text-primary rounded-lg font-semibold text-lg hover:bg-white/90 transition-smooth duration-150 hover-lift elevation-1"
-              >
-                <span>Start Free Trial</span>
-                <Icon name="ArrowRightIcon" size={20} />
-              </Link>
-              <Link
-                href="/public-scoreboard-list"
-                className="inline-flex items-center justify-center space-x-2 px-8 py-4 bg-white/10 backdrop-blur-sm border-2 border-white text-white rounded-lg font-semibold text-lg hover:bg-white/20 transition-smooth duration-150"
-              >
-                <Icon name="EyeIcon" size={20} />
-                <span>View Examples</span>
-              </Link>
-            </div>
-            <p className="text-white/80 text-sm mt-6">
-              No credit card required • Free 14-day trial • Cancel anytime
-            </p>
           </div>
         </div>
       </section>
@@ -448,9 +410,6 @@ export default function MarketingLandingPage() {
             <div className="flex items-center space-x-4 mt-4 sm:mt-0">
               <Link href="#" className="text-white/70 hover:text-white transition-smooth">
                 <Icon name="GlobeAltIcon" size={20} />
-              </Link>
-              <Link href="/login" className="text-white/70 hover:text-white transition-smooth text-sm font-medium">
-                Admin Login
               </Link>
             </div>
           </div>
