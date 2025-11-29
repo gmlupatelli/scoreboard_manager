@@ -15,6 +15,7 @@ import EmptyState from './EmptyState';
 import StatsCard from './StatsCard';
 import Icon from '@/components/ui/AppIcon';
 import SearchableSelect from '@/components/ui/SearchableSelect';
+import InvitationsSection from './InvitationsSection';
 
 interface ToastState {
   message: string;
@@ -297,15 +298,26 @@ const AdminDashboardInteractive = () => {
                   : 'Manage your scoreboards and competition entries'}
               </p>
             </div>
-            {!isAdmin && (
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="mt-4 sm:mt-0 flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
-              >
-                <Icon name="PlusIcon" size={20} />
-                <span>Create New Scoreboard</span>
-              </button>
-            )}
+            <div className="flex items-center space-x-3 mt-4 sm:mt-0">
+              {isAdmin && (
+                <button
+                  onClick={() => router.push('/system-admin/settings')}
+                  className="flex items-center space-x-2 px-4 py-2 border border-border text-text-secondary rounded-md hover:bg-muted transition-smooth"
+                >
+                  <Icon name="Cog6ToothIcon" size={20} />
+                  <span>Settings</span>
+                </button>
+              )}
+              {!isAdmin && (
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
+                >
+                  <Icon name="PlusIcon" size={20} />
+                  <span>Create New Scoreboard</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -327,6 +339,10 @@ const AdminDashboardInteractive = () => {
               icon="ChartBarIcon"
               description="Average participation rate"
             />
+          </div>
+
+          <div className="mb-8">
+            <InvitationsSection />
           </div>
 
           {loading ? (

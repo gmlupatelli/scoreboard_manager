@@ -1,10 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 import Header from '../../components/common/Header';
+import Icon from '@/components/ui/AppIcon';
+
+interface SystemSettings {
+  allow_public_registration: boolean;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,10 +21,66 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checkingSettings, setCheckingSettings] = useState(true);
+  const [isPublicRegistrationAllowed, setIsPublicRegistrationAllowed] = useState(true);
+  const [hasValidInvitation, setHasValidInvitation] = useState(false);
+  const [checkingInvitation, setCheckingInvitation] = useState(false);
+
+  useEffect(() => {
+    const checkSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const settings: SystemSettings = await response.json();
+          setIsPublicRegistrationAllowed(settings.allow_public_registration);
+        }
+      } catch (err) {
+        setIsPublicRegistrationAllowed(true);
+      } finally {
+        setCheckingSettings(false);
+      }
+    };
+
+    checkSettings();
+  }, []);
+
+  const checkInvitation = async (emailToCheck: string) => {
+    if (!emailToCheck) return;
+    
+    setCheckingInvitation(true);
+    try {
+      const response = await fetch(`/api/invitations/check?email=${encodeURIComponent(emailToCheck)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setHasValidInvitation(data.has_valid_invitation);
+        if (data.has_valid_invitation) {
+          setError('');
+        }
+      }
+    } catch (err) {
+      // Silently fail
+    } finally {
+      setCheckingInvitation(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isPublicRegistrationAllowed && email) {
+      const timeoutId = setTimeout(() => {
+        checkInvitation(email);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [email, isPublicRegistrationAllowed]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!isPublicRegistrationAllowed && !hasValidInvitation) {
+      setError('Registration is currently by invitation only. Please use a valid invitation link.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -38,6 +99,13 @@ export default function RegisterPage() {
       if (error) {
         setError(error.message);
       } else {
+        if (hasValidInvitation) {
+          await fetch('/api/invitations/accept', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.toLowerCase().trim() })
+          });
+        }
         setSuccess(true);
         setTimeout(() => {
           router.push('/login');
@@ -50,7 +118,7 @@ export default function RegisterPage() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || checkingSettings) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -95,13 +163,63 @@ export default function RegisterPage() {
             <h1 className="text-3xl font-bold text-center mb-2 text-foreground">Create Account</h1>
             <p className="text-center text-muted-foreground mb-8">Start managing your scoreboards today</p>
 
+            {!isPublicRegistrationAllowed && (
+              <div className="mb-6 bg-warning/10 border border-warning/30 rounded-lg p-4">
+                <div className="flex items-start">
+                  <Icon name="InformationCircleIcon" size={20} className="text-warning mr-2 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-warning">Invite-Only Registration</p>
+                    <p className="text-sm text-text-secondary mt-1">
+                      Registration is currently restricted to invited users. Enter your email to check if you have an invitation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
                 {error}
               </div>
             )}
 
+            {!isPublicRegistrationAllowed && hasValidInvitation && (
+              <div className="mb-6 bg-success/10 border border-success/30 rounded-lg p-4">
+                <div className="flex items-start">
+                  <Icon name="CheckCircleIcon" size={20} className="text-success mr-2 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-success">Valid Invitation Found</p>
+                    <p className="text-sm text-text-secondary mt-1">
+                      You have a pending invitation. Complete the form below to create your account.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                    placeholder="you@example.com"
+                  />
+                  {checkingInvitation && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-2">
                   Full Name
@@ -114,21 +232,6 @@ export default function RegisterPage() {
                   required
                   className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                   placeholder="John Smith"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                  placeholder="you@example.com"
                 />
               </div>
 
@@ -166,7 +269,7 @@ export default function RegisterPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (!isPublicRegistrationAllowed && !hasValidInvitation)}
                 className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
