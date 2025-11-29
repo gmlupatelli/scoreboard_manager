@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import PublicScoreboardInteractive from './components/PublicScoreboardInteractive';
+import Footer from '@/components/common/Footer';
 
 export const metadata: Metadata = {
   title: 'Available Scoreboards - Scoreboard Manager',
@@ -7,5 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default function PublicScoreboardListPage() {
-  return <PublicScoreboardInteractive />;
+  return (
+    <div className="min-h-screen flex flex-col">
+      <PublicScoreboardInteractive />
+      <Footer />
+    </div>
+  );
 }

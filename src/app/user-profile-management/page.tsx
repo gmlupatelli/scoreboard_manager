@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Header from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
 import UserProfileInteractive from './components/UserProfileInteractive';
 
 export default function UserProfileManagementPage() {
@@ -40,11 +41,12 @@ export default function UserProfileManagementPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Header isAuthenticated={true} onLogout={handleLogout} />
-      <div className="pt-16">
+      <div className="pt-16 flex-1">
         <UserProfileInteractive />
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }

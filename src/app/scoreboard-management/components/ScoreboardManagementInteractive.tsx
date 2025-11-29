@@ -13,6 +13,7 @@ import AddEntryModal from './AddEntryModal';
 import ImportCSVModal from './ImportCSVModal';
 import ConfirmationModal from './ConfirmationModal';
 import Toast from './Toast';
+import EditScoreboardModal from './EditScoreboardModal';
 
 interface ToastState {
   message: string;
@@ -39,6 +40,7 @@ const ScoreboardManagementInteractive = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isEditScoreboardModalOpen, setIsEditScoreboardModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -165,6 +167,24 @@ const ScoreboardManagementInteractive = () => {
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type, isVisible: true });
+  };
+
+  const handleEditScoreboard = async (title: string, subtitle: string) => {
+    if (!scoreboard) return;
+    
+    try {
+      const { error } = await scoreboardService.updateScoreboard(scoreboard.id, {
+        title,
+        subtitle
+      });
+      
+      if (error) throw error;
+      
+      await loadScoreboardData();
+      showToast('Scoreboard details updated successfully', 'success');
+    } catch (err) {
+      showToast('Failed to update scoreboard details', 'error');
+    }
   };
 
   const handleAddEntry = async (name: string, score: number) => {
@@ -329,7 +349,16 @@ const ScoreboardManagementInteractive = () => {
         <div className="bg-card border border-border rounded-lg p-6 mb-6 elevation-1">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-text-primary mb-2">{scoreboard.title}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl font-bold text-text-primary">{scoreboard.title}</h1>
+                <button
+                  onClick={() => setIsEditScoreboardModalOpen(true)}
+                  className="p-1.5 rounded-md hover:bg-muted transition-smooth duration-150"
+                  title="Edit scoreboard details"
+                >
+                  <Icon name="PencilIcon" size={18} className="text-text-secondary hover:text-primary" />
+                </button>
+              </div>
               <p className="text-sm text-text-secondary">{scoreboard.subtitle || 'No description available'}</p>
             </div>
             <button
@@ -516,6 +545,14 @@ const ScoreboardManagementInteractive = () => {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImportCSV}
+      />
+
+      <EditScoreboardModal
+        isOpen={isEditScoreboardModalOpen}
+        onClose={() => setIsEditScoreboardModalOpen(false)}
+        onSave={handleEditScoreboard}
+        currentTitle={scoreboard?.title || ''}
+        currentSubtitle={scoreboard?.subtitle || ''}
       />
 
       <ConfirmationModal
