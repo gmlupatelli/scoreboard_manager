@@ -24,18 +24,18 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/#benefits" className="hover:text-primary transition-colors">
+                  Benefits
+                </Link>
+              </li>
+              <li>
+                <Link href="/#testimonials" className="hover:text-primary transition-colors">
+                  Testimonials
+                </Link>
+              </li>
+              <li>
                 <Link href="/public-scoreboard-list" className="hover:text-primary transition-colors">
                   Scoreboards
-                </Link>
-              </li>
-              <li>
-                <Link href="/login" className="hover:text-primary transition-colors">
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link href="/register" className="hover:text-primary transition-colors">
-                  Sign Up
                 </Link>
               </li>
             </ul>
