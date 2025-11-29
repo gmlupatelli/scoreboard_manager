@@ -24,7 +24,9 @@ const PublicScoreboardCard = ({ scoreboard }: PublicScoreboardCardProps) => {
       </div>
 
       <div className="h-12 mb-4">
-        <p className="text-sm text-text-secondary line-clamp-2">{scoreboard.subtitle || 'No description available'}</p>
+        <p className={`text-sm text-text-secondary line-clamp-2 ${!scoreboard.subtitle ? 'italic' : ''}`}>
+          {scoreboard.subtitle || 'No description available'}
+        </p>
       </div>
 
       <div className="flex-1" />
