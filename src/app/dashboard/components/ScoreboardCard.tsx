@@ -34,7 +34,7 @@ const ScoreboardCard = ({
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover-lift relative">
+    <div className="bg-card border border-border rounded-lg p-6 hover-lift relative flex flex-col h-full">
       <div className="flex items-start justify-between mb-4">
         {isEditing ? (
           <input
@@ -89,7 +89,11 @@ const ScoreboardCard = ({
         </div>
       </div>
 
-      {description && <p className="text-sm text-text-secondary mb-4 line-clamp-2">{description}</p>}
+      <div className="h-12 mb-4">
+        {description && <p className="text-sm text-text-secondary line-clamp-2">{description}</p>}
+      </div>
+
+      <div className="flex-1" />
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4 text-sm text-text-secondary">
