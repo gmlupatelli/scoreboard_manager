@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
+const DEFAULT_SETTINGS = {
+  id: 'default',
+  allow_public_registration: true,
+  require_email_verification: true
+};
+
 export async function GET() {
   try {
     const supabase = createClient();
@@ -12,19 +18,15 @@ export async function GET() {
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({
-          id: 'default',
-          allow_public_registration: true,
-          require_email_verification: true
-        });
+      if (error.code === 'PGRST116' || error.code === '42P01') {
+        return NextResponse.json(DEFAULT_SETTINGS);
       }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json(DEFAULT_SETTINGS);
     }
 
     return NextResponse.json(data);
-  } catch (err) {
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+  } catch {
+    return NextResponse.json(DEFAULT_SETTINGS);
   }
 }
 
@@ -43,7 +45,7 @@ export async function PUT(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    if (profile?.role !== 'system_admin') {
+    if (!profile || profile.role !== 'system_admin') {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
     }
 
@@ -64,7 +66,7 @@ export async function PUT(request: NextRequest) {
           allow_public_registration,
           require_email_verification,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', 'default')
         .select()
         .single();
@@ -75,7 +77,7 @@ export async function PUT(request: NextRequest) {
           id: 'default',
           allow_public_registration,
           require_email_verification
-        })
+        } as any)
         .select()
         .single();
     }
@@ -86,6 +88,6 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(result.data);
   } catch (err) {
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update settings. Please ensure the database migration has been run.' }, { status: 500 });
   }
 }

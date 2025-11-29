@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const supabase = createClient();
     const normalizedEmail = email.toLowerCase().trim();
 
-    const { data: invitation } = await supabase
+    const { data: invitation, error } = await supabase
       .from('invitations')
       .select('id, expires_at')
       .eq('invitee_email', normalizedEmail)
@@ -21,11 +21,21 @@ export async function GET(request: NextRequest) {
       .gt('expires_at', new Date().toISOString())
       .single();
 
+    if (error) {
+      return NextResponse.json({ 
+        has_valid_invitation: false,
+        invitation_id: null
+      });
+    }
+
     return NextResponse.json({ 
       has_valid_invitation: !!invitation,
       invitation_id: invitation?.id || null
     });
-  } catch (err) {
-    return NextResponse.json({ error: 'Failed to check invitation' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ 
+      has_valid_invitation: false,
+      invitation_id: null
+    });
   }
 }

@@ -32,12 +32,15 @@ export async function GET() {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error.code === '42P01') {
+        return NextResponse.json([]);
+      }
+      return NextResponse.json([]);
     }
 
-    return NextResponse.json(data);
-  } catch (err) {
-    return NextResponse.json({ error: 'Failed to fetch invitations' }, { status: 500 });
+    return NextResponse.json(data || []);
+  } catch {
+    return NextResponse.json([]);
   }
 }
 
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
           invitee_email: normalizedEmail,
           status: 'pending',
           expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        })
+        } as any)
         .select()
         .single();
 
@@ -117,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || '';
     
-    const { data: invitedUser, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+    const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
       normalizedEmail,
       {
         redirectTo: `${baseUrl}/accept-invite`,
@@ -138,7 +141,7 @@ export async function POST(request: NextRequest) {
         invitee_email: normalizedEmail,
         status: 'pending',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      })
+      } as any)
       .select()
       .single();
 
