@@ -19,7 +19,6 @@ export default function UserProfileManagementPage() {
 
   const handleLogout = async () => {
     await signOut();
-    router?.push('/login');
   };
 
   if (loading) {
