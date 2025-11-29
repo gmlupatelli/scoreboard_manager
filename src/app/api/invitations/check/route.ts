@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const normalizedEmail = email.toLowerCase().trim();
 
     const { data: invitation, error } = await supabase
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ 
       has_valid_invitation: !!invitation,
-      invitation_id: invitation?.id || null
+      invitation_id: invitation ? (invitation as { id: string }).id : null
     });
   } catch {
     return NextResponse.json({ 
