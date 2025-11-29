@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   productionBrowserSourceMaps: true,
-  distDir: process.env.DIST_DIR || '.next',  typescript: {
+  distDir: process.env.DIST_DIR || '.next',
+  typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
@@ -22,6 +23,19 @@ const nextConfig = {
         hostname: 'images.pixabay.com',
       },
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
   },
   async redirects() {
     return [
