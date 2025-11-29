@@ -19,6 +19,11 @@ export default function Footer() {
             <h4 className="font-semibold text-text-primary mb-4">Product</h4>
             <ul className="space-y-2 text-sm text-text-secondary">
               <li>
+                <Link href="/marketing-landing-page" className="hover:text-primary transition-colors">
+                  Features
+                </Link>
+              </li>
+              <li>
                 <Link href="/register" className="hover:text-primary transition-colors">
                   Sign Up
                 </Link>
