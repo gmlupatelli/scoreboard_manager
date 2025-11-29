@@ -363,7 +363,7 @@ You've been invited to join Scoreboard Manager
 
 **Subject Line:**
 ```
-Confirm your identity - Scoreboard Manager
+Your verification code - Scoreboard Manager
 ```
 
 **Email Body (HTML):**
@@ -373,7 +373,7 @@ Confirm your identity - Scoreboard Manager
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Confirm Your Identity</title>
+  <title>Your Verification Code</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #FAFAFA;">
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #FAFAFA;">
@@ -391,24 +391,29 @@ Confirm your identity - Scoreboard Manager
           <!-- Content -->
           <tr>
             <td style="padding: 40px;">
-              <h1 style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #20203e; text-align: center;">Confirm Your Identity</h1>
+              <h1 style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #20203e; text-align: center;">Your Verification Code</h1>
               <p style="margin: 0 0 25px; font-size: 16px; line-height: 24px; color: #38385e; text-align: center;">
-                For your security, we need to verify your identity before you can proceed with this action. Please click the button below to confirm.
+                For your security, please use the following code to verify your identity:
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td style="text-align: center; padding: 20px 0;">
-                    <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Confirm Identity</a>
+                    <div style="display: inline-block; padding: 20px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); border-radius: 12px;">
+                      <span style="font-size: 32px; font-weight: bold; color: #ffffff; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace;">{{ .Token }}</span>
+                    </div>
                   </td>
                 </tr>
               </table>
+              <p style="margin: 20px 0 0; font-size: 14px; line-height: 22px; color: #38385e; text-align: center;">
+                Enter this code in the app to complete your verification.
+              </p>
               <div style="margin: 25px 0 0; padding: 16px; background-color: #FEF7EC; border-radius: 8px; border-left: 4px solid #eba977;">
                 <p style="margin: 0; font-size: 14px; line-height: 22px; color: #20203e;">
-                  <strong>Security Notice:</strong> This verification was requested because you attempted to perform a sensitive action. If you didn't initiate this, please secure your account immediately.
+                  <strong>Security Notice:</strong> This code was requested because you attempted to perform a sensitive action. If you didn't initiate this, please secure your account immediately.
                 </p>
               </div>
               <p style="margin: 25px 0 0; font-size: 14px; line-height: 22px; color: #38385e; text-align: center;">
-                This link will expire shortly for security reasons.
+                This code will expire shortly for security reasons.
               </p>
             </td>
           </tr>
