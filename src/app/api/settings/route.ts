@@ -35,8 +35,10 @@ export async function PUT(request: NextRequest) {
     const supabase = await createClient();
     
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('PUT /api/settings - Auth check:', { user: user?.id, authError: authError?.message });
+    
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized', debug: authError?.message }, { status: 401 });
     }
 
     const { data: profile } = await supabase
