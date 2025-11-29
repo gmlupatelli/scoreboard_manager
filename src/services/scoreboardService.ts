@@ -9,6 +9,20 @@ type EntryRow = Database['public']['Tables']['scoreboard_entries']['Row'];
 type EntryInsert = Database['public']['Tables']['scoreboard_entries']['Insert'];
 type EntryUpdate = Database['public']['Tables']['scoreboard_entries']['Update'];
 
+export interface PaginatedResult<T> {
+  data: T[] | null;
+  error: Error | null;
+  hasMore: boolean;
+  totalCount: number;
+}
+
+export interface PaginationOptions {
+  limit?: number;
+  offset?: number;
+}
+
+const DEFAULT_PAGE_SIZE = 30;
+
 // Helper function to convert database row to application model
 const rowToScoreboard = (row: ScoreboardRow, entryCount?: number): Scoreboard => ({
   id: row.id,
@@ -91,7 +105,7 @@ export const scoreboardService = {
     };
   },
 
-  // Get all public scoreboards
+  // Get all public scoreboards (legacy - no pagination)
   async getPublicScoreboards(): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
     console.log('Fetching public scoreboards...');
     try {
@@ -120,7 +134,53 @@ export const scoreboardService = {
     }
   },
 
-  // Get user's scoreboards (both public and private)
+  // Get public scoreboards with pagination
+  async getPublicScoreboardsPaginated(
+    options: PaginationOptions = {}
+  ): Promise<PaginatedResult<Scoreboard>> {
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0 } = options;
+    
+    try {
+      // Get total count first
+      const { count: totalCount, error: countError } = await supabase
+        .from('scoreboards')
+        .select('*', { count: 'exact', head: true })
+        .eq('visibility', 'public');
+
+      if (countError) {
+        return { data: null, error: countError, hasMore: false, totalCount: 0 };
+      }
+
+      // Fetch paginated data
+      const { data, error } = await supabase
+        .from('scoreboards')
+        .select(`
+          *,
+          scoreboard_entries(count)
+        `)
+        .eq('visibility', 'public')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: null, error, hasMore: false, totalCount: totalCount || 0 };
+      }
+      
+      const scoreboards = (data || []).map((row: any) => {
+        const entryCount = row.scoreboard_entries?.[0]?.count || 0;
+        return rowToScoreboard(row, entryCount);
+      });
+      
+      const hasMore = offset + scoreboards.length < (totalCount || 0);
+      
+      return { data: scoreboards, error: null, hasMore, totalCount: totalCount || 0 };
+    } catch (e) {
+      console.error('Error in getPublicScoreboardsPaginated:', e);
+      return { data: null, error: e as Error, hasMore: false, totalCount: 0 };
+    }
+  },
+
+  // Get user's scoreboards (both public and private) - legacy
   async getUserScoreboards(userId: string): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
     const { data, error } = await supabase
       .from('scoreboards')
@@ -141,7 +201,54 @@ export const scoreboardService = {
     return { data: scoreboards, error: null };
   },
 
-  // Get all scoreboards with owner info (system admin only)
+  // Get user's scoreboards with pagination
+  async getUserScoreboardsPaginated(
+    userId: string,
+    options: PaginationOptions = {}
+  ): Promise<PaginatedResult<Scoreboard>> {
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0 } = options;
+    
+    try {
+      // Get total count first
+      const { count: totalCount, error: countError } = await supabase
+        .from('scoreboards')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', userId);
+
+      if (countError) {
+        return { data: null, error: countError, hasMore: false, totalCount: 0 };
+      }
+
+      // Fetch paginated data
+      const { data, error } = await supabase
+        .from('scoreboards')
+        .select(`
+          *,
+          scoreboard_entries(count)
+        `)
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: null, error, hasMore: false, totalCount: totalCount || 0 };
+      }
+      
+      const scoreboards = (data || []).map((row: any) => {
+        const entryCount = row.scoreboard_entries?.[0]?.count || 0;
+        return rowToScoreboard(row, entryCount);
+      });
+      
+      const hasMore = offset + scoreboards.length < (totalCount || 0);
+      
+      return { data: scoreboards, error: null, hasMore, totalCount: totalCount || 0 };
+    } catch (e) {
+      console.error('Error in getUserScoreboardsPaginated:', e);
+      return { data: null, error: e as Error, hasMore: false, totalCount: 0 };
+    }
+  },
+
+  // Get all scoreboards with owner info (system admin only) - legacy
   async getAllScoreboards(): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
     const { data, error } = await supabase
       .from('scoreboards')
@@ -173,6 +280,64 @@ export const scoreboardService = {
     });
     
     return { data: scoreboards, error: null };
+  },
+
+  // Get all scoreboards with pagination (system admin only)
+  async getAllScoreboardsPaginated(
+    options: PaginationOptions = {}
+  ): Promise<PaginatedResult<Scoreboard>> {
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0 } = options;
+    
+    try {
+      // Get total count first
+      const { count: totalCount, error: countError } = await supabase
+        .from('scoreboards')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        return { data: null, error: countError, hasMore: false, totalCount: 0 };
+      }
+
+      // Fetch paginated data with owner info
+      const { data, error } = await supabase
+        .from('scoreboards')
+        .select(`
+          *,
+          scoreboard_entries(count),
+          user_profiles!owner_id(id, email, full_name, role)
+        `)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        return { data: null, error, hasMore: false, totalCount: totalCount || 0 };
+      }
+      
+      const scoreboards = (data || []).map((row: any) => {
+        const entryCount = row.scoreboard_entries?.[0]?.count || 0;
+        const scoreboard = rowToScoreboard(row, entryCount);
+        
+        if (row.user_profiles) {
+          scoreboard.owner = {
+            id: row.user_profiles.id,
+            email: row.user_profiles.email,
+            fullName: row.user_profiles.full_name,
+            role: row.user_profiles.role,
+            createdAt: '',
+            updatedAt: '',
+          };
+        }
+        
+        return scoreboard;
+      });
+      
+      const hasMore = offset + scoreboards.length < (totalCount || 0);
+      
+      return { data: scoreboards, error: null, hasMore, totalCount: totalCount || 0 };
+    } catch (e) {
+      console.error('Error in getAllScoreboardsPaginated:', e);
+      return { data: null, error: e as Error, hasMore: false, totalCount: 0 };
+    }
   },
 
   // Get single scoreboard by ID
