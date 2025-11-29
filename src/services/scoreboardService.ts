@@ -58,23 +58,41 @@ export const scoreboardService = {
   async getUserScoreboards(userId: string): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
     const { data, error } = await supabase
       .from('scoreboards')
-      .select('*')
+      .select(`
+        *,
+        scoreboard_entries(count)
+      `)
       .eq('owner_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) return { data: null, error };
-    return { data: (data || []).map(rowToScoreboard), error: null };
+    
+    const scoreboards = (data || []).map((row: any) => {
+      const entryCount = row.scoreboard_entries?.[0]?.count || 0;
+      return rowToScoreboard(row, entryCount);
+    });
+    
+    return { data: scoreboards, error: null };
   },
 
   // Get all scoreboards (system admin only)
   async getAllScoreboards(): Promise<{ data: Scoreboard[] | null; error: Error | null }> {
     const { data, error } = await supabase
       .from('scoreboards')
-      .select('*')
+      .select(`
+        *,
+        scoreboard_entries(count)
+      `)
       .order('created_at', { ascending: false });
 
     if (error) return { data: null, error };
-    return { data: (data || []).map(rowToScoreboard), error: null };
+    
+    const scoreboards = (data || []).map((row: any) => {
+      const entryCount = row.scoreboard_entries?.[0]?.count || 0;
+      return rowToScoreboard(row, entryCount);
+    });
+    
+    return { data: scoreboards, error: null };
   },
 
   // Get single scoreboard by ID

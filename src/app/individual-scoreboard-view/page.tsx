@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Header from '@/components/common/Header';
-import Breadcrumb from '@/components/common/Breadcrumb';
 
 import ScoreboardInteractive from './components/ScoreboardInteractive';
 import LoadingSkeleton from './components/LoadingSkeleton';
@@ -17,12 +16,6 @@ export default function IndividualScoreboardViewPage() {
       <Header isAuthenticated={false} />
       
       <main className="pt-16">
-        <div className="bg-surface border-b border-border py-4">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Breadcrumb />
-          </div>
-        </div>
-
         <Suspense fallback={<LoadingSkeleton />}>
           <ScoreboardInteractive />
         </Suspense>

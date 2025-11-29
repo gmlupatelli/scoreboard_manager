@@ -111,8 +111,10 @@ const ScoreboardManagementInteractive = () => {
         throw new Error(entriesResult.error.message || 'Failed to load entries');
       }
 
-      setEntries(entriesResult.data || []);
-      setFilteredEntries(entriesResult.data || []);
+      // Calculate ranks for all entries
+      const entriesWithRanks = recalculateRanks(entriesResult.data || []);
+      setEntries(entriesWithRanks);
+      setFilteredEntries(entriesWithRanks);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load scoreboard data';
       setError(errorMessage);
@@ -134,7 +136,7 @@ const ScoreboardManagementInteractive = () => {
     filtered.sort((a, b) => {
       let comparison = 0;
       if (sortBy === 'rank') {
-        comparison = a.rank - b.rank;
+        comparison = (a.rank || 0) - (b.rank || 0);
       } else if (sortBy === 'name') {
         comparison = a.name.localeCompare(b.name);
       } else if (sortBy === 'score') {
@@ -143,7 +145,9 @@ const ScoreboardManagementInteractive = () => {
       return sortOrder === 'asc' ? comparison : -comparison;
     });
 
-    setFilteredEntries(filtered);
+    // Recalculate ranks after filtering and sorting
+    const filteredWithRanks = recalculateRanks(filtered);
+    setFilteredEntries(filteredWithRanks);
     setCurrentPage(1);
   }, [searchQuery, entries, sortBy, sortOrder]);
 

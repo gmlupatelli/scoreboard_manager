@@ -124,7 +124,7 @@ export default function UserProfileInteractive() {
     if (success) {
       showToast('Account deleted successfully', 'success');
       await signOut();
-      router.push('/');
+      router.push('/public-scoreboard-list');
       return true;
     }
 
@@ -134,7 +134,7 @@ export default function UserProfileInteractive() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-sm p-8">
             <div className="animate-pulse space-y-6">
               <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -152,7 +152,7 @@ export default function UserProfileInteractive() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>

@@ -29,4 +29,5 @@ export interface ScoreboardEntry {
   details?: string | null;
   createdAt: string;
   updatedAt: string;
+  rank?: number; // Calculated on frontend based on score
 }
