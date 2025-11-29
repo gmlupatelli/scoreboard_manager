@@ -68,7 +68,7 @@ const ScoreboardManagementInteractive = () => {
       
       if (!scoreboardId) {
         showToast('No scoreboard selected. Redirecting to dashboard...', 'error');
-        setTimeout(() => router.push('/admin-dashboard'), 2000);
+        setTimeout(() => router.push('/dashboard'), 2000);
         return;
       }
     }
@@ -123,7 +123,7 @@ const ScoreboardManagementInteractive = () => {
       showToast(errorMessage, 'error');
       
       // Redirect to dashboard after showing error
-      setTimeout(() => router.push('/admin-dashboard'), 3000);
+      setTimeout(() => router.push('/dashboard'), 3000);
     } finally {
       setLoading(false);
       setIsHydrated(true);
@@ -328,7 +328,7 @@ const ScoreboardManagementInteractive = () => {
             <h2 className="text-xl font-semibold text-destructive mb-2">Unable to Load Scoreboard</h2>
             <p className="text-sm text-text-secondary mb-4">{error}</p>
             <button
-              onClick={() => router.push('/admin-dashboard')}
+              onClick={() => router.push('/dashboard')}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90"
             >
               Return to Dashboard
@@ -362,7 +362,7 @@ const ScoreboardManagementInteractive = () => {
               <p className="text-sm text-text-secondary">{scoreboard.subtitle || 'No description available'}</p>
             </div>
             <button
-              onClick={() => router.push('/admin-dashboard')}
+              onClick={() => router.push('/dashboard')}
               className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
             >
               <Icon name="ArrowLeftIcon" size={18} />

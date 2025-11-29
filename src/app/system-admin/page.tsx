@@ -16,7 +16,7 @@ export default function SystemAdminLoginPage() {
   useEffect(() => {
     if (!authLoading && user && userProfile) {
       if (userProfile.role === 'system_admin') {
-        router.push('/admin-dashboard');
+        router.push('/dashboard');
       } else {
         setError('Access denied. System admin credentials required.');
       }
