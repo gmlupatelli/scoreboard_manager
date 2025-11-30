@@ -102,6 +102,28 @@ export const profileService = {
   },
 
   /**
+   * Resend email verification for pending email change
+   */
+  async resendEmailVerification(pendingEmail: string) {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: pendingEmail
+      });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: 'Failed to resend verification email. Please try again.' 
+      };
+    }
+  },
+
+  /**
    * Change user password
    */
   async changePassword(newPassword: string) {
