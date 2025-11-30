@@ -103,7 +103,14 @@ export default function SystemAdminSettingsPage() {
         setTimeout(() => setSuccess(''), 3000);
       } else {
         const data = await response.json();
-        setError(data.error || 'Failed to update settings');
+        let errorMsg = data.error || 'Failed to update settings';
+        if (data.debug) {
+          errorMsg += ` [Debug: ${data.debug}]`;
+        }
+        if (data.exception) {
+          errorMsg += ` [Exception: ${data.exception}]`;
+        }
+        setError(errorMsg);
       }
     } catch (err) {
       setError('Failed to update settings');
