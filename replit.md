@@ -12,15 +12,16 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
-### November 30, 2025 - Production Supabase API Compatibility Fix
-- Fixed API routes for production Supabase environment compatibility
+### November 30, 2025 - Production API Routes & Dynamic Export Fix
+- Fixed 405 Method Not Allowed error in production by adding dynamic exports to all API routes
+- Added `export const dynamic = 'force-dynamic'` and `export const runtime = 'nodejs'` to prevent static optimization
+- Added Cache-Control headers to settings API to prevent caching issues
 - Updated all API routes to use service role client with auth client fallback pattern:
   - Service role client when available (production) for reliable RLS bypass
   - Auth client fallback when service role key is missing (development)
 - All routes validate JWT for user identity before any database operations
 - Admin operations check user role before performing privileged actions
-- Fixed "Failed to update settings" error in production environment
-- Fixed settings toggle not reflecting database values in production
+- Profile updates now sync to both user_profiles table AND Supabase Auth metadata
 
 ### November 29, 2025 - System Admin Invitations Management Page
 - Created dedicated System Admin Invitations page at /system-admin/invitations
