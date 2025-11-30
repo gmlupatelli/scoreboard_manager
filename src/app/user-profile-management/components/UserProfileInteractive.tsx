@@ -123,10 +123,10 @@ export default function UserProfileInteractive() {
     }
 
     if (success) {
-      // Navigate first, then sign out to avoid auth state interfering with navigation
-      router.push('/account-deleted');
-      // Sign out after a brief delay to ensure navigation completes
-      setTimeout(() => signOut(), 100);
+      // Sign out first to clear auth state
+      await signOut();
+      // Use hard navigation to prevent auth state changes from interfering
+      window.location.href = '/account-deleted';
       return true;
     }
 
