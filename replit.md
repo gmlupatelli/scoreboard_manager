@@ -12,6 +12,16 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### November 30, 2025 - Email Confirmation Redirect Improvements
+- Created dedicated `/email-confirmed` page with success messages and auto-redirect
+- Enhanced `/auth/callback` route to handle signup and email change confirmations
+- Updated Supabase email templates documentation with custom redirect URLs
+- Email confirmations now redirect to proper pages instead of root URL with hash fragments:
+  - Signup confirmation → shows success page → auto-redirects to Dashboard
+  - Email change → shows success page → auto-redirects to Profile
+  - Password reset → uses Supabase's built-in flow (unchanged)
+- Dashboard "Invite" button now opens InviteUserModal directly
+
 ### November 30, 2025 - Production API Routes & Dynamic Export Fix
 - Fixed 405 Method Not Allowed error in production by adding dynamic exports to all API routes
 - Added `export const dynamic = 'force-dynamic'` and `export const runtime = 'nodejs'` to prevent static optimization
