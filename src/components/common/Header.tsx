@@ -123,20 +123,20 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                     <div className="absolute right-0 mt-2 w-48 bg-popover border border-border rounded-md elevation-2 z-[1010]">
                       <div className="py-1">
                         <Link
-                          href="/user-profile-management"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
-                        >
-                          <Icon name="UserCircleIcon" size={18} className="mr-3" />
-                          Profile
-                        </Link>
-                        <Link
                           href="/dashboard"
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                         >
                           <Icon name="ClipboardDocumentListIcon" size={18} className="mr-3" />
                           My Boards
+                        </Link>
+                        <Link
+                          href="/user-profile-management"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                        >
+                          <Icon name="UserCircleIcon" size={18} className="mr-3" />
+                          Profile
                         </Link>
                         <Link
                           href="/invitations"
@@ -257,20 +257,20 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
                     </span>
                   </div>
                   <Link
-                    href="/user-profile-management"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
-                  >
-                    <Icon name="UserCircleIcon" size={20} className="mr-3" />
-                    Profile
-                  </Link>
-                  <Link
                     href="/dashboard"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   >
                     <Icon name="ClipboardDocumentListIcon" size={20} className="mr-3" />
                     My Boards
+                  </Link>
+                  <Link
+                    href="/user-profile-management"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                  >
+                    <Icon name="UserCircleIcon" size={20} className="mr-3" />
+                    Profile
                   </Link>
                   <Link
                     href="/invitations"
