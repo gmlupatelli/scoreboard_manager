@@ -127,6 +127,48 @@ export const profileService = {
   },
 
   /**
+   * Ensure user profile exists after signup verification
+   * Creates the profile if it doesn't exist
+   */
+  async ensureProfileExists(user: { id: string; email?: string; user_metadata?: { full_name?: string; role?: string } }) {
+    try {
+      // Check if profile already exists
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (existingProfile) {
+        return { success: true, error: null };
+      }
+
+      // Create the profile if it doesn't exist
+      const { error } = await supabase
+        .from('user_profiles')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || null,
+          role: user.user_metadata?.role || 'user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as any);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: 'Failed to create user profile.' 
+      };
+    }
+  },
+
+  /**
    * Resend email verification for pending email change
    */
   async resendEmailVerification(pendingEmail: string) {
