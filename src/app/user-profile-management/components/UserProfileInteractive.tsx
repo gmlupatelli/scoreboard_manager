@@ -123,8 +123,10 @@ export default function UserProfileInteractive() {
     }
 
     if (success) {
-      await signOut();
+      // Navigate first, then sign out to avoid auth state interfering with navigation
       router.push('/account-deleted');
+      // Sign out after a brief delay to ensure navigation completes
+      setTimeout(() => signOut(), 100);
       return true;
     }
 
