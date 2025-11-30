@@ -65,7 +65,7 @@ export async function DELETE(
 
     const { data: invitation, error: fetchError } = await dbClient
       .from('invitations')
-      .select('inviter_id, status')
+      .select('inviter_id, status, invitee_email')
       .eq('id', params.id)
       .single();
 
@@ -82,6 +82,24 @@ export async function DELETE(
       return NextResponse.json({ error: 'Can only cancel pending invitations' }, { status: 400 });
     }
 
+    // Delete the Supabase Auth user that was created when the invitation was sent
+    if (serviceClient && invitation.invitee_email) {
+      try {
+        // Find the auth user by email
+        const { data: authUsers } = await serviceClient.auth.admin.listUsers();
+        const invitedUser = authUsers?.users?.find(
+          (u) => u.email?.toLowerCase() === invitation.invitee_email.toLowerCase()
+        );
+        
+        if (invitedUser) {
+          // Delete the auth user
+          await serviceClient.auth.admin.deleteUser(invitedUser.id);
+        }
+      } catch {
+        // Continue even if auth user deletion fails - the invitation will still be cancelled
+      }
+    }
+
     const { error: updateError } = await dbClient
       .from('invitations')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
@@ -91,7 +109,7 @@ export async function DELETE(
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, authUserDeleted: !!serviceClient });
   } catch {
     return NextResponse.json({ error: 'Failed to cancel invitation' }, { status: 500 });
   }
