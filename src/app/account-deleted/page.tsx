@@ -1,12 +1,23 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
 import Logo from '@/components/ui/Logo';
+import { createBrowserClient } from '@supabase/ssr';
 
 export default function AccountDeletedPage() {
+  // Clear any remaining session when this page loads
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    supabase.auth.signOut();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />

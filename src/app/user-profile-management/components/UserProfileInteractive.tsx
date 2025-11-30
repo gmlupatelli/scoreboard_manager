@@ -123,10 +123,10 @@ export default function UserProfileInteractive() {
     }
 
     if (success) {
-      // Sign out first to clear auth state
-      await signOut();
-      // Use hard navigation to prevent auth state changes from interfering
+      // Navigate immediately using hard navigation
+      // This must happen BEFORE signOut to prevent the page's useEffect from redirecting to /login
       window.location.href = '/account-deleted';
+      // Sign out will happen on the new page load (session is cleared server-side anyway)
       return true;
     }
 
