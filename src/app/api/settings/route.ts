@@ -54,6 +54,22 @@ export async function GET() {
   };
 
   try {
+    // Use service role client first to bypass RLS and get accurate settings
+    const serviceClient = getServiceRoleClient();
+    
+    if (serviceClient) {
+      const { data: serviceData, error: serviceError } = await serviceClient
+        .from('system_settings')
+        .select('*')
+        .eq('id', 'default')
+        .single();
+      
+      if (!serviceError && serviceData) {
+        return NextResponse.json(serviceData, { headers });
+      }
+    }
+    
+    // Fallback to anon client if service role not available
     const supabase = getAnonClient();
     
     const { data, error } = await supabase
@@ -62,32 +78,12 @@ export async function GET() {
       .eq('id', 'default')
       .single();
 
-    console.log('[Settings GET] Anon client result:', data, 'Error:', error?.message);
-
     if (error) {
-      console.log('[Settings GET] Anon client failed, trying service role...');
-      const serviceClient = getServiceRoleClient();
-      if (serviceClient) {
-        const { data: serviceData, error: serviceError } = await serviceClient
-          .from('system_settings')
-          .select('*')
-          .eq('id', 'default')
-          .single();
-        
-        console.log('[Settings GET] Service role result:', serviceData, 'Error:', serviceError?.message);
-        
-        if (!serviceError && serviceData) {
-          return NextResponse.json(serviceData, { headers });
-        }
-      }
-      console.log('[Settings GET] Returning DEFAULT_SETTINGS');
       return NextResponse.json(DEFAULT_SETTINGS, { headers });
     }
 
-    console.log('[Settings GET] Returning anon client data');
     return NextResponse.json(data, { headers });
-  } catch (err) {
-    console.error('[Settings GET] Exception:', err);
+  } catch {
     return NextResponse.json(DEFAULT_SETTINGS, { headers });
   }
 }
@@ -117,9 +113,6 @@ export async function PUT(request: NextRequest) {
 
     const serviceClient = getServiceRoleClient();
     const dbClient = serviceClient || authClient;
-    
-    const usingServiceRole = !!serviceClient;
-    console.log('[Settings PUT] Using service role client:', usingServiceRole);
 
     const { data: profile } = await dbClient
       .from('user_profiles')
@@ -133,20 +126,15 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const { allow_public_registration, require_email_verification } = body;
-    
-    console.log('[Settings PUT] Received values:', { allow_public_registration, require_email_verification });
 
-    const { data: existing, error: existingError } = await dbClient
+    const { data: existing } = await dbClient
       .from('system_settings')
       .select('id')
       .eq('id', 'default')
       .single();
-    
-    console.log('[Settings PUT] Existing record:', existing, 'Error:', existingError?.message);
 
     let result;
     if (existing) {
-      console.log('[Settings PUT] Updating existing record...');
       result = await dbClient
         .from('system_settings')
         .update({
@@ -158,7 +146,6 @@ export async function PUT(request: NextRequest) {
         .select()
         .single();
     } else {
-      console.log('[Settings PUT] Inserting new record...');
       result = await dbClient
         .from('system_settings')
         .insert({
@@ -170,24 +157,12 @@ export async function PUT(request: NextRequest) {
         .single();
     }
 
-    console.log('[Settings PUT] Result:', result.data, 'Error:', result.error?.message);
-
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 500, headers });
     }
 
-    // Verify the update by reading it back
-    const { data: verifyData } = await dbClient
-      .from('system_settings')
-      .select('*')
-      .eq('id', 'default')
-      .single();
-    
-    console.log('[Settings PUT] Verification read:', verifyData);
-
     return NextResponse.json(result.data, { headers });
-  } catch (err) {
-    console.error('[Settings PUT] Exception:', err);
+  } catch {
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500, headers });
   }
 }
