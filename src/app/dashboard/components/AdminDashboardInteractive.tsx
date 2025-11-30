@@ -215,7 +215,7 @@ const AdminDashboardInteractive = () => {
   };
 
   const handleSignOut = async () => {
-    router.push('/public-scoreboard-list');
+    router.push('/');
     await signOut();
   };
 

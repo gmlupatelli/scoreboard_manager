@@ -91,10 +91,6 @@ export default function InvitationsPage() {
     }
   };
 
-  const handleSignOut = async () => {
-    router.push('/public-scoreboard-list');
-    await signOut();
-  };
 
   const pendingCount = invitations.filter(inv => inv.status === 'pending').length;
   const acceptedCount = invitations.filter(inv => inv.status === 'accepted').length;
@@ -112,7 +108,7 @@ export default function InvitationsPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header isAuthenticated={true} onLogout={handleSignOut} />
+      <Header isAuthenticated={true} />
       
       <main className="flex-1 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

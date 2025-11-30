@@ -17,11 +17,6 @@ export default function UserProfileManagementPage() {
     }
   }, [user, loading, router]);
 
-  const handleLogout = async () => {
-    await signOut();
-    router?.push('/public-scoreboard-list');
-  };
-
   if (loading) {
     return (
       <>
@@ -42,7 +37,7 @@ export default function UserProfileManagementPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header isAuthenticated={true} onLogout={handleLogout} />
+      <Header isAuthenticated={true} />
       <div className="pt-16 flex-1">
         <UserProfileInteractive />
       </div>
