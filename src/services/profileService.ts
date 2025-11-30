@@ -73,10 +73,13 @@ export const profileService = {
 
   /**
    * Update user email (requires Supabase Auth API)
+   * Note: This only initiates the email change - the actual email update 
+   * happens in Supabase Auth after the user verifies the new address.
+   * The user_profiles table is updated after verification in verify-email page.
    */
   async updateEmail(newEmail: string) {
     try {
-      const { data, error } = await supabase.auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         email: newEmail
       });
 
@@ -84,19 +87,41 @@ export const profileService = {
         return { success: false, error: error.message };
       }
 
-      // Also update email in user_profiles table
-      if (data?.user?.id) {
-        await supabase
-          .from('user_profiles')
-          .update({ email: newEmail } as any)
-          .eq('id', data.user.id);
-      }
+      // Don't update user_profiles here - wait until email is verified
+      // The new email is stored in user.new_email until verified
 
       return { success: true, error: null };
     } catch (error) {
       return { 
         success: false, 
         error: 'Failed to update email. Please try again.' 
+      };
+    }
+  },
+
+  /**
+   * Sync user_profiles email with verified auth email
+   * Called after email change verification succeeds
+   */
+  async syncProfileEmail(userId: string, verifiedEmail: string) {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          email: verifiedEmail,
+          updated_at: new Date().toISOString()
+        } as any)
+        .eq('id', userId);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: 'Failed to sync profile email.' 
       };
     }
   },
