@@ -52,7 +52,9 @@ SECURITY DEFINER
 AS $$
 DECLARE
   user_id UUID;
-  deleted_count INTEGER;
+  deleted_scoreboards INTEGER;
+  deleted_entries INTEGER;
+  deleted_profile INTEGER;
 BEGIN
   -- Get the current user ID
   user_id := auth.uid();
@@ -64,21 +66,27 @@ BEGIN
     );
   END IF;
 
-  -- Delete user's entries first (cascade will handle this, but explicit for clarity)
-  DELETE FROM entries WHERE user_id = user_id;
+  -- Delete user's scoreboard entries first
+  DELETE FROM public.scoreboard_entries 
+  WHERE scoreboard_id IN (
+    SELECT id FROM public.scoreboards WHERE owner_id = user_id
+  );
+  GET DIAGNOSTICS deleted_entries = ROW_COUNT;
   
-  -- Delete user's scoreboards
-  DELETE FROM scoreboards WHERE created_by = user_id;
+  -- Delete user's scoreboards (this will also cascade delete entries due to FK constraint)
+  DELETE FROM public.scoreboards WHERE owner_id = user_id;
+  GET DIAGNOSTICS deleted_scoreboards = ROW_COUNT;
   
   -- Delete user profile (auth.users deletion must be done via Supabase Auth API)
-  DELETE FROM profiles WHERE id = user_id;
-  
-  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  DELETE FROM public.user_profiles WHERE id = user_id;
+  GET DIAGNOSTICS deleted_profile = ROW_COUNT;
   
   RETURN jsonb_build_object(
     'success', true,
     'message', 'Account data deleted successfully',
-    'deleted_profile', deleted_count > 0
+    'deleted_scoreboards', deleted_scoreboards,
+    'deleted_entries', deleted_entries,
+    'deleted_profile', deleted_profile > 0
   );
 END;
 $$;
