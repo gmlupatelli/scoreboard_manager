@@ -109,6 +109,9 @@ export async function PUT(request: NextRequest) {
 
     const serviceClient = getServiceRoleClient();
     const dbClient = serviceClient || authClient;
+    
+    const usingServiceRole = !!serviceClient;
+    console.log('[Settings PUT] Using service role client:', usingServiceRole);
 
     const { data: profile } = await dbClient
       .from('user_profiles')
@@ -122,15 +125,20 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const { allow_public_registration, require_email_verification } = body;
+    
+    console.log('[Settings PUT] Received values:', { allow_public_registration, require_email_verification });
 
-    const { data: existing } = await dbClient
+    const { data: existing, error: existingError } = await dbClient
       .from('system_settings')
       .select('id')
       .eq('id', 'default')
       .single();
+    
+    console.log('[Settings PUT] Existing record:', existing, 'Error:', existingError?.message);
 
     let result;
     if (existing) {
+      console.log('[Settings PUT] Updating existing record...');
       result = await dbClient
         .from('system_settings')
         .update({
@@ -142,6 +150,7 @@ export async function PUT(request: NextRequest) {
         .select()
         .single();
     } else {
+      console.log('[Settings PUT] Inserting new record...');
       result = await dbClient
         .from('system_settings')
         .insert({
@@ -153,12 +162,24 @@ export async function PUT(request: NextRequest) {
         .single();
     }
 
+    console.log('[Settings PUT] Result:', result.data, 'Error:', result.error?.message);
+
     if (result.error) {
       return NextResponse.json({ error: result.error.message }, { status: 500, headers });
     }
 
+    // Verify the update by reading it back
+    const { data: verifyData } = await dbClient
+      .from('system_settings')
+      .select('*')
+      .eq('id', 'default')
+      .single();
+    
+    console.log('[Settings PUT] Verification read:', verifyData);
+
     return NextResponse.json(result.data, { headers });
-  } catch {
+  } catch (err) {
+    console.error('[Settings PUT] Exception:', err);
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500, headers });
   }
 }
