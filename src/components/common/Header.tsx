@@ -40,7 +40,7 @@ const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
       onLogout();
     } else {
       await signOut();
-      router.push('/public-scoreboard-list');
+      router.push('/');
     }
   };
 
