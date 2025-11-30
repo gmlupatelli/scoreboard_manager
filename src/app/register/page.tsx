@@ -163,14 +163,14 @@ export default function RegisterPage() {
             <h1 className="text-3xl font-bold text-center mb-2 text-foreground">Create Account</h1>
             <p className="text-center text-muted-foreground mb-8">Start managing your scoreboards today</p>
 
-            {!isPublicRegistrationAllowed && (
+            {!isPublicRegistrationAllowed && !hasValidInvitation && (
               <div className="mb-6 bg-warning/10 border border-warning/30 rounded-lg p-4">
                 <div className="flex items-start">
                   <Icon name="InformationCircleIcon" size={20} className="text-warning mr-2 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-warning">Invite-Only Registration</p>
                     <p className="text-sm text-text-secondary mt-1">
-                      Registration is currently restricted to invited users. Enter your email to check if you have an invitation.
+                      Registration is currently restricted to invited users. Please use the invitation link sent to your email.
                     </p>
                   </div>
                 </div>
@@ -198,32 +198,31 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email field - always visible */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                    placeholder="you@example.com"
-                  />
-                  {checkingInvitation && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Show remaining fields only if public registration is allowed OR user has valid invitation */}
+              {/* Show all fields only if public registration is allowed OR user has valid invitation */}
               {(isPublicRegistrationAllowed || hasValidInvitation) && (
                 <>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                      Email Address
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                        placeholder="you@example.com"
+                      />
+                      {checkingInvitation && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
                     <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-2">
                       Full Name
