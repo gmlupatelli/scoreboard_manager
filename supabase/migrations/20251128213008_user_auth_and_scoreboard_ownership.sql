@@ -69,6 +69,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 SELECT EXISTS (
     SELECT 1 FROM public.user_profiles up
@@ -83,6 +84,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 SELECT EXISTS (
     SELECT 1 FROM public.scoreboards s
@@ -97,6 +99,7 @@ RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 SELECT EXISTS (
     SELECT 1 FROM public.scoreboards s
@@ -113,6 +116,7 @@ $$;
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 SECURITY DEFINER
+SET search_path = public, pg_temp
 LANGUAGE plpgsql
 AS $$
 BEGIN
@@ -136,6 +140,8 @@ $$;
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
@@ -265,73 +271,11 @@ CREATE TRIGGER handle_scoreboard_entries_updated_at
     EXECUTE FUNCTION public.handle_updated_at();
 
 -- ============================================
--- 8. MOCK DATA
+-- 8. MOCK DATA (Development Only)
 -- ============================================
-
-DO $$
-DECLARE
-    system_admin_id UUID := gen_random_uuid();
-    user1_id UUID := gen_random_uuid();
-    user2_id UUID := gen_random_uuid();
-    scoreboard1_id TEXT := 'scoreboard_' || EXTRACT(EPOCH FROM NOW())::TEXT;
-    scoreboard2_id TEXT := 'scoreboard_' || (EXTRACT(EPOCH FROM NOW()) + 1)::TEXT;
-    scoreboard3_id TEXT := 'scoreboard_' || (EXTRACT(EPOCH FROM NOW()) + 2)::TEXT;
-BEGIN
-    -- Create auth users with all required fields
-    INSERT INTO auth.users (
-        id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
-        created_at, updated_at, raw_user_meta_data, raw_app_meta_data,
-        is_sso_user, is_anonymous, confirmation_token, confirmation_sent_at,
-        recovery_token, recovery_sent_at, email_change_token_new, email_change,
-        email_change_sent_at, email_change_token_current, email_change_confirm_status,
-        reauthentication_token, reauthentication_sent_at, phone, phone_change,
-        phone_change_token, phone_change_sent_at
-    ) VALUES
-        (
-            system_admin_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-            'admin@scoreboard.com', crypt('admin123', gen_salt('bf', 10)), now(), now(), now(),
-            '{"full_name": "System Administrator", "role": "system_admin"}'::jsonb,
-            '{"provider": "email", "providers": ["email"]}'::jsonb,
-            false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null
-        ),
-        (
-            user1_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-            'john@example.com', crypt('user123', gen_salt('bf', 10)), now(), now(), now(),
-            '{"full_name": "John Smith", "role": "user"}'::jsonb,
-            '{"provider": "email", "providers": ["email"]}'::jsonb,
-            false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null
-        ),
-        (
-            user2_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-            'jane@example.com', crypt('user123', gen_salt('bf', 10)), now(), now(), now(),
-            '{"full_name": "Jane Doe", "role": "user"}'::jsonb,
-            '{"provider": "email", "providers": ["email"]}'::jsonb,
-            false, false, '', null, '', null, '', '', null, '', 0, '', null, null, '', '', null
-        );
-
-    -- Note: user_profiles will be automatically created by trigger
-
-    -- Wait a moment for trigger to complete (in real scenario, this happens automatically)
-    PERFORM pg_sleep(0.1);
-
-    -- Create scoreboards with ownership
-    INSERT INTO public.scoreboards (id, owner_id, title, subtitle, sort_order, visibility)
-    VALUES
-        (scoreboard1_id, user1_id, 'Q4 Sales Performance', 'Top performing sales representatives', 'desc', 'public'::public.scoreboard_visibility),
-        (scoreboard2_id, user1_id, 'Employee Ratings', 'Internal performance metrics', 'desc', 'private'::public.scoreboard_visibility),
-        (scoreboard3_id, user2_id, 'Customer Satisfaction', 'Customer feedback scores', 'desc', 'public'::public.scoreboard_visibility);
-
-    -- Create scoreboard entries
-    INSERT INTO public.scoreboard_entries (id, scoreboard_id, name, score, details)
-    VALUES
-        ('entry_' || gen_random_uuid()::TEXT, scoreboard1_id, 'Sarah Johnson', 98500, 'Exceeded quarterly target by 35%'),
-        ('entry_' || gen_random_uuid()::TEXT, scoreboard1_id, 'Michael Chen', 87200, 'Closed 15 enterprise deals'),
-        ('entry_' || gen_random_uuid()::TEXT, scoreboard1_id, 'Emily Rodriguez', 76800, 'Strong performance in new accounts'),
-        ('entry_' || gen_random_uuid()::TEXT, scoreboard2_id, 'Team Lead A', 95, 'Excellent leadership skills'),
-        ('entry_' || gen_random_uuid()::TEXT, scoreboard2_id, 'Team Lead B', 88, 'Strong technical expertise'),
-        ('entry_' || gen_random_uuid()::TEXT, scoreboard3_id, 'Product Quality', 92, 'Customer satisfaction rating'),
-        ('entry_' || gen_random_uuid()::TEXT, scoreboard3_id, 'Support Response', 89, 'Average response time rating');
-END $$;
+-- NOTE: Mock data has been removed from production migrations.
+-- For development/testing, use the seed.sql file or create users via the Supabase Auth API.
+-- Direct insertion into auth.users is not allowed in hosted Supabase projects.
 
 -- ============================================
 -- 9. COMMENTS
