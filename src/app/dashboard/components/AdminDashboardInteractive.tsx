@@ -10,6 +10,7 @@ import Header from '@/components/common/Header';
 import ScoreboardCard from './ScoreboardCard';
 import CreateScoreboardModal from './CreateScoreboardModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import InviteUserModal from './InviteUserModal';
 import ToastNotification from './ToastNotification';
 import EmptyState from './EmptyState';
 import StatsCard from './StatsCard';
@@ -55,6 +56,7 @@ const AdminDashboardInteractive = () => {
   const [offset, setOffset] = useState(0);
   const [allOwners, setAllOwners] = useState<Owner[]>([]);
   const [loadingOwners, setLoadingOwners] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   
   // Cache isSystemAdmin result to avoid function reference changes
@@ -319,14 +321,14 @@ const AdminDashboardInteractive = () => {
               )}
               {!isAdmin && (
                 <>
-                  <Link
-                    href="/invitations"
+                  <button
+                    onClick={() => setIsInviteModalOpen(true)}
                     className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
                     title="Invite Users"
                   >
                     <Icon name="UserPlusIcon" size={20} />
                     <span className="hidden sm:inline">Invite</span>
-                  </Link>
+                  </button>
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
                     className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
@@ -514,6 +516,14 @@ const AdminDashboardInteractive = () => {
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={() => setToast({ ...toast, isVisible: false })}
+      />
+
+      <InviteUserModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onSuccess={() => {
+          setToast({ message: 'Invitation sent successfully!', type: 'success', isVisible: true });
+        }}
       />
     </div>
   );
