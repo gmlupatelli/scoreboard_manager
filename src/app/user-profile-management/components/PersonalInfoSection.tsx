@@ -95,13 +95,13 @@ export default function PersonalInfoSection({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Personal Information</h2>
+    <div className="bg-card border border-border rounded-lg elevation-1 p-6">
+      <h2 className="text-xl font-semibold text-text-primary mb-6">Personal Information</h2>
       
       <div className="space-y-6">
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Display Name
           </label>
           {isEditingName ? (
@@ -110,21 +110,21 @@ export default function PersonalInfoSection({
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter your display name"
               />
               <div className="flex gap-3">
                 <button
                   onClick={handleSaveName}
                   disabled={savingName || !fullName.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-text-secondary disabled:cursor-not-allowed transition-smooth"
                 >
                   {savingName ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   onClick={handleCancelName}
                   disabled={savingName}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
                 >
                   Cancel
                 </button>
@@ -132,12 +132,12 @@ export default function PersonalInfoSection({
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <span className="text-gray-900">
+              <span className="text-text-primary">
                 {profile?.full_name || 'Not set'}
               </span>
               <button
                 onClick={() => setIsEditingName(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-primary hover:opacity-80 font-medium transition-smooth"
               >
                 Edit
               </button>
@@ -147,7 +147,7 @@ export default function PersonalInfoSection({
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Email Address
           </label>
           {isEditingEmail ? (
@@ -159,29 +159,29 @@ export default function PersonalInfoSection({
                   setEmail(e.target.value);
                   setEmailError('');
                 }}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  emailError ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2 border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  emailError ? 'border-destructive' : 'border-border'
                 }`}
                 placeholder="Enter your email address"
               />
               {emailError && (
-                <p className="text-sm text-red-600">{emailError}</p>
+                <p className="text-sm text-destructive">{emailError}</p>
               )}
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 A verification email will be sent to your new address
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={handleSaveEmail}
                   disabled={savingEmail || !email.trim()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-text-secondary disabled:cursor-not-allowed transition-smooth"
                 >
                   {savingEmail ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   onClick={handleCancelEmail}
                   disabled={savingEmail}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
                 >
                   Cancel
                 </button>
@@ -189,10 +189,10 @@ export default function PersonalInfoSection({
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <span className="text-gray-900">{profile?.email}</span>
+              <span className="text-text-primary">{profile?.email}</span>
               <button
                 onClick={() => setIsEditingEmail(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-primary hover:opacity-80 font-medium transition-smooth"
               >
                 Edit
               </button>
@@ -202,10 +202,10 @@ export default function PersonalInfoSection({
 
         {/* Account Created */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Account Created
           </label>
-          <span className="text-gray-900">
+          <span className="text-text-primary">
             {profile?.created_at 
               ? new Date(profile.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
