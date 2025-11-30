@@ -198,6 +198,7 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Email field - always visible */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
                   Email Address
@@ -220,60 +221,65 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-2">
-                  Full Name
-                </label>
-                <input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                  placeholder="John Smith"
-                />
-              </div>
+              {/* Show remaining fields only if public registration is allowed OR user has valid invitation */}
+              {(isPublicRegistrationAllowed || hasValidInvitation) && (
+                <>
+                  <div>
+                    <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-2">
+                      Full Name
+                    </label>
+                    <input
+                      id="fullName"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                      placeholder="John Smith"
+                    />
+                  </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                  placeholder="••••••••"
-                />
-              </div>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+                      Password
+                    </label>
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                      placeholder="••••••••"
+                    />
+                  </div>
 
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                  placeholder="••••••••"
-                />
-              </div>
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
+                      Confirm Password
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                      placeholder="••••••••"
+                    />
+                  </div>
 
-              <button
-                type="submit"
-                disabled={loading || (!isPublicRegistrationAllowed && !hasValidInvitation)}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </button>
+                  <button
+                    type="submit"
+                    disabled={loading || (!isPublicRegistrationAllowed && !hasValidInvitation)}
+                    className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                  >
+                    {loading ? 'Creating Account...' : 'Create Account'}
+                  </button>
+                </>
+              )}
             </form>
 
             <div className="mt-6 text-center text-sm">
