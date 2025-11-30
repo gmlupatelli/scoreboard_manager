@@ -284,7 +284,7 @@ Your Scoreboard Manager login link
 
 ## 5. Invite User Email
 
-**NOTE:** This template uses Supabase's built-in `{{ .ConfirmationURL }}` which handles the PKCE authentication flow automatically. The URL redirects through `/auth/callback` to establish a session, then sends the user to `/accept-invite` to complete their account setup.
+**NOTE:** This template uses Supabase's built-in `{{ .ConfirmationURL }}` which redirects to `/accept-invite` with authentication tokens in the URL hash fragment. The accept-invite page automatically extracts these tokens, establishes a session, and allows the user to set their password.
 
 **Subject Line:**
 ```
