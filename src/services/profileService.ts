@@ -53,7 +53,7 @@ export const profileService = {
         .update({
           full_name: updates.full_name,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', userId)
         .select()
         .single();
@@ -88,7 +88,7 @@ export const profileService = {
       if (data?.user?.id) {
         await supabase
           .from('user_profiles')
-          .update({ email: newEmail })
+          .update({ email: newEmail } as any)
           .eq('id', data.user.id);
       }
 
@@ -124,31 +124,29 @@ export const profileService = {
   },
 
   /**
-   * Delete user account (complete deletion)
+   * Delete user account (complete deletion including Supabase Auth user)
    */
-  async deleteAccount(userId: string) {
+  async deleteAccount(_userId: string) {
     try {
-      // First, call the database function to clean up related data
-      const { error: dbError } = await supabase.rpc('delete_user_account');
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (dbError) {
-        return { success: false, error: dbError.message };
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Failed to delete account' };
       }
 
-      // Then delete the auth user (this will cascade to profile due to FK)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-      if (authError) {
-        // If auth deletion fails, but DB cleanup succeeded, still sign out
-        await supabase.auth.signOut();
-        return { 
-          success: true, 
-          error: 'Account data deleted. Please contact support if needed.' 
-        };
+      if (data.warning) {
+        return { success: true, error: null, warning: data.warning };
       }
 
       return { success: true, error: null };
-    } catch (error) {
+    } catch {
       return { 
         success: false, 
         error: 'Failed to delete account. Please try again.' 
