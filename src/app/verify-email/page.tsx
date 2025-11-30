@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { supabase } from '@/lib/supabase/client';
 import Logo from '@/components/ui/Logo';
 import Icon from '@/components/ui/AppIcon';
 import { profileService } from '@/services/profileService';
@@ -26,11 +26,6 @@ function VerifyEmailContent() {
         setErrorMessage('Invalid verification link');
         return;
       }
-
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
 
       const { error } = await supabase.auth.verifyOtp({
         token_hash,
