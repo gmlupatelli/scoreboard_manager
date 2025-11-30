@@ -100,7 +100,7 @@ function AcceptInviteContent() {
         await fetch('/api/invitations/accept', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: user.email })
+          body: JSON.stringify({ email: user.email, fullName: fullName.trim() })
         });
       }
 

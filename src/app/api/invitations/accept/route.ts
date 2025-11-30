@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body;
+    const { email, fullName } = body;
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    const { error } = await adminClient
+    // Update invitation status
+    const { error: invitationError } = await adminClient
       .from('invitations')
       .update({
         status: 'accepted',
@@ -41,8 +42,24 @@ export async function POST(request: NextRequest) {
       .eq('invitee_email', normalizedEmail)
       .eq('status', 'pending');
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (invitationError) {
+      return NextResponse.json({ error: invitationError.message }, { status: 500 });
+    }
+
+    // Update user_profiles with full_name if provided
+    if (fullName) {
+      const { error: profileError } = await adminClient
+        .from('user_profiles')
+        .update({
+          full_name: fullName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('email', normalizedEmail);
+
+      if (profileError) {
+        // Log but don't fail - the invitation was already accepted
+        console.error('Failed to update user profile:', profileError);
+      }
     }
 
     return NextResponse.json({ success: true });
