@@ -2,6 +2,8 @@
 
 These are customized email templates for your Scoreboard Manager app. Copy each template into the corresponding section in your Supabase dashboard under **Authentication > Email Templates**.
 
+**IMPORTANT:** These templates use custom redirect URLs that point to your `/auth/callback` route, which then redirects users to the appropriate confirmation pages.
+
 **Brand Colors Used:**
 - Primary: `#f77174` (coral/salmon)
 - Secondary: `#eba977` (orange)
@@ -11,6 +13,8 @@ These are customized email templates for your Scoreboard Manager app. Copy each 
 ---
 
 ## 1. Reset Password Email
+
+**NOTE:** Password reset uses Supabase's built-in `{{ .ConfirmationURL }}` which already includes the proper PKCE flow. Do NOT modify this template's URL - it works correctly with the existing reset-password page.
 
 **Subject Line:**
 ```
@@ -116,7 +120,7 @@ Welcome to Scoreboard Manager - Confirm your email
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td style="text-align: center; padding: 20px 0;">
-                    <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Confirm Email Address</a>
+                    <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Confirm Email Address</a>
                   </td>
                 </tr>
               </table>
@@ -189,7 +193,7 @@ Confirm your new email address - Scoreboard Manager
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td style="text-align: center; padding: 20px 0;">
-                    <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Confirm New Email</a>
+                    <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Confirm New Email</a>
                   </td>
                 </tr>
               </table>
@@ -258,7 +262,7 @@ Your Scoreboard Manager login link
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td style="text-align: center; padding: 20px 0;">
-                    <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Log In to Scoreboard Manager</a>
+                    <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Log In to Scoreboard Manager</a>
                   </td>
                 </tr>
               </table>
@@ -325,7 +329,7 @@ You've been invited to join Scoreboard Manager
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td style="text-align: center; padding: 20px 0;">
-                    <a href="{{ .ConfirmationURL }}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Accept Invitation</a>
+                    <a href="{{ .SiteURL }}/accept-invite?token_hash={{ .TokenHash }}&type=invite" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">Accept Invitation</a>
                   </td>
                 </tr>
               </table>
@@ -446,12 +450,42 @@ Your verification code - Scoreboard Manager
 6. Click **Save** to apply the template
 7. Repeat for each template type
 
+**IMPORTANT:** Apply these templates to BOTH your development and production Supabase projects!
+
+---
+
+## URL Configuration
+
+Make sure your Site URL is correctly configured in **Authentication** > **URL Configuration**:
+
+- **Development:** Your Replit dev URL (e.g., `https://your-project.replit.dev`)
+- **Production:** Your production URL
+
+Also add these to your **Redirect URLs** list:
+- `https://your-domain.com/auth/callback`
+- `https://your-domain.com/accept-invite`
+
+---
+
+## What Happens After Clicking Links
+
+| Email Type | Redirect Flow |
+|-----------|--------------|
+| Signup confirmation | `/auth/callback` → `/email-confirmed?type=signup` → Auto-redirect to Dashboard (5s) |
+| Email change | `/auth/callback` → `/email-confirmed?type=email_change` → Auto-redirect to Profile (5s) |
+| Password reset | Uses `{{ .ConfirmationURL }}` → `/reset-password` (enter new password) |
+| Magic link | `/auth/callback` → `/dashboard` |
+| User invitation | `/accept-invite` (complete registration) |
+
+---
+
 ## Template Variables Reference
 
 These templates use Supabase's built-in variables:
-- `{{ .ConfirmationURL }}` - The full URL the user should click
-- `{{ .Token }}` - The confirmation token (if you need to build custom URLs)
-- `{{ .TokenHash }}` - A hashed version of the token
 - `{{ .SiteURL }}` - Your configured site URL
+- `{{ .TokenHash }}` - The hashed token for verification
+- `{{ .Token }}` - The raw verification code (for reauthentication)
+- `{{ .Email }}` - The user's email address
+- `{{ .NewEmail }}` - The new email address (for email change)
 
 Make sure to keep these variables in your templates for the authentication flow to work properly!

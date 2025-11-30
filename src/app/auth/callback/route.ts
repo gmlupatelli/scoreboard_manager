@@ -1,6 +1,9 @@
 import { createClient } from '../../../lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
@@ -10,31 +13,36 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
 
-  // Handle PKCE flow (login/signup)
+  // Handle PKCE flow (login/signup with OAuth or magic link)
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
     }
+    return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
   }
 
-  // Handle token hash flow (email change, password recovery, etc.)
+  // Handle token hash flow (email confirmations)
+  // Note: Password recovery uses ConfirmationURL which bypasses this callback
   if (token_hash && type) {
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
-      type: type as 'email_change' | 'recovery' | 'signup' | 'email'
+      type: type as 'email_change' | 'signup' | 'email'
     });
     
     if (!error) {
-      // Redirect to appropriate page based on type
+      // Redirect to confirmation page with appropriate message
       if (type === 'email_change') {
-        return NextResponse.redirect(`${origin}/user-profile-management?message=email_updated`);
+        return NextResponse.redirect(`${origin}/email-confirmed?type=email_change`);
       }
-      if (type === 'recovery') {
-        return NextResponse.redirect(`${origin}/reset-password`);
+      if (type === 'signup' || type === 'email') {
+        return NextResponse.redirect(`${origin}/email-confirmed?type=signup`);
       }
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${origin}/email-confirmed?type=generic`);
     }
+    
+    // Handle specific error cases
+    return NextResponse.redirect(`${origin}/email-confirmed?type=error&error=verification_failed`);
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
