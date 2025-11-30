@@ -13,6 +13,8 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 ## Recent Changes
 
 ### November 30, 2025 - Settings API & Registration Form Fixes
+- Fixed settings API caching issues by adding Next.js cache busting (`fetchCache`, `revalidate`)
+- Fixed service role client configuration with `detectSessionInUrl: false` to prevent session conflicts
 - Fixed settings API GET endpoint to use service role client, bypassing RLS for accurate reads
 - Registration page now properly hides all form fields in invite-only mode (not just name/password)
 - Form fields only appear when public registration is enabled OR user has valid invitation
