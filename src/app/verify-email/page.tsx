@@ -50,15 +50,23 @@ function VerifyEmailContent() {
         return;
       }
 
-      // If this was an email change, sync the new email to user_profiles
+      // Get the verified user
+      const { data: userData } = await supabase.auth.getUser();
+
       if (type === 'email_change') {
-        // Get the updated user to get the verified email
-        const { data: userData } = await supabase.auth.getUser();
+        // Sync the new email to user_profiles
         if (userData?.user?.id && userData?.user?.email) {
-          // Sync the verified email to user_profiles table
           await profileService.syncProfileEmail(userData.user.id, userData.user.email);
         }
+      } else if (type === 'signup' || type === 'email') {
+        // Ensure user profile exists after signup verification
+        if (userData?.user) {
+          await profileService.ensureProfileExists(userData.user);
+        }
       }
+
+      // Refresh the session to get fresh tokens with updated user data
+      await supabase.auth.refreshSession();
 
       setStatus('success');
 
