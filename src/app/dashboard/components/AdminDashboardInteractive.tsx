@@ -62,11 +62,25 @@ const AdminDashboardInteractive = () => {
   // Cache isSystemAdmin result to avoid function reference changes
   const isAdmin = isSystemAdmin();
 
+  // Track if we've finished the initial auth check
+  const [authChecked, setAuthChecked] = useState(false);
+  
   useEffect(() => {
-    if (!authLoading && !user) {
+    // Wait a bit after auth finishes loading to allow session to fully establish
+    if (!authLoading) {
+      const timer = setTimeout(() => {
+        setAuthChecked(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
+
+  useEffect(() => {
+    // Only redirect to login after auth is fully checked and there's no user
+    if (authChecked && !user) {
       router.push('/login');
     }
-  }, [user, authLoading, router]);
+  }, [user, authChecked, router]);
 
   // Load owners for system admin dropdown
   useEffect(() => {
