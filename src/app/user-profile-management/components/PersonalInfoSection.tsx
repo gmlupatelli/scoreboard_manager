@@ -16,13 +16,15 @@ interface PersonalInfoSectionProps {
   pendingEmail?: string | null;
   onUpdateProfile: (fullName: string) => Promise<boolean>;
   onUpdateEmail: (newEmail: string) => Promise<boolean>;
+  onResendVerification?: () => Promise<boolean>;
 }
 
 export default function PersonalInfoSection({
   profile,
   pendingEmail,
   onUpdateProfile,
-  onUpdateEmail
+  onUpdateEmail,
+  onResendVerification
 }: PersonalInfoSectionProps) {
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
   const [email, setEmail] = useState(profile?.email ?? '');
@@ -31,6 +33,8 @@ export default function PersonalInfoSection({
   const [savingName, setSavingName] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   // Update local state when profile prop changes
   useEffect(() => {
@@ -95,6 +99,22 @@ export default function PersonalInfoSection({
     setEmail(profile?.email ?? '');
     setEmailError('');
     setIsEditingEmail(false);
+  };
+
+  const handleResendVerification = async () => {
+    if (!onResendVerification) return;
+    
+    setResending(true);
+    setResendSuccess(false);
+    
+    const success = await onResendVerification();
+    
+    setResending(false);
+    if (success) {
+      setResendSuccess(true);
+      // Reset success message after 5 seconds
+      setTimeout(() => setResendSuccess(false), 5000);
+    }
   };
 
   return (
@@ -220,6 +240,23 @@ export default function PersonalInfoSection({
                       <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
                         Please check your inbox and click the verification link to confirm this change.
                       </p>
+                      {onResendVerification && (
+                        <div className="mt-2">
+                          {resendSuccess ? (
+                            <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                              Verification email sent successfully!
+                            </p>
+                          ) : (
+                            <button
+                              onClick={handleResendVerification}
+                              disabled={resending}
+                              className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+                            >
+                              {resending ? 'Sending...' : 'Resend verification email'}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

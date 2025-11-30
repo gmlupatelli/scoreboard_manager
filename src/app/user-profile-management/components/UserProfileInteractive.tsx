@@ -104,6 +104,24 @@ export default function UserProfileInteractive() {
     return false;
   };
 
+  const handleResendVerification = async () => {
+    if (!user?.new_email) return false;
+
+    const { success, error } = await profileService.resendEmailVerification(user.new_email);
+
+    if (error) {
+      showToast(error, 'error');
+      return false;
+    }
+
+    if (success) {
+      showToast('Verification email resent', 'success');
+      return true;
+    }
+
+    return false;
+  };
+
   const handleChangePassword = async (newPassword: string) => {
     const { success, error } = await profileService.changePassword(newPassword);
 
@@ -178,6 +196,7 @@ export default function UserProfileInteractive() {
           pendingEmail={user?.new_email}
           onUpdateProfile={handleUpdateProfile}
           onUpdateEmail={handleUpdateEmail}
+          onResendVerification={handleResendVerification}
         />
 
         {/* Security Settings */}
