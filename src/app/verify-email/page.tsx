@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import Logo from '@/components/ui/Logo';
 import Icon from '@/components/ui/AppIcon';
+import { profileService } from '@/services/profileService';
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -47,6 +48,16 @@ function VerifyEmailContent() {
           setErrorMessage(error.message || 'Verification failed. Please try again.');
         }
         return;
+      }
+
+      // If this was an email change, sync the new email to user_profiles
+      if (type === 'email_change') {
+        // Get the updated user to get the verified email
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user?.id && userData?.user?.email) {
+          // Sync the verified email to user_profiles table
+          await profileService.syncProfileEmail(userData.user.id, userData.user.email);
+        }
       }
 
       setStatus('success');
