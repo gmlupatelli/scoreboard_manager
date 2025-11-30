@@ -7,28 +7,45 @@ const DEFAULT_SETTINGS = {
   require_email_verification: true
 };
 
-function getSupabaseClient(authHeader?: string | null) {
+function getAnonClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    });
-  }
   
   return createClient(supabaseUrl, supabaseAnonKey);
 }
 
-export async function GET(request: NextRequest) {
+function getAuthClient(token: string) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  });
+}
+
+function getServiceRoleClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!serviceRoleKey) {
+    return null;
+  }
+  
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+}
+
+export async function GET() {
   try {
-    const authHeader = request.headers.get('Authorization');
-    const supabase = getSupabaseClient(authHeader);
+    const supabase = getAnonClient();
     
     const { data, error } = await supabase
       .from('system_settings')
@@ -37,8 +54,17 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116' || error.code === '42P01') {
-        return NextResponse.json(DEFAULT_SETTINGS);
+      const serviceClient = getServiceRoleClient();
+      if (serviceClient) {
+        const { data: serviceData, error: serviceError } = await serviceClient
+          .from('system_settings')
+          .select('*')
+          .eq('id', 'default')
+          .single();
+        
+        if (!serviceError && serviceData) {
+          return NextResponse.json(serviceData);
+        }
       }
       return NextResponse.json(DEFAULT_SETTINGS);
     }
@@ -57,15 +83,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });
     }
     
-    const supabase = getSupabaseClient(authHeader);
+    const token = authHeader.substring(7);
+    const authClient = getAuthClient(token);
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
     
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const serviceClient = getServiceRoleClient();
+    const dbClient = serviceClient || authClient;
+
+    const { data: profile } = await dbClient
       .from('user_profiles')
       .select('role')
       .eq('id', user.id)
@@ -78,7 +108,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { allow_public_registration, require_email_verification } = body;
 
-    const { data: existing } = await supabase
+    const { data: existing } = await dbClient
       .from('system_settings')
       .select('id')
       .eq('id', 'default')
@@ -86,7 +116,7 @@ export async function PUT(request: NextRequest) {
 
     let result;
     if (existing) {
-      result = await supabase
+      result = await dbClient
         .from('system_settings')
         .update({
           allow_public_registration,
@@ -97,7 +127,7 @@ export async function PUT(request: NextRequest) {
         .select()
         .single();
     } else {
-      result = await supabase
+      result = await dbClient
         .from('system_settings')
         .insert({
           id: 'default',
@@ -113,7 +143,7 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json(result.data);
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
   }
 }

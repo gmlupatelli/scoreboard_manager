@@ -1,22 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-function getSupabaseClient(authHeader?: string | null) {
+function getAuthClient(token: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-    });
+    }
+  });
+}
+
+function getServiceRoleClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!serviceRoleKey) {
+    return null;
   }
   
-  return createClient(supabaseUrl, supabaseAnonKey);
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
 }
 
 export async function GET(request: NextRequest) {
@@ -27,18 +38,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const supabase = getSupabaseClient(authHeader);
+    const token = authHeader.substring(7);
+    const authClient = getAuthClient(token);
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const serviceClient = getServiceRoleClient();
+
+    const { data: profile } = serviceClient 
+      ? await serviceClient.from('user_profiles').select('role').eq('id', user.id).single()
+      : await authClient.from('user_profiles').select('role').eq('id', user.id).single();
 
     const isSystemAdmin = profile?.role === 'system_admin';
 
@@ -51,12 +63,14 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const offset = (page - 1) * limit;
 
+    const dbClient = (isSystemAdmin && serviceClient) ? serviceClient : authClient;
+
     if (paginated) {
-      let countQuery = supabase
+      let countQuery = dbClient
         .from('invitations')
         .select('id', { count: 'exact', head: true });
 
-      let query = supabase
+      let query = dbClient
         .from('invitations')
         .select(`
           *,
@@ -91,8 +105,28 @@ export async function GET(request: NextRequest) {
       ]);
 
       if (error) {
-        if (error.code === '42P01') {
-          return NextResponse.json({ data: [], totalCount: 0, page, limit, totalPages: 0 });
+        if (serviceClient && !isSystemAdmin) {
+          const fallbackQuery = serviceClient
+            .from('invitations')
+            .select(`*, inviter:user_profiles!inviter_id(id, full_name, email)`)
+            .eq('inviter_id', user.id)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+          
+          const [fallbackResult, fallbackCount] = await Promise.all([
+            fallbackQuery,
+            serviceClient.from('invitations').select('id', { count: 'exact', head: true }).eq('inviter_id', user.id)
+          ]);
+          
+          if (!fallbackResult.error) {
+            return NextResponse.json({
+              data: fallbackResult.data || [],
+              totalCount: fallbackCount.count || 0,
+              page,
+              limit,
+              totalPages: Math.ceil((fallbackCount.count || 0) / limit)
+            });
+          }
         }
         return NextResponse.json({ data: [], totalCount: 0, page, limit, totalPages: 0 });
       }
@@ -106,7 +140,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    let query = supabase
+    let query = dbClient
       .from('invitations')
       .select(`
         *,
@@ -121,8 +155,16 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      if (error.code === '42P01') {
-        return NextResponse.json([]);
+      if (serviceClient && !isSystemAdmin) {
+        const fallbackResult = await serviceClient
+          .from('invitations')
+          .select(`*, inviter:user_profiles!inviter_id(full_name, email)`)
+          .eq('inviter_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (!fallbackResult.error) {
+          return NextResponse.json(fallbackResult.data || []);
+        }
       }
       return NextResponse.json([]);
     }
@@ -141,12 +183,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const supabase = getSupabaseClient(authHeader);
+    const token = authHeader.substring(7);
+    const authClient = getAuthClient(token);
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const serviceClient = getServiceRoleClient();
 
     const body = await request.json();
     const { email } = body;
@@ -157,7 +202,9 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    const { data: existingUser } = await supabase
+    const checkClient = serviceClient || authClient;
+    
+    const { data: existingUser } = await checkClient
       .from('user_profiles')
       .select('id')
       .eq('email', normalizedEmail)
@@ -167,7 +214,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User with this email already exists' }, { status: 400 });
     }
 
-    const { data: existingInvite } = await supabase
+    const { data: existingInvite } = await checkClient
       .from('invitations')
       .select('id, status')
       .eq('invitee_email', normalizedEmail)
@@ -178,9 +225,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'A pending invitation already exists for this email' }, { status: 400 });
     }
 
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceRoleKey) {
-      const { data: invitation, error: insertError } = await supabase
+    if (!serviceClient) {
+      const { data: invitation, error: insertError } = await authClient
         .from('invitations')
         .insert({
           inviter_id: user.id,
@@ -202,20 +248,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || '';
     
-    const { error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+    const { error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(
       normalizedEmail,
       {
         redirectTo: `${baseUrl}/accept-invite`,
@@ -229,7 +264,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: inviteError.message }, { status: 500 });
     }
 
-    const { data: invitation, error: insertError } = await supabase
+    const { data: invitation, error: insertError } = await serviceClient
       .from('invitations')
       .insert({
         inviter_id: user.id,
@@ -249,7 +284,7 @@ export async function POST(request: NextRequest) {
       message: 'Invitation sent successfully',
       email_sent: true
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to send invitation' }, { status: 500 });
   }
 }

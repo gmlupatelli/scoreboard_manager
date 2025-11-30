@@ -1,22 +1,33 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-function getSupabaseClient(authHeader?: string | null) {
+function getAuthClient(token: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`
       }
-    });
+    }
+  });
+}
+
+function getServiceRoleClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!serviceRoleKey) {
+    return null;
   }
   
-  return createClient(supabaseUrl, supabaseAnonKey);
+  return createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
 }
 
 export async function GET(request: NextRequest) {
@@ -27,14 +38,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const supabase = getSupabaseClient(authHeader);
+    const token = authHeader.substring(7);
+    const authClient = getAuthClient(token);
     
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const serviceClient = getServiceRoleClient();
+    const dbClient = serviceClient || authClient;
+
+    const { data: profile } = await dbClient
       .from('user_profiles')
       .select('role')
       .eq('id', user.id)
@@ -44,7 +59,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const { data: inviterIds, error: inviterError } = await supabase
+    const { data: inviterIds, error: inviterError } = await dbClient
       .from('invitations')
       .select('inviter_id')
       .not('inviter_id', 'is', null);
@@ -59,7 +74,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([]);
     }
 
-    const { data: inviters, error: profilesError } = await supabase
+    const { data: inviters, error: profilesError } = await dbClient
       .from('user_profiles')
       .select('id, email, full_name')
       .in('id', uniqueInviterIds)

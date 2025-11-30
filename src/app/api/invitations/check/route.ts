@@ -1,5 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+
+function getAnonClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = getAnonClient();
     const normalizedEmail = email.toLowerCase().trim();
 
     const { data: invitation, error } = await supabase
