@@ -316,13 +316,6 @@ export default function SystemAdminInvitationsPage() {
               </p>
             </div>
             <div className="flex items-center space-x-3">
-              <button
-                onClick={() => setShowInviteModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150"
-              >
-                <Icon name="PlusIcon" size={18} />
-                <span>Invite User</span>
-              </button>
               <Link
                 href="/dashboard"
                 className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
@@ -330,6 +323,13 @@ export default function SystemAdminInvitationsPage() {
                 <Icon name="ArrowLeftIcon" size={18} />
                 <span>Back to Dashboard</span>
               </Link>
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150"
+              >
+                <Icon name="PlusIcon" size={18} />
+                <span>Invite User</span>
+              </button>
             </div>
           </div>
 
