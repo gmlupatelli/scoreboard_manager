@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import Icon from '@/components/ui/AppIcon';
@@ -9,7 +9,6 @@ import Logo from '@/components/ui/Logo';
 
 function AcceptInviteContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -25,8 +24,33 @@ function AcceptInviteContent() {
   );
 
   useEffect(() => {
-    const checkSession = async () => {
+    const handleInviteFlow = async () => {
       try {
+        // Check if we have tokens in the URL hash (from Supabase invite email)
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          const type = hashParams.get('type');
+
+          if (accessToken && refreshToken && type === 'invite') {
+            // Set the session using the tokens from the invite link
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+
+            if (!sessionError) {
+              // Clear the hash from URL for cleaner appearance
+              window.history.replaceState(null, '', window.location.pathname);
+              setHasSession(true);
+              setCheckingSession(false);
+              return;
+            }
+          }
+        }
+
+        // Fallback: check for existing session
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setHasSession(true);
@@ -38,7 +62,7 @@ function AcceptInviteContent() {
       }
     };
 
-    checkSession();
+    handleInviteFlow();
   }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
