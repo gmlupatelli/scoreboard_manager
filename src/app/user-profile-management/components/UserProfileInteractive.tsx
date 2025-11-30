@@ -8,6 +8,7 @@ import PersonalInfoSection from './PersonalInfoSection';
 import SecuritySection from './SecuritySection';
 import DangerZoneSection from './DangerZoneSection';
 import Toast from './Toast';
+import Icon from '@/components/ui/AppIcon';
 
 interface Profile {
   id: string;
@@ -155,6 +156,15 @@ export default function UserProfileInteractive() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+            >
+              <Icon name="ArrowLeftIcon" size={18} />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+            </button>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
           <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
         </div>
