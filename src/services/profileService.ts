@@ -32,9 +32,22 @@ export const profileService = {
 
   /**
    * Update user profile (full name only - email handled separately)
+   * Updates both user_profiles table and Supabase Auth user metadata
    */
   async updateProfile(userId: string, updates: ProfileUpdateData) {
     try {
+      // Update Supabase Auth user metadata so it reflects in Supabase dashboard
+      if (updates.full_name) {
+        const { error: authError } = await supabase.auth.updateUser({
+          data: { full_name: updates.full_name }
+        });
+
+        if (authError) {
+          return { data: null, error: authError.message };
+        }
+      }
+
+      // Also update user_profiles table
       const { data, error } = await supabase
         .from('user_profiles')
         .update({
