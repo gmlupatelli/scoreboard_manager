@@ -96,13 +96,20 @@ export default function SystemAdminSettingsPage() {
         })
       });
 
+      const responseText = await response.text();
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        setError(`Server error (${response.status}): ${responseText.substring(0, 200)}`);
+        return;
+      }
+
       if (response.ok) {
-        const data = await response.json();
         setSettings(data);
         setSuccess('Settings updated successfully');
         setTimeout(() => setSuccess(''), 3000);
       } else {
-        const data = await response.json();
         let errorMsg = data.error || 'Failed to update settings';
         if (data.debug) {
           errorMsg += ` [Debug: ${data.debug}]`;
@@ -110,10 +117,15 @@ export default function SystemAdminSettingsPage() {
         if (data.exception) {
           errorMsg += ` [Exception: ${data.exception}]`;
         }
+        if (data.errorCode) {
+          errorMsg += ` [Code: ${data.errorCode}]`;
+        }
+        errorMsg += ` (HTTP ${response.status})`;
         setError(errorMsg);
       }
     } catch (err) {
-      setError('Failed to update settings');
+      const errorMsg = err instanceof Error ? err.message : 'Network error';
+      setError(`Request failed: ${errorMsg}`);
     } finally {
       setSaving(false);
     }
