@@ -128,10 +128,17 @@ export const profileService = {
    */
   async deleteAccount(_userId: string) {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        return { success: false, error: 'Not authenticated' };
+      }
+
       const response = await fetch('/api/account/delete', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         }
       });
 
