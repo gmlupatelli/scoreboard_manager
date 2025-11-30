@@ -134,39 +134,33 @@ export default function UserProfileInteractive() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8 px-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-sm p-8">
-            <div className="animate-pulse space-y-6">
-              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-              <div className="space-y-4">
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
-                <div className="h-12 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-text-secondary">Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-text-primary mb-2">Profile Settings</h1>
+            <p className="text-text-secondary">Manage your account settings and preferences</p>
+          </div>
+          <div className="flex items-center space-x-3 mt-4 sm:mt-0">
             <button
               onClick={() => router.push('/dashboard')}
               className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
             >
               <Icon name="ArrowLeftIcon" size={18} />
-              <span className="hidden sm:inline">Back to Dashboard</span>
+              <span>Back to Dashboard</span>
             </button>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
-          <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
         </div>
 
         {/* Personal Information */}

@@ -101,22 +101,22 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Security Settings</h2>
+    <div className="bg-card border border-border rounded-lg elevation-1 p-6">
+      <h2 className="text-xl font-semibold text-text-primary mb-6">Security Settings</h2>
       
       <div className="space-y-6">
         {/* Password Section */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-text-secondary mb-2">
             Password
           </label>
           
           {!showPasswordForm ? (
             <div className="flex items-center justify-between">
-              <span className="text-gray-900">••••••••</span>
+              <span className="text-text-primary">••••••••</span>
               <button
                 onClick={() => setShowPasswordForm(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-primary hover:opacity-80 font-medium transition-smooth"
               >
                 Change Password
               </button>
@@ -129,8 +129,8 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
                   type="password"
                   value={newPassword}
                   onChange={(e) => handlePasswordChange(e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    passwordError ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-2 border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    passwordError ? 'border-destructive' : 'border-border'
                   }`}
                   placeholder="New password"
                 />
@@ -139,13 +139,13 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
                 {newPassword && (
                   <div className="mt-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all duration-300 ${passwordStrength.color}`}
                           style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm text-gray-600 min-w-24">
+                      <span className="text-sm text-text-secondary min-w-24">
                         {passwordStrength.label}
                       </span>
                     </div>
@@ -162,8 +162,8 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
                     setConfirmPassword(e.target.value);
                     setPasswordError('');
                   }}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    passwordError ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-2 border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    passwordError ? 'border-destructive' : 'border-border'
                   }`}
                   placeholder="Confirm new password"
                 />
@@ -171,29 +171,29 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
 
               {/* Error Message */}
               {passwordError && (
-                <p className="text-sm text-red-600">{passwordError}</p>
+                <p className="text-sm text-destructive">{passwordError}</p>
               )}
 
               {/* Password Requirements */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-surface border border-border rounded-lg p-4">
+                <p className="text-sm font-medium text-text-primary mb-2">
                   Password Requirements:
                 </p>
-                <ul className="text-sm text-gray-600 space-y-1">
+                <ul className="text-sm text-text-secondary space-y-1">
                   <li className="flex items-center gap-2">
-                    <span className={newPassword.length >= 8 ? 'text-green-600' : ''}>
+                    <span className={newPassword.length >= 8 ? 'text-success' : ''}>
                       {newPassword.length >= 8 ? '✓' : '○'}
                     </span>
                     At least 8 characters
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className={/(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) ? 'text-green-600' : ''}>
+                    <span className={/(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) ? 'text-success' : ''}>
                       {/(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) ? '✓' : '○'}
                     </span>
                     Uppercase and lowercase letters
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className={/\d/.test(newPassword) ? 'text-green-600' : ''}>
+                    <span className={/\d/.test(newPassword) ? 'text-success' : ''}>
                       {/\d/.test(newPassword) ? '✓' : '○'}
                     </span>
                     At least one number
@@ -206,14 +206,14 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
                 <button
                   onClick={handleSavePassword}
                   disabled={saving || !newPassword || !confirmPassword}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-text-secondary disabled:cursor-not-allowed transition-smooth"
                 >
                   {saving ? 'Saving...' : 'Update Password'}
                 </button>
                 <button
                   onClick={handleCancel}
                   disabled={saving}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
                 >
                   Cancel
                 </button>
