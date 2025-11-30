@@ -62,7 +62,10 @@ export async function GET() {
       .eq('id', 'default')
       .single();
 
+    console.log('[Settings GET] Anon client result:', data, 'Error:', error?.message);
+
     if (error) {
+      console.log('[Settings GET] Anon client failed, trying service role...');
       const serviceClient = getServiceRoleClient();
       if (serviceClient) {
         const { data: serviceData, error: serviceError } = await serviceClient
@@ -71,15 +74,20 @@ export async function GET() {
           .eq('id', 'default')
           .single();
         
+        console.log('[Settings GET] Service role result:', serviceData, 'Error:', serviceError?.message);
+        
         if (!serviceError && serviceData) {
           return NextResponse.json(serviceData, { headers });
         }
       }
+      console.log('[Settings GET] Returning DEFAULT_SETTINGS');
       return NextResponse.json(DEFAULT_SETTINGS, { headers });
     }
 
+    console.log('[Settings GET] Returning anon client data');
     return NextResponse.json(data, { headers });
-  } catch {
+  } catch (err) {
+    console.error('[Settings GET] Exception:', err);
     return NextResponse.json(DEFAULT_SETTINGS, { headers });
   }
 }
