@@ -39,7 +39,12 @@ export default function SystemAdminSettingsPage() {
       const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/settings', {
         credentials: 'include',
-        headers: authHeaders
+        cache: 'no-store',
+        headers: {
+          ...authHeaders,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
       });
       if (response.ok) {
         const data = await response.json();
