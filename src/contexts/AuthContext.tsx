@@ -66,13 +66,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (data) {
+        const profile = data as any;
         setUserProfile({
-          id: data.id,
-          email: data.email,
-          fullName: data.full_name,
-          role: data.role,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
+          id: profile.id,
+          email: profile.email,
+          fullName: profile.full_name,
+          role: profile.role,
+          createdAt: profile.created_at,
+          updatedAt: profile.updated_at,
         });
       }
     } catch (error) {

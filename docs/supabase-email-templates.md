@@ -38,9 +38,7 @@ Reset your Scoreboard Manager password
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
-                <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Scoreboard Manager</span>
-              </div>
+              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -105,9 +103,7 @@ Welcome to Scoreboard Manager - Confirm your email
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
-                <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Scoreboard Manager</span>
-              </div>
+              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -178,9 +174,7 @@ Confirm your new email address - Scoreboard Manager
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
-                <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Scoreboard Manager</span>
-              </div>
+              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -247,9 +241,7 @@ Your Scoreboard Manager login link
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
-                <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Scoreboard Manager</span>
-              </div>
+              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -314,9 +306,7 @@ You've been invited to join Scoreboard Manager
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
-                <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Scoreboard Manager</span>
-              </div>
+              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -387,9 +377,7 @@ Your verification code - Scoreboard Manager
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
-                <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Scoreboard Manager</span>
-              </div>
+              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -464,9 +452,7 @@ Your Scoreboard Manager password has been changed
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); padding: 12px 20px; border-radius: 12px; margin-bottom: 20px;">
-                <span style="color: #ffffff; font-size: 24px; font-weight: bold;">Scoreboard Manager</span>
-              </div>
+              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
