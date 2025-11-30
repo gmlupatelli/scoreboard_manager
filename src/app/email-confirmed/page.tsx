@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/common/Header';
@@ -61,7 +61,7 @@ const confirmationTypes: Record<string, ConfirmationConfig> = {
   },
 };
 
-export default function EmailConfirmedPage() {
+function EmailConfirmedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -89,57 +89,78 @@ export default function EmailConfirmedPage() {
   }, [config.autoRedirect, config.redirectDelay, config.redirectPath, router]);
 
   return (
+    <div className="max-w-md w-full">
+      <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm">
+        <div className="mb-6">
+          <Icon 
+            name={config.icon} 
+            size={64} 
+            className={`mx-auto ${config.iconColor}`} 
+          />
+        </div>
+        
+        <h1 className="text-2xl font-bold text-text-primary mb-4">
+          {config.title}
+        </h1>
+        
+        <p className="text-text-secondary mb-8">
+          {config.message}
+        </p>
+
+        {config.autoRedirect && countdown !== null && countdown > 0 && (
+          <p className="text-sm text-muted-foreground mb-6">
+            Redirecting in {countdown} second{countdown !== 1 ? 's' : ''}...
+          </p>
+        )}
+
+        <Link
+          href={config.redirectPath}
+          className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth"
+        >
+          <span>{config.redirectLabel}</span>
+          <Icon name="ArrowRightIcon" size={16} />
+        </Link>
+
+        {type === 'error' && (
+          <div className="mt-6 pt-6 border-t border-border">
+            <p className="text-sm text-text-secondary mb-3">
+              Need help?
+            </p>
+            <Link
+              href="/support"
+              className="text-primary hover:underline text-sm"
+            >
+              Contact Support
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="max-w-md w-full">
+      <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm">
+        <div className="mb-6">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+        </div>
+        <p className="text-text-secondary">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function EmailConfirmedPage() {
+  return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       
       <main className="flex-grow flex items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full">
-          <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm">
-            <div className="mb-6">
-              <Icon 
-                name={config.icon} 
-                size={64} 
-                className={`mx-auto ${config.iconColor}`} 
-              />
-            </div>
-            
-            <h1 className="text-2xl font-bold text-text-primary mb-4">
-              {config.title}
-            </h1>
-            
-            <p className="text-text-secondary mb-8">
-              {config.message}
-            </p>
-
-            {config.autoRedirect && countdown !== null && countdown > 0 && (
-              <p className="text-sm text-muted-foreground mb-6">
-                Redirecting in {countdown} second{countdown !== 1 ? 's' : ''}...
-              </p>
-            )}
-
-            <Link
-              href={config.redirectPath}
-              className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth"
-            >
-              <span>{config.redirectLabel}</span>
-              <Icon name="ArrowRightIcon" size={16} />
-            </Link>
-
-            {type === 'error' && (
-              <div className="mt-6 pt-6 border-t border-border">
-                <p className="text-sm text-text-secondary mb-3">
-                  Need help?
-                </p>
-                <Link
-                  href="/support"
-                  className="text-primary hover:underline text-sm"
-                >
-                  Contact Support
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
+        <Suspense fallback={<LoadingFallback />}>
+          <EmailConfirmedContent />
+        </Suspense>
       </main>
 
       <Footer />
