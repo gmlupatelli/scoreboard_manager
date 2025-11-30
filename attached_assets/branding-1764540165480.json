@@ -1,0 +1,131 @@
+{
+  "colorScheme": "dark",
+  "fonts": [
+    {
+      "family": "Circular",
+      "role": "body"
+    },
+    {
+      "family": "Helvetica Neue",
+      "role": "body"
+    },
+    {
+      "family": "Helvetica",
+      "role": "body"
+    },
+    {
+      "family": "Arial",
+      "role": "body"
+    },
+    {
+      "family": "custom-font",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#006239",
+    "accent": "#1F4B37",
+    "background": "#121212",
+    "textPrimary": "#FAFAFA",
+    "link": "#1F4B37"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Circular",
+      "heading": "Circular"
+    },
+    "fontStacks": {
+      "heading": [
+        "Circular",
+        "custom-font",
+        "Helvetica Neue",
+        "Helvetica",
+        "Arial",
+        "sans-serif"
+      ],
+      "body": [
+        "Circular",
+        "custom-font",
+        "Helvetica Neue",
+        "Helvetica",
+        "Arial",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Circular",
+        "custom-font",
+        "Helvetica Neue",
+        "Helvetica",
+        "Arial",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "72px",
+      "h2": "16px",
+      "body": "14px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "6px"
+  },
+  "components": {
+    "input": {
+      "borderColor": "#CCCCCC",
+      "borderRadius": "6px"
+    },
+    "buttonPrimary": {
+      "background": "#006239",
+      "textColor": "#FAFAFA",
+      "borderColor": "#1F4B37",
+      "borderRadius": "6px",
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#242424",
+      "textColor": "#FAFAFA",
+      "borderColor": "#363636",
+      "borderRadius": "6px",
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.png",
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": "File saved at: attached_assets/ogImage.png"
+  },
+  "__framework_hints": [],
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Logo #0 visually represents the brand name 'Supabase' and is located in the header, linking to the homepage, making it the main brand logo.",
+    "confidence": 0.98
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 1,
+      "text": "Start your project",
+      "reasoning": "Button #1 has a vibrant brand color (#006239) and action-oriented text 'Start your project', making it the primary CTA."
+    },
+    "secondary": {
+      "index": 0,
+      "text": "Join us on Discord",
+      "reasoning": "Button #0 has a different background color (#242424) and is less prominent, making it suitable as the secondary button."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "developers and tech enthusiasts"
+  },
+  "designSystem": {
+    "framework": "tailwind",
+    "componentLibrary": null
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  }
+}
