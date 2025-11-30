@@ -178,10 +178,10 @@ const AdminDashboardInteractive = () => {
 
   // Initial load and reload when debounced search or owner filter changes
   useEffect(() => {
-    if (user && userProfile) {
+    if (user) {
       loadScoreboards(true, debouncedSearch, selectedOwnerId, 0);
     }
-  }, [debouncedSearch, selectedOwnerId]);
+  }, [user, debouncedSearch, selectedOwnerId]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
