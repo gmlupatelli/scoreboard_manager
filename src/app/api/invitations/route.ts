@@ -253,10 +253,11 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || '';
     
+    // Use auth/callback to exchange PKCE code for session, then redirect to accept-invite
     const { error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(
       normalizedEmail,
       {
-        redirectTo: `${baseUrl}/accept-invite`,
+        redirectTo: `${baseUrl}/auth/callback?next=/accept-invite`,
         data: {
           invited_by: user.id
         }
