@@ -54,23 +54,9 @@ export async function GET(request: NextRequest) {
   }
 
   // Handle token hash flow (email confirmations)
+  // Pass the token to a client-side page that will verify it
   if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash,
-      type: type as 'email_change' | 'signup' | 'email'
-    });
-    
-    if (!error) {
-      if (type === 'email_change') {
-        redirectUrl = `${origin}/email-confirmed?type=email_change`;
-      } else if (type === 'signup' || type === 'email') {
-        redirectUrl = `${origin}/email-confirmed?type=signup`;
-      } else {
-        redirectUrl = `${origin}/email-confirmed?type=generic`;
-      }
-    } else {
-      redirectUrl = `${origin}/email-confirmed?type=error&error=verification_failed`;
-    }
+    redirectUrl = `${origin}/verify-email?token_hash=${token_hash}&type=${type}`;
   }
 
   return NextResponse.redirect(redirectUrl);
