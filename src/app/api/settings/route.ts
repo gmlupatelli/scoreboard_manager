@@ -44,6 +44,12 @@ function getServiceRoleClient() {
 }
 
 export async function GET() {
+  const headers = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  };
+
   try {
     const supabase = getAnonClient();
     
@@ -63,24 +69,30 @@ export async function GET() {
           .single();
         
         if (!serviceError && serviceData) {
-          return NextResponse.json(serviceData);
+          return NextResponse.json(serviceData, { headers });
         }
       }
-      return NextResponse.json(DEFAULT_SETTINGS);
+      return NextResponse.json(DEFAULT_SETTINGS, { headers });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, { headers });
   } catch {
-    return NextResponse.json(DEFAULT_SETTINGS);
+    return NextResponse.json(DEFAULT_SETTINGS, { headers });
   }
 }
 
 export async function PUT(request: NextRequest) {
+  const headers = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  };
+
   try {
     const authHeader = request.headers.get('Authorization');
     
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401, headers });
     }
     
     const token = authHeader.substring(7);
@@ -89,7 +101,7 @@ export async function PUT(request: NextRequest) {
     const { data: { user }, error: authError } = await authClient.auth.getUser();
     
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers });
     }
 
     const serviceClient = getServiceRoleClient();
@@ -102,7 +114,7 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (!profile || profile.role !== 'system_admin') {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403, headers });
     }
 
     const body = await request.json();
@@ -139,11 +151,11 @@ export async function PUT(request: NextRequest) {
     }
 
     if (result.error) {
-      return NextResponse.json({ error: result.error.message }, { status: 500 });
+      return NextResponse.json({ error: result.error.message }, { status: 500, headers });
     }
 
-    return NextResponse.json(result.data);
+    return NextResponse.json(result.data, { headers });
   } catch {
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500, headers });
   }
 }
