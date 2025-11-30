@@ -175,6 +175,7 @@ export default function UserProfileInteractive() {
         {/* Personal Information */}
         <PersonalInfoSection
           profile={profile}
+          pendingEmail={user?.new_email}
           onUpdateProfile={handleUpdateProfile}
           onUpdateEmail={handleUpdateEmail}
         />

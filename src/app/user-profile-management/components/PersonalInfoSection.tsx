@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ClockIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 
 interface Profile {
   id: string;
@@ -12,12 +13,14 @@ interface Profile {
 
 interface PersonalInfoSectionProps {
   profile: Profile | null;
+  pendingEmail?: string | null;
   onUpdateProfile: (fullName: string) => Promise<boolean>;
   onUpdateEmail: (newEmail: string) => Promise<boolean>;
 }
 
 export default function PersonalInfoSection({
   profile,
+  pendingEmail,
   onUpdateProfile,
   onUpdateEmail
 }: PersonalInfoSectionProps) {
@@ -188,14 +191,39 @@ export default function PersonalInfoSection({
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between">
-              <span className="text-text-primary">{profile?.email}</span>
-              <button
-                onClick={() => setIsEditingEmail(true)}
-                className="text-primary hover:opacity-80 font-medium transition-smooth"
-              >
-                Edit
-              </button>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-text-primary">{profile?.email}</span>
+                <button
+                  onClick={() => setIsEditingEmail(true)}
+                  className="text-primary hover:opacity-80 font-medium transition-smooth"
+                >
+                  Edit
+                </button>
+              </div>
+              {pendingEmail && (
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <ClockIcon className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        Pending email change
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <EnvelopeIcon className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <span className="text-sm text-amber-700 dark:text-amber-300 truncate">
+                          {pendingEmail}
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        Please check your inbox and click the verification link to confirm this change.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
