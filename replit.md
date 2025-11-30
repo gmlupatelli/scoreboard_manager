@@ -5,12 +5,22 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Project Status
 - **Current State**: Fully configured and running on Replit
-- **Last Updated**: November 29, 2025
+- **Last Updated**: November 30, 2025
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+
+### November 30, 2025 - Production Supabase API Compatibility Fix
+- Fixed API routes for production Supabase environment compatibility
+- Updated all API routes to use service role client with auth client fallback pattern:
+  - Service role client when available (production) for reliable RLS bypass
+  - Auth client fallback when service role key is missing (development)
+- All routes validate JWT for user identity before any database operations
+- Admin operations check user role before performing privileged actions
+- Fixed "Failed to update settings" error in production environment
+- Fixed settings toggle not reflecting database values in production
 
 ### November 29, 2025 - System Admin Invitations Management Page
 - Created dedicated System Admin Invitations page at /system-admin/invitations
