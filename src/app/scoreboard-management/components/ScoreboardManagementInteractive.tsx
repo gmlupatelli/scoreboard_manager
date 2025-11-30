@@ -25,7 +25,7 @@ const ScoreboardManagementInteractive = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const scoreboardId = searchParams.get('id');
-  const { user, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   
   const [isHydrated, setIsHydrated] = useState(false);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
@@ -74,12 +74,12 @@ const ScoreboardManagementInteractive = () => {
     }
   }, [user, authLoading, scoreboardId, router]);
 
-  // Load scoreboard and entries
+  // Load scoreboard and entries (wait for userProfile to be loaded for role check)
   useEffect(() => {
-    if (user && scoreboardId) {
+    if (user && userProfile && scoreboardId) {
       loadScoreboardData();
     }
-  }, [user, scoreboardId]);
+  }, [user, userProfile, scoreboardId]);
 
   const loadScoreboardData = async () => {
     if (!scoreboardId) return;
@@ -99,8 +99,8 @@ const ScoreboardManagementInteractive = () => {
         throw new Error('Scoreboard not found');
       }
 
-      // Check if user has access to this scoreboard
-      if (scoreboardResult.data.ownerId !== user?.id && user?.role !== 'system_admin') {
+      // Check if user has access to this scoreboard (owner or system admin)
+      if (scoreboardResult.data.ownerId !== user?.id && userProfile?.role !== 'system_admin') {
         throw new Error('You do not have permission to manage this scoreboard');
       }
 
