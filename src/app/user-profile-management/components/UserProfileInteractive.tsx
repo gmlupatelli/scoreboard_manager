@@ -123,9 +123,8 @@ export default function UserProfileInteractive() {
     }
 
     if (success) {
-      showToast('Account deleted successfully', 'success');
       await signOut();
-      router.push('/public-scoreboard-list');
+      router.push('/account-deleted');
       return true;
     }
 
