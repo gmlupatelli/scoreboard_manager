@@ -11,11 +11,14 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isEmailChange, setIsEmailChange] = useState(false);
 
   useEffect(() => {
     const verifyEmail = async () => {
       const token_hash = searchParams.get('token_hash');
       const type = searchParams.get('type');
+
+      setIsEmailChange(type === 'email_change');
 
       if (!token_hash || !type) {
         setStatus('error');
@@ -35,7 +38,14 @@ function VerifyEmailContent() {
 
       if (error) {
         setStatus('error');
-        setErrorMessage(error.message || 'Verification failed');
+        // Provide more helpful error messages
+        if (error.message.includes('expired')) {
+          setErrorMessage('This verification link has expired. Please request a new one.');
+        } else if (error.message.includes('invalid') || error.message.includes('Invalid')) {
+          setErrorMessage('This verification link is invalid or has already been used.');
+        } else {
+          setErrorMessage(error.message || 'Verification failed. Please try again.');
+        }
         return;
       }
 
@@ -48,7 +58,7 @@ function VerifyEmailContent() {
         } else {
           router.push('/dashboard');
         }
-      }, 1500);
+      }, 2000);
     };
 
     verifyEmail();
@@ -103,12 +113,26 @@ function VerifyEmailContent() {
             <p className="text-text-secondary mb-6">
               {errorMessage || 'The verification link may have expired or already been used.'}
             </p>
-            <button
-              onClick={() => router.push('/login')}
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth"
-            >
-              Go to Login
-            </button>
+            {isEmailChange ? (
+              <div className="space-y-3">
+                <p className="text-sm text-text-secondary">
+                  You can request a new verification email from your profile settings.
+                </p>
+                <button
+                  onClick={() => router.push('/user-profile-management')}
+                  className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth"
+                >
+                  Go to Profile Settings
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => router.push('/login')}
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth"
+              >
+                Go to Login
+              </button>
+            )}
           </>
         )}
       </div>
