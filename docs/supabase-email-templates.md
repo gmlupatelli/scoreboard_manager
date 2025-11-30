@@ -2,6 +2,33 @@
 
 These are customized email templates for your Scoreboard Manager app. Copy each template into the corresponding section in your Supabase dashboard under **Authentication > Email Templates**.
 
+---
+
+## REQUIRED: Configure Site URL First
+
+Before using these templates, you **MUST** configure the Site URL in your Supabase dashboard. The templates use `{{ .SiteURL }}` which pulls from this configuration.
+
+### Steps to Configure:
+
+1. Go to your **Supabase Dashboard**
+2. Navigate to **Authentication** → **URL Configuration**
+3. Set the **Site URL** to your production domain:
+   ```
+   https://YOUR-REPLIT-DOMAIN.replit.app
+   ```
+   For example: `https://e9ab90de-06dc-4323-b720-03b2944c1002-00-3hpzq7mwwlvzk.janeway.replit.dev`
+
+4. Add **Redirect URLs** (include trailing `/**` for wildcards):
+   ```
+   https://YOUR-REPLIT-DOMAIN.replit.app/**
+   ```
+
+5. Save the changes
+
+**Note:** If emails are redirecting to `0.0.0.0:5000`, it means the Site URL is still set to the development address. Update it to your actual domain.
+
+---
+
 **IMPORTANT:** These templates use custom redirect URLs that point to your `/auth/callback` route, which then redirects users to the appropriate confirmation pages.
 
 **Brand Colors Used:**
