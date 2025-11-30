@@ -14,6 +14,7 @@ CREATE OR REPLACE FUNCTION change_user_password(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   user_id UUID;
@@ -49,6 +50,7 @@ CREATE OR REPLACE FUNCTION delete_user_account()
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   user_id UUID;
