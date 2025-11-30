@@ -47,7 +47,15 @@ export default function UserProfileInteractive() {
     const { data, error } = await profileService.getProfile(user.id);
     
     if (error) {
-      showToast(error, 'error');
+      // If profile doesn't exist, create a default one from auth user data
+      const fallbackProfile: Profile = {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || null,
+        created_at: user.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setProfile(fallbackProfile);
     } else if (data) {
       setProfile(data);
     }
