@@ -9,6 +9,7 @@ import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
 import SearchableSelect from '@/components/ui/SearchableSelect';
+import InviteUserModal from '@/app/dashboard/components/InviteUserModal';
 
 interface Invitation {
   id: string;
@@ -59,6 +60,7 @@ export default function SystemAdminInvitationsPage() {
   
   const [inviters, setInviters] = useState<Inviter[]>([]);
   const [loadingInviters, setLoadingInviters] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
@@ -313,13 +315,22 @@ export default function SystemAdminInvitationsPage() {
                 Manage all user invitations across the platform
               </p>
             </div>
-            <Link
-              href="/dashboard"
-              className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
-            >
-              <Icon name="ArrowLeftIcon" size={18} />
-              <span>Back to Dashboard</span>
-            </Link>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150"
+              >
+                <Icon name="PlusIcon" size={18} />
+                <span>Invite User</span>
+              </button>
+              <Link
+                href="/dashboard"
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+              >
+                <Icon name="ArrowLeftIcon" size={18} />
+                <span>Back to Dashboard</span>
+              </Link>
+            </div>
           </div>
 
           {error && (
@@ -492,6 +503,17 @@ export default function SystemAdminInvitationsPage() {
       </main>
 
       <Footer />
+
+      <InviteUserModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onSuccess={() => {
+          setSuccess('Invitation sent successfully');
+          setTimeout(() => setSuccess(''), 3000);
+          fetchInvitations(1);
+          fetchInviters();
+        }}
+      />
     </div>
   );
 }
