@@ -5,12 +5,62 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Project Status
 - **Current State**: Fully configured and running on Replit
-- **Last Updated**: November 29, 2025
+- **Last Updated**: November 30, 2025
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+
+### November 30, 2025 - Settings API & Registration Form Fixes
+- Fixed settings API caching issues by adding Next.js cache busting (`fetchCache`, `revalidate`)
+- Fixed service role client configuration with `detectSessionInUrl: false` to prevent session conflicts
+- Fixed settings API GET endpoint to use service role client, bypassing RLS for accurate reads
+- Registration page now properly hides all form fields in invite-only mode (not just name/password)
+- Form fields only appear when public registration is enabled OR user has valid invitation
+- Fixed account deletion redirect by navigating before signing out
+
+### November 30, 2025 - Email Confirmation Redirect Improvements
+- Created dedicated `/email-confirmed` page with success messages and auto-redirect
+- Enhanced `/auth/callback` route to handle signup and email change confirmations
+- Updated Supabase email templates documentation with custom redirect URLs
+- Email confirmations now redirect to proper pages instead of root URL with hash fragments:
+  - Signup confirmation → shows success page → auto-redirects to Dashboard
+  - Email change → shows success page → auto-redirects to Profile
+  - Password reset → uses Supabase's built-in flow (unchanged)
+- Dashboard "Invite" button now opens InviteUserModal directly
+
+### November 30, 2025 - Production API Routes & Dynamic Export Fix
+- Fixed 405 Method Not Allowed error in production by adding dynamic exports to all API routes
+- Added `export const dynamic = 'force-dynamic'` and `export const runtime = 'nodejs'` to prevent static optimization
+- Added Cache-Control headers to settings API to prevent caching issues
+- Updated all API routes to use service role client with auth client fallback pattern:
+  - Service role client when available (production) for reliable RLS bypass
+  - Auth client fallback when service role key is missing (development)
+- All routes validate JWT for user identity before any database operations
+- Admin operations check user role before performing privileged actions
+- Profile updates now sync to both user_profiles table AND Supabase Auth metadata
+
+### November 29, 2025 - System Admin Invitations Management Page
+- Created dedicated System Admin Invitations page at /system-admin/invitations
+- Added search by invitee email, filter by status, and filter by inviter
+- Implemented page-based pagination (20 items per page) for performance
+- Added API endpoint for fetching inviters list (/api/invitations/inviters)
+- Updated /api/invitations with optional paginated mode (paginated=true query param)
+- Added navigation link to Invitations page from System Admin Dashboard
+
+### November 29, 2025 - User Invitation System
+- Added system_settings and invitations database tables with RLS policies
+- Created API routes for invitation management (send, list, check, accept, cancel)
+- Built system admin settings page at /system-admin/settings for toggling public registration
+- Added user invite functionality to dashboard with InviteUserModal and InvitationsSection components
+- Created accept-invite page for invited users to complete account setup
+- Updated registration page to check public registration status and validate invitations
+- Uses Supabase's inviteUserByEmail() function for secure email delivery
+
+### November 29, 2025 - Landing Page & Icon Fixes
+- Made marketing landing page the root page (no redirect needed)
+- Fixed visibility icon on scoreboard management screen to use standardized icons
 
 ### November 29, 2025 - Visibility Toggle & UI Standardization
 - Added ability to change scoreboard visibility (public/private) when editing
@@ -55,12 +105,15 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 6. Server-side search across all scoreboards
 7. Owner filtering for admin users
 8. CSV import for scoreboard entries
+9. User invitation system with email notifications
+10. Invite-only registration mode (controllable by system admin)
 
 ## Environment Configuration
 
 ### Required Environment Variables
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `SUPABASE_SERVICE_ROLE_KEY`: Service role key for admin operations (invitation emails)
 
 ## Development
 
@@ -161,6 +214,8 @@ The Supabase database includes:
 - `user_profiles` - User profile information with roles
 - `scoreboards` - Scoreboard metadata with owner references and visibility
 - `scoreboard_entries` - Individual scoreboard entries
+- `system_settings` - App-wide configuration (public registration toggle, email verification)
+- `invitations` - User invitation tracking with status (pending/accepted/expired/cancelled)
 - Row Level Security (RLS) policies for secure data access
 
 ## User Preferences & Design Notes
