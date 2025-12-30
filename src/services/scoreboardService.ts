@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase/client';
 import { Scoreboard, ScoreboardEntry } from '../types/models';
 import { Database } from '../types/database.types';
+import { STYLE_PRESETS } from '../utils/stylePresets';
 
 type ScoreboardRow = Database['public']['Tables']['scoreboards']['Row'];
 type ScoreboardInsert = Database['public']['Tables']['scoreboards']['Insert'];
@@ -407,6 +408,8 @@ export const scoreboardService = {
       subtitle: scoreboard.subtitle,
       sort_order: scoreboard.sortOrder,
       visibility: scoreboard.visibility,
+      custom_styles: scoreboard.customStyles ?? STYLE_PRESETS.light,
+      style_scope: scoreboard.styleScope ?? 'both',
     };
 
     const { data, error } = await supabase
