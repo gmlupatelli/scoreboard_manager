@@ -25,19 +25,23 @@ export interface PaginationOptions {
 const DEFAULT_PAGE_SIZE = 30;
 
 // Helper function to convert database row to application model
-const rowToScoreboard = (row: ScoreboardRow, entryCount?: number): Scoreboard => ({
-  id: row.id,
-  ownerId: row.owner_id,
-  title: row.title,
-  subtitle: row.subtitle,
-  sortOrder: row.sort_order,
-  visibility: row.visibility,
-  customStyles: row.custom_styles,
-  styleScope: row.style_scope,
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-  entryCount: entryCount,
-});
+// Uses type assertion to handle optional columns that may not exist in DB yet
+const rowToScoreboard = (row: ScoreboardRow, entryCount?: number): Scoreboard => {
+  const rowAny = row as Record<string, unknown>;
+  return {
+    id: row.id,
+    ownerId: row.owner_id,
+    title: row.title,
+    subtitle: row.subtitle,
+    sortOrder: row.sort_order,
+    visibility: row.visibility,
+    customStyles: rowAny.custom_styles as ScoreboardRow['custom_styles'] ?? null,
+    styleScope: rowAny.style_scope as ScoreboardRow['style_scope'] ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    entryCount: entryCount,
+  };
+};
 
 const rowToEntry = (row: EntryRow): ScoreboardEntry => ({
   id: row.id,
