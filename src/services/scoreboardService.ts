@@ -21,7 +21,8 @@ export interface PaginationOptions {
   limit?: number;
   offset?: number;
   search?: string;
-  sortBy?: 'newest' | 'oldest' | 'title';
+  sortBy?: 'newest' | 'oldest' | 'title' | 'name' | 'date' | 'entries';
+  sortOrder?: 'asc' | 'desc';
 }
 
 const DEFAULT_PAGE_SIZE = 30;
@@ -188,7 +189,7 @@ export const scoreboardService = {
     userId: string,
     options: PaginationOptions = {}
   ): Promise<PaginatedResult<Scoreboard>> {
-    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search, sortBy = 'newest' } = options;
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search, sortBy = 'date', sortOrder = 'desc' } = options;
     
     try {
       // Build count query with search filter
@@ -220,12 +221,17 @@ export const scoreboardService = {
         dataQuery = dataQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
       }
 
-      // Apply sorting based on sortBy parameter
-      if (sortBy === 'title') {
-        dataQuery = dataQuery.order('title', { ascending: true });
-      } else if (sortBy === 'oldest') {
-        dataQuery = dataQuery.order('created_at', { ascending: true });
+      // Apply sorting based on sortBy option (entries sorting handled client-side)
+      // Map public list sortBy values to date/name equivalents
+      const effectiveSortBy = sortBy === 'newest' ? 'date' : sortBy === 'oldest' ? 'date' : sortBy === 'title' ? 'name' : sortBy;
+      const effectiveSortOrder = sortBy === 'oldest' ? 'asc' : sortBy === 'newest' ? 'desc' : sortOrder;
+      
+      if (effectiveSortBy === 'name') {
+        dataQuery = dataQuery.order('title', { ascending: effectiveSortOrder === 'asc' });
+      } else if (effectiveSortBy === 'date') {
+        dataQuery = dataQuery.order('created_at', { ascending: effectiveSortOrder === 'asc' });
       } else {
+        // Default or 'entries' - use date desc, entries sorting handled client-side
         dataQuery = dataQuery.order('created_at', { ascending: false });
       }
 
@@ -287,7 +293,7 @@ export const scoreboardService = {
   async getAllScoreboardsPaginated(
     options: PaginationOptions & { ownerId?: string } = {}
   ): Promise<PaginatedResult<Scoreboard>> {
-    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search, ownerId } = options;
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search, ownerId, sortBy = 'date', sortOrder = 'desc' } = options;
     
     try {
       // Build count query with search and owner filters
@@ -326,8 +332,21 @@ export const scoreboardService = {
         dataQuery = dataQuery.eq('owner_id', ownerId);
       }
 
+      // Apply sorting based on sortBy option (entries sorting handled client-side)
+      // Map public list sortBy values to date/name equivalents
+      const effectiveSortBy = sortBy === 'newest' ? 'date' : sortBy === 'oldest' ? 'date' : sortBy === 'title' ? 'name' : sortBy;
+      const effectiveSortOrder = sortBy === 'oldest' ? 'asc' : sortBy === 'newest' ? 'desc' : sortOrder;
+      
+      if (effectiveSortBy === 'name') {
+        dataQuery = dataQuery.order('title', { ascending: effectiveSortOrder === 'asc' });
+      } else if (effectiveSortBy === 'date') {
+        dataQuery = dataQuery.order('created_at', { ascending: effectiveSortOrder === 'asc' });
+      } else {
+        // Default or 'entries' - use date desc, entries sorting handled client-side
+        dataQuery = dataQuery.order('created_at', { ascending: false });
+      }
+
       const { data, error } = await dataQuery
-        .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) {
