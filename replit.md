@@ -12,6 +12,16 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### December 30, 2025 - Iframe Embedding with Custom Styling
+- Added `/embed/[id]` route for clean scoreboard embeds (no header/footer)
+- Implemented custom styling system with guided properties (colors, fonts, borders)
+- Added 6 style presets: Light, Dark, Transparent, High Contrast, Minimal, Brand Colors
+- Added style scope selector: apply styles to main view, embed only, or both
+- Created embed code section with copyable iframe snippet
+- Custom styles apply to EntryCard, EntryTable, and ScoreboardHeader components
+- Embed works for both public and private scoreboards (accessible via direct URL)
+- Migration file created: `supabase/migrations/20251130_scoreboard_custom_styles.sql`
+
 ### November 30, 2025 - Settings API & Registration Form Fixes
 - Fixed settings API caching issues by adding Next.js cache busting (`fetchCache`, `revalidate`)
 - Fixed service role client configuration with `detectSessionInUrl: false` to prevent session conflicts
