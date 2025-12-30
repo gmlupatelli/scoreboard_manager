@@ -21,6 +21,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Custom styles apply to EntryCard, EntryTable, and ScoreboardHeader components
 - Embed works for both public and private scoreboards (accessible via direct URL)
 - Migration file created: `supabase/migrations/20251130_scoreboard_custom_styles.sql`
+- After creating a new scoreboard, users are now redirected to the management page for that scoreboard
 
 ### November 30, 2025 - Settings API & Registration Form Fixes
 - Fixed settings API caching issues by adding Next.js cache busting (`fetchCache`, `revalidate`)
