@@ -1,37 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
 
 interface EmbedCodeSectionProps {
   scoreboardId: string;
   scoreboardTitle: string;
+  isExpanded: boolean;
+  onToggleExpanded: (expanded: boolean) => void;
 }
-
-const EMBED_EXPANDED_STORAGE_KEY = 'embedCodeExpanded';
 
 const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
   scoreboardId,
   scoreboardTitle,
+  isExpanded,
+  onToggleExpanded,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
   const [embedWidth, setEmbedWidth] = useState('100%');
   const [embedHeight, setEmbedHeight] = useState('600');
 
-  useEffect(() => {
-    const storageKey = `${EMBED_EXPANDED_STORAGE_KEY}_${scoreboardId}`;
-    const stored = sessionStorage.getItem(storageKey);
-    if (stored !== null) {
-      setIsExpanded(stored === 'true');
-    }
-  }, [scoreboardId]);
-
   const handleToggleExpanded = () => {
-    const newValue = !isExpanded;
-    setIsExpanded(newValue);
-    const storageKey = `${EMBED_EXPANDED_STORAGE_KEY}_${scoreboardId}`;
-    sessionStorage.setItem(storageKey, String(newValue));
+    onToggleExpanded(!isExpanded);
   };
 
   const getBaseUrl = () => {

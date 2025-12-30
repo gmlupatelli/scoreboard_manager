@@ -60,6 +60,8 @@ const ScoreboardManagementInteractive = () => {
     isVisible: false
   });
   const [isSavingStyles, setIsSavingStyles] = useState(false);
+  const [isStyleSectionExpanded, setIsStyleSectionExpanded] = useState(false);
+  const [isEmbedSectionExpanded, setIsEmbedSectionExpanded] = useState(false);
 
   // Redirect if not authenticated or no scoreboard ID
   useEffect(() => {
@@ -453,11 +455,15 @@ const ScoreboardManagementInteractive = () => {
           onSave={handleSaveStyles}
           isSaving={isSavingStyles}
           scoreboardId={scoreboard.id}
+          isExpanded={isStyleSectionExpanded}
+          onToggleExpanded={setIsStyleSectionExpanded}
         />
 
         <EmbedCodeSection
           scoreboardId={scoreboard.id}
           scoreboardTitle={scoreboard.title}
+          isExpanded={isEmbedSectionExpanded}
+          onToggleExpanded={setIsEmbedSectionExpanded}
         />
 
         <div className="bg-card border border-border rounded-lg elevation-1">
