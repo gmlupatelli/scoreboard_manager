@@ -23,12 +23,15 @@ export default function LoginPage() {
       const { error } = await signIn(email, password);
       if (error) {
         setError(error.message);
+        setLoading(false);
       } else {
-        router.push('/dashboard');
+        // Small delay to allow browser password manager to prompt for save
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 100);
       }
     } catch (err) {
       setError('An unexpected error occurred');
-    } finally {
       setLoading(false);
     }
   };
