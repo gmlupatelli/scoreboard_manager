@@ -10,19 +10,31 @@ interface EntryCardProps {
 }
 
 const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles }) => {
-  const getRankColor = (rank: number): string => {
-    if (rank === 1) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-    if (rank === 2) return 'bg-gray-100 text-gray-800 border-gray-300';
-    if (rank === 3) return 'bg-orange-100 text-orange-800 border-orange-300';
-    return 'bg-muted text-text-secondary border-border';
+  const getPerRankColor = (rank: number): string => {
+    if (customStyles) {
+      if (rank === 1) return customStyles.rank1Color || '#ca8a04';
+      if (rank === 2) return customStyles.rank2Color || '#9ca3af';
+      if (rank === 3) return customStyles.rank3Color || '#b45309';
+      return customStyles.textColor || '#1f2937';
+    }
+    if (rank === 1) return '#ca8a04';
+    if (rank === 2) return '#9ca3af';
+    if (rank === 3) return '#b45309';
+    return '#1f2937';
   };
 
-  const getRankIcon = (rank: number) => {
-    if (rank === 1) return <Icon name="TrophyIcon" size={20} className="text-yellow-600" variant="solid" />;
-    if (rank === 2) return <Icon name="TrophyIcon" size={20} className="text-gray-600" variant="solid" />;
-    if (rank === 3) return <Icon name="TrophyIcon" size={20} className="text-orange-600" variant="solid" />;
+  const getRankIcon = (rank: number): string | null => {
+    if (customStyles) {
+      if (rank === 1) return customStyles.rank1Icon || 'TrophyIcon';
+      if (rank === 2) return customStyles.rank2Icon || 'TrophyIcon';
+      if (rank === 3) return customStyles.rank3Icon || 'TrophyIcon';
+    }
+    if (rank <= 3) return 'TrophyIcon';
     return null;
   };
+
+  const rankColor = getPerRankColor(rank);
+  const rankIconName = getRankIcon(rank);
 
   return (
     <div 
@@ -37,14 +49,18 @@ const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles }
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 flex-1 min-w-0">
           <div 
-            className={`flex items-center justify-center w-12 h-12 rounded-lg border-2 flex-shrink-0 ${!customStyles ? getRankColor(rank) : ''}`}
-            style={customStyles && rank <= 3 ? {
-              backgroundColor: customStyles.rankHighlightColor,
-              borderColor: customStyles.rankHighlightColor,
-              color: '#ffffff',
-            } : undefined}
+            className="flex items-center justify-center w-12 h-12 rounded-lg border-2 flex-shrink-0"
+            style={{
+              backgroundColor: rank <= 3 ? `${rankColor}20` : 'var(--muted)',
+              borderColor: rank <= 3 ? rankColor : 'var(--border)',
+              color: rankColor,
+            }}
           >
-            {getRankIcon(rank) || <span className="text-lg font-bold">#{rank}</span>}
+            {rankIconName ? (
+              <Icon name={rankIconName} size={20} style={{ color: rankColor }} variant="solid" />
+            ) : (
+              <span className="text-lg font-bold">#{rank}</span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 

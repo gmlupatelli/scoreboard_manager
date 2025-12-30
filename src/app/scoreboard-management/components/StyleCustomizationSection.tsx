@@ -8,6 +8,8 @@ import {
   PRESET_LABELS, 
   PRESET_DESCRIPTIONS, 
   CUSTOMIZABLE_PROPERTIES,
+  RANK_CUSTOMIZATION_PROPERTIES,
+  RANK_ICON_OPTIONS,
   getStylePreset 
 } from '@/utils/stylePresets';
 
@@ -16,21 +18,37 @@ interface StyleCustomizationSectionProps {
   currentScope: 'main' | 'embed' | 'both';
   onSave: (styles: ScoreboardCustomStyles, scope: 'main' | 'embed' | 'both') => Promise<void>;
   isSaving: boolean;
+  scoreboardId?: string;
 }
+
+const STORAGE_KEY_PREFIX = 'style_section_expanded_';
 
 const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   currentStyles,
   currentScope,
   onSave,
   isSaving,
+  scoreboardId,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window !== 'undefined' && scoreboardId) {
+      const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`);
+      return stored === 'true';
+    }
+    return false;
+  });
   const [selectedPreset, setSelectedPreset] = useState<string>(currentStyles?.preset || 'light');
   const [customStyles, setCustomStyles] = useState<ScoreboardCustomStyles>(
     currentStyles || getStylePreset('light')
   );
   const [scope, setScope] = useState<'main' | 'embed' | 'both'>(currentScope || 'both');
   const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && scoreboardId) {
+      localStorage.setItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`, String(isExpanded));
+    }
+  }, [isExpanded, scoreboardId]);
 
   useEffect(() => {
     if (currentStyles) {
@@ -75,6 +93,20 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
     setCustomStyles(currentStyles || getStylePreset('light'));
     setScope(currentScope || 'both');
     setHasChanges(false);
+  };
+
+  const getRankColor = (rank: number): string => {
+    if (rank === 1) return customStyles.rank1Color || '#ca8a04';
+    if (rank === 2) return customStyles.rank2Color || '#9ca3af';
+    if (rank === 3) return customStyles.rank3Color || '#b45309';
+    return customStyles.textColor || '#1f2937';
+  };
+
+  const getRankIcon = (rank: number): string => {
+    if (rank === 1) return customStyles.rank1Icon || 'TrophyIcon';
+    if (rank === 2) return customStyles.rank2Icon || 'TrophyIcon';
+    if (rank === 3) return customStyles.rank3Icon || 'TrophyIcon';
+    return 'TrophyIcon';
   };
 
   return (
@@ -175,6 +207,65 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-text-primary">
+                Top 3 Rank Customization
+              </label>
+              <span className="text-xs text-text-secondary">
+                Colors and icons for podium positions
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {RANK_CUSTOMIZATION_PROPERTIES.map((rankProp) => (
+                <div key={rankProp.rank} className="p-4 bg-muted/50 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Icon 
+                      name={(customStyles as any)[rankProp.iconKey] || 'TrophyIcon'} 
+                      size={20} 
+                      style={{ color: (customStyles as any)[rankProp.colorKey] || rankProp.defaultColor }}
+                    />
+                    <span className="font-medium text-sm text-text-primary">{rankProp.label}</span>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">Color</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={(customStyles as any)[rankProp.colorKey] || rankProp.defaultColor}
+                          onChange={(e) => handlePropertyChange(rankProp.colorKey, e.target.value)}
+                          className="w-10 h-10 rounded cursor-pointer border border-border"
+                        />
+                        <input
+                          type="text"
+                          value={(customStyles as any)[rankProp.colorKey] || rankProp.defaultColor}
+                          onChange={(e) => handlePropertyChange(rankProp.colorKey, e.target.value)}
+                          placeholder={rankProp.defaultColor}
+                          className="flex-1 px-2 py-1 border border-border rounded-md text-xs bg-background text-text-primary"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-text-secondary mb-1">Icon</label>
+                      <select
+                        value={(customStyles as any)[rankProp.iconKey] || 'TrophyIcon'}
+                        onChange={(e) => handlePropertyChange(rankProp.iconKey, e.target.value)}
+                        className="w-full px-2 py-2 border border-border rounded-md text-sm bg-background text-text-primary"
+                      >
+                        {RANK_ICON_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-text-primary">
                 Custom Properties
               </label>
               <span className="text-xs text-text-secondary">
@@ -268,12 +359,10 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
                       }}
                     >
                       <td className="px-3 py-2">
-                        <span 
-                          className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold text-white"
-                          style={{ backgroundColor: customStyles.rankHighlightColor }}
-                        >
-                          #{entry.rank}
-                        </span>
+                        <div className="flex items-center gap-2" style={{ color: getRankColor(entry.rank) }}>
+                          <Icon name={getRankIcon(entry.rank)} size={18} />
+                          <span className="font-semibold">#{entry.rank}</span>
+                        </div>
                       </td>
                       <td className="px-3 py-2" style={{ color: customStyles.textColor }}>
                         {entry.name}

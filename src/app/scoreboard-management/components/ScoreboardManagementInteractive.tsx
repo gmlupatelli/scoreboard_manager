@@ -452,6 +452,7 @@ const ScoreboardManagementInteractive = () => {
           currentScope={scoreboard.styleScope || 'both'}
           onSave={handleSaveStyles}
           isSaving={isSavingStyles}
+          scoreboardId={scoreboard.id}
         />
 
         <EmbedCodeSection
