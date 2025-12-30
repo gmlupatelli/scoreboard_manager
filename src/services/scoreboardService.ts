@@ -21,6 +21,7 @@ export interface PaginationOptions {
   limit?: number;
   offset?: number;
   search?: string;
+  sortBy?: 'newest' | 'oldest' | 'title';
 }
 
 const DEFAULT_PAGE_SIZE = 30;
@@ -100,7 +101,7 @@ export const scoreboardService = {
   async getPublicScoreboardsPaginated(
     options: PaginationOptions = {}
   ): Promise<PaginatedResult<Scoreboard>> {
-    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search } = options;
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search, sortBy = 'newest' } = options;
     
     try {
       // Build count query with search filter
@@ -132,8 +133,16 @@ export const scoreboardService = {
         dataQuery = dataQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
       }
 
+      // Apply sorting based on sortBy parameter
+      if (sortBy === 'title') {
+        dataQuery = dataQuery.order('title', { ascending: true });
+      } else if (sortBy === 'oldest') {
+        dataQuery = dataQuery.order('created_at', { ascending: true });
+      } else {
+        dataQuery = dataQuery.order('created_at', { ascending: false });
+      }
+
       const { data, error } = await dataQuery
-        .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) {
@@ -179,7 +188,7 @@ export const scoreboardService = {
     userId: string,
     options: PaginationOptions = {}
   ): Promise<PaginatedResult<Scoreboard>> {
-    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search } = options;
+    const { limit = DEFAULT_PAGE_SIZE, offset = 0, search, sortBy = 'newest' } = options;
     
     try {
       // Build count query with search filter
@@ -211,8 +220,16 @@ export const scoreboardService = {
         dataQuery = dataQuery.or(`title.ilike.%${search}%,subtitle.ilike.%${search}%`);
       }
 
+      // Apply sorting based on sortBy parameter
+      if (sortBy === 'title') {
+        dataQuery = dataQuery.order('title', { ascending: true });
+      } else if (sortBy === 'oldest') {
+        dataQuery = dataQuery.order('created_at', { ascending: true });
+      } else {
+        dataQuery = dataQuery.order('created_at', { ascending: false });
+      }
+
       const { data, error } = await dataQuery
-        .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) {
