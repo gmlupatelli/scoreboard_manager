@@ -12,7 +12,8 @@ import ErrorDisplay from './ErrorDisplay';
 import LoadingSkeleton from './LoadingSkeleton';
 import ScoreboardHeader from './ScoreboardHeader';
 import { scoreboardService } from '@/services/scoreboardService';
-import { Scoreboard, ScoreboardEntry } from '@/types/models';
+import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
+import { getStylePreset } from '@/utils/stylePresets';
 
 interface EntryWithRank extends ScoreboardEntry {
   rank: number;
@@ -171,6 +172,22 @@ const ScoreboardInteractive: React.FC = () => {
     }
   };
 
+  const shouldApplyStyles = (scope?: 'main' | 'embed' | 'both') => {
+    return scope === 'main' || scope === 'both';
+  };
+
+  const getAppliedStyles = (): ScoreboardCustomStyles | null => {
+    if (!scoreboard?.customStyles) return null;
+    if (!shouldApplyStyles(scoreboard.styleScope)) return null;
+    
+    if (scoreboard.customStyles.preset && scoreboard.customStyles.preset !== 'light') {
+      const presetStyles = getStylePreset(scoreboard.customStyles.preset);
+      return { ...presetStyles, ...scoreboard.customStyles };
+    }
+    
+    return scoreboard.customStyles;
+  };
+
   if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -195,57 +212,90 @@ const ScoreboardInteractive: React.FC = () => {
     );
   }
 
+  const appliedStyles = getAppliedStyles();
+
   return (
     <>
       <ScoreboardHeader
         title={scoreboard.title}
         description={scoreboard.subtitle || ''}
         totalEntries={entries.length}
+        customStyles={appliedStyles}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="mb-6">
-          <SearchInterface
-            placeholder="Search by name..."
-            onSearch={handleSearch}
-            debounceMs={200}
-            className="max-w-md"
-            showClearButton={true}
-          />
-        </div>
-
-        {currentEntries.length === 0 ? (
-          <div className="bg-surface border border-border rounded-lg">
-            <EmptyState searchQuery={searchQuery} />
-          </div>
-        ) : (
-          <>
-            <div className="bg-surface border border-border rounded-lg overflow-hidden mb-6">
-              {isMobile ? (
-                <div className="p-4 space-y-4">
-                  {currentEntries.map((entry) => (
-                    <EntryCard 
-                      key={entry.id} 
-                      rank={entry.rank} 
-                      name={entry.name} 
-                      score={Number(entry.score)} 
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EntryTable entries={currentEntries.map(e => ({ ...e, score: Number(e.score) }))} />
-              )}
-            </div>
-
-            <PaginationControls
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              entriesPerPage={entriesPerPage}
-              totalEntries={filteredEntries.length}
+      <div 
+        className="py-6"
+        style={{
+          backgroundColor: appliedStyles?.backgroundColor,
+          fontFamily: appliedStyles?.fontFamily,
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <SearchInterface
+              placeholder="Search by name..."
+              onSearch={handleSearch}
+              debounceMs={200}
+              className="max-w-md"
+              showClearButton={true}
             />
-          </>
-        )}
+          </div>
+
+          {currentEntries.length === 0 ? (
+            <div 
+              className="rounded-lg"
+              style={{
+                backgroundColor: appliedStyles?.backgroundColor || 'var(--surface)',
+                borderColor: appliedStyles?.borderColor || 'var(--border)',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderRadius: appliedStyles?.borderRadius || '8px',
+              }}
+            >
+              <EmptyState searchQuery={searchQuery} />
+            </div>
+          ) : (
+            <>
+              <div 
+                className="overflow-hidden mb-6"
+                style={{
+                  backgroundColor: appliedStyles?.backgroundColor || 'var(--surface)',
+                  borderColor: appliedStyles?.borderColor || 'var(--border)',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderRadius: appliedStyles?.borderRadius || '8px',
+                }}
+              >
+                {isMobile ? (
+                  <div className="p-4 space-y-4">
+                    {currentEntries.map((entry) => (
+                      <EntryCard 
+                        key={entry.id} 
+                        rank={entry.rank} 
+                        name={entry.name} 
+                        score={Number(entry.score)}
+                        customStyles={appliedStyles}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EntryTable 
+                    entries={currentEntries.map(e => ({ ...e, score: Number(e.score) }))} 
+                    customStyles={appliedStyles}
+                  />
+                )}
+              </div>
+
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                entriesPerPage={entriesPerPage}
+                totalEntries={filteredEntries.length}
+              />
+            </>
+          )}
+        </div>
       </div>
     </>
   );

@@ -32,6 +32,8 @@ const rowToScoreboard = (row: ScoreboardRow, entryCount?: number): Scoreboard =>
   subtitle: row.subtitle,
   sortOrder: row.sort_order,
   visibility: row.visibility,
+  customStyles: row.custom_styles,
+  styleScope: row.style_scope,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   entryCount: entryCount,
@@ -416,13 +418,15 @@ export const scoreboardService = {
   // Update scoreboard
   async updateScoreboard(
     id: string,
-    updates: Partial<Pick<Scoreboard, 'title' | 'subtitle' | 'sortOrder' | 'visibility'>>
+    updates: Partial<Pick<Scoreboard, 'title' | 'subtitle' | 'sortOrder' | 'visibility' | 'customStyles' | 'styleScope'>>
   ): Promise<{ data: Scoreboard | null; error: Error | null }> {
     const updateData: ScoreboardUpdate = {};
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.subtitle !== undefined) updateData.subtitle = updates.subtitle;
     if (updates.sortOrder !== undefined) updateData.sort_order = updates.sortOrder;
     if (updates.visibility !== undefined) updateData.visibility = updates.visibility;
+    if (updates.customStyles !== undefined) updateData.custom_styles = updates.customStyles;
+    if (updates.styleScope !== undefined) updateData.style_scope = updates.styleScope;
 
     const { data, error } = await supabase
       .from('scoreboards')
