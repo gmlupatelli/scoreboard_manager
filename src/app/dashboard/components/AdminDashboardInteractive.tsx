@@ -197,7 +197,7 @@ const AdminDashboardInteractive = () => {
 
   const handleCreateScoreboard = async (title: string, subtitle: string, visibility: 'public' | 'private') => {
     try {
-      const { error } = await scoreboardService.createScoreboard({
+      const { data, error } = await scoreboardService.createScoreboard({
         ownerId: user!.id,
         title,
         subtitle,
@@ -210,7 +210,7 @@ const AdminDashboardInteractive = () => {
       }
 
       await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0);
-      return { success: true, message: 'Scoreboard created successfully' };
+      return { success: true, message: 'Scoreboard created successfully', scoreboardId: data?.id };
     } catch (err) {
       return { success: false, message: 'Failed to create scoreboard' };
     }

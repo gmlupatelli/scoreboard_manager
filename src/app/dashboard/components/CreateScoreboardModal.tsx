@@ -1,13 +1,15 @@
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
 
 interface CreateScoreboardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (title: string, subtitle: string, visibility: 'public' | 'private') => Promise<{ success: boolean; message: string }>;
+  onCreate: (title: string, subtitle: string, visibility: 'public' | 'private') => Promise<{ success: boolean; message: string; scoreboardId?: string }>;
 }
 
 const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardModalProps) => {
+  const router = useRouter();
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
@@ -32,6 +34,9 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
       setSubtitle('');
       setVisibility('public');
       onClose();
+      if (result.scoreboardId) {
+        router.push(`/scoreboard-management?id=${result.scoreboardId}`);
+      }
     } else {
       setError(result.message);
     }
