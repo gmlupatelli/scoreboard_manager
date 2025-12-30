@@ -19,39 +19,24 @@ interface StyleCustomizationSectionProps {
   onSave: (styles: ScoreboardCustomStyles, scope: 'main' | 'embed' | 'both') => Promise<void>;
   isSaving: boolean;
   scoreboardId?: string;
+  isExpanded: boolean;
+  onToggleExpanded: (expanded: boolean) => void;
 }
-
-const STORAGE_KEY_PREFIX = 'style_section_expanded_';
 
 const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   currentStyles,
   currentScope,
   onSave,
   isSaving,
-  scoreboardId,
+  isExpanded,
+  onToggleExpanded,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>(currentStyles?.preset || 'light');
   const [customStyles, setCustomStyles] = useState<ScoreboardCustomStyles>(
     currentStyles || getStylePreset('light')
   );
   const [scope, setScope] = useState<'main' | 'embed' | 'both'>(currentScope || 'both');
   const [hasChanges, setHasChanges] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && scoreboardId) {
-      const stored = sessionStorage.getItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`);
-      if (stored !== null) {
-        setIsExpanded(stored === 'true');
-      }
-    }
-  }, [scoreboardId]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && scoreboardId) {
-      sessionStorage.setItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`, String(isExpanded));
-    }
-  }, [isExpanded, scoreboardId]);
 
   useEffect(() => {
     if (currentStyles) {
@@ -115,7 +100,7 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   return (
     <div className="bg-card border border-border rounded-lg elevation-1 mb-6">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => onToggleExpanded(!isExpanded)}
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors rounded-lg"
       >
         <div className="flex items-center gap-3">
