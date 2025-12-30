@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { scoreboardService } from '../../../services/scoreboardService';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
@@ -26,7 +26,7 @@ const PublicScoreboardInteractive = () => {
   const [offset, setOffset] = useState(0);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const loadPublicScoreboards = useCallback(async (isInitial = true, search = '') => {
+  const loadPublicScoreboards = useCallback(async (isInitial = true, search = '', sort: 'newest' | 'oldest' | 'title' = 'newest') => {
     if (isInitial) {
       setLoading(true);
       setOffset(0);
@@ -43,6 +43,7 @@ const PublicScoreboardInteractive = () => {
           limit: PAGE_SIZE,
           offset: currentOffset,
           search: search || undefined,
+          sortBy: sort,
         });
       
       if (error) {
@@ -85,16 +86,16 @@ const PublicScoreboardInteractive = () => {
     };
   }, [searchQuery]);
 
-  // Load scoreboards when debounced search changes
+  // Load scoreboards when debounced search or sortBy changes
   useEffect(() => {
-    loadPublicScoreboards(true, debouncedSearch);
-  }, [debouncedSearch]);
+    loadPublicScoreboards(true, debouncedSearch, sortBy);
+  }, [debouncedSearch, sortBy]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadPublicScoreboards(false, debouncedSearch);
+      loadPublicScoreboards(false, debouncedSearch, sortBy);
     }
-  }, [loadingMore, hasMore, debouncedSearch, loadPublicScoreboards]);
+  }, [loadingMore, hasMore, debouncedSearch, sortBy, loadPublicScoreboards]);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasMore,
@@ -102,20 +103,6 @@ const PublicScoreboardInteractive = () => {
     onLoadMore: handleLoadMore,
   });
 
-  // Client-side sorting only (search is now server-side)
-  const sortedScoreboards = useMemo(() => {
-    const sorted = [...scoreboards].sort((a, b) => {
-      if (sortBy === 'title') {
-        return (a?.title || '').localeCompare(b?.title || '');
-      } else if (sortBy === 'newest') {
-        return new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime();
-      } else {
-        return new Date(a?.createdAt || 0).getTime() - new Date(b?.createdAt || 0).getTime();
-      }
-    });
-
-    return sorted;
-  }, [scoreboards, sortBy]);
 
   return (
     <>
@@ -176,7 +163,7 @@ const PublicScoreboardInteractive = () => {
               <Icon name="ExclamationTriangleIcon" size={20} />
               <span>{error}</span>
             </div>
-          ) : sortedScoreboards.length === 0 ? (
+          ) : scoreboards.length === 0 ? (
             <div className="text-center py-12">
               <Icon name="InboxIcon" size={48} className="mx-auto text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-foreground mb-2">No scoreboards found</p>
@@ -187,7 +174,7 @@ const PublicScoreboardInteractive = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedScoreboards.map((scoreboard) => (
+                {scoreboards.map((scoreboard) => (
                   <PublicScoreboardCard key={scoreboard?.id} scoreboard={scoreboard} />
                 ))}
               </div>
