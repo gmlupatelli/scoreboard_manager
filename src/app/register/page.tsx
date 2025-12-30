@@ -208,7 +208,9 @@ export default function RegisterPage() {
                     <div className="relative">
                       <input
                         id="email"
+                        name="email"
                         type="email"
+                        autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -229,7 +231,9 @@ export default function RegisterPage() {
                     </label>
                     <input
                       id="fullName"
+                      name="name"
                       type="text"
+                      autoComplete="name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
@@ -244,7 +248,9 @@ export default function RegisterPage() {
                     </label>
                     <input
                       id="password"
+                      name="new-password"
                       type="password"
+                      autoComplete="new-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -260,7 +266,9 @@ export default function RegisterPage() {
                     </label>
                     <input
                       id="confirmPassword"
+                      name="confirm-password"
                       type="password"
+                      autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
