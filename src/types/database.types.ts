@@ -1,3 +1,17 @@
+export interface ScoreboardCustomStyles {
+  preset?: 'light' | 'dark' | 'transparent' | 'high-contrast' | 'minimal' | 'brand';
+  backgroundColor?: string;
+  textColor?: string;
+  headerColor?: string;
+  headerTextColor?: string;
+  borderColor?: string;
+  accentColor?: string;
+  fontFamily?: string;
+  borderRadius?: string;
+  rowHoverColor?: string;
+  rankHighlightColor?: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -35,6 +49,8 @@ export interface Database {
           subtitle: string | null;
           sort_order: 'asc' | 'desc';
           visibility: 'public' | 'private';
+          custom_styles?: ScoreboardCustomStyles | null;
+          style_scope?: 'main' | 'embed' | 'both';
           created_at: string;
           updated_at: string;
         };
@@ -45,6 +61,8 @@ export interface Database {
           subtitle?: string | null;
           sort_order?: 'asc' | 'desc';
           visibility?: 'public' | 'private';
+          custom_styles?: ScoreboardCustomStyles | null;
+          style_scope?: 'main' | 'embed' | 'both';
           created_at?: string;
           updated_at?: string;
         };
@@ -55,6 +73,8 @@ export interface Database {
           subtitle?: string | null;
           sort_order?: 'asc' | 'desc';
           visibility?: 'public' | 'private';
+          custom_styles?: ScoreboardCustomStyles | null;
+          style_scope?: 'main' | 'embed' | 'both';
           created_at?: string;
           updated_at?: string;
         };

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
-import { Scoreboard, ScoreboardEntry } from '../../../types/models';
+import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '../../../types/models';
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
 import EntryRow from './EntryRow';
@@ -14,6 +14,8 @@ import ImportCSVModal from './ImportCSVModal';
 import ConfirmationModal from './ConfirmationModal';
 import Toast from './Toast';
 import EditScoreboardModal from './EditScoreboardModal';
+import StyleCustomizationSection from './StyleCustomizationSection';
+import EmbedCodeSection from './EmbedCodeSection';
 
 interface ToastState {
   message: string;
@@ -57,6 +59,7 @@ const ScoreboardManagementInteractive = () => {
     type: 'info',
     isVisible: false
   });
+  const [isSavingStyles, setIsSavingStyles] = useState(false);
 
   // Redirect if not authenticated or no scoreboard ID
   useEffect(() => {
@@ -185,6 +188,27 @@ const ScoreboardManagementInteractive = () => {
       showToast('Scoreboard details updated successfully', 'success');
     } catch {
       showToast('Failed to update scoreboard details', 'error');
+    }
+  };
+
+  const handleSaveStyles = async (styles: ScoreboardCustomStyles, scope: 'main' | 'embed' | 'both') => {
+    if (!scoreboard) return;
+    
+    setIsSavingStyles(true);
+    try {
+      const { error } = await scoreboardService.updateScoreboard(scoreboard.id, {
+        customStyles: styles,
+        styleScope: scope
+      });
+      
+      if (error) throw error;
+      
+      await loadScoreboardData();
+      showToast('Style settings saved successfully', 'success');
+    } catch {
+      showToast('Failed to save style settings', 'error');
+    } finally {
+      setIsSavingStyles(false);
     }
   };
 
@@ -422,6 +446,18 @@ const ScoreboardManagementInteractive = () => {
             </div>
           </div>
         </div>
+
+        <StyleCustomizationSection
+          currentStyles={scoreboard.customStyles}
+          currentScope={scoreboard.styleScope || 'both'}
+          onSave={handleSaveStyles}
+          isSaving={isSavingStyles}
+        />
+
+        <EmbedCodeSection
+          scoreboardId={scoreboard.id}
+          scoreboardTitle={scoreboard.title}
+        />
 
         <div className="bg-card border border-border rounded-lg elevation-1">
           <div className="p-6 border-b border-border">
