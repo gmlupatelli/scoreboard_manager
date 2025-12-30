@@ -30,13 +30,7 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   isSaving,
   scoreboardId,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(() => {
-    if (typeof window !== 'undefined' && scoreboardId) {
-      const stored = localStorage.getItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`);
-      return stored === 'true';
-    }
-    return false;
-  });
+  const [isExpanded, setIsExpanded] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>(currentStyles?.preset || 'light');
   const [customStyles, setCustomStyles] = useState<ScoreboardCustomStyles>(
     currentStyles || getStylePreset('light')
@@ -46,7 +40,16 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
 
   useEffect(() => {
     if (typeof window !== 'undefined' && scoreboardId) {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`, String(isExpanded));
+      const stored = sessionStorage.getItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`);
+      if (stored !== null) {
+        setIsExpanded(stored === 'true');
+      }
+    }
+  }, [scoreboardId]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && scoreboardId) {
+      sessionStorage.setItem(`${STORAGE_KEY_PREFIX}${scoreboardId}`, String(isExpanded));
     }
   }, [isExpanded, scoreboardId]);
 

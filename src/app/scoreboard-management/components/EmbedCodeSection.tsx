@@ -21,7 +21,7 @@ const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
 
   useEffect(() => {
     const storageKey = `${EMBED_EXPANDED_STORAGE_KEY}_${scoreboardId}`;
-    const stored = localStorage.getItem(storageKey);
+    const stored = sessionStorage.getItem(storageKey);
     if (stored !== null) {
       setIsExpanded(stored === 'true');
     }
@@ -31,7 +31,7 @@ const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
     const newValue = !isExpanded;
     setIsExpanded(newValue);
     const storageKey = `${EMBED_EXPANDED_STORAGE_KEY}_${scoreboardId}`;
-    localStorage.setItem(storageKey, String(newValue));
+    sessionStorage.setItem(storageKey, String(newValue));
   };
 
   const getBaseUrl = () => {
