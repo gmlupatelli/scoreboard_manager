@@ -5,12 +5,21 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Project Status
 - **Current State**: Fully configured and running on Replit
-- **Last Updated**: November 30, 2025
+- **Last Updated**: December 30, 2025
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+
+### December 30, 2025 - Per-Rank Customization with Colors and Icons
+- Added per-rank color customization for top 3 positions (gold, silver, bronze defaults)
+- Added custom icon selector for top 3 ranks with 8 icon options (Trophy, Star, Sparkles, Fire, Lightning, Heart, Badge, Gift)
+- EntryTable, EntryCard, and embed page all use per-rank colors and icons from customStyles
+- Style Customization section expanded state persists via localStorage using scoreboardId as key
+- Updated all style presets with per-rank color defaults: rank1Color (#ca8a04), rank2Color (#9ca3af), rank3Color (#b45309)
+- ScoreboardCustomStyles extended with rank1Color, rank2Color, rank3Color, rank1Icon, rank2Icon, rank3Icon fields
+- Fixed light preset not populating on new scoreboard creation by defaulting custom_styles and style_scope in createScoreboard
 
 ### December 30, 2025 - Iframe Embedding with Custom Styling
 - Added `/embed/[id]` route for clean scoreboard embeds (no header/footer)

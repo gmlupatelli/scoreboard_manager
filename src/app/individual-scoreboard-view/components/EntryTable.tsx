@@ -15,17 +15,26 @@ interface EntryTableProps {
 }
 
 const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles }) => {
-  const getRankColor = (rank: number): string => {
-    if (rank === 1) return 'text-yellow-600';
-    if (rank === 2) return 'text-gray-400';
-    if (rank === 3) return 'text-amber-700';
-    return 'text-text-primary';
+  const getRankColor = (rank: number): string | undefined => {
+    if (customStyles) {
+      if (rank === 1) return customStyles.rank1Color || '#ca8a04';
+      if (rank === 2) return customStyles.rank2Color || '#9ca3af';
+      if (rank === 3) return customStyles.rank3Color || '#b45309';
+      return customStyles.textColor;
+    }
+    if (rank === 1) return '#ca8a04';
+    if (rank === 2) return '#9ca3af';
+    if (rank === 3) return '#b45309';
+    return undefined;
   };
 
   const getRankIcon = (rank: number): string | null => {
-    if (rank === 1) return 'TrophyIcon';
-    if (rank === 2) return 'TrophyIcon';
-    if (rank === 3) return 'TrophyIcon';
+    if (customStyles) {
+      if (rank === 1) return customStyles.rank1Icon || 'TrophyIcon';
+      if (rank === 2) return customStyles.rank2Icon || 'TrophyIcon';
+      if (rank === 3) return customStyles.rank3Icon || 'TrophyIcon';
+    }
+    if (rank <= 3) return 'TrophyIcon';
     return null;
   };
 
@@ -57,7 +66,7 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles }) => {
         <tbody style={{ backgroundColor: customStyles?.backgroundColor || 'var(--surface)' }}>
           {entries?.map?.((entry, index) => {
             const rankIcon = getRankIcon(entry?.rank || 0);
-            const rankColor = customStyles ? undefined : getRankColor(entry?.rank || 0);
+            const rankColor = getRankColor(entry?.rank || 0);
 
             return (
               <tr 
@@ -72,10 +81,10 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles }) => {
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div 
-                    className={`flex items-center space-x-2 font-semibold ${rankColor || ''}`}
-                    style={customStyles ? { color: customStyles.textColor } : undefined}
+                    className="flex items-center space-x-2 font-semibold"
+                    style={{ color: rankColor || (customStyles?.textColor || 'var(--text-primary)') }}
                   >
-                    {rankIcon && <Icon name={rankIcon} size={20} style={customStyles && entry.rank <= 3 ? { color: customStyles.rankHighlightColor } : undefined} />}
+                    {rankIcon && <Icon name={rankIcon} size={20} style={{ color: rankColor }} />}
                     <span className="text-sm">#{entry?.rank}</span>
                   </div>
                 </td>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import SearchInterface from '@/components/common/SearchInterface';
+import Icon from '@/components/ui/AppIcon';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
 import { getStylePreset, generateCustomStyles } from '@/utils/stylePresets';
@@ -10,6 +11,21 @@ import { getStylePreset, generateCustomStyles } from '@/utils/stylePresets';
 interface EntryWithRank extends ScoreboardEntry {
   rank: number;
 }
+
+const getRankColor = (rank: number, styles: ScoreboardCustomStyles): string => {
+  if (rank === 1) return styles.rank1Color || '#ca8a04';
+  if (rank === 2) return styles.rank2Color || '#9ca3af';
+  if (rank === 3) return styles.rank3Color || '#b45309';
+  return styles.textColor || '#1f2937';
+};
+
+const getRankIcon = (rank: number, styles: ScoreboardCustomStyles): string | null => {
+  if (rank === 1) return styles.rank1Icon || 'TrophyIcon';
+  if (rank === 2) return styles.rank2Icon || 'TrophyIcon';
+  if (rank === 3) return styles.rank3Icon || 'TrophyIcon';
+  if (rank <= 3) return 'TrophyIcon';
+  return null;
+};
 
 export default function EmbedScoreboardPage() {
   const params = useParams();
@@ -269,48 +285,45 @@ export default function EmbedScoreboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentEntries.map((entry, index) => (
-                    <tr 
-                      key={entry.id}
-                      className="transition-colors"
-                      style={{ 
-                        backgroundColor: index % 2 === 0 
-                          ? appliedStyles.backgroundColor
-                          : appliedStyles.rowHoverColor,
-                        borderBottom: `1px solid ${appliedStyles.borderColor}`
-                      }}
-                    >
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span 
-                          className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
-                            entry.rank <= 3 ? 'text-white' : ''
-                          }`}
-                          style={{
-                            backgroundColor: entry.rank <= 3 
-                              ? (appliedStyles.rankHighlightColor || appliedStyles.accentColor)
-                              : 'transparent',
-                            color: entry.rank <= 3 
-                              ? '#ffffff' 
-                              : appliedStyles.textColor
-                          }}
+                  {currentEntries.map((entry, index) => {
+                    const rankColor = getRankColor(entry.rank, appliedStyles);
+                    const rankIconName = getRankIcon(entry.rank, appliedStyles);
+                    
+                    return (
+                      <tr 
+                        key={entry.id}
+                        className="transition-colors"
+                        style={{ 
+                          backgroundColor: index % 2 === 0 
+                            ? appliedStyles.backgroundColor
+                            : appliedStyles.rowHoverColor,
+                          borderBottom: `1px solid ${appliedStyles.borderColor}`
+                        }}
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div 
+                            className="flex items-center gap-2 font-semibold"
+                            style={{ color: rankColor }}
+                          >
+                            {rankIconName && <Icon name={rankIconName} size={18} style={{ color: rankColor }} />}
+                            <span className="text-sm">#{entry.rank}</span>
+                          </div>
+                        </td>
+                        <td 
+                          className="px-4 py-3 font-medium"
+                          style={{ color: appliedStyles.textColor }}
                         >
-                          #{entry.rank}
-                        </span>
-                      </td>
-                      <td 
-                        className="px-4 py-3 font-medium"
-                        style={{ color: appliedStyles.textColor }}
-                      >
-                        {entry.name}
-                      </td>
-                      <td 
-                        className="px-4 py-3 text-right font-semibold"
-                        style={{ color: appliedStyles.accentColor || appliedStyles.textColor }}
-                      >
-                        {Number(entry.score).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
+                          {entry.name}
+                        </td>
+                        <td 
+                          className="px-4 py-3 text-right font-semibold"
+                          style={{ color: appliedStyles.accentColor || appliedStyles.textColor }}
+                        >
+                          {Number(entry.score).toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

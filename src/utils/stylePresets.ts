@@ -13,6 +13,12 @@ export const STYLE_PRESETS: Record<string, ScoreboardCustomStyles> = {
     borderRadius: '8px',
     rowHoverColor: '#f9fafb',
     rankHighlightColor: '#f77174',
+    rank1Color: '#ca8a04',
+    rank2Color: '#9ca3af',
+    rank3Color: '#b45309',
+    rank1Icon: 'TrophyIcon',
+    rank2Icon: 'TrophyIcon',
+    rank3Icon: 'TrophyIcon',
   },
   dark: {
     preset: 'dark',
@@ -26,6 +32,12 @@ export const STYLE_PRESETS: Record<string, ScoreboardCustomStyles> = {
     borderRadius: '8px',
     rowHoverColor: '#374151',
     rankHighlightColor: '#f77174',
+    rank1Color: '#fbbf24',
+    rank2Color: '#d1d5db',
+    rank3Color: '#f59e0b',
+    rank1Icon: 'TrophyIcon',
+    rank2Icon: 'TrophyIcon',
+    rank3Icon: 'TrophyIcon',
   },
   transparent: {
     preset: 'transparent',
@@ -39,6 +51,12 @@ export const STYLE_PRESETS: Record<string, ScoreboardCustomStyles> = {
     borderRadius: '8px',
     rowHoverColor: 'rgba(249, 250, 251, 0.5)',
     rankHighlightColor: '#f77174',
+    rank1Color: '#ca8a04',
+    rank2Color: '#9ca3af',
+    rank3Color: '#b45309',
+    rank1Icon: 'TrophyIcon',
+    rank2Icon: 'TrophyIcon',
+    rank3Icon: 'TrophyIcon',
   },
   'high-contrast': {
     preset: 'high-contrast',
@@ -52,6 +70,12 @@ export const STYLE_PRESETS: Record<string, ScoreboardCustomStyles> = {
     borderRadius: '0px',
     rowHoverColor: '#1a1a1a',
     rankHighlightColor: '#ff0000',
+    rank1Color: '#ffd700',
+    rank2Color: '#ffffff',
+    rank3Color: '#ff6600',
+    rank1Icon: 'TrophyIcon',
+    rank2Icon: 'TrophyIcon',
+    rank3Icon: 'TrophyIcon',
   },
   minimal: {
     preset: 'minimal',
@@ -65,6 +89,12 @@ export const STYLE_PRESETS: Record<string, ScoreboardCustomStyles> = {
     borderRadius: '0px',
     rowHoverColor: '#fafafa',
     rankHighlightColor: '#333333',
+    rank1Color: '#1f2937',
+    rank2Color: '#6b7280',
+    rank3Color: '#374151',
+    rank1Icon: 'TrophyIcon',
+    rank2Icon: 'TrophyIcon',
+    rank3Icon: 'TrophyIcon',
   },
   brand: {
     preset: 'brand',
@@ -78,8 +108,25 @@ export const STYLE_PRESETS: Record<string, ScoreboardCustomStyles> = {
     borderRadius: '12px',
     rowHoverColor: '#2a2a4e',
     rankHighlightColor: '#eba977',
+    rank1Color: '#f77174',
+    rank2Color: '#eba977',
+    rank3Color: '#9ca3af',
+    rank1Icon: 'TrophyIcon',
+    rank2Icon: 'TrophyIcon',
+    rank3Icon: 'TrophyIcon',
   },
 };
+
+export const RANK_ICON_OPTIONS = [
+  { value: 'TrophyIcon', label: 'Trophy' },
+  { value: 'StarIcon', label: 'Star' },
+  { value: 'SparklesIcon', label: 'Sparkles' },
+  { value: 'FireIcon', label: 'Fire' },
+  { value: 'BoltIcon', label: 'Lightning' },
+  { value: 'HeartIcon', label: 'Heart' },
+  { value: 'CheckBadgeIcon', label: 'Badge' },
+  { value: 'GiftIcon', label: 'Gift' },
+];
 
 export const PRESET_LABELS: Record<string, string> = {
   light: 'Light (Default)',
@@ -115,6 +162,9 @@ export function generateCustomStyles(styles: ScoreboardCustomStyles): React.CSSP
     '--embed-radius': styles.borderRadius,
     '--embed-row-hover': styles.rowHoverColor,
     '--embed-rank-highlight': styles.rankHighlightColor,
+    '--embed-rank1-color': styles.rank1Color,
+    '--embed-rank2-color': styles.rank2Color,
+    '--embed-rank3-color': styles.rank3Color,
   } as React.CSSProperties;
 }
 
@@ -156,12 +206,6 @@ export const CUSTOMIZABLE_PROPERTIES = [
     description: 'Used for scores and interactive elements',
   },
   {
-    key: 'rankHighlightColor',
-    label: 'Top 3 Highlight',
-    type: 'color',
-    description: 'Background color for top 3 rank badges',
-  },
-  {
     key: 'rowHoverColor',
     label: 'Alternate Row Color',
     type: 'color',
@@ -193,5 +237,29 @@ export const CUSTOMIZABLE_PROPERTIES = [
       { value: '16px', label: 'Very Rounded (16px)' },
     ],
     description: 'How round the corners of the scoreboard should be',
+  },
+];
+
+export const RANK_CUSTOMIZATION_PROPERTIES = [
+  {
+    rank: 1,
+    colorKey: 'rank1Color',
+    iconKey: 'rank1Icon',
+    label: '1st Place (Gold)',
+    defaultColor: '#ca8a04',
+  },
+  {
+    rank: 2,
+    colorKey: 'rank2Color',
+    iconKey: 'rank2Icon',
+    label: '2nd Place (Silver)',
+    defaultColor: '#9ca3af',
+  },
+  {
+    rank: 3,
+    colorKey: 'rank3Color',
+    iconKey: 'rank3Icon',
+    label: '3rd Place (Bronze)',
+    defaultColor: '#b45309',
   },
 ];

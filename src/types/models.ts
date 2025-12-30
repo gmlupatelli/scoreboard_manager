@@ -19,6 +19,12 @@ export interface ScoreboardCustomStyles {
   borderRadius?: string;
   rowHoverColor?: string;
   rankHighlightColor?: string;
+  rank1Color?: string;
+  rank2Color?: string;
+  rank3Color?: string;
+  rank1Icon?: string;
+  rank2Icon?: string;
+  rank3Icon?: string;
 }
 
 export interface Scoreboard {
