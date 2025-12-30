@@ -1,0 +1,67 @@
+Short answer
+Yes — the DO block’s approach (searching policies and replacing direct calls like auth.uid() / auth.jwt() with (SELECT auth.uid()) / (SELECT auth.jwt())) would address the lint: it converts per-row-evaluated function calls into scalar subqueries so PostgreSQL can avoid re-evaluating them for each row.
+
+What your script does right
+It reads existing policies from pg_policies (via pg_get_expr on qual/with_check).
+It replaces occurrences of auth.uid() and auth.jwt() with (SELECT auth.uid()) and (SELECT auth.jwt()) in both USING and WITH CHECK expressions.
+It drops each policy and recreates it with the modified expressions, preserving FOR, TO (roles), permissive flag, and WITH CHECK when applicable.
+It scopes changes to the specified tables (user_profiles, invitations, scoreboard_entries, scoreboards) and schema public.
+Edge-cases and recommended fixes / improvements
+Quoting / identifier names:
+
+In your first pasted block you used roles while in the second you used policyroles (pg_policies has the column name policyroles). Use policyroles consistently (your second DO block seems correct).
+Replace occurrences more robustly:
+
+The simple text replace will work for straightforward uses (e.g., auth.uid()), but may miss:
+Variations in whitespace or capitalization (e.g., AUTH.Uid() — unlikely but possible if someone used quoted identifiers).
+Occurrences inside strings or comments (rare in policy expressions but possible).
+If you expect more complex cases, consider using a regex-based replacement (PL/pgSQL lacks built-in robust regex replace that preserves SQL safety). For most real-world policies, the simple replace is sufficient.
+current_setting() handling:
+
+The lint also mentioned current_setting(). Your script only handles auth.uid() and auth.jwt(). Add replacements for current_setting( patterns as needed:
+Replace current_setting('...') with (SELECT current_setting('...')).
+Be careful to preserve the argument string exactly; a simple text replace of current_setting( → (SELECT current_setting( is safe.
+Roles formatting & quoting:
+
+You build roles_sql using quote_ident on each role; good. Ensure role names returned in pg_policies are plain role names and not expressions. Using quote_ident is appropriate.
+Preservation of boolean TRUE expressions:
+
+You already coalesce blank expressions to 'TRUE' — OK.
+Permissions / downtime considerations:
+
+DROP POLICY then CREATE introduces a very small window where the policy does not exist. If you need zero-downtime for critical tables, create the new policy under a temporary name first (e.g., append _v2), test it, then atomically DROP the old and CREATE the final name. PostgreSQL doesn’t support ALTER POLICY to swap expressions, so a brief swap is necessary.
+Validation after execution:
+
+After running the script, validate policies with:
+Query pg_policies or pg_get_expr to confirm new expressions.
+Test representative SELECT/INSERT/UPDATE queries as an authenticated user.
+Run EXPLAIN (ANALYZE) on heavy queries to confirm fewer function calls per row or improved plan cost.
+SQL injection / expression safety:
+
+You are re-executing policy expressions verbatim. Since these originate from pg_policies in the database, risk of SQL injection is low; still, keep this script limited to trusted environments.
+Policy role column name difference:
+
+Some Postgres versions / extensions expose different column names; you used policyroles in the final block — that matches recent pg_policies. If you see errors, confirm the column name via SELECT * FROM pg_policies LIMIT 1;.*_
+Minimal edits to your DO block
+Add replacements for current_setting(.
+Ensure you consistently use policyroles.
+Optionally handle common whitespace/capitalization by comparing lower-cased copies for replacement, e.g. replace auth.uid() and AUTH.UID() variants by doing a case-insensitive approach (but be careful to preserve original casing if needed).
+Example replacements to add:
+
+using_sql := replace(using_sql, 'current_setting(', '(SELECT current_setting(');
+check_sql := replace(check_sql, 'current_setting(', '(SELECT current_setting(');
+(You can add both before the TRIM checks.)
+
+Safety checklist before running
+Backup the DB or at least export current policies (SELECT pg_get_expr(...) and store).
+Run the DO block inside a transaction in a maintenance window if you cannot tolerate any brief change.
+Test on a staging copy first.
+Would this fix the lint fully?
+Yes, for typical policy expressions this script will fix the lint by ensuring auth/current_setting calls are executed as scalar subqueries rather than per-row calls. After running it, re-run the lint (or inspect policy definitions) to confirm replacements were applied everywhere and then validate behavior and performance.
+
+If you want, I can:
+
+Produce a final DO block that includes replacements for current_setting( and uses policyroles consistently, or
+Create a safe zero-downtime variant (create new policies with a temporary suffix, test them, then swap). Which would you prefer?
+
+

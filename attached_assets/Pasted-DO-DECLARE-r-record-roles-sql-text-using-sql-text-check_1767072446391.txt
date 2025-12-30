@@ -1,0 +1,85 @@
+DO $$
+DECLARE
+  r record;
+  roles_sql text;
+  using_sql text;
+  check_sql text;
+  permissive_clause text;
+  with_check_clause text;
+  cmd_sql text;
+  create_sql text;
+BEGIN
+  FOR r IN
+    SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual AS raw_qual, with_check AS raw_with_check
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename IN ('user_profiles','invitations','scoreboard_entries','scoreboards')
+  LOOP
+    -- convert qual -> using_sql
+    IF r.raw_qual IS NULL THEN
+      using_sql := 'TRUE';
+    ELSE
+      IF pg_typeof(r.raw_qual)::text = 'pg_node_tree' THEN
+        using_sql := pg_get_expr(r.raw_qual, format('%I.%I', r.schemaname, r.tablename)::regclass);
+      ELSE
+        using_sql := r.raw_qual::text;
+      END IF;
+    END IF;
+
+    -- convert with_check -> check_sql
+    IF r.raw_with_check IS NULL THEN
+      check_sql := 'TRUE';
+    ELSE
+      IF pg_typeof(r.raw_with_check)::text = 'pg_node_tree' THEN
+        check_sql := pg_get_expr(r.raw_with_check, format('%I.%I', r.schemaname, r.tablename)::regclass);
+      ELSE
+        check_sql := r.raw_with_check::text;
+      END IF;
+    END IF;
+
+    -- roles -> roles_sql
+    IF r.roles IS NULL OR cardinality(r.roles) = 0 THEN
+      roles_sql := 'PUBLIC';
+    ELSE
+      roles_sql := array_to_string(ARRAY(SELECT quote_ident(role_name) FROM unnest(r.roles) AS role_name), ', ');
+    END IF;
+
+    -- normalize auth.* calls
+    using_sql := replace(replace(COALESCE(using_sql, ''), 'auth.uid()', '(SELECT auth.uid())'), 'auth.jwt()', '(SELECT auth.jwt())');
+    check_sql := replace(replace(COALESCE(check_sql, ''), 'auth.uid()', '(SELECT auth.uid())'), 'auth.jwt()', '(SELECT auth.jwt())');
+
+    IF trim(using_sql) = '' THEN using_sql := 'TRUE'; END IF;
+    IF trim(check_sql) = '' THEN check_sql := 'TRUE'; END IF;
+
+    cmd_sql := upper(r.cmd);
+
+    -- permissive may be boolean or text in different PG versions; handle both.
+    IF pg_typeof(r.permissive)::text = 'boolean' THEN
+      permissive_clause := CASE WHEN r.permissive THEN '' ELSE ' AS RESTRICTIVE' END;
+    ELSE
+      -- treat text values 'PERMISSIVE' (case-insensitive) as permissive
+      permissive_clause := CASE WHEN upper(coalesce(r.permissive::text, '')) = 'PERMISSIVE' THEN '' ELSE ' AS RESTRICTIVE' END;
+    END IF;
+
+    -- drop existing policy
+    EXECUTE format('DROP POLICY IF EXISTS %I ON %I.%I', r.policyname, r.schemaname, r.tablename);
+
+    -- build CREATE POLICY
+    IF cmd_sql = 'INSERT' THEN
+      create_sql := format(
+        'CREATE POLICY %I ON %I.%I%s FOR %s TO %s WITH CHECK (%s)',
+        r.policyname, r.schemaname, r.tablename, permissive_clause, cmd_sql, roles_sql, check_sql
+      );
+    ELSE
+      with_check_clause := CASE WHEN cmd_sql IN ('ALL','UPDATE') AND check_sql <> 'TRUE' THEN format(' WITH CHECK (%s)', check_sql) ELSE '' END;
+      create_sql := format(
+        'CREATE POLICY %I ON %I.%I%s FOR %s TO %s USING (%s)%s',
+        r.policyname, r.schemaname, r.tablename, permissive_clause, cmd_sql, roles_sql, using_sql, with_check_clause
+      );
+    END IF;
+
+    -- execute
+    EXECUTE create_sql;
+  END LOOP;
+END;
+$$;
