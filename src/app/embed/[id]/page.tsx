@@ -140,20 +140,27 @@ export default function EmbedScoreboardPage() {
     return scope === 'embed' || scope === 'both' || !scope;
   };
 
-  const getAppliedStyles = (): ScoreboardCustomStyles | null => {
-    if (!scoreboard?.customStyles) return null;
-    if (!shouldApplyStyles(scoreboard.styleScope)) return null;
+  const getAppliedStyles = (): ScoreboardCustomStyles => {
+    const lightPreset = getStylePreset('light');
     
-    if (scoreboard.customStyles.preset && scoreboard.customStyles.preset !== 'light') {
+    if (!scoreboard?.customStyles) {
+      return lightPreset;
+    }
+    
+    if (!shouldApplyStyles(scoreboard.styleScope)) {
+      return lightPreset;
+    }
+    
+    if (scoreboard.customStyles.preset) {
       const presetStyles = getStylePreset(scoreboard.customStyles.preset);
       return { ...presetStyles, ...scoreboard.customStyles };
     }
     
-    return scoreboard.customStyles;
+    return { ...lightPreset, ...scoreboard.customStyles };
   };
 
   const appliedStyles = getAppliedStyles();
-  const customCssVars = appliedStyles ? generateCustomStyles(appliedStyles) : {};
+  const customCssVars = generateCustomStyles(appliedStyles);
 
   if (!isHydrated || isLoading) {
     return (
@@ -170,10 +177,10 @@ export default function EmbedScoreboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={customCssVars}>
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2" style={{ color: appliedStyles?.textColor || '#1f2937' }}>
+          <h2 className="text-xl font-semibold mb-2" style={{ color: appliedStyles.textColor }}>
             Unable to Load Scoreboard
           </h2>
-          <p className="text-sm" style={{ color: appliedStyles?.textColor ? `${appliedStyles.textColor}99` : '#6b7280' }}>
+          <p className="text-sm" style={{ color: `${appliedStyles.textColor}99` }}>
             {error || 'Scoreboard not found'}
           </p>
         </div>
@@ -185,9 +192,9 @@ export default function EmbedScoreboardPage() {
     <div 
       className="min-h-screen p-4"
       style={{
-        backgroundColor: appliedStyles?.backgroundColor || '#ffffff',
-        color: appliedStyles?.textColor || '#1f2937',
-        fontFamily: appliedStyles?.fontFamily || 'inherit',
+        backgroundColor: appliedStyles.backgroundColor,
+        color: appliedStyles.textColor,
+        fontFamily: appliedStyles.fontFamily,
         ...customCssVars
       }}
     >
@@ -195,14 +202,14 @@ export default function EmbedScoreboardPage() {
         <div className="mb-6 text-center">
           <h1 
             className="text-2xl font-bold mb-2"
-            style={{ color: appliedStyles?.headerColor || appliedStyles?.textColor || '#1f2937' }}
+            style={{ color: appliedStyles.headerColor || appliedStyles.textColor }}
           >
             {scoreboard.title}
           </h1>
           {scoreboard.subtitle && (
             <p 
               className="text-sm opacity-80"
-              style={{ color: appliedStyles?.textColor || '#6b7280' }}
+              style={{ color: appliedStyles.textColor }}
             >
               {scoreboard.subtitle}
             </p>
@@ -226,14 +233,14 @@ export default function EmbedScoreboardPage() {
           <div 
             className="text-center py-12 rounded-lg"
             style={{
-              backgroundColor: appliedStyles?.backgroundColor ? `${appliedStyles.backgroundColor}` : '#f9fafb',
-              borderColor: appliedStyles?.borderColor || '#e5e7eb',
+              backgroundColor: appliedStyles.backgroundColor,
+              borderColor: appliedStyles.borderColor,
               borderWidth: '1px',
               borderStyle: 'solid',
-              borderRadius: appliedStyles?.borderRadius || '8px'
+              borderRadius: appliedStyles.borderRadius
             }}
           >
-            <p style={{ color: appliedStyles?.textColor || '#6b7280' }}>
+            <p style={{ color: appliedStyles.textColor }}>
               {searchQuery ? 'No entries found matching your search' : 'No entries yet'}
             </p>
           </div>
@@ -242,18 +249,18 @@ export default function EmbedScoreboardPage() {
             <div 
               className="overflow-hidden mb-4"
               style={{
-                borderColor: appliedStyles?.borderColor || '#e5e7eb',
+                borderColor: appliedStyles.borderColor,
                 borderWidth: '1px',
                 borderStyle: 'solid',
-                borderRadius: appliedStyles?.borderRadius || '8px'
+                borderRadius: appliedStyles.borderRadius
               }}
             >
               <table className="w-full">
                 <thead>
                   <tr 
                     style={{ 
-                      backgroundColor: appliedStyles?.headerColor || '#f3f4f6',
-                      color: appliedStyles?.headerTextColor || appliedStyles?.textColor || '#374151'
+                      backgroundColor: appliedStyles.headerColor,
+                      color: appliedStyles.headerTextColor || appliedStyles.textColor
                     }}
                   >
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Rank</th>
@@ -268,9 +275,9 @@ export default function EmbedScoreboardPage() {
                       className="transition-colors"
                       style={{ 
                         backgroundColor: index % 2 === 0 
-                          ? (appliedStyles?.backgroundColor || '#ffffff')
-                          : (appliedStyles?.rowHoverColor || '#f9fafb'),
-                        borderBottom: `1px solid ${appliedStyles?.borderColor || '#e5e7eb'}`
+                          ? appliedStyles.backgroundColor
+                          : appliedStyles.rowHoverColor,
+                        borderBottom: `1px solid ${appliedStyles.borderColor}`
                       }}
                     >
                       <td className="px-4 py-3 whitespace-nowrap">
@@ -280,11 +287,11 @@ export default function EmbedScoreboardPage() {
                           }`}
                           style={{
                             backgroundColor: entry.rank <= 3 
-                              ? (appliedStyles?.rankHighlightColor || appliedStyles?.accentColor || '#f77174')
+                              ? (appliedStyles.rankHighlightColor || appliedStyles.accentColor)
                               : 'transparent',
                             color: entry.rank <= 3 
                               ? '#ffffff' 
-                              : (appliedStyles?.textColor || '#374151')
+                              : appliedStyles.textColor
                           }}
                         >
                           #{entry.rank}
@@ -292,13 +299,13 @@ export default function EmbedScoreboardPage() {
                       </td>
                       <td 
                         className="px-4 py-3 font-medium"
-                        style={{ color: appliedStyles?.textColor || '#1f2937' }}
+                        style={{ color: appliedStyles.textColor }}
                       >
                         {entry.name}
                       </td>
                       <td 
                         className="px-4 py-3 text-right font-semibold"
-                        style={{ color: appliedStyles?.accentColor || appliedStyles?.textColor || '#1f2937' }}
+                        style={{ color: appliedStyles.accentColor || appliedStyles.textColor }}
                       >
                         {Number(entry.score).toLocaleString()}
                       </td>
@@ -310,7 +317,7 @@ export default function EmbedScoreboardPage() {
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between text-sm">
-                <span style={{ color: appliedStyles?.textColor ? `${appliedStyles.textColor}99` : '#6b7280' }}>
+                <span style={{ color: `${appliedStyles.textColor}99` }}>
                   Showing {startIndex + 1} to {Math.min(endIndex, filteredEntries.length)} of {filteredEntries.length}
                 </span>
                 <div className="flex gap-2">
@@ -319,7 +326,7 @@ export default function EmbedScoreboardPage() {
                     disabled={currentPage === 1}
                     className="px-3 py-1 rounded disabled:opacity-50"
                     style={{
-                      backgroundColor: appliedStyles?.accentColor || '#f77174',
+                      backgroundColor: appliedStyles.accentColor,
                       color: '#ffffff'
                     }}
                   >
@@ -330,7 +337,7 @@ export default function EmbedScoreboardPage() {
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 rounded disabled:opacity-50"
                     style={{
-                      backgroundColor: appliedStyles?.accentColor || '#f77174',
+                      backgroundColor: appliedStyles.accentColor,
                       color: '#ffffff'
                     }}
                   >

@@ -1,0 +1,56 @@
+Yes — the consolidated policies you posted look correct and will eliminate the overlapping-policy warnings, provided the helper functions and enum types you reference exist and behave as expected (is_system_admin(), can_view_scoreboard(), owns_scoreboard(), scoreboard_visibility, invitation_status). Also ensure RLS is enabled on these tables.
+
+Below are a few concrete checks and small fixes to make the policy set robust.
+
+Preconditions to verify
+RLS is enabled on each table. If not, run:
+SQL Query
+
+
+
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.scoreboards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.scoreboard_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
+
+Helper functions must be defined and safe to call from RLS contexts:
+is_system_admin() — should return boolean and use auth.uid() or auth.jwt() internally.
+can_view_scoreboard(scoreboard_id uuid) — returns boolean (checks visibility, owner membership, or membership/organization relationship).
+owns_scoreboard(scoreboard_id uuid) — returns boolean (true if auth.uid() is owner or admin). If any are missing, your policies will error when evaluated.
+Enum types referenced must exist with those labels:
+scoreboard_visibility (must include 'public')
+invitation_status (must include 'pending')
+Minor corrections / improvements
+CREATE POLICY format: You used FOR SELECT TO authenticated USING ((id = (SELECT auth.uid())) OR is_system_admin()); — that's fine, but prefer explicit parentheses only where needed. Also be consistent in quoting/qualification.
+
+Anonymous select policy on scoreboards:
+
+You used visibility = 'public'::scoreboard_visibility — good (explicit cast). If scoreboard_visibility is text, remove the cast.
+Invitations anonymous policy:
+
+You check expires_at > CURRENT_TIMESTAMP — good. Consider timezone-aware checks if expires_at is timestamptz.
+INSERT policy for user_profiles:
+
+You created admin-only INSERT for authenticated role. If you want to allow users to create their own profiles on signup, you might instead allow INSERT with check id = auth.uid() OR is_system_admin(). Confirm your intended flow.
+Use of auth.uid() in RLS:
+
+You wrapped it as (SELECT auth.uid()) in earlier code. In policy expressions, either form works, but using (SELECT auth.uid()) avoids some planner/typing issues; if you hit errors, switch to that wrapped form.
+Prevent accidental public access:
+
+Make sure you don’t have a broad policy FOR ALL TO PUBLIC USING (true) anywhere else.
+Suggested small edits (optional)
+If you want the UPDATE policy to also enforce WITH CHECK that prevents privilege-escalation (you already did), keep it as-is.
+If you prefer to be defensive about auth.uid() returning NULL, you can add AND (SELECT auth.uid()) IS NOT NULL in authenticated policies — not required if role is authenticated.
+Example minor tweaks (only if you want them applied):
+
+Allow new user profile insert by the authenticated user (optional):
+SQL Query
+
+
+
+DROP POLICY IF EXISTS admin_insert_profiles ON public.user_profiles;
+
+CREATE POLICY user_insert_own_profile ON public.user_profiles
+FOR INSERT TO authenticated
+WITH CHECK ((id = (SELECT auth.uid())) OR is_system_admin());
+

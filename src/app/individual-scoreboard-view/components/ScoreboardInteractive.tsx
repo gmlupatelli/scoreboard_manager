@@ -177,15 +177,22 @@ const ScoreboardInteractive: React.FC = () => {
   };
 
   const getAppliedStyles = (): ScoreboardCustomStyles | null => {
-    if (!scoreboard?.customStyles) return null;
-    if (!shouldApplyStyles(scoreboard.styleScope)) return null;
+    const lightPreset = getStylePreset('light');
     
-    if (scoreboard.customStyles.preset && scoreboard.customStyles.preset !== 'light') {
+    if (!scoreboard?.customStyles) {
+      return null;
+    }
+    
+    if (!shouldApplyStyles(scoreboard.styleScope)) {
+      return null;
+    }
+    
+    if (scoreboard.customStyles.preset) {
       const presetStyles = getStylePreset(scoreboard.customStyles.preset);
       return { ...presetStyles, ...scoreboard.customStyles };
     }
     
-    return scoreboard.customStyles;
+    return { ...lightPreset, ...scoreboard.customStyles };
   };
 
   if (!isHydrated || isLoading) {
