@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '@/components/ui/AppIcon';
 
 interface EmbedCodeSectionProps {
   scoreboardId: string;
   scoreboardTitle: string;
 }
+
+const EMBED_EXPANDED_STORAGE_KEY = 'embedCodeExpanded';
 
 const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
   scoreboardId,
@@ -16,6 +18,21 @@ const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
   const [copied, setCopied] = useState(false);
   const [embedWidth, setEmbedWidth] = useState('100%');
   const [embedHeight, setEmbedHeight] = useState('600');
+
+  useEffect(() => {
+    const storageKey = `${EMBED_EXPANDED_STORAGE_KEY}_${scoreboardId}`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored !== null) {
+      setIsExpanded(stored === 'true');
+    }
+  }, [scoreboardId]);
+
+  const handleToggleExpanded = () => {
+    const newValue = !isExpanded;
+    setIsExpanded(newValue);
+    const storageKey = `${EMBED_EXPANDED_STORAGE_KEY}_${scoreboardId}`;
+    localStorage.setItem(storageKey, String(newValue));
+  };
 
   const getBaseUrl = () => {
     if (typeof window === 'undefined') return '';
@@ -66,7 +83,7 @@ const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
   return (
     <div className="bg-card border border-border rounded-lg elevation-1 mb-6">
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleToggleExpanded}
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-muted/50 transition-colors rounded-lg"
       >
         <div className="flex items-center gap-3">
