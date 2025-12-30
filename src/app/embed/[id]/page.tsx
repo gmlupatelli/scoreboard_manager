@@ -217,20 +217,12 @@ export default function EmbedScoreboardPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 text-center">
           <h1 
-            className="text-2xl font-bold mb-2"
-            style={{ color: appliedStyles.headerColor || appliedStyles.textColor }}
+            className="text-2xl font-bold mb-1"
+            style={{ color: appliedStyles.accentColor || appliedStyles.textColor }}
           >
             {scoreboard.title}
           </h1>
-          {scoreboard.subtitle && (
-            <p 
-              className="text-sm opacity-80"
-              style={{ color: appliedStyles.textColor }}
-            >
-              {scoreboard.subtitle}
-            </p>
-          )}
-          <div className="mt-3 text-sm opacity-70">
+          <div className="text-sm" style={{ color: `${appliedStyles.textColor}99` }}>
             Total Entries: {entries.length}
           </div>
         </div>
