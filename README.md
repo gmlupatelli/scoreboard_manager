@@ -5,12 +5,22 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Project Status
 - **Current State**: Fully configured and running on Replit
-- **Last Updated**: November 30, 2025
+- **Last Updated**: January 9, 2026
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+
+### January 9, 2026 - Time-Based Scoreboards & Flexible Score Types
+- Added flexible score types: number (default) or time-based scoreboards
+- Configurable sort order: ascending (lowest/fastest first) or descending (highest/slowest first)
+- Multiple time formats supported: hh:mm, hh:mm:ss, mm:ss, mm:ss.s, mm:ss.ss, mm:ss.sss
+- Time stored as milliseconds for accurate sorting, displayed based on format settings
+- Updated CreateScoreboardModal and EditScoreboardModal with score type options
+- Confirmation dialog when changing score type (warns about entry deletion)
+- Updated all entry display components to format scores correctly based on type
+- Applied database migrations to both development and production Supabase projects
 
 ### November 30, 2025 - Settings API & Registration Form Fixes
 - Fixed settings API caching issues by adding Next.js cache busting (`fetchCache`, `revalidate`)
@@ -107,6 +117,10 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 8. CSV import for scoreboard entries
 9. User invitation system with email notifications
 10. Invite-only registration mode (controllable by system admin)
+11. Flexible score types: number or time-based scoreboards
+12. Configurable sort order: ascending or descending
+13. Multiple time formats: hh:mm, hh:mm:ss, mm:ss, mm:ss.s, mm:ss.ss, mm:ss.sss
+14. Embeddable scoreboards via `/embed/[id]` with custom styling
 
 ## Environment Configuration
 
@@ -212,11 +226,36 @@ The application is configured for Replit deployment with:
 ## Database Schema
 The Supabase database includes:
 - `user_profiles` - User profile information with roles
-- `scoreboards` - Scoreboard metadata with owner references and visibility
-- `scoreboard_entries` - Individual scoreboard entries
+- `scoreboards` - Scoreboard metadata with owner references, visibility, score_type, sort_order, time_format
+- `scoreboard_entries` - Individual scoreboard entries (score stored as number/milliseconds)
 - `system_settings` - App-wide configuration (public registration toggle, email verification)
 - `invitations` - User invitation tracking with status (pending/accepted/expired/cancelled)
 - Row Level Security (RLS) policies for secure data access
+
+## Supabase CLI Configuration
+The Supabase CLI is installed and configured for database migrations.
+
+### Project References
+- **Development**: `kvorvygjgeelhybnstje`
+- **Production**: `bfbvcmfezdhdotmbgxsn`
+
+### Running Migrations
+```bash
+# Link to target project
+supabase link --project-ref <project-ref>
+
+# Check migration status
+supabase migration list
+
+# Repair if needed (for remote-only migrations)
+supabase migration repair --status reverted <migration-ids>
+
+# Push migrations
+supabase db push
+```
+
+### Creating New Migrations
+Place SQL migration files in `supabase/migrations/` with timestamp prefix (e.g., `20260109120000_add_feature.sql`).
 
 ## User Preferences & Design Notes
 - Brand colors: Coral (#f77174), Orange (#eba977), Navy (#38385e, #20203e)
