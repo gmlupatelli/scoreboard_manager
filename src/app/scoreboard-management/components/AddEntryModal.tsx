@@ -2,14 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/AppIcon';
+import { ScoreType, TimeFormat } from '@/types/models';
+import { parseTimeToMilliseconds, getTimeFormatPlaceholder } from '@/utils/timeUtils';
 
 interface AddEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (name: string, score: number) => void;
+  scoreType: ScoreType;
+  timeFormat: TimeFormat | null;
 }
 
-const AddEntryModal = ({ isOpen, onClose, onAdd }: AddEntryModalProps) => {
+const AddEntryModal = ({ isOpen, onClose, onAdd, scoreType, timeFormat }: AddEntryModalProps) => {
   const [isHydrated, setIsHydrated] = useState(false);
   const [name, setName] = useState('');
   const [score, setScore] = useState('');
@@ -49,17 +53,31 @@ const AddEntryModal = ({ isOpen, onClose, onAdd }: AddEntryModalProps) => {
   };
 
   const validateScore = (value: string): boolean => {
-    const numValue = parseInt(value);
-    if (isNaN(numValue)) {
-      setScoreError('Score must be a valid number');
-      return false;
+    if (scoreType === 'number') {
+      const numValue = parseInt(value);
+      if (isNaN(numValue)) {
+        setScoreError('Score must be a valid number');
+        return false;
+      }
+      if (numValue < -1000000 || numValue > 1000000) {
+        setScoreError('Score must be between -1,000,000 and 1,000,000');
+        return false;
+      }
+      setScoreError('');
+      return true;
+    } else {
+      if (!timeFormat) {
+        setScoreError('Time format not configured');
+        return false;
+      }
+      const ms = parseTimeToMilliseconds(value, timeFormat);
+      if (ms === null) {
+        setScoreError(`Enter time in format: ${timeFormat}`);
+        return false;
+      }
+      setScoreError('');
+      return true;
     }
-    if (numValue < -1000000 || numValue > 1000000) {
-      setScoreError('Score must be between -1,000,000 and 1,000,000');
-      return false;
-    }
-    setScoreError('');
-    return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,9 +86,33 @@ const AddEntryModal = ({ isOpen, onClose, onAdd }: AddEntryModalProps) => {
     const isScoreValid = validateScore(score);
 
     if (isNameValid && isScoreValid) {
-      onAdd(name, parseInt(score));
+      let scoreValue: number;
+      if (scoreType === 'number') {
+        scoreValue = parseInt(score);
+      } else {
+        scoreValue = parseTimeToMilliseconds(score, timeFormat!) || 0;
+      }
+      onAdd(name, scoreValue);
       onClose();
     }
+  };
+
+  const getScoreInputLabel = () => {
+    return scoreType === 'time' ? 'Time' : 'Score';
+  };
+
+  const getScoreInputPlaceholder = () => {
+    if (scoreType === 'time' && timeFormat) {
+      return `Enter time (${getTimeFormatPlaceholder(timeFormat)})`;
+    }
+    return 'Enter score';
+  };
+
+  const getScoreHelperText = () => {
+    if (scoreType === 'time' && timeFormat) {
+      return `Format: ${timeFormat}`;
+    }
+    return 'Number between -1,000,000 and 1,000,000';
   };
 
   return (
@@ -90,7 +132,10 @@ const AddEntryModal = ({ isOpen, onClose, onAdd }: AddEntryModalProps) => {
           </div>
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             <div>
-              <label htmlFor="entry-name" className="block text-sm font-medium text-text-primary mb-2">
+              <label
+                htmlFor="entry-name"
+                className="block text-sm font-medium text-text-primary mb-2"
+              >
                 Name <span className="text-destructive">*</span>
               </label>
               <input
@@ -107,15 +152,20 @@ const AddEntryModal = ({ isOpen, onClose, onAdd }: AddEntryModalProps) => {
                 placeholder="Enter participant name"
               />
               {nameError && <p className="text-xs text-destructive mt-1">{nameError}</p>}
-              <p className="text-xs text-text-secondary mt-1">1-100 characters (letters, numbers, spaces, hyphens, apostrophes)</p>
+              <p className="text-xs text-text-secondary mt-1">
+                1-100 characters (letters, numbers, spaces, hyphens, apostrophes)
+              </p>
             </div>
             <div>
-              <label htmlFor="entry-score" className="block text-sm font-medium text-text-primary mb-2">
-                Score <span className="text-destructive">*</span>
+              <label
+                htmlFor="entry-score"
+                className="block text-sm font-medium text-text-primary mb-2"
+              >
+                {getScoreInputLabel()} <span className="text-destructive">*</span>
               </label>
               <input
                 id="entry-score"
-                type="number"
+                type={scoreType === 'number' ? 'number' : 'text'}
                 value={score}
                 onChange={(e) => {
                   setScore(e.target.value);
@@ -124,10 +174,10 @@ const AddEntryModal = ({ isOpen, onClose, onAdd }: AddEntryModalProps) => {
                 className={`w-full px-3 py-2 border rounded-md bg-surface text-text-primary placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-smooth duration-150 ${
                   scoreError ? 'border-destructive' : 'border-input'
                 }`}
-                placeholder="Enter score"
+                placeholder={getScoreInputPlaceholder()}
               />
               {scoreError && <p className="text-xs text-destructive mt-1">{scoreError}</p>}
-              <p className="text-xs text-text-secondary mt-1">Integer between -1,000,000 and 1,000,000</p>
+              <p className="text-xs text-text-secondary mt-1">{getScoreHelperText()}</p>
             </div>
             <div className="flex items-center space-x-3 pt-2">
               <button

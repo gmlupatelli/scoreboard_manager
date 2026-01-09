@@ -65,7 +65,7 @@ Reset your Scoreboard Manager password
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+              <img src="{{ .SiteURL }}/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -130,7 +130,7 @@ Welcome to Scoreboard Manager - Confirm your email
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+              <img src="{{ .SiteURL }}/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -201,7 +201,7 @@ Confirm your new email address - Scoreboard Manager
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+              <img src="{{ .SiteURL }}/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -268,7 +268,7 @@ Your Scoreboard Manager login link
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+              <img src="{{ .SiteURL }}/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -335,7 +335,7 @@ You've been invited to join Scoreboard Manager
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+              <img src="{{ .SiteURL }}/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -406,7 +406,7 @@ Your verification code - Scoreboard Manager
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+              <img src="{{ .SiteURL }}/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->
@@ -481,7 +481,7 @@ Your Scoreboard Manager password has been changed
           <!-- Header -->
           <tr>
             <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
-              <img src="{{ .SiteURL }}/scoreboard-logo.svg" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+              <img src="{{ .SiteURL }}/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
             </td>
           </tr>
           <!-- Content -->

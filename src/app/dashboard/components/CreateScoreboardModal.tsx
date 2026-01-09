@@ -1,18 +1,32 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
+import { ScoreType, TimeFormat } from '@/types/models';
+import { getTimeFormatLabel } from '@/utils/timeUtils';
 
 interface CreateScoreboardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (title: string, subtitle: string, visibility: 'public' | 'private') => Promise<{ success: boolean; message: string; scoreboardId?: string }>;
+  onCreate: (
+    title: string,
+    subtitle: string,
+    visibility: 'public' | 'private',
+    scoreType: ScoreType,
+    sortOrder: 'asc' | 'desc',
+    timeFormat: TimeFormat | null
+  ) => Promise<{ success: boolean; message: string; scoreboardId?: string }>;
 }
+
+const TIME_FORMATS: TimeFormat[] = ['hh:mm', 'hh:mm:ss', 'mm:ss', 'mm:ss.s', 'mm:ss.ss', 'mm:ss.sss'];
 
 const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardModalProps) => {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+  const [scoreType, setScoreType] = useState<ScoreType>('number');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [timeFormat, setTimeFormat] = useState<TimeFormat>('mm:ss');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,13 +40,23 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
     }
 
     setIsSubmitting(true);
-    const result = await onCreate(title.trim(), subtitle.trim(), visibility);
+    const result = await onCreate(
+      title.trim(),
+      subtitle.trim(),
+      visibility,
+      scoreType,
+      sortOrder,
+      scoreType === 'time' ? timeFormat : null
+    );
     setIsSubmitting(false);
 
     if (result.success) {
       setTitle('');
       setSubtitle('');
       setVisibility('public');
+      setScoreType('number');
+      setSortOrder('desc');
+      setTimeFormat('mm:ss');
       onClose();
       if (result.scoreboardId) {
         router.push(`/scoreboard-management?id=${result.scoreboardId}`);
@@ -46,6 +70,9 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
     setTitle('');
     setSubtitle('');
     setVisibility('public');
+    setScoreType('number');
+    setSortOrder('desc');
+    setTimeFormat('mm:ss');
     setError('');
     onClose();
   };
@@ -55,7 +82,7 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="fixed inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4 elevation-3">
+      <div className="relative bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4 elevation-3 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-text-primary">Create New Scoreboard</h2>
           <button
@@ -136,6 +163,110 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
                   ? 'Anyone can view this scoreboard' 
                   : 'Only you can view this scoreboard'}
               </p>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <h3 className="text-sm font-medium text-text-primary mb-3">Score Settings</h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Score Type</label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        value="number"
+                        checked={scoreType === 'number'}
+                        onChange={() => setScoreType('number')}
+                        className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                        disabled={isSubmitting}
+                      />
+                      <span className="ml-2 text-sm text-text-primary flex items-center">
+                        <Icon name="HashtagIcon" size={16} className="mr-1" />
+                        Number
+                      </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        value="time"
+                        checked={scoreType === 'time'}
+                        onChange={() => setScoreType('time')}
+                        className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                        disabled={isSubmitting}
+                      />
+                      <span className="ml-2 text-sm text-text-primary flex items-center">
+                        <Icon name="ClockIcon" size={16} className="mr-1" />
+                        Time
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-primary mb-2">Sort Order</label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        value="desc"
+                        checked={sortOrder === 'desc'}
+                        onChange={() => setSortOrder('desc')}
+                        className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                        disabled={isSubmitting}
+                      />
+                      <span className="ml-2 text-sm text-text-primary flex items-center">
+                        <Icon name="ArrowDownIcon" size={16} className="mr-1" />
+                        {scoreType === 'time' ? 'Longest First' : 'Highest First'}
+                      </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        value="asc"
+                        checked={sortOrder === 'asc'}
+                        onChange={() => setSortOrder('asc')}
+                        className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
+                        disabled={isSubmitting}
+                      />
+                      <span className="ml-2 text-sm text-text-primary flex items-center">
+                        <Icon name="ArrowUpIcon" size={16} className="mr-1" />
+                        {scoreType === 'time' ? 'Fastest First' : 'Lowest First'}
+                      </span>
+                    </label>
+                  </div>
+                  <p className="mt-1 text-xs text-text-secondary">
+                    {sortOrder === 'desc'
+                      ? scoreType === 'time'
+                        ? 'Entries with longer times appear first'
+                        : 'Entries with higher scores appear first'
+                      : scoreType === 'time'
+                        ? 'Entries with faster times appear first'
+                        : 'Entries with lower scores appear first'}
+                  </p>
+                </div>
+
+                {scoreType === 'time' && (
+                  <div>
+                    <label htmlFor="timeFormat" className="block text-sm font-medium text-text-primary mb-2">
+                      Time Format
+                    </label>
+                    <select
+                      id="timeFormat"
+                      value={timeFormat}
+                      onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
+                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring bg-background"
+                      disabled={isSubmitting}
+                    >
+                      {TIME_FORMATS.map((format) => (
+                        <option key={format} value={format}>
+                          {getTimeFormatLabel(format)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {error && (

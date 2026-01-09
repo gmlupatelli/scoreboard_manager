@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
-import { Scoreboard as ScoreboardModel } from '../../../types/models';
+import { Scoreboard as ScoreboardModel, ScoreType, TimeFormat } from '../../../types/models';
 import Header from '@/components/common/Header';
 import ScoreboardCard from './ScoreboardCard';
 import CreateScoreboardModal from './CreateScoreboardModal';
@@ -201,14 +201,23 @@ const AdminDashboardInteractive = () => {
     onLoadMore: handleLoadMore,
   });
 
-  const handleCreateScoreboard = async (title: string, subtitle: string, visibility: 'public' | 'private') => {
+  const handleCreateScoreboard = async (
+    title: string,
+    subtitle: string,
+    visibility: 'public' | 'private',
+    scoreType: ScoreType,
+    scoreSortOrder: 'asc' | 'desc',
+    timeFormat: TimeFormat | null
+  ) => {
     try {
       const { data, error } = await scoreboardService.createScoreboard({
         ownerId: user!.id,
         title,
         subtitle,
-        sortOrder: 'desc',
+        sortOrder: scoreSortOrder,
         visibility,
+        scoreType,
+        timeFormat,
       });
 
       if (error) {

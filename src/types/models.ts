@@ -27,6 +27,9 @@ export interface ScoreboardCustomStyles {
   rank3Icon?: string;
 }
 
+export type ScoreType = 'number' | 'time';
+export type TimeFormat = 'hh:mm' | 'hh:mm:ss' | 'mm:ss' | 'mm:ss.s' | 'mm:ss.ss' | 'mm:ss.sss';
+
 export interface Scoreboard {
   id: string;
   ownerId: string;
@@ -34,6 +37,8 @@ export interface Scoreboard {
   subtitle?: string | null;
   sortOrder: 'asc' | 'desc';
   visibility: 'public' | 'private';
+  scoreType: ScoreType;
+  timeFormat?: TimeFormat | null;
   customStyles?: ScoreboardCustomStyles | null;
   styleScope?: 'main' | 'embed' | 'both';
   createdAt: string;

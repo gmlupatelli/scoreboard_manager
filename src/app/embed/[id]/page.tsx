@@ -7,6 +7,7 @@ import Icon from '@/components/ui/AppIcon';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
 import { getStylePreset, generateCustomStyles } from '@/utils/stylePresets';
+import { formatScoreDisplay } from '@/utils/timeUtils';
 
 interface EntryWithRank extends ScoreboardEntry {
   rank: number;
@@ -119,11 +120,14 @@ export default function EmbedScoreboardPage() {
   }, [isHydrated, scoreboardId]);
 
   const sortedEntries = useMemo(() => {
+    const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
     const sorted = [...entries].sort((a, b) => {
       const scoreA = Number(a.score);
       const scoreB = Number(b.score);
       
-      if (scoreB !== scoreA) return scoreB - scoreA;
+      if (scoreA !== scoreB) {
+        return scoreboardSortOrder === 'desc' ? scoreB - scoreA : scoreA - scoreB;
+      }
       return a.name.localeCompare(b.name);
     });
 
@@ -131,7 +135,7 @@ export default function EmbedScoreboardPage() {
       ...entry,
       rank: index + 1,
     }));
-  }, [entries]);
+  }, [entries, scoreboard?.sortOrder]);
 
   const filteredEntries = useMemo(() => {
     if (!searchQuery?.trim()) return sortedEntries;
@@ -273,7 +277,7 @@ export default function EmbedScoreboardPage() {
                   >
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Rank</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">Score</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">{scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -311,7 +315,7 @@ export default function EmbedScoreboardPage() {
                           className="px-4 py-3 text-right font-semibold"
                           style={{ color: appliedStyles.accentColor || appliedStyles.textColor }}
                         >
-                          {Number(entry.score).toLocaleString()}
+                          {formatScoreDisplay(Number(entry.score), scoreboard?.scoreType || 'number', scoreboard?.timeFormat || null)}
                         </td>
                       </tr>
                     );

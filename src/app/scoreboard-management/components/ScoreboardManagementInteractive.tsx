@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
-import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '../../../types/models';
+import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles, ScoreType, TimeFormat } from '../../../types/models';
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
 import EntryRow from './EntryRow';
@@ -156,11 +156,14 @@ const ScoreboardManagementInteractive = () => {
     const filteredWithRanks = recalculateRanks(filtered);
     setFilteredEntries(filteredWithRanks);
     setCurrentPage(1);
-  }, [searchQuery, entries, sortBy, sortOrder]);
+  }, [searchQuery, entries, sortBy, sortOrder, scoreboard?.sortOrder]);
 
   const recalculateRanks = (entriesList: ScoreboardEntry[]): ScoreboardEntry[] => {
+    const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
     const sorted = [...entriesList].sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
+      if (a.score !== b.score) {
+        return scoreboardSortOrder === 'desc' ? b.score - a.score : a.score - b.score;
+      }
       return a.name.localeCompare(b.name);
     });
 
@@ -174,20 +177,41 @@ const ScoreboardManagementInteractive = () => {
     setToast({ message, type, isVisible: true });
   };
 
-  const handleEditScoreboard = async (title: string, subtitle: string, visibility: 'public' | 'private') => {
+  const handleEditScoreboard = async (
+    title: string,
+    subtitle: string,
+    visibility: 'public' | 'private',
+    scoreType: ScoreType,
+    sortOrder: 'asc' | 'desc',
+    timeFormat: TimeFormat | null,
+    scoreTypeChanged: boolean
+  ) => {
     if (!scoreboard) return;
     
     try {
+      if (scoreTypeChanged && entries.length > 0) {
+        const deleteResult = await scoreboardService.deleteAllEntries(scoreboard.id);
+        if (deleteResult.error) throw deleteResult.error;
+      }
+
       const { error } = await scoreboardService.updateScoreboard(scoreboard.id, {
         title,
         subtitle,
-        visibility
+        visibility,
+        scoreType,
+        sortOrder,
+        timeFormat
       });
       
       if (error) throw error;
       
       await loadScoreboardData();
-      showToast('Scoreboard details updated successfully', 'success');
+      showToast(
+        scoreTypeChanged && entries.length > 0 
+          ? 'Scoreboard updated and entries cleared' 
+          : 'Scoreboard details updated successfully',
+        'success'
+      );
     } catch {
       showToast('Failed to update scoreboard details', 'error');
     }
@@ -534,7 +558,7 @@ const ScoreboardManagementInteractive = () => {
                       onClick={() => handleSort('score')}
                       className="flex items-center space-x-1 text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text-primary transition-smooth duration-150"
                     >
-                      <span>Score</span>
+                      <span>{scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}</span>
                       {sortBy === 'score' && (
                         <Icon name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={14} />
                       )}
@@ -548,9 +572,11 @@ const ScoreboardManagementInteractive = () => {
                   currentEntries.map(entry => (
                     <EntryRow
                       key={entry.id}
-                      entry={entry}
+                      entry={{ ...entry, rank: entry.rank || 0 }}
                       onEdit={handleEditEntry}
                       onDelete={handleDeleteEntry}
+                      scoreType={scoreboard?.scoreType || 'number'}
+                      timeFormat={scoreboard?.timeFormat || null}
                     />
                   ))
                 ) : (
@@ -574,9 +600,11 @@ const ScoreboardManagementInteractive = () => {
               currentEntries.map(entry => (
                 <EntryCard
                   key={entry.id}
-                  entry={entry}
+                  entry={{ ...entry, rank: entry.rank || 0 }}
                   onEdit={handleEditEntry}
                   onDelete={handleDeleteEntry}
+                  scoreType={scoreboard?.scoreType || 'number'}
+                  timeFormat={scoreboard?.timeFormat || null}
                 />
               ))
             ) : (
@@ -624,12 +652,16 @@ const ScoreboardManagementInteractive = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddEntry}
+        scoreType={scoreboard?.scoreType || 'number'}
+        timeFormat={scoreboard?.timeFormat || null}
       />
 
       <ImportCSVModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImport={handleImportCSV}
+        scoreType={scoreboard?.scoreType || 'number'}
+        timeFormat={scoreboard?.timeFormat || null}
       />
 
       <EditScoreboardModal
@@ -639,6 +671,10 @@ const ScoreboardManagementInteractive = () => {
         currentTitle={scoreboard?.title || ''}
         currentSubtitle={scoreboard?.subtitle || ''}
         currentVisibility={scoreboard?.visibility || 'public'}
+        currentScoreType={scoreboard?.scoreType || 'number'}
+        currentSortOrder={scoreboard?.sortOrder || 'desc'}
+        currentTimeFormat={scoreboard?.timeFormat || null}
+        entryCount={entries.length}
       />
 
       <ConfirmationModal

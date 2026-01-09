@@ -1,15 +1,18 @@
 import React from 'react';
 import Icon from '@/components/ui/AppIcon';
-import { ScoreboardCustomStyles } from '@/types/models';
+import { ScoreboardCustomStyles, ScoreType, TimeFormat } from '@/types/models';
+import { formatScoreDisplay } from '@/utils/timeUtils';
 
 interface EntryCardProps {
   rank: number;
   name: string;
   score: number;
   customStyles?: ScoreboardCustomStyles | null;
+  scoreType?: ScoreType;
+  timeFormat?: TimeFormat | null;
 }
 
-const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles }) => {
+const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles, scoreType = 'number', timeFormat = null }) => {
   const getPerRankColor = (rank: number): string => {
     if (customStyles) {
       if (rank === 1) return customStyles.rank1Color || '#ca8a04';
@@ -35,6 +38,8 @@ const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles }
 
   const rankColor = getPerRankColor(rank);
   const rankIconName = getRankIcon(rank);
+  const displayScore = formatScoreDisplay(score, scoreType, timeFormat);
+  const scoreIcon = scoreType === 'time' ? 'ClockIcon' : 'StarIcon';
 
   return (
     <div 
@@ -78,12 +83,12 @@ const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles }
           </div>
         </div>
         <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-          <Icon name="StarIcon" size={18} style={{ color: customStyles?.accentColor || 'var(--primary)' }} variant="solid" />
+          <Icon name={scoreIcon} size={18} style={{ color: customStyles?.accentColor || 'var(--primary)' }} variant="solid" />
           <span 
             className="text-xl font-bold"
             style={{ color: customStyles?.accentColor || 'var(--primary)' }}
           >
-            {score.toLocaleString()}
+            {displayScore}
           </span>
         </div>
       </div>
