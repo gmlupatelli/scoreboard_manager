@@ -59,3 +59,36 @@ The Scoreboard Manager is a modern Next.js 14 application designed for creating,
 - **Next.js**: Primary web framework.
 - **React**: Frontend library for UI.
 - **Tailwind CSS**: Utility-first CSS framework for styling.
+
+## Supabase CLI Configuration
+The Supabase CLI is installed and configured for database migrations.
+
+### Project References
+- **Development**: `kvorvygjgeelhybnstje`
+- **Production**: `bfbvcmfezdhdotmbgxsn`
+
+### Running Migrations
+To apply migrations to a Supabase project:
+
+1. Link to the target project:
+   ```bash
+   supabase link --project-ref <project-ref>
+   ```
+
+2. Check migration status:
+   ```bash
+   supabase migration list
+   ```
+
+3. If there are remote migrations not in local, repair first:
+   ```bash
+   supabase migration repair --status reverted <migration-ids>
+   ```
+
+4. Push migrations:
+   ```bash
+   supabase db push
+   ```
+
+### Creating New Migrations
+Place SQL migration files in `supabase/migrations/` with timestamp prefix (e.g., `20260109120000_add_feature.sql`).
