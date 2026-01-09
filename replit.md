@@ -49,6 +49,10 @@ The Scoreboard Manager is a modern Next.js 14 application designed for creating,
 - CSV import for scoreboard entries.
 - User invitation system with email notifications and invite-only registration mode.
 - Embeddable scoreboards via `/embed/[id]` route with custom styling.
+- Flexible score types: number or time-based scoreboards.
+- Configurable sort order: ascending (lowest first) or descending (highest first).
+- Multiple time formats: hh:mm, hh:mm:ss, mm:ss, mm:ss.s, mm:ss.ss, mm:ss.sss.
+- Time stored as milliseconds for accurate sorting and displayed based on format settings.
 
 ## External Dependencies
 - **Supabase**: Used for PostgreSQL database, authentication, and real-time functionalities.
