@@ -130,12 +130,13 @@ const ScoreboardInteractive: React.FC = () => {
   }, [isHydrated, scoreboardId]);
 
   const sortedEntries = useMemo(() => {
+    const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
     const sorted = [...entries].sort((a, b) => {
       const scoreA = Number(a.score);
       const scoreB = Number(b.score);
       
-      if (scoreB !== scoreA) {
-        return scoreB - scoreA;
+      if (scoreA !== scoreB) {
+        return scoreboardSortOrder === 'desc' ? scoreB - scoreA : scoreA - scoreB;
       }
       return a.name.localeCompare(b.name);
     });
@@ -144,7 +145,7 @@ const ScoreboardInteractive: React.FC = () => {
       ...entry,
       rank: index + 1,
     }));
-  }, [entries]);
+  }, [entries, scoreboard?.sortOrder]);
 
   const filteredEntries = useMemo(() => {
     if (!searchQuery?.trim()) return sortedEntries;
@@ -282,6 +283,8 @@ const ScoreboardInteractive: React.FC = () => {
                         name={entry.name} 
                         score={Number(entry.score)}
                         customStyles={appliedStyles}
+                        scoreType={scoreboard?.scoreType || 'number'}
+                        timeFormat={scoreboard?.timeFormat || null}
                       />
                     ))}
                   </div>
@@ -289,6 +292,8 @@ const ScoreboardInteractive: React.FC = () => {
                   <EntryTable 
                     entries={currentEntries.map(e => ({ ...e, score: Number(e.score) }))} 
                     customStyles={appliedStyles}
+                    scoreType={scoreboard?.scoreType || 'number'}
+                    timeFormat={scoreboard?.timeFormat || null}
                   />
                 )}
               </div>

@@ -49,6 +49,8 @@ export interface Database {
           subtitle: string | null;
           sort_order: 'asc' | 'desc';
           visibility: 'public' | 'private';
+          score_type: 'number' | 'time';
+          time_format: 'hh:mm' | 'hh:mm:ss' | 'mm:ss' | 'mm:ss.s' | 'mm:ss.ss' | 'mm:ss.sss' | null;
           custom_styles?: ScoreboardCustomStyles | null;
           style_scope?: 'main' | 'embed' | 'both';
           created_at: string;
@@ -61,6 +63,8 @@ export interface Database {
           subtitle?: string | null;
           sort_order?: 'asc' | 'desc';
           visibility?: 'public' | 'private';
+          score_type?: 'number' | 'time';
+          time_format?: 'hh:mm' | 'hh:mm:ss' | 'mm:ss' | 'mm:ss.s' | 'mm:ss.ss' | 'mm:ss.sss' | null;
           custom_styles?: ScoreboardCustomStyles | null;
           style_scope?: 'main' | 'embed' | 'both';
           created_at?: string;
@@ -73,6 +77,8 @@ export interface Database {
           subtitle?: string | null;
           sort_order?: 'asc' | 'desc';
           visibility?: 'public' | 'private';
+          score_type?: 'number' | 'time';
+          time_format?: 'hh:mm' | 'hh:mm:ss' | 'mm:ss' | 'mm:ss.s' | 'mm:ss.ss' | 'mm:ss.sss' | null;
           custom_styles?: ScoreboardCustomStyles | null;
           style_scope?: 'main' | 'embed' | 'both';
           created_at?: string;

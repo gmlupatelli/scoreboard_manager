@@ -1,6 +1,7 @@
 import React from 'react';
 import Icon from '@/components/ui/AppIcon';
-import { ScoreboardCustomStyles } from '@/types/models';
+import { ScoreboardCustomStyles, ScoreType, TimeFormat } from '@/types/models';
+import { formatScoreDisplay } from '@/utils/timeUtils';
 
 interface Entry {
   id: string | number;
@@ -12,9 +13,11 @@ interface Entry {
 interface EntryTableProps {
   entries: Entry[];
   customStyles?: ScoreboardCustomStyles | null;
+  scoreType?: ScoreType;
+  timeFormat?: TimeFormat | null;
 }
 
-const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles }) => {
+const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles, scoreType = 'number', timeFormat = null }) => {
   const getRankColor = (rank: number): string | undefined => {
     if (customStyles) {
       if (rank === 1) return customStyles.rank1Color || '#ca8a04';
@@ -38,6 +41,8 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles }) => {
     return null;
   };
 
+  const scoreLabel = scoreType === 'time' ? 'Time' : 'Score';
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -59,7 +64,7 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles }) => {
               className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider w-32"
               style={{ color: customStyles?.headerTextColor || 'var(--text-secondary)' }}
             >
-              Score
+              {scoreLabel}
             </th>
           </tr>
         </thead>
@@ -101,7 +106,7 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles }) => {
                     className="text-sm font-semibold"
                     style={{ color: customStyles?.accentColor || 'var(--primary)' }}
                   >
-                    {entry?.score?.toLocaleString?.() || '0'}
+                    {formatScoreDisplay(entry?.score || 0, scoreType, timeFormat)}
                   </span>
                 </td>
               </tr>

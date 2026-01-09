@@ -38,6 +38,8 @@ const rowToScoreboard = (row: ScoreboardRow, entryCount?: number): Scoreboard =>
     subtitle: row.subtitle,
     sortOrder: row.sort_order,
     visibility: row.visibility,
+    scoreType: (rowAny.score_type as Scoreboard['scoreType']) ?? 'number',
+    timeFormat: (rowAny.time_format as Scoreboard['timeFormat']) ?? null,
     customStyles: rowAny.custom_styles as ScoreboardRow['custom_styles'] ?? null,
     styleScope: rowAny.style_scope as ScoreboardRow['style_scope'] ?? undefined,
     createdAt: row.created_at,
@@ -444,6 +446,8 @@ export const scoreboardService = {
       subtitle: scoreboard.subtitle,
       sort_order: scoreboard.sortOrder,
       visibility: scoreboard.visibility,
+      score_type: scoreboard.scoreType ?? 'number',
+      time_format: scoreboard.timeFormat ?? null,
       custom_styles: scoreboard.customStyles ?? STYLE_PRESETS.light,
       style_scope: scoreboard.styleScope ?? 'both',
     };
@@ -461,13 +465,15 @@ export const scoreboardService = {
   // Update scoreboard
   async updateScoreboard(
     id: string,
-    updates: Partial<Pick<Scoreboard, 'title' | 'subtitle' | 'sortOrder' | 'visibility' | 'customStyles' | 'styleScope'>>
+    updates: Partial<Pick<Scoreboard, 'title' | 'subtitle' | 'sortOrder' | 'visibility' | 'scoreType' | 'timeFormat' | 'customStyles' | 'styleScope'>>
   ): Promise<{ data: Scoreboard | null; error: Error | null }> {
     const updateData: ScoreboardUpdate = {};
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.subtitle !== undefined) updateData.subtitle = updates.subtitle;
     if (updates.sortOrder !== undefined) updateData.sort_order = updates.sortOrder;
     if (updates.visibility !== undefined) updateData.visibility = updates.visibility;
+    if (updates.scoreType !== undefined) updateData.score_type = updates.scoreType;
+    if (updates.timeFormat !== undefined) updateData.time_format = updates.timeFormat;
     if (updates.customStyles !== undefined) updateData.custom_styles = updates.customStyles;
     if (updates.styleScope !== undefined) updateData.style_scope = updates.styleScope;
 
@@ -553,6 +559,16 @@ export const scoreboardService = {
       .from('scoreboard_entries')
       .delete()
       .eq('id', id);
+
+    return { error };
+  },
+
+  // Delete all entries for a scoreboard (used when changing score type)
+  async deleteAllEntries(scoreboardId: string): Promise<{ error: Error | null }> {
+    const { error } = await supabase
+      .from('scoreboard_entries')
+      .delete()
+      .eq('scoreboard_id', scoreboardId);
 
     return { error };
   },
