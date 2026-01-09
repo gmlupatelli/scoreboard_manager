@@ -369,7 +369,7 @@ const EditScoreboardModal = ({
                       />
                       <span className="ml-2 text-sm text-text-primary flex items-center">
                         <Icon name="ArrowDownIcon" size={16} className="mr-1" />
-                        {scoreType === 'time' ? 'Longest First' : 'Highest First'}
+                        {scoreType === 'time' ? 'Slowest First' : 'Highest First'}
                       </span>
                     </label>
                     <label className="flex items-center cursor-pointer">
