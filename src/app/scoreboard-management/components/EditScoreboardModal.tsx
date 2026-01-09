@@ -335,6 +335,26 @@ const EditScoreboardModal = ({
                   )}
                 </div>
 
+                {scoreType === 'time' && (
+                  <div>
+                    <label htmlFor="timeFormat" className="block text-sm font-medium text-text-primary mb-2">
+                      Time Format
+                    </label>
+                    <select
+                      id="timeFormat"
+                      value={timeFormat}
+                      onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
+                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-surface text-text-primary"
+                    >
+                      {TIME_FORMATS.map((format) => (
+                        <option key={format} value={format}>
+                          {getTimeFormatLabel(format)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2">Sort Order</label>
                   <div className="flex items-center space-x-4">
@@ -377,26 +397,6 @@ const EditScoreboardModal = ({
                         : 'Entries with lower scores appear first'}
                   </p>
                 </div>
-
-                {scoreType === 'time' && (
-                  <div>
-                    <label htmlFor="timeFormat" className="block text-sm font-medium text-text-primary mb-2">
-                      Time Format
-                    </label>
-                    <select
-                      id="timeFormat"
-                      value={timeFormat}
-                      onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
-                      className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-surface text-text-primary"
-                    >
-                      {TIME_FORMATS.map((format) => (
-                        <option key={format} value={format}>
-                          {getTimeFormatLabel(format)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
               </div>
             </div>
 
