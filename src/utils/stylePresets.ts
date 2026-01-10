@@ -150,6 +150,34 @@ export function getStylePreset(preset: string): ScoreboardCustomStyles {
   return STYLE_PRESETS[preset] || STYLE_PRESETS.light;
 }
 
+export function getAppliedScoreboardStyles(
+  scoreboard: { customStyles?: ScoreboardCustomStyles | null; styleScope?: 'main' | 'embed' | 'both' } | null | undefined,
+  scope: 'main' | 'embed' = 'main'
+): ScoreboardCustomStyles | null {
+  const lightPreset = getStylePreset('light');
+  
+  if (!scoreboard?.customStyles) {
+    return null;
+  }
+  
+  const shouldApplyStyles = (scoreScope?: 'main' | 'embed' | 'both') => {
+    if (scope === 'main') return scoreScope === 'main' || scoreScope === 'both';
+    if (scope === 'embed') return scoreScope === 'embed' || scoreScope === 'both' || !scoreScope;
+    return false;
+  };
+  
+  if (!shouldApplyStyles(scoreboard.styleScope)) {
+    return null;
+  }
+  
+  if (scoreboard.customStyles.preset) {
+    const presetStyles = getStylePreset(scoreboard.customStyles.preset);
+    return { ...presetStyles, ...scoreboard.customStyles };
+  }
+  
+  return { ...lightPreset, ...scoreboard.customStyles };
+}
+
 export function generateCustomStyles(styles: ScoreboardCustomStyles): React.CSSProperties {
   return {
     '--embed-bg': styles.backgroundColor,
