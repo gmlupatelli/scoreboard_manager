@@ -13,37 +13,26 @@ const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description,
     <div 
       className="border-b"
       style={{
-        backgroundColor: customStyles?.backgroundColor || 'var(--surface)',
+        backgroundColor: customStyles?.headerColor || 'var(--surface)',
         borderColor: customStyles?.borderColor || 'var(--border)',
-        fontFamily: customStyles?.fontFamily || 'inherit',
-        borderRadius: customStyles?.borderRadius || '0px',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 
           className="text-3xl sm:text-4xl font-bold mb-3"
-          style={{ 
-            color: customStyles?.headerTextColor || customStyles?.textColor || 'var(--text-primary)',
-            fontFamily: customStyles?.fontFamily || 'inherit',
-          }}
+          style={{ color: customStyles?.headerTextColor || customStyles?.textColor || 'var(--text-primary)' }}
         >
           {title}
         </h1>
         <p 
           className="text-base sm:text-lg mb-4 max-w-3xl"
-          style={{ 
-            color: customStyles?.headerTextColor ? `${customStyles.headerTextColor}99` : 'var(--text-secondary)',
-            fontFamily: customStyles?.fontFamily || 'inherit',
-          }}
+          style={{ color: customStyles?.textColor ? `${customStyles.textColor}99` : 'var(--text-secondary)' }}
         >
           {description}
         </p>
         <div 
           className="flex items-center space-x-2 text-sm"
-          style={{ 
-            color: customStyles?.headerTextColor ? `${customStyles.headerTextColor}99` : 'var(--text-secondary)',
-            fontFamily: customStyles?.fontFamily || 'inherit',
-          }}
+          style={{ color: customStyles?.textColor ? `${customStyles.textColor}99` : 'var(--text-secondary)' }}
         >
           <span className="font-medium">Total Entries:</span>
           <span 
@@ -51,8 +40,6 @@ const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description,
             style={{
               backgroundColor: customStyles?.accentColor || 'var(--muted)',
               color: customStyles?.accentColor ? '#ffffff' : 'var(--text-primary)',
-              fontFamily: customStyles?.fontFamily || 'inherit',
-              borderRadius: customStyles?.borderRadius || '4px',
             }}
           >
             {totalEntries}
