@@ -221,7 +221,7 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
                     <div>
                       <label className="block text-xs text-text-secondary mb-1">Color</label>
                       <ColorPicker
-                        color={(customStyles as any)[rankProp.colorKey] || rankProp.defaultColor}
+                        value={(customStyles as any)[rankProp.colorKey] || rankProp.defaultColor}
                         onChange={(color) => handlePropertyChange(rankProp.colorKey, color)}
                       />
                     </div>
@@ -263,7 +263,7 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
                   <p className="text-xs text-text-secondary mb-1">{prop.description}</p>
                   {prop.type === 'color' ? (
                     <ColorPicker
-                      color={(customStyles as any)[prop.key] || '#ffffff'}
+                      value={(customStyles as any)[prop.key] || '#ffffff'}
                       onChange={(color) => handlePropertyChange(prop.key, color)}
                     />
                   ) : prop.type === 'select' && prop.options ? (
