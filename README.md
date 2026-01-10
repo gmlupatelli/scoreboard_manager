@@ -125,7 +125,8 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 ## Environment Configuration
 
 ### Required Environment Variables
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_URL_DEV`: Supabase project URL for Development Enviroment
+- `NEXT_PUBLIC_SUPABASE_URL_PRD`: Supabase project URL for Production Enviroment
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
 - `SUPABASE_SERVICE_ROLE_KEY`: Service role key for admin operations (invitation emails)
 
