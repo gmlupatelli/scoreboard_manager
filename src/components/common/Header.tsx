@@ -6,36 +6,18 @@ import { usePathname, useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
 import Logo from '@/components/ui/Logo';
 import { useAuth } from '@/contexts/AuthContext';
-import { ScoreboardCustomStyles } from '@/types/models';
 
 interface HeaderProps {
   isAuthenticated?: boolean;
   onLogout?: () => void;
-  customStyles?: ScoreboardCustomStyles | null;
 }
 
-const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: HeaderProps) => {
+const Header = ({ isAuthenticated = false, onLogout }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { userProfile, user, signOut } = useAuth();
-
-  const headerStyle = customStyles ? {
-    backgroundColor: customStyles.backgroundColor,
-    borderColor: customStyles.borderColor,
-    fontFamily: customStyles.fontFamily || 'inherit',
-  } : undefined;
-
-  const textStyle = customStyles ? {
-    color: customStyles.textColor,
-    fontFamily: customStyles.fontFamily || 'inherit',
-  } : undefined;
-
-  const accentStyle = customStyles ? {
-    backgroundColor: customStyles.accentColor,
-    fontFamily: customStyles.fontFamily || 'inherit',
-  } : undefined;
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -66,7 +48,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
   const displayName = userProfile?.fullName || user?.email || 'User';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[1000] border-b border-border bg-surface elevation-1" style={customStyles ? headerStyle : undefined}>
+    <header className="fixed top-0 left-0 right-0 z-[1000] bg-surface border-b border-border elevation-1">
       <nav className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -89,32 +71,28 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <>
                 <Link
                   href="/#features"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                 >
                   <Icon name="SparklesIcon" size={18} />
                   <span>Features</span>
                 </Link>
                 <Link
                   href="/#benefits"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                 >
                   <Icon name="CheckBadgeIcon" size={18} />
                   <span>Benefits</span>
                 </Link>
                 <Link
                   href="/#testimonials"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                 >
                   <Icon name="ChatBubbleLeftRightIcon" size={18} />
                   <span>Testimonials</span>
                 </Link>
                 <Link
                   href="/public-scoreboard-list"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                 >
                   <Icon name="TrophyIcon" size={18} />
                   <span>Scoreboards</span>
@@ -125,13 +103,12 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   aria-label="User menu"
                   aria-expanded={isUserMenuOpen}
                 >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={accentStyle}>
-                    <Icon name="UserIcon" size={18} className="text-white" />
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                    <Icon name="UserIcon" size={18} className="text-primary-foreground" />
                   </div>
                   <span className="text-sm font-medium">{displayName}</span>
                   <Icon
@@ -147,13 +124,12 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                       className="fixed inset-0 z-[1009]"
                       onClick={() => setIsUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 border border-border rounded-md elevation-2 z-[1010] bg-popover" style={customStyles ? { backgroundColor: customStyles.backgroundColor, borderColor: customStyles.borderColor } : undefined}>
+                    <div className="absolute right-0 mt-2 w-48 bg-popover border border-border rounded-md elevation-2 z-[1010]">
                       <div className="py-1">
                         <Link
                           href="/dashboard"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                         >
                           <Icon name="ClipboardDocumentListIcon" size={18} className="mr-3" />
                           My Boards
@@ -161,8 +137,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                         <Link
                           href="/user-profile-management"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                         >
                           <Icon name="UserCircleIcon" size={18} className="mr-3" />
                           Profile
@@ -170,8 +145,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                         <Link
                           href="/invitations"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                         >
                           <Icon name="EnvelopeIcon" size={18} className="mr-3" />
                           Invitations
@@ -180,8 +154,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                           <Link
                             href="/system-admin/settings"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                            style={customStyles ? textStyle : undefined}
+                            className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                           >
                             <Icon name="Cog6ToothIcon" size={18} className="mr-3" />
                             System Settings
@@ -189,8 +162,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                         )}
                         <button
                           onClick={handleLogout}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                         >
                           <Icon name="ArrowRightOnRectangleIcon" size={18} className="mr-3" />
                           Logout
@@ -204,21 +176,14 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <>
                 <Link
                   href="/register"
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={{
-                    color: customStyles?.textColor || 'var(--text-secondary)',
-                    borderColor: customStyles?.borderColor || 'var(--border)',
-                    borderWidth: '1px',
-                    fontFamily: customStyles?.fontFamily || 'inherit',
-                  }}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 hover-lift border border-border"
                 >
                   <Icon name="UserPlusIcon" size={18} />
                   <span>Sign Up</span>
                 </Link>
                 <Link
                   href="/login"
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-white hover:opacity-90 transition-smooth duration-150 hover-lift"
-                  style={accentStyle}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 hover-lift"
                 >
                   <Icon name="ArrowRightOnRectangleIcon" size={18} />
                   <span>Login</span>
@@ -230,8 +195,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150"
-              style={customStyles ? textStyle : undefined}
+              className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
               aria-label="Toggle menu"
               aria-expanded={isMobileMenuOpen}
             >
@@ -241,13 +205,12 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
         </div>
 
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border" style={customStyles ? { borderColor: customStyles.borderColor } : undefined}>
+          <div className="md:hidden border-t border-border">
             {!isAuthenticated && (
               <div className="px-2 pt-2 pb-3 space-y-1">
                 <Link
                   href="/"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="HomeIcon" size={20} />
@@ -255,8 +218,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/#features"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="SparklesIcon" size={20} />
@@ -264,8 +226,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/#benefits"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="CheckBadgeIcon" size={20} />
@@ -273,8 +234,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/#testimonials"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="ChatBubbleLeftRightIcon" size={20} />
@@ -282,8 +242,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/public-scoreboard-list"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="TrophyIcon" size={20} />
@@ -292,22 +251,21 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               </div>
             )}
 
-            <div className="border-t border-border px-2 pt-4 pb-3" style={customStyles ? { borderColor: customStyles.borderColor } : undefined}>
+            <div className="border-t border-border px-2 pt-4 pb-3">
               {isAuthenticated ? (
                 <div className="space-y-1">
                   <div className="flex items-center px-3 py-2">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={accentStyle}>
-                      <Icon name="UserIcon" size={20} className="text-white" />
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                      <Icon name="UserIcon" size={20} className="text-primary-foreground" />
                     </div>
-                    <span className="ml-3 text-base font-medium text-text-primary" style={customStyles ? { color: customStyles.textColor } : undefined}>
+                    <span className="ml-3 text-base font-medium text-text-primary">
                       {displayName}
                     </span>
                   </div>
                   <Link
                     href="/dashboard"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   >
                     <Icon name="ClipboardDocumentListIcon" size={20} className="mr-3" />
                     My Boards
@@ -315,8 +273,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   <Link
                     href="/user-profile-management"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   >
                     <Icon name="UserCircleIcon" size={20} className="mr-3" />
                     Profile
@@ -324,8 +281,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   <Link
                     href="/invitations"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   >
                     <Icon name="EnvelopeIcon" size={20} className="mr-3" />
                     Invitations
@@ -334,8 +290,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     <Link
                       href="/system-admin/settings"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                      style={customStyles ? textStyle : undefined}
+                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                     >
                       <Icon name="Cog6ToothIcon" size={20} className="mr-3" />
                       System Settings
@@ -343,8 +298,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   )}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
                   >
                     <Icon name="ArrowRightOnRectangleIcon" size={20} className="mr-3" />
                     Logout
@@ -354,21 +308,14 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 <div className="space-y-2">
                   <Link
                     href="/register"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                    style={{
-                      color: customStyles?.textColor || 'var(--text-secondary)',
-                      borderColor: customStyles?.borderColor || 'var(--border)',
-                      borderWidth: '1px',
-                      fontFamily: customStyles?.fontFamily || 'inherit',
-                    }}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 border border-border"
                   >
                     <Icon name="UserPlusIcon" size={20} />
                     <span>Sign Up</span>
                   </Link>
                   <Link
                     href="/login"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-white hover:opacity-90 transition-smooth duration-150"
-                    style={accentStyle}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150"
                   >
                     <Icon name="ArrowRightOnRectangleIcon" size={20} />
                     <span>Login</span>
