@@ -177,14 +177,22 @@ const ScoreboardInteractive: React.FC = () => {
     return scope === 'main' || scope === 'both';
   };
 
+
+  // Always recalculate and set applied styles with Light preset fallback
+  const [appliedStyles, setAppliedStyles] = useState<ScoreboardCustomStyles | null>(null);
   useEffect(() => {
     if (scoreboard) {
-      getAppliedScoreboardStyles(scoreboard, 'main');
+      const styles = getAppliedScoreboardStyles(scoreboard, 'main');
+      // Fallback to Light preset if styles is null
+      setAppliedStyles(styles || getAppliedScoreboardStyles({ customStyles: undefined, styleScope: 'main' }, 'main'));
+    } else {
+      setAppliedStyles(getAppliedScoreboardStyles({ customStyles: undefined, styleScope: 'main' }, 'main'));
     }
-  }, [scoreboard?.styleScope, scoreboard?.customStyles?.preset]);
+  }, [scoreboard]);
 
   const getAppliedStyles = (): ScoreboardCustomStyles | null => {
-    return getAppliedScoreboardStyles(scoreboard, 'main');
+    // This function is now unused, but if kept, always fallback to Light preset
+    return getAppliedScoreboardStyles(scoreboard, 'main') || getAppliedScoreboardStyles({ customStyles: undefined, styleScope: 'main' }, 'main');
   };
 
   if (!isHydrated || isLoading) {
@@ -211,7 +219,7 @@ const ScoreboardInteractive: React.FC = () => {
     );
   }
 
-  const appliedStyles = getAppliedStyles();
+  // appliedStyles is now managed by state and useEffect above
 
   return (
     <>

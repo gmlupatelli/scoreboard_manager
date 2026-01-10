@@ -49,9 +49,12 @@ const ScoreboardViewLayout: React.FC = () => {
   useEffect(() => {
     if (scoreboard) {
       const styles = getAppliedScoreboardStyles(scoreboard, 'main');
-      setAppliedStyles(styles);
+      // Fallback to Light preset if styles is null
+      setAppliedStyles(styles || getAppliedScoreboardStyles({ customStyles: undefined, styleScope: 'main' }, 'main'));
+    } else {
+      setAppliedStyles(getAppliedScoreboardStyles({ customStyles: undefined, styleScope: 'main' }, 'main'));
     }
-  }, [scoreboard?.styleScope]);
+  }, [scoreboard]);
 
   if (!isHydrated || isLoading) {
     return (
