@@ -77,7 +77,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <Logo size={40} />
               <span
                 className="text-2xl font-bold text-text-primary hidden sm:block tracking-tight"
-                style={{ fontWeight: 700 }}
+                style={{ fontWeight: 700, color: customStyles?.textColor || undefined }}
               >
                 Scoreboard Manager
               </span>
