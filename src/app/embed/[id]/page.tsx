@@ -179,6 +179,10 @@ export default function EmbedScoreboardPage() {
     return { ...lightPreset, ...scoreboard.customStyles };
   };
 
+  useEffect(() => {
+    // Recalculate styles when styleScope or customStyles change
+  }, [scoreboard?.styleScope, scoreboard?.customStyles?.preset]);
+
   const appliedStyles = getAppliedStyles();
   const customCssVars = generateCustomStyles(appliedStyles);
 

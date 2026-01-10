@@ -34,7 +34,7 @@ const ScoreboardViewLayout: React.FC = () => {
         
         if (data) {
           const styles = getAppliedScoreboardStyles(data, 'main');
-          setAppliedStyles(styles || getStylePreset('light'));
+          setAppliedStyles(styles);
         }
       } catch {
         // Error handled in ScoreboardInteractive
@@ -46,26 +46,38 @@ const ScoreboardViewLayout: React.FC = () => {
     loadScoreboard();
 
     // Set up real-time subscription to detect scoreboard changes
-    if (scoreboardId) {
-      const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
-        scoreboardId,
-        {
-          onScoreboardChange: () => {
-            loadScoreboard();
-          },
-          onEntriesChange: () => {} // Entries handled by ScoreboardInteractive
-        }
-      );
+    if (!isHydrated || !scoreboardId) return;
 
-      return () => {
-        unsubscribe();
-      };
-    }
+    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
+      scoreboardId,
+      {
+        onScoreboardChange: () => {
+          loadScoreboard();
+        },
+        onEntriesChange: () => {
+          // Entries are handled by ScoreboardInteractive
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, [isHydrated, scoreboardId]);
+
+  useEffect(() => {
+    if (scoreboard) {
+      const styles = getAppliedScoreboardStyles(scoreboard, 'main');
+      // Fallback to Light preset if styles is null
+      setAppliedStyles(styles || getStylePreset('light'));
+    } else {
+      setAppliedStyles(getStylePreset('light'));
+    }
+  }, [scoreboard]);
 
   if (!isHydrated || isLoading) {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: appliedStyles?.backgroundColor }}>
+      <div className="min-h-screen bg-background flex flex-col">
         <Header isAuthenticated={false} />
         <main className="pt-16 flex-1">
           <LoadingSkeleton />
@@ -76,13 +88,14 @@ const ScoreboardViewLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: appliedStyles?.backgroundColor }}>
+    <div
+      className="min-h-screen flex flex-col"
+      style={appliedStyles?.backgroundColor ? { backgroundColor: appliedStyles.backgroundColor } : undefined}
+    >
       <Header isAuthenticated={false} customStyles={appliedStyles} />
-      
       <main className="pt-16 flex-1">
         <ScoreboardInteractive scoreboard={scoreboard} appliedStyles={appliedStyles} />
       </main>
-
       <Footer customStyles={appliedStyles} />
     </div>
   );

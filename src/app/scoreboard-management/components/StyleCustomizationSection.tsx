@@ -29,7 +29,6 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   currentScope,
   onSave,
   isSaving,
-  scoreboardId,
   isExpanded,
   onToggleExpanded,
 }) => {
@@ -40,39 +39,10 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   const [scope, setScope] = useState<'main' | 'embed' | 'both'>(currentScope || 'both');
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Helper to get localStorage key for this scoreboard's custom styles
-  const getCustomStylesKey = () => `scoreboard_custom_styles_${scoreboardId || 'default'}`;
-
-  // Load custom styles from localStorage
-  const loadCustomStylesFromCache = (): ScoreboardCustomStyles | null => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const cached = localStorage.getItem(getCustomStylesKey());
-      return cached ? JSON.parse(cached) : null;
-    } catch {
-      return null;
-    }
-  };
-
-  // Save custom styles to localStorage
-  const saveCustomStylesToCache = (styles: ScoreboardCustomStyles) => {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(getCustomStylesKey(), JSON.stringify(styles));
-    } catch {
-      // Silently fail if localStorage is full or unavailable
-    }
-  };
-
   useEffect(() => {
     if (currentStyles) {
       setSelectedPreset(currentStyles.preset || 'light');
       setCustomStyles(currentStyles);
-      
-      // If current preset is custom, also save to cache
-      if (currentStyles.preset === 'custom') {
-        saveCustomStylesToCache(currentStyles);
-      }
     }
     if (currentScope) {
       setScope(currentScope);
@@ -81,37 +51,19 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
 
   const handlePresetChange = (preset: string) => {
     setSelectedPreset(preset);
-    
-    // If selecting 'custom', try to load from localStorage first, then fallback to defaults
-    if (preset === 'custom') {
-      const cachedCustom = loadCustomStylesFromCache();
-      if (cachedCustom) {
-        setCustomStyles(cachedCustom);
-      } else {
-        const presetStyles = getStylePreset('custom');
-        setCustomStyles({ ...presetStyles, preset: 'custom' });
-      }
-    } else {
-      const presetStyles = getStylePreset(preset);
-      setCustomStyles({ ...presetStyles, preset: preset as ScoreboardCustomStyles['preset'] });
-    }
-    
+    const presetStyles = getStylePreset(preset);
+    setCustomStyles({ ...presetStyles, preset: preset as ScoreboardCustomStyles['preset'] });
     setHasChanges(true);
   };
 
   const handlePropertyChange = (key: string, value: string) => {
-    const updatedStyles = {
-      ...customStyles,
+    setCustomStyles(prev => ({
+      ...prev,
       [key]: value,
-      preset: 'custom' as const,
-    };
-    
-    setCustomStyles(updatedStyles);
+      preset: 'light', 
+    }));
     setSelectedPreset('custom');
     setHasChanges(true);
-    
-    // Save to localStorage so custom changes persist
-    saveCustomStylesToCache(updatedStyles);
   };
 
   const handleScopeChange = (newScope: 'main' | 'embed' | 'both') => {
@@ -120,11 +72,6 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   };
 
   const handleSave = async () => {
-    // If saving custom styles, also update localStorage cache
-    if (customStyles.preset === 'custom') {
-      saveCustomStylesToCache(customStyles);
-    }
-    
     await onSave(customStyles, scope);
     setHasChanges(false);
   };
@@ -179,15 +126,15 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
             <div className="flex gap-3">
               <Icon name="InformationCircleIcon" size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1"><strong>How styling works</strong></p>
-                  <p className="mb-2">
-                    Choose a preset theme or customize individual colors.
-                 <br/>
-                    Colors can be specified in multiple formats: <strong>HEX</strong> (#ffffff), <strong>RGBA</strong> (rgba(255,255,255,0.8)), 
-                    or the keyword <strong>transparent</strong> for see-through backgrounds and borders.
-                 <br/>
-                    You can apply styles to just the embedded version, the main public view, or both. Changes are saved automatically when you click Save.
-                  </p>
+                <p className="font-medium mb-1">How styling works</p>
+                <p className="mb-2">
+                  Choose a preset theme or customize individual colors. You can apply styles to just the embedded 
+                  version, the main public view, or both. Changes are saved automatically when you click Save.
+                </p>
+                <p className="mb-2">
+                  Colors accept HEX (#ffffff), RGBA (rgba(255, 255, 255, 0.8)), or the keyword "transparent" 
+                  for see-through backgrounds.
+                </p>
               </div>
             </div>
           </div>
@@ -274,9 +221,8 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
                     <div>
                       <label className="block text-xs text-text-secondary mb-1">Color</label>
                       <ColorPicker
-                        value={(customStyles as any)[rankProp.colorKey] || rankProp.defaultColor}
+                        color={(customStyles as any)[rankProp.colorKey] || rankProp.defaultColor}
                         onChange={(color) => handlePropertyChange(rankProp.colorKey, color)}
-                        label={`${rankProp.label} Color`}
                       />
                     </div>
                     <div>
@@ -317,9 +263,8 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
                   <p className="text-xs text-text-secondary mb-1">{prop.description}</p>
                   {prop.type === 'color' ? (
                     <ColorPicker
-                      value={(customStyles as any)[prop.key] || '#ffffff'}
+                      color={(customStyles as any)[prop.key] || '#ffffff'}
                       onChange={(color) => handlePropertyChange(prop.key, color)}
-                      label={prop.label}
                     />
                   ) : prop.type === 'select' && prop.options ? (
                     <select
@@ -344,25 +289,30 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
               Preview
             </label>
             <div 
-              className="p-4 rounded-lg border overflow-hidden"
+              className="p-4"
               style={{
                 backgroundColor: customStyles.backgroundColor,
-                borderColor: customStyles.borderColor,
-                borderRadius: customStyles.borderRadius,
                 fontFamily: customStyles.fontFamily,
               }}
             >
               <div 
                 className="text-center mb-3"
+                style={{ color: customStyles.headerColor }}
               >
-                <h4 className="font-bold" style={{ color: customStyles.titleTextColor }}>
+                <h4 className="font-bold" style={{ color: customStyles.textColor }}>
                   Sample Scoreboard
                 </h4>
-                <p className="text-sm opacity-70" style={{ color: customStyles.titleTextColor }}>
+                <p className="text-sm opacity-70" style={{ color: customStyles.textColor }}>
                   Preview of your style settings
                 </p>
               </div>
-              <table className="w-full text-sm">
+              <table 
+                className="w-full text-sm overflow-hidden"
+                style={{
+                  borderRadius: customStyles.borderRadius,
+                  border: `1px solid ${customStyles.borderColor}`
+                }}
+              >
                 <thead>
                   <tr style={{ backgroundColor: customStyles.headerColor }}>
                     <th className="px-3 py-2 text-left" style={{ color: customStyles.headerTextColor }}>Rank</th>
@@ -377,32 +327,32 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
                     { rank: 3, name: 'Sam Wilson', score: 2200 },
                   ].map((entry, idx) => {
                     const isAlternateRow = idx % 2 !== 0;
-                    const textColor = isAlternateRow 
-                      ? (customStyles.alternateRowTextColor || customStyles.textColor)
+                    const textColor = isAlternateRow && customStyles.alternateRowTextColor 
+                      ? customStyles.alternateRowTextColor 
                       : customStyles.textColor;
                     
                     return (
-                      <tr 
-                        key={entry.rank}
-                        style={{ 
-                          backgroundColor: idx % 2 === 0 ? customStyles.backgroundColor : customStyles.rowHoverColor,
-                          borderBottom: `1px solid ${customStyles.borderColor}`
-                        }}
-                      >
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-2" style={{ color: getRankColor(entry.rank) }}>
-                            <Icon name={getRankIcon(entry.rank)} size={18} />
-                            <span className="font-semibold">#{entry.rank}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2" style={{ color: textColor }}>
-                          {entry.name}
-                        </td>
-                        <td className="px-3 py-2 text-right font-semibold" style={{ color: customStyles.accentColor }}>
-                          {entry.score.toLocaleString()}
-                        </td>
-                      </tr>
-                    );
+                    <tr 
+                      key={entry.rank}
+                      style={{ 
+                        backgroundColor: idx % 2 === 0 ? customStyles.backgroundColor : customStyles.rowHoverColor,
+                        borderBottom: `1px solid ${customStyles.borderColor}`
+                      }}
+                    >
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2" style={{ color: getRankColor(entry.rank) }}>
+                          <Icon name={getRankIcon(entry.rank)} size={18} />
+                          <span className="font-semibold">#{entry.rank}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2" style={{ color: textColor }}>
+                        {entry.name}
+                      </td>
+                      <td className="px-3 py-2 text-right font-semibold" style={{ color: customStyles.accentColor }}>
+                        {entry.score.toLocaleString()}
+                      </td>
+                    </tr>
+                  );
                   })}
                 </tbody>
               </table>

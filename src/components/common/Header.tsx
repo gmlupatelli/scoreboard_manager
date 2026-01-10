@@ -82,7 +82,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <Logo size={40} />
               <span
                 className="text-2xl font-bold text-text-primary hidden sm:block tracking-tight"
-                style={{ fontWeight: 700 }}
+                style={{ fontWeight: 700, color: customStyles?.textColor || undefined }}
               >
                 Scoreboard Manager
               </span>
@@ -296,7 +296,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               {isAuthenticated ? (
                 <div className="space-y-1">
                   <div className="flex items-center px-3 py-2">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={accentStyle}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary" style={customStyles ? { backgroundColor: customStyles.accentColor } : undefined}>
                       <Icon name="UserIcon" size={20} className="text-white" />
                     </div>
                     <span className="ml-3 text-base font-medium text-text-primary" style={customStyles ? { color: customStyles.textColor } : undefined}>
@@ -354,21 +354,16 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 <div className="space-y-2">
                   <Link
                     href="/register"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                    style={{
-                      color: customStyles?.textColor || 'var(--text-secondary)',
-                      borderColor: customStyles?.borderColor || 'var(--border)',
-                      borderWidth: '1px',
-                      fontFamily: customStyles?.fontFamily || 'inherit',
-                    }}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium border border-border text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                    style={customStyles ? { borderColor: customStyles.borderColor, color: customStyles.textColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
                   >
                     <Icon name="UserPlusIcon" size={20} />
                     <span>Sign Up</span>
                   </Link>
                   <Link
                     href="/login"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-white hover:opacity-90 transition-smooth duration-150"
-                    style={accentStyle}
+                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium bg-primary text-white hover:opacity-90 transition-smooth duration-150"
+                    style={customStyles ? { backgroundColor: customStyles.accentColor } : undefined}
                   >
                     <Icon name="ArrowRightOnRectangleIcon" size={20} />
                     <span>Login</span>

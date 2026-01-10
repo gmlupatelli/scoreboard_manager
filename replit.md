@@ -64,8 +64,8 @@ The Scoreboard Manager is a modern Next.js 14 application designed for creating,
 The Supabase CLI is installed and configured for database migrations.
 
 ### Project References
-- **Development**: `kvorvygjgeelhybnstje`
-- **Production**: `bfbvcmfezdhdotmbgxsn`
+- **Development**: `supabase_project_ref_dev`
+- **Production**: `supabase_project_ref_prod`
 
 ### Running Migrations
 To apply migrations to a Supabase project:

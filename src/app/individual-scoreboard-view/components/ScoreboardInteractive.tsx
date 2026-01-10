@@ -13,6 +13,7 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ScoreboardHeader from './ScoreboardHeader';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
+import { getAppliedScoreboardStyles } from '@/utils/stylePresets';
 
 interface EntryWithRank extends ScoreboardEntry {
   rank: number;
@@ -24,9 +25,6 @@ interface ScoreboardInteractiveProps {
 }
 
 const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboard, appliedStyles }) => {
-  const searchParams = useSearchParams();
-  const scoreboardId = searchParams?.get('id') || null;
-  
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,26 +42,7 @@ const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboar
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Load only entries
-  const loadEntriesOnly = async () => {
-    if (!scoreboardId) return;
-    
-    try {
-      const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
-      
-      if (entriesError) {
-        setError(entriesError.message || 'Failed to load entries');
-        return;
-      }
-
-      setEntries(entriesData || []);
-      setError(null);
-    } catch {
-      setError('Failed to load entries');
-    }
-  };
-
-  // Load entries on mount and set up real-time subscription
+  // Only load entries (not scoreboard) here
   useEffect(() => {
     if (!isHydrated || !scoreboard?.id) {
       if (isHydrated && !scoreboard?.id) {
@@ -72,8 +51,8 @@ const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboar
       }
       return;
     }
-    
-    const loadEntries = async () => {
+
+    const loadEntriesOnly = async () => {
       try {
         const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboard.id);
         if (entriesError) {
@@ -90,20 +69,19 @@ const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboar
       }
     };
 
-    loadEntries();
+    loadEntriesOnly();
 
     // Set up real-time subscription for entries only
     const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
       scoreboard.id,
       {
-        onScoreboardChange: () => {}, // parent handles scoreboard changes
+        onScoreboardChange: () => {}, // parent will handle scoreboard changes
         onEntriesChange: () => {
           loadEntriesOnly();
         }
       }
     );
 
-    // Cleanup subscription on unmount or when scoreboardId changes
     return () => {
       unsubscribe();
     };
@@ -177,6 +155,8 @@ const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboar
     );
   }
 
+  // appliedStyles is now managed by state and useEffect above
+
   return (
     <>
       <ScoreboardHeader
@@ -231,7 +211,7 @@ const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboar
               >
                 {isMobile ? (
                   <div className="p-4 space-y-4">
-                    {currentEntries.map((entry, index) => (
+                    {currentEntries.map((entry) => (
                       <EntryCard 
                         key={entry.id} 
                         rank={entry.rank} 
@@ -240,7 +220,6 @@ const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboar
                         customStyles={appliedStyles}
                         scoreType={scoreboard?.scoreType || 'number'}
                         timeFormat={scoreboard?.timeFormat || null}
-                        index={index}
                       />
                     ))}
                   </div>
