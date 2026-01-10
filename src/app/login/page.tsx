@@ -24,7 +24,10 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
       } else {
-        router.push('/dashboard');
+        // Small delay to allow Chrome to detect successful login for password saving
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 100);
       }
     } catch (err) {
       setError('An unexpected error occurred');

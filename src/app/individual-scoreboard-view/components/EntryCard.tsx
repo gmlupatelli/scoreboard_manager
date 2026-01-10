@@ -10,9 +10,10 @@ interface EntryCardProps {
   customStyles?: ScoreboardCustomStyles | null;
   scoreType?: ScoreType;
   timeFormat?: TimeFormat | null;
+  index?: number;
 }
 
-const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles, scoreType = 'number', timeFormat = null }) => {
+const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles, scoreType = 'number', timeFormat = null, index = 0 }) => {
   const getPerRankColor = (rank: number): string => {
     if (customStyles) {
       if (rank === 1) return customStyles.rank1Color || '#ca8a04';
@@ -40,12 +41,19 @@ const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles, 
   const rankIconName = getRankIcon(rank);
   const displayScore = formatScoreDisplay(score, scoreType, timeFormat);
   const scoreIcon = scoreType === 'time' ? 'ClockIcon' : 'StarIcon';
+  
+  const isAlternateRow = index % 2 !== 0;
+  const textColor = isAlternateRow 
+    ? (customStyles?.alternateRowTextColor || customStyles?.textColor || 'var(--text-primary)')
+    : (customStyles?.textColor || 'var(--text-primary)');
 
   return (
     <div 
       className="rounded-lg p-4 hover:elevation-1 transition-smooth duration-150"
       style={{
-        backgroundColor: customStyles?.backgroundColor || 'var(--surface)',
+        backgroundColor: isAlternateRow 
+          ? (customStyles?.rowHoverColor || customStyles?.backgroundColor || 'var(--surface)')
+          : (customStyles?.backgroundColor || 'var(--surface)'),
         borderColor: customStyles?.borderColor || 'var(--border)',
         borderWidth: '1px',
         borderStyle: 'solid',
@@ -70,13 +78,13 @@ const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles, 
           <div className="flex-1 min-w-0">
             <h3 
               className="text-base font-semibold truncate"
-              style={{ color: customStyles?.textColor || 'var(--text-primary)' }}
+              style={{ color: textColor }}
             >
               {name}
             </h3>
             <p 
               className="text-sm"
-              style={{ color: customStyles?.textColor ? `${customStyles.textColor}99` : 'var(--text-secondary)' }}
+              style={{ color: textColor ? `${textColor}99` : 'var(--text-secondary)' }}
             >
               Rank #{rank}
             </p>

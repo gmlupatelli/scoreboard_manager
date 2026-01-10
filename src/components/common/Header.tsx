@@ -37,6 +37,11 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
     fontFamily: customStyles.fontFamily || 'inherit',
   } : undefined;
 
+  const primaryStyle = customStyles ? {
+    backgroundColor: customStyles.accentColor,
+    fontFamily: customStyles.fontFamily || 'inherit',
+  } : undefined;
+
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
@@ -130,7 +135,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   aria-label="User menu"
                   aria-expanded={isUserMenuOpen}
                 >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={accentStyle}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary" style={primaryStyle}>
                     <Icon name="UserIcon" size={18} className="text-white" />
                   </div>
                   <span className="text-sm font-medium">{displayName}</span>

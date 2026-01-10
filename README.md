@@ -5,12 +5,27 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Project Status
 - **Current State**: Fully configured and running on Replit
-- **Last Updated**: January 9, 2026
+- **Last Updated**: January 10, 2026
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+
+### January 10, 2026 - Advanced Styling & UX Improvements
+- Added **Alternate Row Text Color** custom property for better readability in alternating table rows
+  - Property added to all 6 style presets (light, dark, transparent, high-contrast, minimal, custom)
+  - Applied to desktop table view, mobile card view, embed view, and preview table
+- Enhanced color picker with **RGBA/transparency support**
+  - Replaced native color inputs with custom ColorPicker component using react-colorful
+  - Visual color picker with hue, saturation, lightness controls
+  - Alpha/opacity slider (0-100%) for all 21+ color properties
+  - Text input supporting HEX, RGBA, and transparent formats
+  - Smart format conversion (opaque→HEX, transparent→keyword, partial→RGBA)
+  - Checkerboard pattern for transparency preview
+- Fixed embed view to include subtitle and match main view font sizes
+- Fixed header user icon to use correct primary brand color
+- Improved login form to trigger Chrome password save prompt
 
 ### January 9, 2026 - Time-Based Scoreboards & Flexible Score Types
 - Added flexible score types: number (default) or time-based scoreboards
@@ -121,6 +136,8 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 12. Configurable sort order: ascending or descending
 13. Multiple time formats: hh:mm, hh:mm:ss, mm:ss, mm:ss.s, mm:ss.ss, mm:ss.sss
 14. Embeddable scoreboards via `/embed/[id]` with custom styling
+15. Advanced style customization with 21+ properties including alternate row text color
+16. RGBA/transparency support in all color pickers with alpha slider
 
 ## Environment Configuration
 
@@ -176,6 +193,8 @@ The application is configured for Replit deployment with:
 │   │   │   └── components/           # Management components
 │   │   ├── support/                  # Support page
 │   │   ├── system-admin/             # System admin page
+│   │   │   ├── invitations/          # Invitations management
+│   │   │   └── settings/             # System settings
 │   │   ├── terms/                    # Terms of service
 │   │   ├── user-profile-management/  # User profile settings
 │   │   │   └── components/           # Profile components
@@ -192,6 +211,7 @@ The application is configured for Replit deployment with:
 │   │   └── ui/                       # UI primitives
 │   │       ├── AppIcon.tsx
 │   │       ├── AppImage.tsx
+│   │       ├── ColorPicker.tsx       # RGBA color picker
 │   │       ├── Logo.tsx
 │   │       └── SearchableSelect.tsx
 │   ├── contexts/

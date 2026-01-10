@@ -1,14 +1,17 @@
 export interface ScoreboardCustomStyles {
-  preset?: 'light' | 'dark' | 'transparent' | 'high-contrast' | 'minimal' | 'brand';
+  preset?: 'light' | 'dark' | 'transparent' | 'high-contrast' | 'minimal' | 'custom';
   backgroundColor?: string;
   textColor?: string;
+  titleTextColor?: string;
   headerColor?: string;
   headerTextColor?: string;
   borderColor?: string;
   accentColor?: string;
+  accentTextColor?: string;
   fontFamily?: string;
   borderRadius?: string;
   rowHoverColor?: string;
+  alternateRowTextColor?: string;
   rankHighlightColor?: string;
 }
 

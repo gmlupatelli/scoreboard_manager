@@ -72,6 +72,10 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles, scoreTyp
           {entries?.map?.((entry, index) => {
             const rankIcon = getRankIcon(entry?.rank || 0);
             const rankColor = getRankColor(entry?.rank || 0);
+            const isAlternateRow = index % 2 !== 0;
+            const textColor = isAlternateRow 
+              ? (customStyles?.alternateRowTextColor || customStyles?.textColor || 'var(--text-primary)')
+              : (customStyles?.textColor || 'var(--text-primary)');
 
             return (
               <tr 
@@ -87,7 +91,7 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles, scoreTyp
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div 
                     className="flex items-center space-x-2 font-semibold"
-                    style={{ color: rankColor || (customStyles?.textColor || 'var(--text-primary)') }}
+                    style={{ color: rankColor || textColor }}
                   >
                     {rankIcon && <Icon name={rankIcon} size={20} style={{ color: rankColor }} />}
                     <span className="text-sm">#{entry?.rank}</span>
@@ -96,7 +100,7 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles, scoreTyp
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span 
                     className="text-sm font-medium"
-                    style={{ color: customStyles?.textColor || 'var(--text-primary)' }}
+                    style={{ color: textColor }}
                   >
                     {entry?.name || 'Unknown'}
                   </span>

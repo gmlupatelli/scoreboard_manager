@@ -8,7 +8,7 @@ import ScoreboardInteractive from './ScoreboardInteractive';
 import LoadingSkeleton from './LoadingSkeleton';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardCustomStyles } from '@/types/models';
-import { getAppliedScoreboardStyles } from '@/utils/stylePresets';
+import { getAppliedScoreboardStyles, getStylePreset } from '@/utils/stylePresets';
 
 const ScoreboardViewLayout: React.FC = () => {
   const searchParams = useSearchParams();
@@ -34,7 +34,7 @@ const ScoreboardViewLayout: React.FC = () => {
         
         if (data) {
           const styles = getAppliedScoreboardStyles(data, 'main');
-          setAppliedStyles(styles);
+          setAppliedStyles(styles || getStylePreset('light'));
         }
       } catch {
         // Error handled in ScoreboardInteractive
@@ -44,11 +44,28 @@ const ScoreboardViewLayout: React.FC = () => {
     };
 
     loadScoreboard();
+
+    // Set up real-time subscription to detect scoreboard changes
+    if (scoreboardId) {
+      const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
+        scoreboardId,
+        {
+          onScoreboardChange: () => {
+            loadScoreboard();
+          },
+          onEntriesChange: () => {} // Entries handled by ScoreboardInteractive
+        }
+      );
+
+      return () => {
+        unsubscribe();
+      };
+    }
   }, [isHydrated, scoreboardId]);
 
   if (!isHydrated || isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: appliedStyles?.backgroundColor }}>
         <Header isAuthenticated={false} />
         <main className="pt-16 flex-1">
           <LoadingSkeleton />
@@ -59,11 +76,11 @@ const ScoreboardViewLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: appliedStyles?.backgroundColor }}>
       <Header isAuthenticated={false} customStyles={appliedStyles} />
       
       <main className="pt-16 flex-1">
-        <ScoreboardInteractive />
+        <ScoreboardInteractive scoreboard={scoreboard} appliedStyles={appliedStyles} />
       </main>
 
       <Footer customStyles={appliedStyles} />

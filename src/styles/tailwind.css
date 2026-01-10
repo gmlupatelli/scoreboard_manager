@@ -128,3 +128,27 @@
     }
   }
 }
+  /* React Colorful Styles */
+  .react-colorful {
+    width: 100%;
+    height: 200px;
+  }
+
+  .react-colorful__saturation {
+    border-radius: 4px 4px 0 0;
+    border-bottom: none;
+  }
+
+  .react-colorful__hue,
+  .react-colorful__alpha {
+    height: 12px;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+
+  .react-colorful__pointer {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }

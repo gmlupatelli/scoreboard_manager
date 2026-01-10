@@ -221,12 +221,20 @@ export default function EmbedScoreboardPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 text-center">
           <h1 
-            className="text-2xl font-bold mb-1"
-            style={{ color: appliedStyles.accentColor || appliedStyles.textColor }}
+            className="text-3xl sm:text-4xl font-bold mb-3"
+            style={{ color: appliedStyles.titleTextColor || appliedStyles.textColor }}
           >
             {scoreboard.title}
           </h1>
-          <div className="text-sm" style={{ color: `${appliedStyles.textColor}99` }}>
+          {scoreboard.subtitle && (
+            <p 
+              className="text-base sm:text-lg mb-4"
+              style={{ color: appliedStyles.titleTextColor ? `${appliedStyles.titleTextColor}cc` : `${appliedStyles.textColor}cc` }}
+            >
+              {scoreboard.subtitle}
+            </p>
+          )}
+          <div className="text-sm" style={{ color: appliedStyles.titleTextColor || `${appliedStyles.textColor}99` }}>
             Total Entries: {entries.length}
           </div>
         </div>
@@ -284,6 +292,10 @@ export default function EmbedScoreboardPage() {
                   {currentEntries.map((entry, index) => {
                     const rankColor = getRankColor(entry.rank, appliedStyles);
                     const rankIconName = getRankIcon(entry.rank, appliedStyles);
+                    const isAlternateRow = index % 2 !== 0;
+                    const textColor = isAlternateRow 
+                      ? (appliedStyles.alternateRowTextColor || appliedStyles.textColor)
+                      : appliedStyles.textColor;
                     
                     return (
                       <tr 
@@ -307,7 +319,7 @@ export default function EmbedScoreboardPage() {
                         </td>
                         <td 
                           className="px-4 py-3 font-medium"
-                          style={{ color: appliedStyles.textColor }}
+                          style={{ color: textColor }}
                         >
                           {entry.name}
                         </td>

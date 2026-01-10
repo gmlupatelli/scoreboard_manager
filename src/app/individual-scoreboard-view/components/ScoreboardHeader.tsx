@@ -23,7 +23,7 @@ const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description,
         <h1 
           className="text-3xl sm:text-4xl font-bold mb-3"
           style={{ 
-            color: customStyles?.headerTextColor || customStyles?.textColor || 'var(--text-primary)',
+            color: customStyles?.titleTextColor || 'var(--text-primary)',
             fontFamily: customStyles?.fontFamily || 'inherit',
           }}
         >
@@ -32,7 +32,7 @@ const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description,
         <p 
           className="text-base sm:text-lg mb-4 max-w-3xl"
           style={{ 
-            color: customStyles?.headerTextColor ? `${customStyles.headerTextColor}99` : 'var(--text-secondary)',
+            color: customStyles?.titleTextColor ? `${customStyles.titleTextColor}cc` : 'var(--text-secondary)',
             fontFamily: customStyles?.fontFamily || 'inherit',
           }}
         >
@@ -41,7 +41,7 @@ const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description,
         <div 
           className="flex items-center space-x-2 text-sm"
           style={{ 
-            color: customStyles?.headerTextColor ? `${customStyles.headerTextColor}99` : 'var(--text-secondary)',
+            color: customStyles?.titleTextColor || 'var(--text-secondary)',
             fontFamily: customStyles?.fontFamily || 'inherit',
           }}
         >
@@ -50,7 +50,7 @@ const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description,
             className="px-3 py-1 rounded-md font-semibold"
             style={{
               backgroundColor: customStyles?.accentColor || 'var(--muted)',
-              color: customStyles?.accentColor ? '#ffffff' : 'var(--text-primary)',
+              color: customStyles?.accentTextColor || '#ffffff',
               fontFamily: customStyles?.fontFamily || 'inherit',
               borderRadius: customStyles?.borderRadius || '4px',
             }}
