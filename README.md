@@ -236,8 +236,8 @@ The Supabase database includes:
 The Supabase CLI is installed and configured for database migrations.
 
 ### Project References
-- **Development**: `kvorvygjgeelhybnstje`
-- **Production**: `bfbvcmfezdhdotmbgxsn`
+- **Development**: `supabase-project-ref-dev`
+- **Production**: `supabase-project-ref-prod`
 
 ### Running Migrations
 ```bash
