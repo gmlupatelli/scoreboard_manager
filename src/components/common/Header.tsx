@@ -204,21 +204,16 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <>
                 <Link
                   href="/register"
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={{
-                    color: customStyles?.textColor || 'var(--text-secondary)',
-                    borderColor: customStyles?.borderColor || 'var(--border)',
-                    borderWidth: '1px',
-                    fontFamily: customStyles?.fontFamily || 'inherit',
-                  }}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium border border-border text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? { borderColor: customStyles.borderColor, color: customStyles.textColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
                 >
                   <Icon name="UserPlusIcon" size={18} />
                   <span>Sign Up</span>
                 </Link>
                 <Link
                   href="/login"
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-white hover:opacity-90 transition-smooth duration-150 hover-lift"
-                  style={accentStyle}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-white hover:opacity-90 transition-smooth duration-150 hover-lift"
+                  style={customStyles ? { backgroundColor: customStyles.accentColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
                 >
                   <Icon name="ArrowRightOnRectangleIcon" size={18} />
                   <span>Login</span>
