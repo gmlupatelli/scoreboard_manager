@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import { ScoreboardCustomStyles } from '@/types/models';
+import { safeLocalStorage } from '@/utils/localStorage';
 import { 
   STYLE_PRESETS, 
   PRESET_LABELS, 
@@ -29,6 +30,7 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   currentScope,
   onSave,
   isSaving,
+  scoreboardId,
   isExpanded,
   onToggleExpanded,
 }) => {
@@ -38,6 +40,19 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   );
   const [scope, setScope] = useState<'main' | 'embed' | 'both'>(currentScope || 'both');
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Helper to get localStorage key for this scoreboard's custom styles
+  const getCustomStylesKey = () => `scoreboard_custom_styles_${scoreboardId || 'default'}`;
+
+  // Load custom styles from localStorage
+  const loadCustomStylesFromCache = (): ScoreboardCustomStyles | null => {
+    return safeLocalStorage.getJSON<ScoreboardCustomStyles>(getCustomStylesKey());
+  };
+
+  // Save custom styles to localStorage
+  const saveCustomStylesToCache = (styles: ScoreboardCustomStyles) => {
+    safeLocalStorage.setJSON(getCustomStylesKey(), styles);
+  };
 
   useEffect(() => {
     if (currentStyles) {
@@ -51,19 +66,37 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
 
   const handlePresetChange = (preset: string) => {
     setSelectedPreset(preset);
-    const presetStyles = getStylePreset(preset);
-    setCustomStyles({ ...presetStyles, preset: preset as ScoreboardCustomStyles['preset'] });
+    
+    // If selecting 'custom', try to load from localStorage first
+    if (preset === 'custom') {
+      const cachedCustom = loadCustomStylesFromCache();
+      if (cachedCustom) {
+        setCustomStyles(cachedCustom);
+      } else {
+        const presetStyles = getStylePreset('custom');
+        setCustomStyles({ ...presetStyles, preset: 'custom' });
+      }
+    } else {
+      const presetStyles = getStylePreset(preset);
+      setCustomStyles({ ...presetStyles, preset: preset as ScoreboardCustomStyles['preset'] });
+    }
+    
     setHasChanges(true);
   };
 
   const handlePropertyChange = (key: string, value: string) => {
-    setCustomStyles(prev => ({
-      ...prev,
+    const updatedStyles = {
+      ...customStyles,
       [key]: value,
-      preset: 'light', 
-    }));
+      preset: 'custom' as const,
+    };
+    
+    setCustomStyles(updatedStyles);
     setSelectedPreset('custom');
     setHasChanges(true);
+    
+    // Save to localStorage so custom changes persist
+    saveCustomStylesToCache(updatedStyles);
   };
 
   const handleScopeChange = (newScope: 'main' | 'embed' | 'both') => {
@@ -72,6 +105,11 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   };
 
   const handleSave = async () => {
+    // If saving custom styles, also update localStorage cache
+    if (customStyles.preset === 'custom') {
+      saveCustomStylesToCache(customStyles);
+    }
+    
     await onSave(customStyles, scope);
     setHasChanges(false);
   };

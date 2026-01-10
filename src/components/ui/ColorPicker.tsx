@@ -3,14 +3,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RgbaColorPicker } from 'react-colorful';
 
-interface ColorPickerProps {
+type RgbaColor = { r: number; g: number; b: number; a: number };
+
+export interface ColorPickerProps {
   value: string;
   onChange: (value: string) => void;
   label?: string;
 }
 
 // Convert various color formats to RGBA object
-const parseColor = (color: string): { r: number; g: number; b: number; a: number } => {
+const parseColor = (color: string): RgbaColor => {
   // Handle rgba format
   const rgbaMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
   if (rgbaMatch) {
@@ -42,7 +44,7 @@ const parseColor = (color: string): { r: number; g: number; b: number; a: number
 };
 
 // Convert RGBA object to string
-const rgbaToString = (rgba: { r: number; g: number; b: number; a: number }): string => {
+const rgbaToString = (rgba: RgbaColor): string => {
   if (rgba.a === 1) {
     // If fully opaque, return HEX
     const toHex = (n: number) => n.toString(16).padStart(2, '0');
@@ -87,7 +89,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, label }) => 
     };
   }, [isOpen]);
 
-  const handleColorChange = (newColor: { r: number; g: number; b: number; a: number }) => {
+  const handleColorChange = (newColor: RgbaColor) => {
     setRgbaColor(newColor);
     const colorString = rgbaToString(newColor);
     setTextInput(colorString);
