@@ -21,21 +21,21 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
   const router = useRouter();
   const { userProfile, user, signOut } = useAuth();
 
-  const headerStyle = {
-    backgroundColor: customStyles?.backgroundColor || 'var(--surface)',
-    borderColor: customStyles?.borderColor || 'var(--border)',
-    fontFamily: customStyles?.fontFamily || 'inherit',
-  };
+  const headerStyle = customStyles ? {
+    backgroundColor: customStyles.backgroundColor,
+    borderColor: customStyles.borderColor,
+    fontFamily: customStyles.fontFamily || 'inherit',
+  } : undefined;
 
-  const textStyle = {
-    color: customStyles?.textColor || 'var(--text-secondary)',
-    fontFamily: customStyles?.fontFamily || 'inherit',
-  };
+  const textStyle = customStyles ? {
+    color: customStyles.textColor,
+    fontFamily: customStyles.fontFamily || 'inherit',
+  } : undefined;
 
-  const accentStyle = {
-    backgroundColor: customStyles?.accentColor || 'var(--primary)',
-    fontFamily: customStyles?.fontFamily || 'inherit',
-  };
+  const accentStyle = customStyles ? {
+    backgroundColor: customStyles.accentColor,
+    fontFamily: customStyles.fontFamily || 'inherit',
+  } : undefined;
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -66,7 +66,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
   const displayName = userProfile?.fullName || user?.email || 'User';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[1000] border-b elevation-1" style={headerStyle}>
+    <header className="fixed top-0 left-0 right-0 z-[1000] border-b border-border bg-surface elevation-1" style={customStyles ? headerStyle : undefined}>
       <nav className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -147,7 +147,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                       className="fixed inset-0 z-[1009]"
                       onClick={() => setIsUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 border rounded-md elevation-2 z-[1010]" style={{ backgroundColor: customStyles?.backgroundColor || 'var(--popover)', borderColor: customStyles?.borderColor || 'var(--border)' }}>
+                    <div className="absolute right-0 mt-2 w-48 border border-border rounded-md elevation-2 z-[1010] bg-popover" style={customStyles ? { backgroundColor: customStyles.backgroundColor, borderColor: customStyles.borderColor } : undefined}>
                       <div className="py-1">
                         <Link
                           href="/dashboard"
@@ -241,7 +241,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
         </div>
 
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t" style={{ borderColor: customStyles?.borderColor || 'var(--border)' }}>
+          <div className="md:hidden border-t border-border" style={customStyles ? { borderColor: customStyles.borderColor } : undefined}>
             {!isAuthenticated && (
               <div className="px-2 pt-2 pb-3 space-y-1">
                 <Link
@@ -292,7 +292,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               </div>
             )}
 
-            <div className="border-t px-2 pt-4 pb-3" style={{ borderColor: customStyles?.borderColor || 'var(--border)' }}>
+            <div className="border-t border-border px-2 pt-4 pb-3" style={customStyles ? { borderColor: customStyles.borderColor } : undefined}>
               {isAuthenticated ? (
                 <div className="space-y-1">
                   <div className="flex items-center px-3 py-2">
