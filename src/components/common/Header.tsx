@@ -89,32 +89,32 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <>
                 <Link
                   href="/#features"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                 >
                   <Icon name="SparklesIcon" size={18} />
                   <span>Features</span>
                 </Link>
                 <Link
                   href="/#benefits"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                 >
                   <Icon name="CheckBadgeIcon" size={18} />
                   <span>Benefits</span>
                 </Link>
                 <Link
                   href="/#testimonials"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                 >
                   <Icon name="ChatBubbleLeftRightIcon" size={18} />
                   <span>Testimonials</span>
                 </Link>
                 <Link
                   href="/public-scoreboard-list"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                 >
                   <Icon name="TrophyIcon" size={18} />
                   <span>Scoreboards</span>
@@ -125,8 +125,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                   aria-label="User menu"
                   aria-expanded={isUserMenuOpen}
                 >
@@ -152,8 +152,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                         <Link
                           href="/dashboard"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm hover:opacity-80 transition-smooth duration-150"
-                          style={textStyle}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                          style={customStyles ? textStyle : undefined}
                         >
                           <Icon name="ClipboardDocumentListIcon" size={18} className="mr-3" />
                           My Boards
@@ -161,8 +161,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                         <Link
                           href="/user-profile-management"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm hover:opacity-80 transition-smooth duration-150"
-                          style={textStyle}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                          style={customStyles ? textStyle : undefined}
                         >
                           <Icon name="UserCircleIcon" size={18} className="mr-3" />
                           Profile
@@ -170,8 +170,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                         <Link
                           href="/invitations"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm hover:opacity-80 transition-smooth duration-150"
-                          style={textStyle}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                          style={customStyles ? textStyle : undefined}
                         >
                           <Icon name="EnvelopeIcon" size={18} className="mr-3" />
                           Invitations
@@ -180,8 +180,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                           <Link
                             href="/system-admin/settings"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center w-full px-4 py-2 text-sm hover:opacity-80 transition-smooth duration-150"
-                            style={textStyle}
+                            className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                            style={customStyles ? textStyle : undefined}
                           >
                             <Icon name="Cog6ToothIcon" size={18} className="mr-3" />
                             System Settings
@@ -189,8 +189,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                         )}
                         <button
                           onClick={handleLogout}
-                          className="flex items-center w-full px-4 py-2 text-sm hover:opacity-80 transition-smooth duration-150"
-                          style={textStyle}
+                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                          style={customStyles ? textStyle : undefined}
                         >
                           <Icon name="ArrowRightOnRectangleIcon" size={18} className="mr-3" />
                           Logout
@@ -230,8 +230,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md hover:opacity-80 transition-smooth duration-150"
-              style={textStyle}
+              className="p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150"
+              style={customStyles ? textStyle : undefined}
               aria-label="Toggle menu"
               aria-expanded={isMobileMenuOpen}
             >
@@ -246,8 +246,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <div className="px-2 pt-2 pb-3 space-y-1">
                 <Link
                   href="/"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="HomeIcon" size={20} />
@@ -255,8 +255,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/#features"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="SparklesIcon" size={20} />
@@ -264,8 +264,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/#benefits"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="CheckBadgeIcon" size={20} />
@@ -273,8 +273,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/#testimonials"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="ChatBubbleLeftRightIcon" size={20} />
@@ -282,8 +282,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </Link>
                 <Link
                   href="/public-scoreboard-list"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                  style={textStyle}
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Icon name="TrophyIcon" size={20} />
@@ -299,15 +299,15 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" style={accentStyle}>
                       <Icon name="UserIcon" size={20} className="text-white" />
                     </div>
-                    <span className="ml-3 text-base font-medium" style={{ color: customStyles?.textColor || 'var(--text-primary)' }}>
+                    <span className="ml-3 text-base font-medium text-text-primary" style={customStyles ? { color: customStyles.textColor } : undefined}>
                       {displayName}
                     </span>
                   </div>
                   <Link
                     href="/dashboard"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                    style={textStyle}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                    style={customStyles ? textStyle : undefined}
                   >
                     <Icon name="ClipboardDocumentListIcon" size={20} className="mr-3" />
                     My Boards
@@ -315,8 +315,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   <Link
                     href="/user-profile-management"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                    style={textStyle}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                    style={customStyles ? textStyle : undefined}
                   >
                     <Icon name="UserCircleIcon" size={20} className="mr-3" />
                     Profile
@@ -324,8 +324,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   <Link
                     href="/invitations"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                    style={textStyle}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                    style={customStyles ? textStyle : undefined}
                   >
                     <Icon name="EnvelopeIcon" size={20} className="mr-3" />
                     Invitations
@@ -334,8 +334,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     <Link
                       href="/system-admin/settings"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                      style={textStyle}
+                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                      style={customStyles ? textStyle : undefined}
                     >
                       <Icon name="Cog6ToothIcon" size={20} className="mr-3" />
                       System Settings
@@ -343,8 +343,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   )}
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium hover:opacity-80 transition-smooth duration-150"
-                    style={textStyle}
+                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                    style={customStyles ? textStyle : undefined}
                   >
                     <Icon name="ArrowRightOnRectangleIcon" size={20} className="mr-3" />
                     Logout
