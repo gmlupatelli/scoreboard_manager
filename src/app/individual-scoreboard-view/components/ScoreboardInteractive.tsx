@@ -177,6 +177,12 @@ const ScoreboardInteractive: React.FC = () => {
     return scope === 'main' || scope === 'both';
   };
 
+  useEffect(() => {
+    if (scoreboard) {
+      getAppliedScoreboardStyles(scoreboard, 'main');
+    }
+  }, [scoreboard?.styleScope, scoreboard?.customStyles?.preset]);
+
   const getAppliedStyles = (): ScoreboardCustomStyles | null => {
     return getAppliedScoreboardStyles(scoreboard, 'main');
   };

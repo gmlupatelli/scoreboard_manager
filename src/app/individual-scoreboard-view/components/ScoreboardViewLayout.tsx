@@ -46,6 +46,13 @@ const ScoreboardViewLayout: React.FC = () => {
     loadScoreboard();
   }, [isHydrated, scoreboardId]);
 
+  useEffect(() => {
+    if (scoreboard) {
+      const styles = getAppliedScoreboardStyles(scoreboard, 'main');
+      setAppliedStyles(styles);
+    }
+  }, [scoreboard?.styleScope]);
+
   if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
