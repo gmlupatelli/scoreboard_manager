@@ -8,7 +8,7 @@ import ScoreboardInteractive from './ScoreboardInteractive';
 import LoadingSkeleton from './LoadingSkeleton';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardCustomStyles } from '@/types/models';
-import { getAppliedScoreboardStyles } from '@/utils/stylePresets';
+import { getAppliedScoreboardStyles, getStylePreset } from '@/utils/stylePresets';
 
 const ScoreboardViewLayout: React.FC = () => {
   const searchParams = useSearchParams();
@@ -44,15 +44,34 @@ const ScoreboardViewLayout: React.FC = () => {
     };
 
     loadScoreboard();
+
+    // Set up real-time subscription to detect scoreboard changes
+    if (!isHydrated || !scoreboardId) return;
+
+    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
+      scoreboardId,
+      {
+        onScoreboardChange: () => {
+          loadScoreboard();
+        },
+        onEntriesChange: () => {
+          // Entries are handled by ScoreboardInteractive
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, [isHydrated, scoreboardId]);
 
   useEffect(() => {
     if (scoreboard) {
       const styles = getAppliedScoreboardStyles(scoreboard, 'main');
       // Fallback to Light preset if styles is null
-      setAppliedStyles(styles || getAppliedScoreboardStyles({ customStyles: undefined, styleScope: 'main' }, 'main'));
+      setAppliedStyles(styles || getStylePreset('light'));
     } else {
-      setAppliedStyles(getAppliedScoreboardStyles({ customStyles: undefined, styleScope: 'main' }, 'main'));
+      setAppliedStyles(getStylePreset('light'));
     }
   }, [scoreboard]);
 
@@ -69,13 +88,14 @@ const ScoreboardViewLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div
+      className="min-h-screen flex flex-col"
+      style={appliedStyles?.backgroundColor ? { backgroundColor: appliedStyles.backgroundColor } : undefined}
+    >
       <Header isAuthenticated={false} customStyles={appliedStyles} />
-      
       <main className="pt-16 flex-1">
-        <ScoreboardInteractive />
+        <ScoreboardInteractive scoreboard={scoreboard} appliedStyles={appliedStyles} />
       </main>
-
       <Footer customStyles={appliedStyles} />
     </div>
   );
