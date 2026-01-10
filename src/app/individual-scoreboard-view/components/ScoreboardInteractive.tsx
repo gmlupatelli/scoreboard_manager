@@ -19,17 +19,18 @@ interface EntryWithRank extends ScoreboardEntry {
   rank: number;
 }
 
-const ScoreboardInteractive: React.FC = () => {
-  const searchParams = useSearchParams();
-  const scoreboardId = searchParams?.get('id') || null;
-  
+interface ScoreboardInteractiveProps {
+  scoreboard: Scoreboard | null;
+  appliedStyles: ScoreboardCustomStyles | null;
+}
+
+const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboard, appliedStyles }) => {
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(50);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
   const [entries, setEntries] = useState<ScoreboardEntry[]>([]);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -41,93 +42,50 @@ const ScoreboardInteractive: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Load only entries (for real-time updates - no flash)
-  const loadEntriesOnly = async () => {
-    if (!scoreboardId) return;
-    
-    try {
-      const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
-      
-      if (entriesError) {
-        return;
-      }
-
-      setEntries(entriesData || []);
-    } catch {
-    }
-  };
-
-  // Load full scoreboard data (initial load or scoreboard metadata changes)
-  const loadScoreboardData = async () => {
-    if (!scoreboardId) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const { data: scoreboardData, error: scoreboardError } = await scoreboardService.getScoreboard(scoreboardId);
-      
-      if (scoreboardError) {
-        setError(scoreboardError.message || 'Failed to load scoreboard');
-        setIsLoading(false);
-        return;
-      }
-
-      if (!scoreboardData) {
-        setError('Scoreboard not found');
-        setIsLoading(false);
-        return;
-      }
-
-      setScoreboard(scoreboardData);
-
-      const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
-      
-      if (entriesError) {
-        setError(entriesError.message || 'Failed to load entries');
-        setIsLoading(false);
-        return;
-      }
-
-      setEntries(entriesData || []);
-      setError(null);
-    } catch (err) {
-      setError('Failed to load scoreboard data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Load scoreboard and entries from Supabase
+  // Only load entries (not scoreboard) here
   useEffect(() => {
-    if (!isHydrated || !scoreboardId) {
-      if (isHydrated && !scoreboardId) {
+    if (!isHydrated || !scoreboard?.id) {
+      if (isHydrated && !scoreboard?.id) {
         setError('No scoreboard ID provided');
         setIsLoading(false);
       }
       return;
     }
-    
-    loadScoreboardData();
 
-    // Set up real-time subscription with separate callbacks
+    const loadEntriesOnly = async () => {
+      try {
+        const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboard.id);
+        if (entriesError) {
+          setError(entriesError.message || 'Failed to load entries');
+          setIsLoading(false);
+          return;
+        }
+        setEntries(entriesData || []);
+        setError(null);
+      } catch {
+        setError('Failed to load entries');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEntriesOnly();
+
+    // Set up real-time subscription for entries only
     const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
-      scoreboardId,
+      scoreboard.id,
       {
-        onScoreboardChange: () => {
-          loadScoreboardData();
-        },
+        onScoreboardChange: () => {}, // parent will handle scoreboard changes
         onEntriesChange: () => {
           loadEntriesOnly();
         }
       }
     );
 
-    // Cleanup subscription on unmount or when scoreboardId changes
     return () => {
       unsubscribe();
     };
-  }, [isHydrated, scoreboardId]);
+  }, [isHydrated, scoreboard]);
 
   const sortedEntries = useMemo(() => {
     const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
@@ -173,17 +131,9 @@ const ScoreboardInteractive: React.FC = () => {
     }
   };
 
-  const shouldApplyStyles = (scope?: 'main' | 'embed' | 'both') => {
-    return scope === 'main' || scope === 'both';
-  };
-
-  const getAppliedStyles = (): ScoreboardCustomStyles | null => {
-    return getAppliedScoreboardStyles(scoreboard, 'main');
-  };
-
   if (!isHydrated || isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
         <main className="pt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <LoadingSkeleton />
@@ -195,7 +145,7 @@ const ScoreboardInteractive: React.FC = () => {
 
   if (error || !scoreboard) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
         <main className="pt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <ErrorDisplay message={error || 'Scoreboard not found'} />
@@ -205,7 +155,7 @@ const ScoreboardInteractive: React.FC = () => {
     );
   }
 
-  const appliedStyles = getAppliedStyles();
+  // appliedStyles is now managed by state and useEffect above
 
   return (
     <>

@@ -126,9 +126,13 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
               <Icon name="InformationCircleIcon" size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-1">How styling works</p>
-                <p>
+                <p className="mb-2">
                   Choose a preset theme or customize individual colors. You can apply styles to just the embedded 
                   version, the main public view, or both. Changes are saved automatically when you click Save.
+                </p>
+                <p className="mb-2">
+                  Colors accept HEX (#ffffff), RGBA (rgba(255, 255, 255, 0.8)), or the keyword "transparent" 
+                  for see-through backgrounds.
                 </p>
               </div>
             </div>
@@ -306,11 +310,9 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
               Preview
             </label>
             <div 
-              className="p-4 rounded-lg border overflow-hidden"
+              className="p-4"
               style={{
                 backgroundColor: customStyles.backgroundColor,
-                borderColor: customStyles.borderColor,
-                borderRadius: customStyles.borderRadius,
                 fontFamily: customStyles.fontFamily,
               }}
             >
@@ -325,7 +327,13 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
                   Preview of your style settings
                 </p>
               </div>
-              <table className="w-full text-sm">
+              <table 
+                className="w-full text-sm overflow-hidden"
+                style={{
+                  borderRadius: customStyles.borderRadius,
+                  border: `1px solid ${customStyles.borderColor}`
+                }}
+              >
                 <thead>
                   <tr style={{ backgroundColor: customStyles.headerColor }}>
                     <th className="px-3 py-2 text-left" style={{ color: customStyles.headerTextColor }}>Rank</th>

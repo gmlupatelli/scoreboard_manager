@@ -5,12 +5,45 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Project Status
 - **Current State**: Fully configured and running on Replit
-- **Last Updated**: January 9, 2026
+- **Last Updated**: January 10, 2026
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+
+### January 10, 2026 - Custom Scoreboard Styling & Security Fixes
+- **Custom Styles Feature**: Full customization of scoreboard appearance
+  - 6 preset themes: Light (default), Dark, Transparent, High Contrast, Minimal, Brand Colors
+  - 18 customizable properties: background color, text color, header color, borders, fonts, etc.
+  - Rank customization: colors and icons for 1st, 2nd, 3rd place
+  - Style scope options: Main View Only, Embed Only, or Both Views
+  - Live preview in management UI with sample scoreboard
+  - Support for HEX (#ffffff), RGBA (rgba(255,255,255,0.8)), and "transparent" keyword
+- **Applied custom styles to**:
+  - Header component (navigation, buttons, user menu)
+  - Footer component
+  - Scoreboard header (title, description, total entries)
+  - Main scoreboard view layout and interactive components
+  - Embedded scoreboard view
+- **Security hardening**:
+  - Removed exposed .env file from git history using filter-branch
+  - Redacted Supabase project IDs from documentation
+  - Consolidated .gitignore files and added .env.local to ignore list
+  - Created .env.example template for developers
+- **Bug fixes**:
+  - Fixed double background color issue in main scoreboard view
+  - Fixed style scope reactivity (styles now update immediately when scope changes)
+  - Fixed custom text color application to all header text elements
+  - Fixed corner roundness preview in management UI (now applies to table, not container)
+  - Added Light preset fallback when custom styles don't apply to current scope
+- **TypeScript improvements**:
+  - Installed missing type declarations (@types/react, @types/react-dom, @types/node)
+  - Resolved 272+ TypeScript compilation errors
+- **Architecture improvements**:
+  - Refactored ScoreboardViewLayout as single source of truth for scoreboard and styles
+  - Added real-time subscriptions for style scope changes
+  - Props-based styling with conditional Tailwind classes as defaults
 
 ### January 9, 2026 - Time-Based Scoreboards & Flexible Score Types
 - Added flexible score types: number (default) or time-based scoreboards
@@ -236,8 +269,8 @@ The Supabase database includes:
 The Supabase CLI is installed and configured for database migrations.
 
 ### Project References
-- **Development**: `kvorvygjgeelhybnstje`
-- **Production**: `bfbvcmfezdhdotmbgxsn`
+- **Development**: `supabase_project_ref_dev`
+- **Production**: `supabase_project_ref_prod`
 
 ### Running Migrations
 ```bash
