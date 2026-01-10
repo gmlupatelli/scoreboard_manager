@@ -25,7 +25,7 @@ interface StyleCustomizationSectionProps {
   onToggleExpanded: (expanded: boolean) => void;
 }
 
-const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
+export default function StyleCustomizationSection({
   currentStyles,
   currentScope,
   onSave,
@@ -33,7 +33,7 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
   scoreboardId,
   isExpanded,
   onToggleExpanded,
-}) => {
+}: StyleCustomizationSectionProps) {
   const [selectedPreset, setSelectedPreset] = useState<string>(currentStyles?.preset || 'light');
   const [customStyles, setCustomStyles] = useState<ScoreboardCustomStyles>(
     currentStyles || getStylePreset('light')
@@ -427,6 +427,4 @@ const StyleCustomizationSection: React.FC<StyleCustomizationSectionProps> = ({
       )}
     </div>
   );
-};
-
-export default StyleCustomizationSection;
+}

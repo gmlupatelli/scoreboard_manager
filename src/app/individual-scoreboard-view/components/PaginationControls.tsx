@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { Fragment } from 'react';
 import Icon from '@/components/ui/AppIcon';
 
 interface PaginationControlsProps {
@@ -11,13 +11,13 @@ interface PaginationControlsProps {
   totalEntries: number;
 }
 
-const PaginationControls: React.FC<PaginationControlsProps> = ({
+export default function PaginationControls({
   currentPage,
   totalPages,
   onPageChange,
   entriesPerPage,
   totalEntries,
-}) => {
+}: PaginationControlsProps) {
   const startEntry = (currentPage - 1) * entriesPerPage + 1;
   const endEntry = Math.min(currentPage * entriesPerPage, totalEntries);
 
@@ -95,7 +95,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
 
         <div className="hidden md:flex items-center space-x-1">
           {getPageNumbers().map((page, index) => (
-            <React.Fragment key={index}>
+            <Fragment key={index}>
               {page === '...' ? (
                 <span className="px-3 py-2 text-text-secondary">...</span>
               ) : (
@@ -112,7 +112,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
                   {page}
                 </button>
               )}
-            </React.Fragment>
+            </Fragment>
           ))}
         </div>
 
@@ -138,6 +138,4 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
       </div>
     </div>
   );
-};
-
-export default PaginationControls;
+}

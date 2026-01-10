@@ -1,4 +1,3 @@
-import React from 'react';
 import { ScoreboardCustomStyles } from '@/types/models';
 
 interface ScoreboardHeaderProps {
@@ -8,7 +7,7 @@ interface ScoreboardHeaderProps {
   customStyles?: ScoreboardCustomStyles | null;
 }
 
-const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description, totalEntries, customStyles }) => {
+export default function ScoreboardHeader({ title, description, totalEntries, customStyles }: ScoreboardHeaderProps) {
   return (
     <div 
       className="border-b"
@@ -61,6 +60,4 @@ const ScoreboardHeader: React.FC<ScoreboardHeaderProps> = ({ title, description,
       </div>
     </div>
   );
-};
-
-export default ScoreboardHeader;
+}

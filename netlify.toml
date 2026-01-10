@@ -1,0 +1,40 @@
+# Netlify Configuration
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  command = "npm run build:prod"
+  publish = ".next"
+
+[build.environment]
+  # Node version for compatibility
+  NODE_VERSION = "20"
+
+# Install Supabase CLI before build
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Custom build lifecycle hook to install Supabase CLI
+[build.processing]
+  skip_processing = false
+
+# Production settings - runs migrations before build
+[context.production]
+  command = "curl -sSL https://github.com/supabase/cli/releases/download/v1.200.3/supabase_1.200.3_linux_amd64.tar.gz | tar -xz && chmod +x supabase && ./supabase link --project-ref \"$SUPABASE_PROJECT_REF_PROD\" && ./supabase db push && npm run build"
+  
+[context.production.environment]
+  NEXT_PUBLIC_SITE_URL = "https://myscoreboardmanager.netlify.app"
+
+# Dev branch settings (uses dev Supabase project - migrations applied manually)
+[context.dev]
+  command = "npm run build"
+  
+[context.dev.environment]
+  NEXT_PUBLIC_SITE_URL = "https://dev--myscoreboardmanager.netlify.app"
+
+# Deploy preview settings (no migrations)
+[context.deploy-preview]
+  command = "npm run build"
+
+# Branch deploy settings (no migrations)
+[context.branch-deploy]
+  command = "npm run build"

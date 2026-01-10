@@ -56,7 +56,7 @@ const rgbaToString = (rgba: RgbaColor): string => {
   }
 };
 
-const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, label }) => {
+export default function ColorPicker({ value, onChange, label }: ColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [rgbaColor, setRgbaColor] = useState(parseColor(value || '#ffffff'));
   const [textInput, setTextInput] = useState(value || '#ffffff');
@@ -178,6 +178,4 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ value, onChange, label }) => 
       )}
     </div>
   );
-};
-
-export default ColorPicker;
+}

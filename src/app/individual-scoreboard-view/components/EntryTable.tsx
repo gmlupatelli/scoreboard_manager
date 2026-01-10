@@ -1,4 +1,3 @@
-import React from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { ScoreboardCustomStyles, ScoreType, TimeFormat } from '@/types/models';
 import { formatScoreDisplay } from '@/utils/timeUtils';
@@ -17,7 +16,7 @@ interface EntryTableProps {
   timeFormat?: TimeFormat | null;
 }
 
-const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles, scoreType = 'number', timeFormat = null }) => {
+export default function EntryTable({ entries, customStyles, scoreType = 'number', timeFormat = null }: EntryTableProps) {
   const getRankColor = (rank: number): string | undefined => {
     if (customStyles) {
       if (rank === 1) return customStyles.rank1Color || '#ca8a04';
@@ -120,6 +119,4 @@ const EntryTable: React.FC<EntryTableProps> = ({ entries, customStyles, scoreTyp
       </table>
     </div>
   );
-};
-
-export default EntryTable;
+}

@@ -24,7 +24,7 @@ interface ScoreboardInteractiveProps {
   appliedStyles: ScoreboardCustomStyles | null;
 }
 
-const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboard, appliedStyles }) => {
+export default function ScoreboardInteractive({ scoreboard, appliedStyles }: ScoreboardInteractiveProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -246,6 +246,4 @@ const ScoreboardInteractive: React.FC<ScoreboardInteractiveProps> = ({ scoreboar
       </div>
     </>
   );
-};
-
-export default ScoreboardInteractive;
+}

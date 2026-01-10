@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Icon from '@/components/ui/AppIcon';
 
 interface ErrorDisplayProps {
@@ -8,7 +7,7 @@ interface ErrorDisplayProps {
   onRetry?: () => void;
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message, onRetry }) => {
+export default function ErrorDisplay({ message, onRetry }: ErrorDisplayProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mb-6">
@@ -27,6 +26,4 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ message, onRetry }) => {
       )}
     </div>
   );
-};
-
-export default ErrorDisplay;
+}

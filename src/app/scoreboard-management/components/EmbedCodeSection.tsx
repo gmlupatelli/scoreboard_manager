@@ -10,12 +10,12 @@ interface EmbedCodeSectionProps {
   onToggleExpanded: (expanded: boolean) => void;
 }
 
-const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
+export default function EmbedCodeSection({
   scoreboardId,
   scoreboardTitle,
   isExpanded,
   onToggleExpanded,
-}) => {
+}: EmbedCodeSectionProps) {
   const [copied, setCopied] = useState(false);
   const [embedWidth, setEmbedWidth] = useState('100%');
   const [embedHeight, setEmbedHeight] = useState('600');
@@ -222,6 +222,4 @@ const EmbedCodeSection: React.FC<EmbedCodeSectionProps> = ({
       )}
     </div>
   );
-};
-
-export default EmbedCodeSection;
+}

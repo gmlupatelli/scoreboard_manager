@@ -1,6 +1,4 @@
-import React from 'react';
-
-const LoadingSkeleton: React.FC = () => {
+export default function LoadingSkeleton() {
   return (
     <div className="animate-pulse">
       <div className="bg-surface border-b border-border">
@@ -51,6 +49,4 @@ const LoadingSkeleton: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default LoadingSkeleton;
+}

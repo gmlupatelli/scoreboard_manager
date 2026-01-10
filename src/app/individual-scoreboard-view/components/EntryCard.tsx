@@ -1,4 +1,3 @@
-import React from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { ScoreboardCustomStyles, ScoreType, TimeFormat } from '@/types/models';
 import { formatScoreDisplay } from '@/utils/timeUtils';
@@ -13,7 +12,7 @@ interface EntryCardProps {
   index?: number;
 }
 
-const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles, scoreType = 'number', timeFormat = null, index = 0 }) => {
+export default function EntryCard({ rank, name, score, customStyles, scoreType = 'number', timeFormat = null, index = 0 }: EntryCardProps) {
   const getPerRankColor = (rank: number): string => {
     if (customStyles) {
       if (rank === 1) return customStyles.rank1Color || '#ca8a04';
@@ -102,6 +101,4 @@ const EntryCard: React.FC<EntryCardProps> = ({ rank, name, score, customStyles, 
       </div>
     </div>
   );
-};
-
-export default EntryCard;
+}

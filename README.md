@@ -12,6 +12,13 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 10, 2026 - Git Workflow & Supabase CLI Integration
+- Created comprehensive Git workflow guide at `.github/GIT_WORKFLOW.md`
+- Documented branch strategy (main → production, dev → staging, feature branches)
+- Added Supabase CLI setup and migration instructions
+- Updated `.env.example` with CLI environment variables
+- See [Database Migrations](#database-migrations) section below for workflow
+
 ### January 10, 2026 - Advanced Styling & UX Improvements
 - Added **Alternate Row Text Color** custom property for better readability in alternating table rows
   - Property added to all 6 style presets (light, dark, transparent, high-contrast, minimal, custom)

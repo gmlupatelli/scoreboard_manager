@@ -10,7 +10,7 @@ import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardCustomStyles } from '@/types/models';
 import { getAppliedScoreboardStyles, getStylePreset } from '@/utils/stylePresets';
 
-const ScoreboardViewLayout: React.FC = () => {
+export default function ScoreboardViewLayout() {
   const searchParams = useSearchParams();
   const scoreboardId = searchParams?.get('id') || null;
   
@@ -99,6 +99,4 @@ const ScoreboardViewLayout: React.FC = () => {
       <Footer customStyles={appliedStyles} />
     </div>
   );
-};
-
-export default ScoreboardViewLayout;
+}

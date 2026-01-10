@@ -1,11 +1,10 @@
-import React from 'react';
 import Icon from '@/components/ui/AppIcon';
 
 interface EmptyStateProps {
   searchQuery?: string;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ searchQuery }) => {
+export default function EmptyState({ searchQuery }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mb-6">
@@ -21,6 +20,4 @@ const EmptyState: React.FC<EmptyStateProps> = ({ searchQuery }) => {
       </p>
     </div>
   );
-};
-
-export default EmptyState;
+}
