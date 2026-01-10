@@ -13,7 +13,7 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ScoreboardHeader from './ScoreboardHeader';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
-import { getStylePreset } from '@/utils/stylePresets';
+import { getAppliedScoreboardStyles } from '@/utils/stylePresets';
 
 interface EntryWithRank extends ScoreboardEntry {
   rank: number;
@@ -178,22 +178,7 @@ const ScoreboardInteractive: React.FC = () => {
   };
 
   const getAppliedStyles = (): ScoreboardCustomStyles | null => {
-    const lightPreset = getStylePreset('light');
-    
-    if (!scoreboard?.customStyles) {
-      return null;
-    }
-    
-    if (!shouldApplyStyles(scoreboard.styleScope)) {
-      return null;
-    }
-    
-    if (scoreboard.customStyles.preset) {
-      const presetStyles = getStylePreset(scoreboard.customStyles.preset);
-      return { ...presetStyles, ...scoreboard.customStyles };
-    }
-    
-    return { ...lightPreset, ...scoreboard.customStyles };
+    return getAppliedScoreboardStyles(scoreboard, 'main');
   };
 
   if (!isHydrated || isLoading) {
