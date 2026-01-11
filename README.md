@@ -12,11 +12,33 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 10, 2026 - JWT Migration & Build Safety Improvements
+- **Migrated to modern JWT signing keys** (ECC P-256) from legacy shared secrets
+  - Enabled JWT signing keys in both Dev and Prod Supabase projects
+  - Generated new publishable and secret API keys for enhanced security
+  - Updated all 20+ files to use modern key nomenclature
+- **Renamed environment variables for consistency**:
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY` → `SUPABASE_SECRET_KEY`
+- **Implemented build-safe Supabase client initialization**:
+  - Added empty string fallbacks for missing environment variables during build
+  - Implemented runtime error guards in middleware, auth callback, and client pages
+  - Prevents build failures when env vars missing (Netlify/CI/CD compatibility)
+  - Graceful error handling instead of cryptic crashes
+- **Fixed Netlify automated migrations**:
+  - Updated Supabase CLI download URL to use latest release endpoint
+  - Added fail-fast curl flags for better error reporting
+  - Automated production database migrations via Netlify build hooks
+- **Consolidated environment variables**:
+  - Merged `SUPABASE_PROJECT_REF_DEV` and `SUPABASE_PROJECT_REF_PROD` into single `SUPABASE_PROJECT_REF`
+  - Context-specific values set in Netlify (Production vs Deploy Previews)
+
 ### January 10, 2026 - Git Workflow & Supabase CLI Integration
 - Created comprehensive Git workflow guide at `.github/GIT_WORKFLOW.md`
+- Created JWT migration checklist at `docs/JWT_MIGRATION_CHECKLIST.md`
 - Documented branch strategy (main → production, dev → staging, feature branches)
 - Added Supabase CLI setup and migration instructions
-- Updated `.env.example` with CLI environment variables
+- Updated `.env.example` with modern key names and CLI environment variables
 - See [Database Migrations](#database-migrations) section below for workflow
 
 ### January 10, 2026 - Advanced Styling & UX Improvements
@@ -150,8 +172,17 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ### Required Environment Variables
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Supabase publishable key
-- `SUPABASE_SECRET_KEY`: Secret key for admin operations (invitation emails)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Supabase publishable key (modern) or anon key (legacy)
+- `SUPABASE_SECRET_KEY`: Secret key for admin operations (modern) or service_role key (legacy)
+- `SUPABASE_PROJECT_REF`: Project reference ID for Supabase CLI migrations
+- `SUPABASE_ACCESS_TOKEN`: Personal access token for Supabase CLI (production migrations only)
+- `SUPABASE_DB_PASSWORD`: Database password for Supabase CLI (production migrations only)
+
+### Security Notes
+- **JWT Signing Keys**: Application uses modern ECC P-256 signing keys (enabled January 10, 2026)
+- **API Keys**: Publishable key is safe for client-side use; Secret key must never be exposed
+- **Build Safety**: Application can build without environment variables (uses empty string fallbacks)
+- **Runtime Guards**: Graceful error handling when configuration is missing
 
 ## Development
 
@@ -164,6 +195,8 @@ The application runs automatically via the configured workflow:
 ### Available Scripts
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
+- `npm run build:prod` - Build with production database migrations (Netlify only)
+- `npm run migrate:prod` - Run Supabase migrations on production
 - `npm run start` - Start production server
 - `npm run serve` - Start production server (alias)
 - `npm run lint` - Run ESLint
@@ -171,10 +204,29 @@ The application runs automatically via the configured workflow:
 - `npm run format` - Format code with Prettier
 
 ## Deployment
-The application is configured for Replit deployment with:
+
+### Netlify Deployment (Production)
+The application is deployed to Netlify with automated database migrations:
+- **Site**: https://myscoreboardmanager.netlify.app
+- **Build Command**: Automated via `netlify.toml` (downloads Supabase CLI, runs migrations, builds app)
+- **Deploy Contexts**:
+  - **Production** (main branch): Uses prod Supabase project, runs migrations automatically
+  - **Deploy Previews**: Uses dev Supabase project, standard build only
+  - **Branch Deploys**: Uses dev Supabase project, standard build only
+- **Environment Variables Required**:
+  - `NEXT_PUBLIC_SUPABASE_URL` (all contexts)
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (all contexts)
+  - `SUPABASE_SECRET_KEY` (all contexts)
+  - `SUPABASE_PROJECT_REF` (context-specific: prod for Production, dev for others)
+  - `SUPABASE_ACCESS_TOKEN` (production only, for migrations)
+  - `SUPABASE_DB_PASSWORD` (production only, for migrations)
+
+### Replit Deployment (Development)
+The application can also run on Replit:
 - **Target**: Autoscale
 - **Build Command**: `npm run build`
 - **Run Command**: `npm run serve`
+- **Port**: 5000 (configured for Replit proxy)
 
 ## File Structure
 ```
