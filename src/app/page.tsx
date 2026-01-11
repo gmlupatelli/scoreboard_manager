@@ -66,24 +66,24 @@ const TestimonialCard = ({ quote, author, role }: TestimonialCardProps) => (
 export default function Home() {
   const features = [
     {
-      icon: 'BoltIcon',
-      title: 'Real-Time Updates',
-      description: 'Instant scoreboard updates that sync across all devices automatically. Never miss a score change with our live update technology.'
+      icon: 'PaintBrushIcon',
+      title: 'Custom Branding & Styling',
+      description: 'Personalize your scoreboards with custom colors, fonts, and logos. Match your brand identity perfectly with our flexible design system.'
     },
     {
-      icon: 'Cog6ToothIcon',
-      title: 'Easy Management',
-      description: 'Create and manage unlimited scoreboards with our intuitive admin dashboard. No technical skills required.'
+      icon: 'ClockIcon',
+      title: 'Flexible Score Formats',
+      description: 'Support for numbers, times, and custom formats. Track everything from race times to game points with built-in format converters.'
     },
     {
-      icon: 'GlobeAltIcon',
-      title: 'Public Access',
-      description: 'Share scoreboards with anyone via simple public links. Perfect for tournaments, events, and competitions.'
+      icon: 'CodeBracketIcon',
+      title: 'Embed Anywhere',
+      description: 'One-click embed codes for any website. Display your scoreboard seamlessly on your site with responsive iframe integration.'
     },
     {
-      icon: 'ShieldCheckIcon',
-      title: 'Secure & Reliable',
-      description: 'Enterprise-grade security with role-based access control. Your data is always protected and backed up.'
+      icon: 'UserGroupIcon',
+      title: 'Team Collaboration',
+      description: 'Invite collaborators with specific permissions. Manage access levels for editors and viewers to streamline team workflows.'
     },
     {
       icon: 'DevicePhoneMobileIcon',
@@ -91,9 +91,9 @@ export default function Home() {
       description: 'Fully responsive design works flawlessly on any device. Manage scoreboards on the go from your smartphone.'
     },
     {
-      icon: 'ChartBarIcon',
-      title: 'Advanced Analytics',
-      description: 'Track performance trends and generate detailed reports. Make data-driven decisions with comprehensive insights.'
+      icon: 'BoltIcon',
+      title: 'Zero Setup Required',
+      description: 'Start tracking scores in seconds. No installation, no configuration - just sign up and create your first scoreboard instantly.'
     }
   ];
 
@@ -187,58 +187,56 @@ export default function Home() {
             </div>
             <div className="relative">
               <div className="bg-surface border border-border rounded-2xl p-6 elevation-2">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                        <Icon name="TrophyIcon" size={20} className="text-white" />
-                      </div>
                       <div>
                         <p className="font-semibold text-text-primary">Q4 Sales Performance</p>
                         <p className="text-sm text-text-secondary">Top Performers</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 px-3 py-1 bg-success/10 rounded-full">
-                      <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                      <span className="text-xs font-semibold text-success">LIVE</span>
-                    </div>
+
                   </div>
-                  <div className="space-y-3 pt-2">
-                    <div className="flex items-center justify-between p-3 bg-warning/10 rounded-lg border border-warning/20">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-warning flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">1</span>
-                        </div>
-                        <span className="font-medium text-text-primary">Sarah Johnson</span>
+
+                  {/* Table Header */}
+                  <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 border-b border-border">
+                    <span className="text-xs font-semibold text-text-secondary uppercase">Rank</span>
+                    <span className="text-xs font-semibold text-text-secondary uppercase">Name</span>
+                    <span className="text-xs font-semibold text-text-secondary uppercase text-right">Score</span>
+                  </div>
+
+                  {/* Table Rows */}
+                  <div className="divide-y divide-border">
+                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center">
+                        <Icon name="TrophyIcon" size={24} className="text-warning" />
+                        <span className="ml-2 font-semibold text-text-primary">#1</span>
                       </div>
-                      <span className="text-lg font-bold text-primary">98,500</span>
+                      <span className="font-medium text-text-primary">Sarah Johnson</span>
+                      <span className="text-lg font-bold text-primary text-right">98,500</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-text-secondary flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">2</span>
-                        </div>
-                        <span className="font-medium text-text-primary">Michael Chen</span>
+                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center">
+                        <Icon name="TrophyIcon" size={24} className="text-text-secondary" />
+                        <span className="ml-2 font-semibold text-text-primary">#2</span>
                       </div>
-                      <span className="text-lg font-bold text-text-primary">87,200</span>
+                      <span className="font-medium text-text-primary">Michael Chen</span>
+                      <span className="text-lg font-bold text-primary text-right">87,200</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                          <span className="text-sm font-bold text-white">3</span>
-                        </div>
-                        <span className="font-medium text-text-primary">Emily Rodriguez</span>
+                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center">
+                        <Icon name="TrophyIcon" size={24} className="text-secondary" />
+                        <span className="ml-2 font-semibold text-text-primary">#3</span>
                       </div>
-                      <span className="text-lg font-bold text-text-primary">76,800</span>
+                      <span className="font-medium text-text-primary">Emily Rodriguez</span>
+                      <span className="text-lg font-bold text-primary text-right">76,800</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-border flex items-center justify-center">
-                          <span className="text-sm font-bold text-text-secondary">4</span>
-                        </div>
-                        <span className="font-medium text-text-secondary">David Kim</span>
+                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center">
+                        <span className="ml-2 font-semibold text-text-primary">#4</span>
                       </div>
-                      <span className="text-lg font-bold text-text-secondary">65,400</span>
+                      <span className="font-medium text-text-primary">David Kim</span>
+                      <span className="text-lg font-bold text-primary text-right">65,400</span>
                     </div>
                   </div>
                 </div>
