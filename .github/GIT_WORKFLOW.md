@@ -311,8 +311,8 @@ Production database migrations are **automatically applied** during Netlify depl
 1. Migration files in `supabase/migrations/` are committed to git
 2. Push to `main` branch triggers Netlify production build
 3. Netlify build process:
-   - Downloads and installs Supabase CLI
-   - Links to production project using `SUPABASE_PROJECT_REF_PROD`
+   - Installs Supabase CLI via npx (no download/extraction issues)
+   - Links to production project using `SUPABASE_PROJECT_REF`
    - Runs `supabase db push` to apply new migrations
    - Builds the Next.js app with `npm run build`
 4. If migration fails → build fails → production stays on previous version ✅
@@ -321,12 +321,13 @@ Production database migrations are **automatically applied** during Netlify depl
 These must be set in Netlify (**Site settings** → **Environment variables** → **Production** scope):
 - `SUPABASE_ACCESS_TOKEN` - Your personal access token (starts with `sbp_`)
 - `SUPABASE_DB_PASSWORD` - Production database password
-- `SUPABASE_PROJECT_REF_PROD` - Production project ref: `bfbvcmfezdhdotmbgxsn`
+- `SUPABASE_PROJECT_REF` - Production project ref: `bfbvcmfezdhdotmbgxsn`
 
 #### **Important Notes:**
 - ✅ **Always test migrations in dev first** before merging to main
 - ✅ **Migrations are atomic** - failed migrations prevent bad deployments
 - ✅ **Safe rollback** - redeploy previous version in Netlify dashboard
+- ✅ **Uses npm-based CLI** - more stable than binary downloads
 - ⚠️ **Breaking schema changes** - consider multi-phase migrations
 - ⚠️ **Data migrations** - test thoroughly in dev, backup production first
 
@@ -497,6 +498,7 @@ git checkout main
 git merge dev
 git push origin main
 # Netlify automatically:
+# - Installs Supabase CLI via npx
 # - Applies migration to production database
 # - Builds and deploys the app
 # Production: https://myscoreboardmanager.netlify.app
@@ -506,6 +508,7 @@ git push origin main
 - ✅ **Always test migrations in dev first** before merging to main
 - ✅ **Migrations run before app build** - failed migrations prevent bad deploys
 - ✅ **Build logs show migration status** - check Netlify deploy logs if issues occur
+- ✅ **npm-based CLI** - more reliable than binary downloads
 - ⚠️ **Breaking migrations need phases** - add column first, then update code
 - ⚠️ **No rollback automation** - database changes persist even if deploy fails
 
