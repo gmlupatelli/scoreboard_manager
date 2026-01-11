@@ -12,6 +12,27 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 11, 2026 - Mobile Optimization & E2E Testing
+- **Comprehensive mobile responsiveness** targeting minimum viewport of 320px (iPhone SE)
+  - Optimized all modals for iPhone SE with responsive padding and stacked buttons
+  - Fixed ScoreboardCard metadata wrapping and increased touch targets to 20px (44x44px minimum)
+  - Added landscape orientation support with custom Tailwind variant (`landscape-mobile`)
+  - Adjusted breakpoints to treat tablets (1024px+) as desktop view
+- **Swipe gesture system** with Pointer Events API and touch fallback
+  - Direction locking (35° threshold), progressive feedback (30fps throttling)
+  - 120px swipe threshold with online status validation
+  - RTL-aware swipe directions for bidirectional language support
+- **Undo toast system** with batching and 5-second timers
+  - 3-toast stacking with countdown progress bars
+  - Batch actions (4+ within 2 seconds) to reduce notification spam
+  - Navigation cancellation for clean UX
+- **Invitations page conversion** to responsive card view with swipe-to-cancel
+- **Playwright E2E testing infrastructure**
+  - 9 device profiles: Desktop (Chrome/Firefox/Safari), Tablet, Mobile (iPhone 12/SE/Minimum/Landscape), Android
+  - 3 comprehensive test suites: mobile.spec.ts, desktop.spec.ts, accessibility.spec.ts
+  - Tests cover: touch interactions, swipe gestures, keyboard navigation, WCAG compliance, RTL support
+  - Manual testing checklist for 320px viewport validation
+
 ### January 10, 2026 - JWT Migration & Build Safety Improvements
 - **Migrated to modern JWT signing keys** (ECC P-256) from legacy shared secrets
   - Enabled JWT signing keys in both Dev and Prod Supabase projects
@@ -202,6 +223,64 @@ The application runs automatically via the configured workflow:
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint issues
 - `npm run format` - Format code with Prettier
+- `npm run type-check` - TypeScript type checking
+- `npm run test:e2e` - Run Playwright E2E tests
+- `npm run test:e2e:ui` - Run Playwright tests in UI mode
+- `npm run test:e2e:debug` - Run Playwright tests in debug mode
+
+## Testing
+
+### E2E Testing with Playwright
+The application includes comprehensive end-to-end tests using Playwright.
+
+> **📖 Full Testing Documentation**: See [e2e/README.md](e2e/README.md) for comprehensive testing guide including:
+> - Manual testing checklist (320px viewport)
+> - CI/CD integration details
+> - Debugging tips and troubleshooting
+> - Known limitations and contributing guidelines
+
+**Setup:**
+```bash
+npm install
+npx playwright install
+
+# Linux/WSL only (install system dependencies)
+sudo npx playwright install-deps
+```
+
+**Running Tests:**
+```bash
+# All tests
+npm run test:e2e
+
+# Interactive UI mode
+npm run test:e2e:ui
+
+# Debug mode
+npm run test:e2e:debug
+
+# Specific test file
+npx playwright test e2e/mobile.spec.ts
+
+# Specific browser/device
+npx playwright test --project="Desktop Chrome"
+npx playwright test --project="Mobile iPhone SE"
+```
+
+**Test Coverage:**
+- **Mobile Tests** (`e2e/mobile.spec.ts`): Touch targets (44x44px), swipe gestures, landscape orientation, 320px viewport
+- **Desktop Tests** (`e2e/desktop.spec.ts`): Auth flows, CRUD operations, keyboard navigation, real-time updates
+- **Accessibility Tests** (`e2e/accessibility.spec.ts`): WCAG compliance, ARIA labels, screen readers, focus management
+
+**Test Devices:**
+- Desktop: Chrome (1920x1080), Firefox (1920x1080), Safari (1920x1080)
+- Tablet: iPad Pro (1024x768)
+- Mobile: iPhone 12 (390x844), iPhone SE (375x667), Minimum (320x568), Landscape (844x390), Android Pixel 5 (393x851)
+
+**Documentation:**
+- Full testing guide: `e2e/README.md`
+- Manual testing checklist: `docs/mobile-testing-checklist.md`
+- Mobile optimization summary: `docs/mobile-optimization-summary.md`
 
 ## Deployment
 
@@ -239,9 +318,12 @@ The application can also run on Replit:
 │   │   ├── cookies/                  # Cookie policy
 │   │   ├── dashboard/                # User/Admin dashboard
 │   │   │   └── components/           # Dashboard components
+│   │   ├── embed/[id]/               # Embedded scoreboard view
 │   │   ├── forgot-password/          # Password reset request
 │   │   ├── individual-scoreboard-view/  # Single scoreboard display
 │   │   │   └── components/           # Scoreboard view components
+│   │   ├── invitations/              # User invitations
+│   │   │   └── components/           # Invitation cards
 │   │   ├── login/                    # Login page
 │   │   ├── privacy/                  # Privacy policy
 │   │   ├── public-scoreboard-list/   # Public scoreboard browsing
@@ -264,9 +346,12 @@ The application can also run on Replit:
 │   ├── components/
 │   │   ├── common/                   # Shared components
 │   │   │   ├── AuthStatusIndicator.tsx
+│   │   │   ├── ErrorBoundary.tsx
 │   │   │   ├── Footer.tsx
 │   │   │   ├── Header.tsx
-│   │   │   └── SearchInterface.tsx
+│   │   │   ├── SearchInterface.tsx
+│   │   │   ├── UndoToast.tsx         # Undo toast component
+│   │   │   └── UndoToastContainer.tsx
 │   │   └── ui/                       # UI primitives
 │   │       ├── AppIcon.tsx
 │   │       ├── AppImage.tsx
@@ -276,7 +361,9 @@ The application can also run on Replit:
 │   ├── contexts/
 │   │   └── AuthContext.tsx           # Authentication context
 │   ├── hooks/
-│   │   └── useInfiniteScroll.ts      # Infinite scroll hook
+│   │   ├── useInfiniteScroll.ts      # Infinite scroll hook
+│   │   ├── useSwipeGesture.ts        # Swipe gesture hook
+│   │   └── useUndoQueue.ts           # Undo queue management
 │   ├── lib/
 │   │   └── supabase/
 │   │       ├── client.ts             # Browser Supabase client
@@ -291,12 +378,24 @@ The application can also run on Replit:
 │   │   ├── database.types.ts         # Supabase types
 │   │   └── models.ts                 # App models
 │   └── utils/
-│       └── storage.ts                # Local storage utils
+│       ├── localStorage.ts           # Local storage utils
+│       ├── stylePresets.ts           # Style presets
+│       └── timeUtils.ts              # Time formatting utils
+├── e2e/                              # Playwright E2E tests
+│   ├── accessibility.spec.ts         # Accessibility tests
+│   ├── desktop.spec.ts               # Desktop tests
+│   ├── mobile.spec.ts                # Mobile tests
+│   └── README.md                     # Testing guide
+├── docs/                             # Documentation
+│   ├── mobile-optimization-summary.md
+│   ├── mobile-testing-checklist.md
+│   ├── JWT_MIGRATION_CHECKLIST.md
+│   └── supabase-email-templates.md
 ├── public/                           # Static assets
 ├── supabase/                         # Database migrations
-├── docs/                             # Documentation
 ├── middleware.ts                     # Next.js auth middleware
 ├── next.config.mjs                   # Next.js configuration
+├── playwright.config.ts              # Playwright configuration
 ├── tailwind.config.js                # Tailwind configuration
 ├── tsconfig.json                     # TypeScript configuration
 └── package.json                      # Dependencies
@@ -342,9 +441,15 @@ Place SQL migration files in `supabase/migrations/` with timestamp prefix (e.g.,
 - Real-time updates optimized for TV displays (no screen flashing)
 - Infinite scroll with 30 items per page for performance
 - Server-side search with 300ms debounce to reduce API calls
+- Mobile-first responsive design with 320px minimum viewport support
+- Touch targets meet WCAG 2.1 Level AA standards (44x44px minimum)
+- Landscape orientation optimized for mobile devices (<500px height)
 
 ## Technical Notes
 - Uses state-based node tracking in useInfiniteScroll hook for proper observer re-attachment
 - Debounced search uses direct state control (not SearchInterface component) to avoid double-debouncing
 - All database functions have SET search_path = public, pg_temp for security
 - Cache-Control headers prevent stale content in Replit's iframe proxy
+- Swipe gestures use Pointer Events API with touch event fallback for older Android devices
+- RTL language support via Tailwind custom variant and direction-aware swipe actions
+- Undo toast system batches rapid actions (4+ within 2 seconds) to reduce notification spam

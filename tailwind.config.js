@@ -110,5 +110,13 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addVariant }) {
+      // Add landscape-mobile variant for landscape orientation on mobile devices
+      addVariant('landscape-mobile', '@media (orientation: landscape) and (max-height: 500px)');
+      
+      // Add RTL support variant
+      addVariant('rtl', '[dir="rtl"] &');
+    }
+  ],
 };

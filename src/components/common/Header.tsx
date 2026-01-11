@@ -73,7 +73,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
   return (
     <header className="fixed top-0 left-0 right-0 z-[1000] border-b border-border bg-surface elevation-1" style={customStyles ? headerStyle : undefined}>
       <nav className="mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 landscape-mobile:h-12">
           <div className="flex items-center">
             <Link
               href={isAuthenticated ? '/dashboard' : '/'}

@@ -143,6 +143,7 @@ body (optional)
 - `test:` - Adding or updating tests
 - `chore:` - Maintenance tasks (dependencies, configs)
 - `perf:` - Performance improvements
+- `ci:` - CI/CD pipeline changes
 
 ### **Examples:**
 ```powershell
@@ -151,7 +152,70 @@ git commit -m "fix: standardize password minimum to 6 characters"
 git commit -m "refactor: improve localStorage error handling"
 git commit -m "docs: update README with deployment instructions"
 git commit -m "style: format code with Prettier"
+git commit -m "test: add Playwright E2E tests for mobile interactions"
 git commit -m "chore: update dependencies"
+```
+
+---
+
+## Testing
+
+### **Running E2E Tests**
+
+The project uses Playwright for comprehensive end-to-end testing.
+
+#### **Setup** (one-time)
+```powershell
+# Install dependencies
+npm install
+
+# Install Playwright browsers
+npx playwright install
+
+# Install system dependencies (Linux/WSL only)
+sudo npx playwright install-deps
+```
+
+#### **Running Tests**
+```powershell
+# Run all tests
+npm run test:e2e
+
+# Run tests in UI mode (interactive)
+npm run test:e2e:ui
+
+# Run tests in debug mode
+npm run test:e2e:debug
+
+# Run specific test file
+npx playwright test e2e/mobile.spec.ts
+
+# Run specific device/browser
+npx playwright test --project="Desktop Chrome"
+npx playwright test --project="Mobile iPhone SE"
+npx playwright test --project="Mobile Minimum"
+```
+
+#### **Test Coverage**
+- **Mobile Tests**: Touch targets, swipe gestures, landscape orientation, 320px viewport
+- **Desktop Tests**: Auth flows, CRUD operations, keyboard navigation, real-time updates
+- **Accessibility Tests**: WCAG compliance, ARIA labels, screen readers, focus management
+
+#### **Before Pushing Code**
+```powershell
+# 1. Run linting
+npm run lint
+
+# 2. Run type checking
+npm run type-check
+
+# 3. Run E2E tests (optional but recommended)
+npm run test:e2e
+
+# 4. If all pass, commit and push
+git add .
+git commit -m "feat: your changes"
+git push
 ```
 
 ---

@@ -305,8 +305,8 @@ const AdminDashboardInteractive = () => {
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={!!user} onLogout={handleSignOut} />
 
-      <main className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="pt-20 landscape-mobile:pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-text-primary mb-2">
@@ -357,7 +357,7 @@ const AdminDashboardInteractive = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <StatsCard
               title="Total Scoreboards"
               value={totalCount || scoreboards.length}
@@ -429,7 +429,7 @@ const AdminDashboardInteractive = () => {
                           onChange={setSelectedOwnerId}
                           placeholder={loadingOwners ? "Loading owners..." : "Filter by owner..."}
                           emptyMessage="No owners found"
-                          className="min-w-[220px]"
+                          className="min-w-[140px] sm:min-w-[180px] md:min-w-[220px]"
                         />
                       </div>
                     )}

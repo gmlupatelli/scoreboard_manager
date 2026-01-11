@@ -36,7 +36,7 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
 
   useEffect(() => {
     setIsHydrated(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -134,8 +134,8 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
   if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen">
-        <main className="pt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="pt-16 landscape-mobile:pt-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
             <LoadingSkeleton />
           </div>
         </main>
@@ -146,8 +146,8 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
   if (error || !scoreboard) {
     return (
       <div className="min-h-screen">
-        <main className="pt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="pt-16 landscape-mobile:pt-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
             <ErrorDisplay message={error || 'Scoreboard not found'} />
           </div>
         </main>
@@ -210,19 +210,43 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
                 }}
               >
                 {isMobile ? (
-                  <div className="p-4 space-y-4">
-                    {currentEntries.map((entry) => (
-                      <EntryCard 
-                        key={entry.id} 
-                        rank={entry.rank} 
-                        name={entry.name} 
-                        score={Number(entry.score)}
-                        customStyles={appliedStyles}
-                        scoreType={scoreboard?.scoreType || 'number'}
-                        timeFormat={scoreboard?.timeFormat || null}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <div 
+                      className="px-6 py-3 border-b"
+                      style={{
+                        backgroundColor: appliedStyles?.headerColor || 'var(--muted)',
+                        borderColor: appliedStyles?.borderColor || 'var(--border)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span 
+                          className="text-xs font-medium uppercase tracking-wider"
+                          style={{ color: appliedStyles?.headerTextColor || 'var(--text-secondary)' }}
+                        >
+                          Player
+                        </span>
+                        <span 
+                          className="text-xs font-medium uppercase tracking-wider"
+                          style={{ color: appliedStyles?.headerTextColor || 'var(--text-secondary)' }}
+                        >
+                          {scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {currentEntries.map((entry) => (
+                        <EntryCard 
+                          key={entry.id} 
+                          rank={entry.rank} 
+                          name={entry.name} 
+                          score={Number(entry.score)}
+                          customStyles={appliedStyles}
+                          scoreType={scoreboard?.scoreType || 'number'}
+                          timeFormat={scoreboard?.timeFormat || null}
+                        />
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   <EntryTable 
                     entries={currentEntries.map(e => ({ ...e, score: Number(e.score) }))} 

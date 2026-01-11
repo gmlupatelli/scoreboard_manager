@@ -157,14 +157,14 @@ const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = 
               className="p-2 rounded-md bg-success text-success-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Save changes"
             >
-              <Icon name="CheckIcon" size={18} />
+              <Icon name="CheckIcon" size={20} />
             </button>
             <button
               onClick={handleCancel}
               className="p-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150"
               aria-label="Cancel editing"
             >
-              <Icon name="XMarkIcon" size={18} />
+              <Icon name="XMarkIcon" size={20} />
             </button>
           </div>
         </td>
@@ -184,14 +184,14 @@ const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = 
             className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
             aria-label="Edit entry"
           >
-            <Icon name="PencilIcon" size={18} />
+            <Icon name="PencilIcon" size={20} />
           </button>
           <button
             onClick={() => onDelete(entry.id)}
             className="p-2 rounded-md text-destructive hover:bg-destructive/10 transition-smooth duration-150"
             aria-label="Delete entry"
           >
-            <Icon name="TrashIcon" size={18} />
+            <Icon name="TrashIcon" size={20} />
           </button>
         </div>
       </td>

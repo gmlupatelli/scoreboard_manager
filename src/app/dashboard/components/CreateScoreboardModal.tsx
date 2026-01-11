@@ -81,9 +81,9 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4 elevation-3 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
+      <div className="fixed inset-0 bg-black/80" onClick={handleClose} />
+      <div className="relative bg-card border border-border rounded-lg p-4 sm:p-6 landscape-mobile:p-3 max-w-[calc(100vw-2rem)] sm:max-w-md w-full mx-4 elevation-3 max-h-[90vh] landscape-mobile:max-h-[95vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6 landscape-mobile:mb-3">
           <h2 className="text-xl font-semibold text-text-primary">Create New Scoreboard</h2>
           <button
             onClick={handleClose}
@@ -95,7 +95,7 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
+          <div className="space-y-4 landscape-mobile:space-y-2">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-text-primary mb-2">
                 Title <span className="text-destructive">*</span>
@@ -128,7 +128,7 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
 
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">Visibility</label>
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
@@ -171,7 +171,7 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2">Score Type</label>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
                     <label className="flex items-center cursor-pointer">
                       <input
                         type="radio"
@@ -226,7 +226,7 @@ const CreateScoreboardModal = ({ isOpen, onClose, onCreate }: CreateScoreboardMo
 
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-2">Sort Order</label>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
                     <label className="flex items-center cursor-pointer">
                       <input
                         type="radio"

@@ -378,8 +378,8 @@ const ScoreboardManagementInteractive = () => {
   // Loading state
   if (!isHydrated || loading || authLoading) {
     return (
-      <div className="min-h-screen bg-background pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-background pt-16 landscape-mobile:pt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-muted rounded w-1/3" />
             <div className="h-4 bg-muted rounded w-2/3" />
@@ -393,8 +393,8 @@ const ScoreboardManagementInteractive = () => {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-background pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-background pt-16 landscape-mobile:pt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
           <div className="bg-destructive/10 border border-destructive rounded-lg p-6 text-center">
             <Icon name="ExclamationTriangleIcon" size={48} className="text-destructive mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-destructive mb-2">Unable to Load Scoreboard</h2>
@@ -500,28 +500,31 @@ const ScoreboardManagementInteractive = () => {
                   debounceMs={200}
                 />
               </div>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
+                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
                 >
-                  <Icon name="PlusIcon" size={18} />
-                  <span>Add Entry</span>
+                  <Icon name="PlusIcon" size={20} />
+                  <span className="hidden sm:inline">Add Entry</span>
+                  <span className="sr-only sm:hidden">Add Entry</span>
                 </button>
                 <button
                   onClick={() => setIsImportModalOpen(true)}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
+                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
                 >
-                  <Icon name="ArrowUpTrayIcon" size={18} />
-                  <span>Import CSV</span>
+                  <Icon name="ArrowUpTrayIcon" size={20} />
+                  <span className="hidden sm:inline">Import CSV</span>
+                  <span className="sr-only sm:hidden">Import CSV</span>
                 </button>
                 <button
                   onClick={handleClearAll}
                   disabled={entries.length === 0}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Icon name="TrashIcon" size={18} />
-                  <span>Clear All</span>
+                  <Icon name="TrashIcon" size={20} />
+                  <span className="hidden sm:inline">Clear All</span>
+                  <span className="sr-only sm:hidden">Clear All</span>
                 </button>
               </div>
             </div>

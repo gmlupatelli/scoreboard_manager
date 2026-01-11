@@ -35,9 +35,24 @@ Thumbs.db
 coverage/
 jest-test-results.json
 
+# Playwright test artifacts
+playwright-report/
+test-results/
+
+# Linting and formatting cache
+.eslintcache
+.stylelintcache
+
 # Optional: if using IDEs
 .vscode/
 .idea/
+
+# Editor backup files
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
 
 # Optional: if using TurboRepo or monorepo
 turbo/

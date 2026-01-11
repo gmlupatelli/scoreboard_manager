@@ -81,16 +81,9 @@ export default function EntryCard({ rank, name, score, customStyles, scoreType =
             >
               {name}
             </h3>
-            <p 
-              className="text-sm"
-              style={{ color: textColor ? `${textColor}99` : 'var(--text-secondary)' }}
-            >
-              Rank #{rank}
-            </p>
           </div>
         </div>
-        <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-          <Icon name={scoreIcon} size={18} style={{ color: customStyles?.accentColor || 'var(--primary)' }} variant="solid" />
+        <div className="flex items-center flex-shrink-0 ml-4">
           <span 
             className="text-xl font-bold"
             style={{ color: customStyles?.accentColor || 'var(--primary)' }}

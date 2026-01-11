@@ -67,9 +67,9 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative bg-card border border-border rounded-lg shadow-lg w-full max-w-md mx-4 elevation-3">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="absolute inset-0 bg-black/80" onClick={handleClose} />
+      <div className="relative bg-card border border-border rounded-lg shadow-lg w-full max-w-[calc(100vw-2rem)] sm:max-w-md mx-4 elevation-3">
+        <div className="flex items-center justify-between p-4 sm:p-6 landscape-mobile:p-3 border-b border-border">
           <h2 className="text-xl font-semibold text-text-primary flex items-center">
             <Icon name="EnvelopeIcon" size={24} className="mr-2 text-primary" />
             Invite User
@@ -82,7 +82,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 landscape-mobile:p-3">
           {error && (
             <div className="mb-4 bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
               {error}
@@ -100,14 +100,14 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email address..."
               required
-              className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-text-primary"
+              className="min-w-0 w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-text-primary"
             />
             <p className="mt-2 text-sm text-text-secondary">
               The user will receive an email invitation to join the platform.
             </p>
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3">
             <button
               type="button"
               onClick={handleClose}
@@ -118,7 +118,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
             <button
               type="submit"
               disabled={loading || !email}
-              className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50"
             >
               {loading ? (
                 <>

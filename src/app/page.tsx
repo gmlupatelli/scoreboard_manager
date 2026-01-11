@@ -138,7 +138,7 @@ export default function Home() {
       <Header isAuthenticated={false} />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative pt-20 sm:pt-24 md:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
         <div className="relative max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -147,40 +147,40 @@ export default function Home() {
                 <Icon name="SparklesIcon" size={16} />
                 <span>Trusted by 10,000+ Event Organizers</span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-bold text-text-primary mb-6 leading-tight">
-                Manage Scoreboards <span className="text-primary">Like a Pro</span>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6 leading-tight">
+                Manage Scoreboards <span className="text-primary whitespace-nowrap">Like a Pro</span>
               </h1>
-              <p className="text-xl text-text-secondary mb-8 leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-text-secondary mb-8 leading-relaxed">
                 The ultimate platform for creating, managing, and sharing real-time scoreboards. 
                 Perfect for tournaments, leagues, and competitions of any size.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center space-x-2 px-8 py-4 bg-primary text-white rounded-lg font-semibold text-lg hover:opacity-90 transition-smooth duration-150 hover-lift elevation-1"
+                  className="inline-flex items-center justify-center space-x-2 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-white rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-smooth duration-150 hover-lift elevation-1"
                 >
                   <span>Create an Account</span>
                   <Icon name="ArrowRightIcon" size={20} />
                 </Link>
                 <Link
                   href="/public-scoreboard-list"
-                  className="inline-flex items-center justify-center space-x-2 px-8 py-4 bg-surface border-2 border-border text-text-primary rounded-lg font-semibold text-lg hover:bg-muted transition-smooth duration-150"
+                  className="inline-flex items-center justify-center space-x-2 px-6 sm:px-8 py-3 sm:py-4 bg-surface border-2 border-border text-text-primary rounded-lg font-semibold text-base sm:text-lg hover:bg-muted transition-smooth duration-150"
                 >
                   <Icon name="TrophyIcon" size={20} />
                   <span>Scoreboards</span>
                 </Link>
               </div>
-              <div className="flex items-center space-x-8 mt-8 pt-8 border-t border-border">
+              <div className="flex items-center space-x-4 sm:space-x-6 md:space-x-8 mt-8 pt-8 border-t border-border">
                 <div>
-                  <p className="text-3xl font-bold text-text-primary">10K+</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-text-primary">10K+</p>
                   <p className="text-sm text-text-secondary">Active Users</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-text-primary">50K+</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-text-primary">50K+</p>
                   <p className="text-sm text-text-secondary">Scoreboards Created</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-bold text-text-primary">99.9%</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-text-primary">99.9%</p>
                   <p className="text-sm text-text-secondary">Uptime</p>
                 </div>
               </div>
@@ -199,7 +199,7 @@ export default function Home() {
                   </div>
 
                   {/* Table Header */}
-                  <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 border-b border-border">
+                  <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 border-b border-border">
                     <span className="text-xs font-semibold text-text-secondary uppercase">Rank</span>
                     <span className="text-xs font-semibold text-text-secondary uppercase">Name</span>
                     <span className="text-xs font-semibold text-text-secondary uppercase text-right">Score</span>
@@ -207,7 +207,7 @@ export default function Home() {
 
                   {/* Table Rows */}
                   <div className="divide-y divide-border">
-                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                    <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
                       <div className="flex items-center">
                         <Icon name="TrophyIcon" size={24} className="text-warning" />
                         <span className="ml-2 font-semibold text-text-primary">#1</span>
@@ -215,7 +215,7 @@ export default function Home() {
                       <span className="font-medium text-text-primary">Sarah Johnson</span>
                       <span className="text-lg font-bold text-primary text-right">98,500</span>
                     </div>
-                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                    <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
                       <div className="flex items-center">
                         <Icon name="TrophyIcon" size={24} className="text-text-secondary" />
                         <span className="ml-2 font-semibold text-text-primary">#2</span>
@@ -223,7 +223,7 @@ export default function Home() {
                       <span className="font-medium text-text-primary">Michael Chen</span>
                       <span className="text-lg font-bold text-primary text-right">87,200</span>
                     </div>
-                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                    <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
                       <div className="flex items-center">
                         <Icon name="TrophyIcon" size={24} className="text-secondary" />
                         <span className="ml-2 font-semibold text-text-primary">#3</span>
@@ -231,7 +231,7 @@ export default function Home() {
                       <span className="font-medium text-text-primary">Emily Rodriguez</span>
                       <span className="text-lg font-bold text-primary text-right">76,800</span>
                     </div>
-                    <div className="grid grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
+                    <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
                       <div className="flex items-center">
                         <span className="ml-2 font-semibold text-text-primary">#4</span>
                       </div>
@@ -250,7 +250,7 @@ export default function Home() {
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-4">
               Powerful Features for <span className="text-primary">Every Need</span>
             </h2>
             <p className="text-xl text-text-secondary max-w-3xl mx-auto">
@@ -270,7 +270,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-6">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-6">
                 Why Choose <span className="text-primary">Scoreboard Manager?</span>
               </h2>
               <p className="text-xl text-text-secondary mb-8">
@@ -300,7 +300,7 @@ export default function Home() {
       <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-text-primary mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-4">
               Loved by <span className="text-primary">Event Organizers</span>
             </h2>
             <p className="text-xl text-text-secondary">
