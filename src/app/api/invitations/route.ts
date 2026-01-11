@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 
 function getAuthClient(token: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
   
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
@@ -19,7 +19,7 @@ function getAuthClient(token: string) {
 
 function getServiceRoleClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
   
   if (!serviceRoleKey) {
     return null;
@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         ...invitation,
-        message: 'Invitation created. Email sending requires SUPABASE_SERVICE_ROLE_KEY to be configured.',
+        message: 'Invitation created. Email sending requires SUPABASE_SECRET_KEY to be configured.',
         email_sent: false
       });
     }

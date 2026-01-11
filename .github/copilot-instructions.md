@@ -333,7 +333,7 @@ export const runtime = 'nodejs';
 function getAuthClient(token: string) {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       global: {
         headers: {
@@ -347,7 +347,7 @@ function getAuthClient(token: string) {
 function getServiceRoleClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SECRET_KEY!,
     {
       auth: {
         autoRefreshToken: false,
@@ -808,8 +808,8 @@ const rowToModel = (row: Row): Model => { ... };
 ### Required Variables
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-secret-key
 ```
 
 ### Usage
@@ -818,7 +818,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 // Server-side only (API routes)
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const secretKey = process.env.SUPABASE_SECRET_KEY!;
 ```
 
 ---

@@ -19,7 +19,7 @@
 
 # Production settings - runs migrations before build
 [context.production]
-  command = "curl -sSL https://github.com/supabase/cli/releases/download/v1.200.3/supabase_1.200.3_linux_amd64.tar.gz | tar -xz && chmod +x supabase && ./supabase link --project-ref \"$SUPABASE_PROJECT_REF_PROD\" && ./supabase db push && npm run build"
+  command = "curl -sSL https://github.com/supabase/cli/releases/download/v1.200.3/supabase_1.200.3_linux_amd64.tar.gz | tar -xz && chmod +x supabase && ./supabase link --project-ref \"$SUPABASE_PROJECT_REF\" && ./supabase db push && npm run build"
   
 [context.production.environment]
   NEXT_PUBLIC_SITE_URL = "https://myscoreboardmanager.netlify.app"

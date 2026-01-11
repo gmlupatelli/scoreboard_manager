@@ -5,7 +5,7 @@ const isDev = process.env.NODE_ENV === 'development';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL 
   || (isDev ? process.env.NEXT_PUBLIC_SUPABASE_URL_DEV : process.env.NEXT_PUBLIC_SUPABASE_URL_PROD) 
   || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables:', { 

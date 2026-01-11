@@ -42,7 +42,7 @@
     "dev": "next dev -H 0.0.0.0 -p 5000",
     "build": "next build",
     "build:prod": "npm run migrate:prod && npm run build",
-    "migrate:prod": "supabase link --project-ref \"$SUPABASE_PROJECT_REF_PROD\" && supabase db push",
+    "migrate:prod": "supabase link --project-ref \"$SUPABASE_PROJECT_REF\" && supabase db push",
     "start": "next start -H 0.0.0.0 -p 5000",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
