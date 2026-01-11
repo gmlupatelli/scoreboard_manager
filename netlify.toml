@@ -17,9 +17,9 @@
 [build.processing]
   skip_processing = false
 
-# Production settings - runs migrations before build
+# Production settings - runs migrations before build using npm-based Supabase CLI
 [context.production]
-  command = "curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar -xz -C /tmp --strip-components=1 && chmod +x /tmp/supabase && /tmp/supabase link --project-ref \"$SUPABASE_PROJECT_REF\" && /tmp/supabase db push && npm run build"
+  command = "npx supabase@latest link --project-ref \"$SUPABASE_PROJECT_REF\" && npx supabase@latest db push && npm run build"
   
 [context.production.environment]
   NEXT_PUBLIC_SITE_URL = "https://myscoreboardmanager.netlify.app"
