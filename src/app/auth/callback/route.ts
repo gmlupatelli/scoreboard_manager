@@ -24,9 +24,17 @@ export async function GET(request: NextRequest) {
   // Determine redirect URL first
   let redirectUrl = `${origin}/login?error=auth_callback_error`;
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Missing Supabase environment variables in auth callback');
+    return NextResponse.redirect(`${origin}/login?error=missing_supabase_config`);
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
