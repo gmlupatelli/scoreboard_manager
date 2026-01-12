@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { ScoreType, TimeFormat } from '@/types/models';
-import { formatScoreDisplay, parseTimeToMilliseconds, getTimeFormatPlaceholder } from '@/utils/timeUtils';
+import {
+  formatScoreDisplay,
+  parseTimeToMilliseconds,
+  getTimeFormatPlaceholder,
+} from '@/utils/timeUtils';
 
 interface Entry {
   id: string;
@@ -20,7 +24,13 @@ interface EntryRowProps {
   timeFormat?: TimeFormat | null;
 }
 
-const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = null }: EntryRowProps) => {
+const EntryRow = ({
+  entry,
+  onEdit,
+  onDelete,
+  scoreType = 'number',
+  timeFormat = null,
+}: EntryRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(entry.name);
   const [editScore, setEditScore] = useState(
@@ -144,7 +154,11 @@ const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = 
               className={`w-full px-3 py-2 border rounded-md bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-ring transition-smooth duration-150 ${
                 scoreError ? 'border-destructive' : 'border-input'
               }`}
-              placeholder={scoreType === 'time' && timeFormat ? getTimeFormatPlaceholder(timeFormat) : 'Enter score'}
+              placeholder={
+                scoreType === 'time' && timeFormat
+                  ? getTimeFormatPlaceholder(timeFormat)
+                  : 'Enter score'
+              }
             />
             {scoreError && <p className="text-xs text-destructive mt-1">{scoreError}</p>}
           </div>
@@ -157,14 +171,14 @@ const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = 
               className="p-2 rounded-md bg-success text-success-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Save changes"
             >
-              <Icon name="CheckIcon" size={18} />
+              <Icon name="CheckIcon" size={20} />
             </button>
             <button
               onClick={handleCancel}
               className="p-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150"
               aria-label="Cancel editing"
             >
-              <Icon name="XMarkIcon" size={18} />
+              <Icon name="XMarkIcon" size={20} />
             </button>
           </div>
         </td>
@@ -184,14 +198,14 @@ const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = 
             className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
             aria-label="Edit entry"
           >
-            <Icon name="PencilIcon" size={18} />
+            <Icon name="PencilIcon" size={20} />
           </button>
           <button
             onClick={() => onDelete(entry.id)}
             className="p-2 rounded-md text-destructive hover:bg-destructive/10 transition-smooth duration-150"
             aria-label="Delete entry"
           >
-            <Icon name="TrashIcon" size={18} />
+            <Icon name="TrashIcon" size={20} />
           </button>
         </div>
       </td>

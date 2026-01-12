@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
 import SearchInterface from '@/components/common/SearchInterface';
 import EntryTable from './EntryTable';
 import EntryCard from './EntryCard';
@@ -13,7 +12,6 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ScoreboardHeader from './ScoreboardHeader';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
-import { getAppliedScoreboardStyles } from '@/utils/stylePresets';
 
 interface EntryWithRank extends ScoreboardEntry {
   rank: number;
@@ -24,7 +22,10 @@ interface ScoreboardInteractiveProps {
   appliedStyles: ScoreboardCustomStyles | null;
 }
 
-export default function ScoreboardInteractive({ scoreboard, appliedStyles }: ScoreboardInteractiveProps) {
+export default function ScoreboardInteractive({
+  scoreboard,
+  appliedStyles,
+}: ScoreboardInteractiveProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,7 +37,7 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
 
   useEffect(() => {
     setIsHydrated(true);
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -54,7 +55,8 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
 
     const loadEntriesOnly = async () => {
       try {
-        const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboard.id);
+        const { data: entriesData, error: entriesError } =
+          await scoreboardService.getScoreboardEntries(scoreboard.id);
         if (entriesError) {
           setError(entriesError.message || 'Failed to load entries');
           setIsLoading(false);
@@ -72,15 +74,12 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
     loadEntriesOnly();
 
     // Set up real-time subscription for entries only
-    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
-      scoreboard.id,
-      {
-        onScoreboardChange: () => {}, // parent will handle scoreboard changes
-        onEntriesChange: () => {
-          loadEntriesOnly();
-        }
-      }
-    );
+    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(scoreboard.id, {
+      onScoreboardChange: () => {}, // parent will handle scoreboard changes
+      onEntriesChange: () => {
+        loadEntriesOnly();
+      },
+    });
 
     return () => {
       unsubscribe();
@@ -92,26 +91,26 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
     const sorted = [...entries].sort((a, b) => {
       const scoreA = Number(a.score);
       const scoreB = Number(b.score);
-      
+
       if (scoreA !== scoreB) {
         return scoreboardSortOrder === 'desc' ? scoreB - scoreA : scoreA - scoreB;
       }
       return a.name.localeCompare(b.name);
     });
 
-    return sorted.map((entry, index): EntryWithRank => ({
-      ...entry,
-      rank: index + 1,
-    }));
+    return sorted.map(
+      (entry, index): EntryWithRank => ({
+        ...entry,
+        rank: index + 1,
+      })
+    );
   }, [entries, scoreboard?.sortOrder]);
 
   const filteredEntries = useMemo(() => {
     if (!searchQuery?.trim()) return sortedEntries;
 
     const query = searchQuery.toLowerCase();
-    return sortedEntries.filter((entry) =>
-      entry?.name?.toLowerCase()?.includes(query)
-    );
+    return sortedEntries.filter((entry) => entry?.name?.toLowerCase()?.includes(query));
   }, [sortedEntries, searchQuery]);
 
   const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
@@ -134,8 +133,8 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
   if (!isHydrated || isLoading) {
     return (
       <div className="min-h-screen">
-        <main className="pt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="pt-16 landscape-mobile:pt-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
             <LoadingSkeleton />
           </div>
         </main>
@@ -146,8 +145,8 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
   if (error || !scoreboard) {
     return (
       <div className="min-h-screen">
-        <main className="pt-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="pt-16 landscape-mobile:pt-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
             <ErrorDisplay message={error || 'Scoreboard not found'} />
           </div>
         </main>
@@ -161,12 +160,12 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
     <>
       <ScoreboardHeader
         title={scoreboard.title}
-        description={scoreboard.subtitle || ''}
+        description={scoreboard.description || ''}
         totalEntries={entries.length}
         customStyles={appliedStyles}
       />
 
-      <div 
+      <div
         className="py-6"
         style={{
           backgroundColor: appliedStyles?.backgroundColor,
@@ -185,7 +184,7 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
           </div>
 
           {currentEntries.length === 0 ? (
-            <div 
+            <div
               className="rounded-lg"
               style={{
                 backgroundColor: appliedStyles?.backgroundColor || 'var(--surface)',
@@ -199,7 +198,7 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
             </div>
           ) : (
             <>
-              <div 
+              <div
                 className="overflow-hidden mb-6"
                 style={{
                   backgroundColor: appliedStyles?.backgroundColor || 'var(--surface)',
@@ -210,22 +209,50 @@ export default function ScoreboardInteractive({ scoreboard, appliedStyles }: Sco
                 }}
               >
                 {isMobile ? (
-                  <div className="p-4 space-y-4">
-                    {currentEntries.map((entry) => (
-                      <EntryCard 
-                        key={entry.id} 
-                        rank={entry.rank} 
-                        name={entry.name} 
-                        score={Number(entry.score)}
-                        customStyles={appliedStyles}
-                        scoreType={scoreboard?.scoreType || 'number'}
-                        timeFormat={scoreboard?.timeFormat || null}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <div
+                      className="px-6 py-3 border-b"
+                      style={{
+                        backgroundColor: appliedStyles?.headerColor || 'var(--muted)',
+                        borderColor: appliedStyles?.borderColor || 'var(--border)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className="text-xs font-medium uppercase tracking-wider"
+                          style={{
+                            color: appliedStyles?.headerTextColor || 'var(--text-secondary)',
+                          }}
+                        >
+                          Player
+                        </span>
+                        <span
+                          className="text-xs font-medium uppercase tracking-wider"
+                          style={{
+                            color: appliedStyles?.headerTextColor || 'var(--text-secondary)',
+                          }}
+                        >
+                          {scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-4">
+                      {currentEntries.map((entry) => (
+                        <EntryCard
+                          key={entry.id}
+                          rank={entry.rank}
+                          name={entry.name}
+                          score={Number(entry.score)}
+                          customStyles={appliedStyles}
+                          scoreType={scoreboard?.scoreType || 'number'}
+                          timeFormat={scoreboard?.timeFormat || null}
+                        />
+                      ))}
+                    </div>
+                  </>
                 ) : (
-                  <EntryTable 
-                    entries={currentEntries.map(e => ({ ...e, score: Number(e.score) }))} 
+                  <EntryTable
+                    entries={currentEntries.map((e) => ({ ...e, score: Number(e.score) }))}
                     customStyles={appliedStyles}
                     scoreType={scoreboard?.scoreType || 'number'}
                     timeFormat={scoreboard?.timeFormat || null}

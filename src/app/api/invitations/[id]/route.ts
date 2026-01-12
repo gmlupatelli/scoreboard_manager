@@ -1,53 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function getAuthClient(token: string) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-  
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  });
-}
-
-function getServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
-  
-  if (!serviceRoleKey) {
-    return null;
-  }
-  
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    
-    if (!authHeader?.startsWith('Bearer ')) {
+    const token = extractBearerToken(request.headers.get('Authorization'));
+
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    const token = authHeader.substring(7);
+
     const authClient = getAuthClient(token);
-    
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await authClient.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -90,7 +60,7 @@ export async function DELETE(
         const invitedUser = authUsers?.users?.find(
           (u) => u.email?.toLowerCase() === invitation.invitee_email.toLowerCase()
         );
-        
+
         if (invitedUser) {
           // Delete the auth user
           await serviceClient.auth.admin.deleteUser(invitedUser.id);

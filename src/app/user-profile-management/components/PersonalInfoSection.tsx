@@ -24,7 +24,7 @@ export default function PersonalInfoSection({
   pendingEmail,
   onUpdateProfile,
   onUpdateEmail,
-  onResendVerification
+  onResendVerification,
 }: PersonalInfoSectionProps) {
   const [fullName, setFullName] = useState(profile?.full_name ?? '');
   const [email, setEmail] = useState(profile?.email ?? '');
@@ -103,12 +103,12 @@ export default function PersonalInfoSection({
 
   const handleResendVerification = async () => {
     if (!onResendVerification) return;
-    
+
     setResending(true);
     setResendSuccess(false);
-    
+
     const success = await onResendVerification();
-    
+
     setResending(false);
     if (success) {
       setResendSuccess(true);
@@ -120,13 +120,11 @@ export default function PersonalInfoSection({
   return (
     <div className="bg-card border border-border rounded-lg elevation-1 p-6">
       <h2 className="text-xl font-semibold text-text-primary mb-6">Personal Information</h2>
-      
+
       <div className="space-y-6">
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">
-            Display Name
-          </label>
+          <label className="block text-sm font-medium text-text-secondary mb-2">Display Name</label>
           {isEditingName ? (
             <div className="space-y-3">
               <input
@@ -155,9 +153,7 @@ export default function PersonalInfoSection({
             </div>
           ) : (
             <div className="flex items-center justify-between">
-              <span className="text-text-primary">
-                {profile?.full_name || 'Not set'}
-              </span>
+              <span className="text-text-primary">{profile?.full_name || 'Not set'}</span>
               <button
                 onClick={() => setIsEditingName(true)}
                 className="text-primary hover:opacity-80 font-medium transition-smooth"
@@ -187,9 +183,7 @@ export default function PersonalInfoSection({
                 }`}
                 placeholder="Enter your email address"
               />
-              {emailError && (
-                <p className="text-sm text-destructive">{emailError}</p>
-              )}
+              {emailError && <p className="text-sm text-destructive">{emailError}</p>}
               <p className="text-sm text-text-secondary">
                 A verification email will be sent to your new address
               </p>
@@ -238,7 +232,8 @@ export default function PersonalInfoSection({
                         </span>
                       </div>
                       <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                        Please check your inbox and click the verification link to confirm this change.
+                        Please check your inbox and click the verification link to confirm this
+                        change.
                       </p>
                       {onResendVerification && (
                         <div className="mt-2">
@@ -271,11 +266,11 @@ export default function PersonalInfoSection({
             Account Created
           </label>
           <span className="text-text-primary">
-            {profile?.created_at 
+            {profile?.created_at
               ? new Date(profile.created_at).toLocaleDateString('en-US', {
                   year: 'numeric',
                   month: 'long',
-                  day: 'numeric'
+                  day: 'numeric',
                 })
               : 'N/A'}
           </span>

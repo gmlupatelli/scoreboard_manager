@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
-import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react';
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+} from '@headlessui/react';
 import Icon from '@/components/ui/AppIcon';
 
 export interface SelectOption {
@@ -46,9 +52,7 @@ export default function SearchableSelect({
   const filteredOptions = useMemo(() => {
     if (!query) return options;
     const lowerQuery = query.toLowerCase();
-    return options.filter((option) =>
-      option.label.toLowerCase().includes(lowerQuery)
-    );
+    return options.filter((option) => option.label.toLowerCase().includes(lowerQuery));
   }, [options, query]);
 
   const handleChange = (option: SelectOption | null) => {
@@ -57,11 +61,7 @@ export default function SearchableSelect({
   };
 
   return (
-    <Combobox
-      value={selectedOption}
-      onChange={handleChange}
-      onClose={() => setQuery('')}
-    >
+    <Combobox value={selectedOption} onChange={handleChange} onClose={() => setQuery('')}>
       <div className={`relative ${className}`}>
         <div className="relative">
           <ComboboxInput
@@ -79,13 +79,9 @@ export default function SearchableSelect({
           </ComboboxButton>
         </div>
 
-        <ComboboxOptions 
-          className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white border border-border shadow-lg focus:outline-none"
-        >
+        <ComboboxOptions className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-md bg-white border border-border shadow-lg focus:outline-none">
           {filteredOptions.length === 0 && query !== '' ? (
-            <div className="px-4 py-3 text-sm text-text-secondary">
-              {emptyMessage}
-            </div>
+            <div className="px-4 py-3 text-sm text-text-secondary">{emptyMessage}</div>
           ) : (
             filteredOptions.map((option) => (
               <ComboboxOption
@@ -95,10 +91,10 @@ export default function SearchableSelect({
               >
                 <div className="flex items-center justify-between">
                   <span>{option.label}</span>
-                  <Icon 
-                    name="CheckIcon" 
-                    size={16} 
-                    className="text-primary opacity-0 group-data-[selected]:opacity-100" 
+                  <Icon
+                    name="CheckIcon"
+                    size={16}
+                    className="text-primary opacity-0 group-data-[selected]:opacity-100"
                   />
                 </div>
               </ComboboxOption>

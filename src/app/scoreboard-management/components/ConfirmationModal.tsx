@@ -22,7 +22,7 @@ const ConfirmationModal = ({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  variant = 'danger'
+  variant = 'danger',
 }: ConfirmationModalProps) => {
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -39,13 +39,13 @@ const ConfirmationModal = ({
   const iconConfig = {
     danger: { name: 'ExclamationTriangleIcon' as const, color: 'text-destructive' },
     warning: { name: 'ExclamationCircleIcon' as const, color: 'text-warning' },
-    info: { name: 'InformationCircleIcon' as const, color: 'text-primary' }
+    info: { name: 'InformationCircleIcon' as const, color: 'text-primary' },
   };
 
   const buttonConfig = {
     danger: 'bg-destructive text-destructive-foreground hover:opacity-90',
     warning: 'bg-warning text-warning-foreground hover:opacity-90',
-    info: 'bg-primary text-primary-foreground hover:opacity-90'
+    info: 'bg-primary text-primary-foreground hover:opacity-90',
   };
 
   const config = iconConfig[variant];

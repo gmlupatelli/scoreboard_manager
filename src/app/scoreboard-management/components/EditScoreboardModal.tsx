@@ -10,7 +10,7 @@ interface EditScoreboardModalProps {
   onClose: () => void;
   onSave: (
     title: string,
-    subtitle: string,
+    description: string,
     visibility: 'public' | 'private',
     scoreType: ScoreType,
     sortOrder: 'asc' | 'desc',
@@ -18,7 +18,7 @@ interface EditScoreboardModalProps {
     scoreTypeChanged: boolean
   ) => void;
   currentTitle: string;
-  currentSubtitle: string;
+  currentDescription: string;
   currentVisibility: 'public' | 'private';
   currentScoreType: ScoreType;
   currentSortOrder: 'asc' | 'desc';
@@ -26,48 +26,63 @@ interface EditScoreboardModalProps {
   entryCount: number;
 }
 
-const TIME_FORMATS: TimeFormat[] = ['hh:mm', 'hh:mm:ss', 'mm:ss', 'mm:ss.s', 'mm:ss.ss', 'mm:ss.sss'];
+const TIME_FORMATS: TimeFormat[] = [
+  'hh:mm',
+  'hh:mm:ss',
+  'mm:ss',
+  'mm:ss.s',
+  'mm:ss.ss',
+  'mm:ss.sss',
+];
 
-const EditScoreboardModal = ({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  currentTitle, 
-  currentSubtitle,
+const EditScoreboardModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  currentTitle,
+  currentDescription,
   currentVisibility,
   currentScoreType,
   currentSortOrder,
   currentTimeFormat,
-  entryCount
+  entryCount,
 }: EditScoreboardModalProps) => {
   const [title, setTitle] = useState(currentTitle);
-  const [subtitle, setSubtitle] = useState(currentSubtitle);
+  const [description, setDescription] = useState(currentDescription);
   const [visibility, setVisibility] = useState<'public' | 'private'>(currentVisibility);
   const [scoreType, setScoreType] = useState<ScoreType>(currentScoreType);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(currentSortOrder);
   const [timeFormat, setTimeFormat] = useState<TimeFormat>(currentTimeFormat || 'mm:ss');
-  const [errors, setErrors] = useState({ title: '', subtitle: '' });
+  const [errors, setErrors] = useState({ title: '', description: '' });
   const [showTypeChangeConfirm, setShowTypeChangeConfirm] = useState(false);
-  const [pendingSubmit, setPendingSubmit] = useState(false);
+  const [_pendingSubmit, setPendingSubmit] = useState(false);
 
   const scoreTypeChanged = scoreType !== currentScoreType;
 
   useEffect(() => {
     if (isOpen) {
       setTitle(currentTitle);
-      setSubtitle(currentSubtitle);
+      setDescription(currentDescription);
       setVisibility(currentVisibility);
       setScoreType(currentScoreType);
       setSortOrder(currentSortOrder);
       setTimeFormat(currentTimeFormat || 'mm:ss');
-      setErrors({ title: '', subtitle: '' });
+      setErrors({ title: '', description: '' });
       setShowTypeChangeConfirm(false);
       setPendingSubmit(false);
     }
-  }, [isOpen, currentTitle, currentSubtitle, currentVisibility, currentScoreType, currentSortOrder, currentTimeFormat]);
+  }, [
+    isOpen,
+    currentTitle,
+    currentDescription,
+    currentVisibility,
+    currentScoreType,
+    currentSortOrder,
+    currentTimeFormat,
+  ]);
 
   const validateForm = () => {
-    const newErrors = { title: '', subtitle: '' };
+    const newErrors = { title: '', description: '' };
     let isValid = true;
 
     if (!title.trim()) {
@@ -81,8 +96,8 @@ const EditScoreboardModal = ({
       isValid = false;
     }
 
-    if (subtitle.trim().length > 200) {
-      newErrors.subtitle = 'Description must be less than 200 characters';
+    if (description.trim().length > 200) {
+      newErrors.description = 'Description must be less than 200 characters';
       isValid = false;
     }
 
@@ -92,7 +107,7 @@ const EditScoreboardModal = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     if (scoreTypeChanged && entryCount > 0) {
@@ -107,7 +122,7 @@ const EditScoreboardModal = ({
   const doSave = () => {
     onSave(
       title.trim(),
-      subtitle.trim(),
+      description.trim(),
       visibility,
       scoreType,
       sortOrder,
@@ -131,12 +146,12 @@ const EditScoreboardModal = ({
 
   const handleClose = () => {
     setTitle(currentTitle);
-    setSubtitle(currentSubtitle);
+    setDescription(currentDescription);
     setVisibility(currentVisibility);
     setScoreType(currentScoreType);
     setSortOrder(currentSortOrder);
     setTimeFormat(currentTimeFormat || 'mm:ss');
-    setErrors({ title: '', subtitle: '' });
+    setErrors({ title: '', description: '' });
     setShowTypeChangeConfirm(false);
     setPendingSubmit(false);
     onClose();
@@ -149,20 +164,25 @@ const EditScoreboardModal = ({
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-screen items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
-          
+
           <div className="relative w-full max-w-md transform rounded-lg bg-card border border-border shadow-xl transition-all">
             <div className="flex items-center justify-between p-6 border-b border-border">
               <div className="flex items-center space-x-2">
                 <Icon name="ExclamationTriangleIcon" size={24} className="text-warning" />
-                <h3 className="text-lg font-semibold text-text-primary">Confirm Score Type Change</h3>
+                <h3 className="text-lg font-semibold text-text-primary">
+                  Confirm Score Type Change
+                </h3>
               </div>
             </div>
 
             <div className="p-6 space-y-4">
               <p className="text-text-primary">
-                Changing the score type from <strong>{currentScoreType === 'number' ? 'Number' : 'Time'}</strong> to{' '}
+                Changing the score type from{' '}
+                <strong>{currentScoreType === 'number' ? 'Number' : 'Time'}</strong> to{' '}
                 <strong>{scoreType === 'number' ? 'Number' : 'Time'}</strong> will{' '}
-                <span className="text-destructive font-semibold">permanently delete all {entryCount} entries</span>{' '}
+                <span className="text-destructive font-semibold">
+                  permanently delete all {entryCount} entries
+                </span>{' '}
                 from this scoreboard.
               </p>
               <p className="text-text-secondary text-sm">
@@ -195,11 +215,11 @@ const EditScoreboardModal = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
           onClick={handleClose}
         />
-        
+
         <div className="relative w-full max-w-md transform rounded-lg bg-card border border-border shadow-xl transition-all max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b border-border">
             <h3 className="text-lg font-semibold text-text-primary">Edit Scoreboard Details</h3>
@@ -226,34 +246,33 @@ const EditScoreboardModal = ({
                 } bg-surface text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary transition-smooth duration-150`}
                 placeholder="Enter scoreboard title"
               />
-              {errors.title && (
-                <p className="mt-1 text-xs text-destructive">{errors.title}</p>
-              )}
+              {errors.title && <p className="mt-1 text-xs text-destructive">{errors.title}</p>}
             </div>
 
             <div>
-              <label htmlFor="subtitle" className="block text-sm font-medium text-text-primary mb-2">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-text-primary mb-2"
+              >
                 Description
               </label>
               <textarea
-                id="subtitle"
-                value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 className={`w-full px-3 py-2 rounded-md border ${
-                  errors.subtitle ? 'border-destructive' : 'border-input'
+                  errors.description ? 'border-destructive' : 'border-input'
                 } bg-surface text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary transition-smooth duration-150 resize-none`}
                 placeholder="Enter scoreboard description (optional)"
               />
-              {errors.subtitle && (
-                <p className="mt-1 text-xs text-destructive">{errors.subtitle}</p>
+              {errors.description && (
+                <p className="mt-1 text-xs text-destructive">{errors.description}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">
-                Visibility
-              </label>
+              <label className="block text-sm font-medium text-text-primary mb-2">Visibility</label>
               <div className="flex items-center space-x-4">
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -285,18 +304,20 @@ const EditScoreboardModal = ({
                 </label>
               </div>
               <p className="mt-1 text-xs text-text-secondary">
-                {visibility === 'public' 
-                  ? 'Anyone can view this scoreboard' 
+                {visibility === 'public'
+                  ? 'Anyone can view this scoreboard'
                   : 'Only you can view this scoreboard'}
               </p>
             </div>
 
             <div className="border-t border-border pt-4">
               <h4 className="text-sm font-medium text-text-primary mb-3">Score Settings</h4>
-              
+
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">Score Type</label>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Score Type
+                  </label>
                   <div className="flex items-center space-x-4">
                     <label className="flex items-center cursor-pointer">
                       <input
@@ -337,7 +358,10 @@ const EditScoreboardModal = ({
 
                 {scoreType === 'time' && (
                   <div>
-                    <label htmlFor="timeFormat" className="block text-sm font-medium text-text-primary mb-2">
+                    <label
+                      htmlFor="timeFormat"
+                      className="block text-sm font-medium text-text-primary mb-2"
+                    >
                       Time Format
                     </label>
                     <select
@@ -356,7 +380,9 @@ const EditScoreboardModal = ({
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">Sort Order</label>
+                  <label className="block text-sm font-medium text-text-primary mb-2">
+                    Sort Order
+                  </label>
                   <div className="flex items-center space-x-4">
                     <label className="flex items-center cursor-pointer">
                       <input

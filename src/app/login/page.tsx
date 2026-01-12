@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '../../contexts/AuthContext';
-import Header from '../../components/common/Header';
+import { useAuth } from '@/contexts/AuthContext';
+import Header from '@/components/common/Header';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function LoginPage() {
           router.push('/dashboard');
         }, 100);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

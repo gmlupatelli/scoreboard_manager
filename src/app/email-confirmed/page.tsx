@@ -21,7 +21,8 @@ interface ConfirmationConfig {
 const confirmationTypes: Record<string, ConfirmationConfig> = {
   signup: {
     title: 'Email Confirmed!',
-    message: 'Your email has been verified successfully. You can now access all features of your account.',
+    message:
+      'Your email has been verified successfully. You can now access all features of your account.',
     icon: 'CheckCircleIcon',
     iconColor: 'text-green-500',
     redirectPath: '/dashboard',
@@ -31,7 +32,8 @@ const confirmationTypes: Record<string, ConfirmationConfig> = {
   },
   email_change: {
     title: 'Email Updated!',
-    message: 'Your email address has been changed successfully. Your account is now using your new email.',
+    message:
+      'Your email address has been changed successfully. Your account is now using your new email.',
     icon: 'CheckCircleIcon',
     iconColor: 'text-green-500',
     redirectPath: '/user-profile-management',
@@ -51,7 +53,8 @@ const confirmationTypes: Record<string, ConfirmationConfig> = {
   },
   error: {
     title: 'Verification Failed',
-    message: 'We could not verify your request. The link may have expired or already been used. Please try again or request a new confirmation email.',
+    message:
+      'We could not verify your request. The link may have expired or already been used. Please try again or request a new confirmation email.',
     icon: 'ExclamationCircleIcon',
     iconColor: 'text-red-500',
     redirectPath: '/login',
@@ -72,7 +75,7 @@ function EmailConfirmedContent() {
   useEffect(() => {
     if (config.autoRedirect) {
       setCountdown(config.redirectDelay);
-      
+
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev === null || prev <= 1) {
@@ -92,20 +95,12 @@ function EmailConfirmedContent() {
     <div className="max-w-md w-full">
       <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm">
         <div className="mb-6">
-          <Icon 
-            name={config.icon} 
-            size={64} 
-            className={`mx-auto ${config.iconColor}`} 
-          />
+          <Icon name={config.icon} size={64} className={`mx-auto ${config.iconColor}`} />
         </div>
-        
-        <h1 className="text-2xl font-bold text-text-primary mb-4">
-          {config.title}
-        </h1>
-        
-        <p className="text-text-secondary mb-8">
-          {config.message}
-        </p>
+
+        <h1 className="text-2xl font-bold text-text-primary mb-4">{config.title}</h1>
+
+        <p className="text-text-secondary mb-8">{config.message}</p>
 
         {config.autoRedirect && countdown !== null && countdown > 0 && (
           <p className="text-sm text-muted-foreground mb-6">
@@ -123,13 +118,8 @@ function EmailConfirmedContent() {
 
         {type === 'error' && (
           <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-sm text-text-secondary mb-3">
-              Need help?
-            </p>
-            <Link
-              href="/support"
-              className="text-primary hover:underline text-sm"
-            >
+            <p className="text-sm text-text-secondary mb-3">Need help?</p>
+            <Link href="/support" className="text-primary hover:underline text-sm">
               Contact Support
             </Link>
           </div>
@@ -156,7 +146,7 @@ export default function EmailConfirmedPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <main className="flex-grow flex items-center justify-center px-4 py-12">
         <Suspense fallback={<LoadingFallback />}>
           <EmailConfirmedContent />

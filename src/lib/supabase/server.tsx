@@ -3,9 +3,10 @@ import { createServerClient } from '@supabase/ssr';
 import { Database } from '@/types/database.types';
 
 const isDev = process.env.NODE_ENV === 'development';
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL 
-  || (isDev ? process.env.NEXT_PUBLIC_SUPABASE_URL_DEV : process.env.NEXT_PUBLIC_SUPABASE_URL_PROD) 
-  || '';
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  (isDev ? process.env.NEXT_PUBLIC_SUPABASE_URL_DEV : process.env.NEXT_PUBLIC_SUPABASE_URL_PROD) ||
+  '';
 
 export async function createClient() {
   const cookieStore = await cookies();

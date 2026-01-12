@@ -20,9 +20,11 @@ export default function InvitationsSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
-      return { 'Authorization': `Bearer ${session.access_token}` };
+      return { Authorization: `Bearer ${session.access_token}` };
     }
     return {};
   };
@@ -32,13 +34,13 @@ export default function InvitationsSection() {
       const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/invitations', {
         credentials: 'include',
-        headers: authHeaders
+        headers: authHeaders,
       });
       if (response.ok) {
         const data = await response.json();
         setInvitations(data);
       }
-    } catch (err) {
+    } catch (_err) {
       // Silently handle error
     } finally {
       setLoading(false);
@@ -55,31 +57,38 @@ export default function InvitationsSection() {
       const response = await fetch(`/api/invitations/${invitationId}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: authHeaders
+        headers: authHeaders,
       });
 
       if (response.ok) {
-        setInvitations(prev => prev.map(inv => 
-          inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
-        ));
+        setInvitations((prev) =>
+          prev.map((inv) =>
+            inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
+          )
+        );
       }
-    } catch (err) {
+    } catch (_err) {
       // Silently handle error
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-warning/10 text-warning';
-      case 'accepted': return 'bg-success/10 text-success';
-      case 'expired': return 'bg-muted text-text-secondary';
-      case 'cancelled': return 'bg-destructive/10 text-destructive';
-      default: return 'bg-muted text-text-secondary';
+      case 'pending':
+        return 'bg-warning/10 text-warning';
+      case 'accepted':
+        return 'bg-success/10 text-success';
+      case 'expired':
+        return 'bg-muted text-text-secondary';
+      case 'cancelled':
+        return 'bg-destructive/10 text-destructive';
+      default:
+        return 'bg-muted text-text-secondary';
     }
   };
 
-  const pendingCount = invitations.filter(inv => inv.status === 'pending').length;
-  const acceptedCount = invitations.filter(inv => inv.status === 'accepted').length;
+  const pendingCount = invitations.filter((inv) => inv.status === 'pending').length;
+  const acceptedCount = invitations.filter((inv) => inv.status === 'accepted').length;
 
   return (
     <div className="bg-card border border-border rounded-lg elevation-1">
@@ -112,9 +121,15 @@ export default function InvitationsSection() {
           </div>
         ) : invitations.length === 0 ? (
           <div className="text-center py-8">
-            <Icon name="EnvelopeIcon" size={48} className="mx-auto text-text-secondary opacity-50 mb-4" />
+            <Icon
+              name="EnvelopeIcon"
+              size={48}
+              className="mx-auto text-text-secondary opacity-50 mb-4"
+            />
             <p className="text-text-secondary">No invitations sent yet.</p>
-            <p className="text-sm text-text-secondary mt-1">Click "Invite User" to invite someone to join.</p>
+            <p className="text-sm text-text-secondary mt-1">
+              Click "Invite User" to invite someone to join.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -135,7 +150,9 @@ export default function InvitationsSection() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(invitation.status)}`}>
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(invitation.status)}`}
+                  >
                     {invitation.status}
                   </span>
                   {invitation.status === 'pending' && (

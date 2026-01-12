@@ -325,43 +325,30 @@ export const resourceService = {
 
 ## API Route Pattern
 
+### Shared API Client Utilities
+The project uses shared utility functions in `src/lib/supabase/apiClient.ts`:
+
+```typescript
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
+
+// getAuthClient(token) - Creates client authenticated with user's JWT
+// getServiceRoleClient() - Creates admin client (returns null if key not configured)
+// extractBearerToken(authHeader) - Extracts token from Authorization header
+```
+
 ### Standard API Route Structure
 ```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function getAuthClient(token: string) {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    }
-  );
-}
-
-function getServiceRoleClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
-}
-
 export async function POST(request: NextRequest) {
   try {
-    // 1. Validate Authorization header
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    // 1. Extract and validate token
+    const token = extractBearerToken(request.headers.get('Authorization'));
+    if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -369,7 +356,6 @@ export async function POST(request: NextRequest) {
     }
     
     // 2. Get authenticated user
-    const token = authHeader.substring(7);
     const authClient = getAuthClient(token);
     const { data: { user }, error: authError } = await authClient.auth.getUser();
     
@@ -391,8 +377,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 5. Process request
-    const { data, error } = await authClient
+    // 5. Process request (use serviceClient for admin operations)
+    const serviceClient = getServiceRoleClient();
+    const dbClient = serviceClient || authClient;
+    
+    const { data, error } = await dbClient
       .from('table_name')
       .insert({ ...body, owner_id: user.id })
       .select()
@@ -674,6 +663,88 @@ const rowToScoreboard = (row: ScoreboardRow): Scoreboard => ({
 const customStyles = row.custom_styles as ScoreboardCustomStyles | null;
 ```
 
+### Avoiding `any` Types
+- ❌ **Never use `any` type** - ESLint enforces `@typescript-eslint/no-explicit-any`
+- ✅ **Use proper types** for all variables, parameters, and return values
+
+#### Common Patterns to Replace `any`:
+
+**1. Dynamic object access with `keyof`:**
+```typescript
+// Bad
+const value = (obj as any)[key];
+
+// Good
+const getStyleValue = (key: keyof ScoreboardCustomStyles): string | undefined => {
+  return customStyles[key] as string | undefined;
+};
+```
+
+**2. Supabase insert/update operations:**
+```typescript
+// When Supabase types don't match, use `as never` for insert/update calls
+const insertData: ScoreboardInsert = { ... };
+const { data, error } = await supabase
+  .from('scoreboards')
+  .insert(insertData as never)  // Use `as never` to bypass Supabase type issues
+  .select()
+  .single();
+```
+
+**3. Event handlers with specific types:**
+```typescript
+// Bad
+onChange={(e) => setValue(e.target.value as any)}
+
+// Good - use union type
+onChange={(e) => setValue(e.target.value as 'newest' | 'oldest' | 'title')}
+```
+
+**4. Component refs with proper types:**
+```typescript
+// Bad
+ref={ref as any}
+
+// Good - use proper Ref type
+ref={ref as React.Ref<HTMLButtonElement>}
+```
+
+**5. Unused variables (prefix with underscore):**
+```typescript
+// Bad - triggers unused variable warning
+} catch (error) {
+  return { data: null, error: 'Failed' };
+}
+
+// Good - underscore prefix signals intentionally unused
+} catch (_error) {
+  return { data: null, error: 'Failed' };
+}
+```
+
+**6. Icon/component props:**
+```typescript
+// Bad
+<Icon name={icon as any} />
+
+// Good - icon is already string type, no cast needed
+<Icon name={icon} />
+```
+
+**7. Array/object with known structure:**
+```typescript
+// Bad
+const items: any[] = [];
+
+// Good - define interface
+interface NavItem {
+  label: string;
+  path: string;
+  icon: string;
+}
+const items: NavItem[] = [];
+```
+
 ---
 
 ## Async/Await Patterns
@@ -904,6 +975,90 @@ export const myService = {
   }
 };
 ```
+
+---
+
+## Database Architecture
+
+### Schema Overview
+
+The application uses Supabase (PostgreSQL) with the following tables:
+
+#### Tables
+| Table | Purpose |
+|-------|---------|
+| `user_profiles` | User account data, synced from Supabase Auth via trigger |
+| `scoreboards` | Scoreboard definitions with owner, visibility, styling |
+| `scoreboard_entries` | Individual entries/scores within scoreboards |
+| `invitations` | User invitations with status tracking |
+| `system_settings` | Global app settings (single row table) |
+
+#### Key Columns
+
+**user_profiles**
+- `id` (UUID, FK to auth.users)
+- `email` (unique, validated format)
+- `full_name` (optional, max 255 chars)
+- `role` (enum: 'system_admin' | 'user')
+
+**scoreboards**
+- `id` (UUID, primary key)
+- `owner_id` (FK to user_profiles with CASCADE)
+- `title` (3-100 chars required)
+- `description` (optional, max 200 chars)
+- `visibility` (enum: 'public' | 'private')
+- `score_type` (enum: 'number' | 'time')
+- `sort_order` (enum: 'asc' | 'desc')
+- `time_format` (nullable, for time-based scores)
+- `custom_styles` (JSONB, styling configuration)
+- `style_scope` (enum: 'main' | 'embed' | 'both')
+
+**scoreboard_entries**
+- `id` (UUID, primary key)
+- `scoreboard_id` (FK to scoreboards with CASCADE)
+- `name` (1-100 chars, alphanumeric pattern)
+- `score` (numeric)
+- `details` (optional, max 500 chars)
+
+**invitations**
+- `id` (UUID, primary key)
+- `inviter_id` (FK to user_profiles, SET NULL on delete)
+- `invitee_email` (validated format)
+- `status` (enum: 'pending' | 'accepted' | 'expired' | 'cancelled')
+- `expires_at` (must be > created_at)
+- `accepted_at` (required when status = 'accepted')
+
+### PostgreSQL Enums
+```sql
+user_role: 'system_admin' | 'user'
+scoreboard_visibility: 'public' | 'private'
+invitation_status: 'pending' | 'accepted' | 'expired' | 'cancelled'
+```
+
+### RLS Helper Functions
+```sql
+is_system_admin()              -- Returns true if current user is system_admin
+owns_scoreboard(scoreboard_uuid)   -- Returns true if user owns the scoreboard
+can_view_scoreboard(scoreboard_uuid) -- Returns true if public or user owns it
+```
+
+### Key Constraints
+- All tables have `created_at <= updated_at` timestamp validation
+- Email format validation on user_profiles and invitations
+- Title length: 3-100 characters
+- Description length: max 200 characters
+- Entry name pattern: alphanumeric with spaces, hyphens, apostrophes
+
+### Indexes
+- `idx_entries_scoreboard_score` - Composite index for leaderboard queries
+- `idx_scoreboards_title_trgm` - GIN trigram for fast ILIKE search
+- `idx_scoreboards_description_trgm` - GIN trigram for description search
+- `idx_scoreboards_visibility_created` - Composite for public listing
+
+### Cascade Behavior
+- Deleting a scoreboard CASCADE deletes all entries
+- Deleting a user CASCADE deletes their scoreboards
+- Deleting an inviter SET NULL on invitation.inviter_id
 
 ---
 

@@ -37,7 +37,7 @@ export interface Scoreboard {
   id: string;
   ownerId: string;
   title: string;
-  subtitle?: string | null;
+  description?: string | null;
   sortOrder: 'asc' | 'desc';
   visibility: 'public' | 'private';
   scoreType: ScoreType;

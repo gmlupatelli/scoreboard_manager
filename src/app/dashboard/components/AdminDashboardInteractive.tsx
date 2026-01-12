@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
@@ -39,9 +39,12 @@ const AdminDashboardInteractive = () => {
   const [scoreboards, setScoreboards] = useState<ScoreboardModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState('');
+  const [_error, setError] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; scoreboard: ScoreboardModel | null }>({
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    scoreboard: ScoreboardModel | null;
+  }>({
     isOpen: false,
     scoreboard: null,
   });
@@ -58,13 +61,13 @@ const AdminDashboardInteractive = () => {
   const [loadingOwners, setLoadingOwners] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
-  
+
   // Cache isSystemAdmin result to avoid function reference changes
   const isAdmin = isSystemAdmin();
 
   // Track if we've finished the initial auth check
   const [authChecked, setAuthChecked] = useState(false);
-  
+
   useEffect(() => {
     // Wait a bit after auth finishes loading to allow session to fully establish
     if (!authLoading) {
@@ -103,74 +106,77 @@ const AdminDashboardInteractive = () => {
   };
 
   // Load scoreboards function - uses isAdmin and user from closure
-  const loadScoreboards = useCallback(async (
-    isInitial: boolean,
-    searchTerm: string,
-    ownerFilter: string,
-    currentOffset: number,
-    currentSortBy: 'name' | 'date' | 'entries',
-    currentSortOrder: 'asc' | 'desc'
-  ) => {
-    if (isInitial) {
-      setLoading(true);
-      setScoreboards([]);
-    } else {
-      setLoadingMore(true);
-    }
-    setError('');
-    
-    try {
-      let result;
-      
-      if (isAdmin) {
-        result = await scoreboardService.getAllScoreboardsPaginated({
-          limit: PAGE_SIZE,
-          offset: currentOffset,
-          search: searchTerm || undefined,
-          ownerId: ownerFilter !== 'all' ? ownerFilter : undefined,
-          sortBy: currentSortBy,
-          sortOrder: currentSortOrder,
-        });
-      } else {
-        result = await scoreboardService.getUserScoreboardsPaginated(user!.id, {
-          limit: PAGE_SIZE,
-          offset: currentOffset,
-          search: searchTerm || undefined,
-          sortBy: currentSortBy,
-          sortOrder: currentSortOrder,
-        });
-      }
-
-      if (result.error) {
-        setError(result.error.message);
-      } else {
-        if (isInitial) {
-          setScoreboards(result.data || []);
-          setOffset(result.data?.length || 0);
-        } else {
-          setScoreboards(prev => [...prev, ...(result.data || [])]);
-          setOffset(currentOffset + (result.data?.length || 0));
-        }
-        setHasMore(result.hasMore);
-        setTotalCount(result.totalCount);
-      }
-    } catch (err) {
-      setError('Failed to load scoreboards');
-    } finally {
+  const loadScoreboards = useCallback(
+    async (
+      isInitial: boolean,
+      searchTerm: string,
+      ownerFilter: string,
+      currentOffset: number,
+      currentSortBy: 'name' | 'date' | 'entries',
+      currentSortOrder: 'asc' | 'desc'
+    ) => {
       if (isInitial) {
-        setLoading(false);
+        setLoading(true);
+        setScoreboards([]);
       } else {
-        setLoadingMore(false);
+        setLoadingMore(true);
       }
-    }
-  }, [user, isAdmin]);
+      setError('');
+
+      try {
+        let result;
+
+        if (isAdmin) {
+          result = await scoreboardService.getAllScoreboardsPaginated({
+            limit: PAGE_SIZE,
+            offset: currentOffset,
+            search: searchTerm || undefined,
+            ownerId: ownerFilter !== 'all' ? ownerFilter : undefined,
+            sortBy: currentSortBy,
+            sortOrder: currentSortOrder,
+          });
+        } else {
+          result = await scoreboardService.getUserScoreboardsPaginated(user!.id, {
+            limit: PAGE_SIZE,
+            offset: currentOffset,
+            search: searchTerm || undefined,
+            sortBy: currentSortBy,
+            sortOrder: currentSortOrder,
+          });
+        }
+
+        if (result.error) {
+          setError(result.error.message);
+        } else {
+          if (isInitial) {
+            setScoreboards(result.data || []);
+            setOffset(result.data?.length || 0);
+          } else {
+            setScoreboards((prev) => [...prev, ...(result.data || [])]);
+            setOffset(currentOffset + (result.data?.length || 0));
+          }
+          setHasMore(result.hasMore);
+          setTotalCount(result.totalCount);
+        }
+      } catch (_err) {
+        setError('Failed to load scoreboards');
+      } finally {
+        if (isInitial) {
+          setLoading(false);
+        } else {
+          setLoadingMore(false);
+        }
+      }
+    },
+    [user, isAdmin]
+  );
 
   // Debounce search query - same pattern as PublicScoreboardInteractive
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     searchTimeoutRef.current = setTimeout(() => {
       setDebouncedSearch(searchQuery);
     }, SEARCH_DEBOUNCE_MS);
@@ -182,18 +188,22 @@ const AdminDashboardInteractive = () => {
     };
   }, [searchQuery]);
 
-  // Initial load and reload when debounced search, owner filter, or sort changes
+  // Effect for data fetching - ONLY depends on search and owner filter
+  // Sort is always done client-side, never triggers a reload
+  // Wait for userProfile to be loaded before fetching to ensure isAdmin is correct
   useEffect(() => {
-    if (user) {
-      loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+    if (user && userProfile) {
+      // Always fetch with default sort (date desc), sorting is done client-side
+      loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
     }
-  }, [user, debouncedSearch, selectedOwnerId, sortBy, sortOrder]);
+  }, [user, userProfile, debouncedSearch, selectedOwnerId, loadScoreboards]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadScoreboards(false, debouncedSearch, selectedOwnerId, offset, sortBy, sortOrder);
+      // Always fetch with default sort (date desc), sorting is done client-side
+      loadScoreboards(false, debouncedSearch, selectedOwnerId, offset, 'date', 'desc');
     }
-  }, [loadingMore, hasMore, offset, debouncedSearch, selectedOwnerId, sortBy, sortOrder]);
+  }, [loadingMore, hasMore, offset, debouncedSearch, selectedOwnerId, loadScoreboards]);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasMore,
@@ -203,7 +213,7 @@ const AdminDashboardInteractive = () => {
 
   const handleCreateScoreboard = async (
     title: string,
-    subtitle: string,
+    description: string,
     visibility: 'public' | 'private',
     scoreType: ScoreType,
     scoreSortOrder: 'asc' | 'desc',
@@ -213,7 +223,7 @@ const AdminDashboardInteractive = () => {
       const { data, error } = await scoreboardService.createScoreboard({
         ownerId: user!.id,
         title,
-        subtitle,
+        description,
         sortOrder: scoreSortOrder,
         visibility,
         scoreType,
@@ -224,21 +234,21 @@ const AdminDashboardInteractive = () => {
         throw error;
       }
 
-      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
       return { success: true, message: 'Scoreboard created successfully', scoreboardId: data?.id };
-    } catch (err) {
+    } catch (_err) {
       return { success: false, message: 'Failed to create scoreboard' };
     }
   };
 
-  const handleDeleteScoreboard = async (id: string) => {
+  const _handleDeleteScoreboard = async (id: string) => {
     try {
       const { error } = await scoreboardService.deleteScoreboard(id);
       if (error) throw error;
-      
-      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
       return { success: true };
-    } catch (err) {
+    } catch (_err) {
       return { success: false };
     }
   };
@@ -256,27 +266,42 @@ const AdminDashboardInteractive = () => {
     router.push(`/scoreboard-management?id=${id}`);
   };
 
-  const totalEntries = scoreboards.reduce((sum, scoreboard) => sum + (scoreboard.entryCount || 0), 0);
-  const avgEntriesPerScoreboard = scoreboards.length > 0 
-    ? Math.round(totalEntries / scoreboards.length) 
-    : 0;
+  const totalEntries = scoreboards.reduce(
+    (sum, scoreboard) => sum + (scoreboard.entryCount || 0),
+    0
+  );
+  const avgEntriesPerScoreboard =
+    scoreboards.length > 0 ? Math.round(totalEntries / scoreboards.length) : 0;
 
-  // Client-side sorting only for 'entries' (date and name sorting is done server-side)
-  const sortedScoreboards = sortBy === 'entries' 
-    ? [...scoreboards].sort((a, b) => {
-        const comparison = (a.entryCount || 0) - (b.entryCount || 0);
-        return sortOrder === 'asc' ? comparison : -comparison;
-      })
-    : scoreboards;
+  // Client-side sorting for all sort types
+  const sortedScoreboards = useMemo(() => {
+    const sorted = [...scoreboards];
+    sorted.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'name':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+        case 'date':
+          comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+          break;
+        case 'entries':
+          comparison = (a.entryCount || 0) - (b.entryCount || 0);
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    return sorted;
+  }, [scoreboards, sortBy, sortOrder]);
 
   const handleRenameScoreboard = async (id: string, newTitle: string) => {
     try {
       const { error } = await scoreboardService.updateScoreboard(id, { title: newTitle });
       if (error) throw error;
-      
-      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
       showToast('Scoreboard renamed successfully', 'success');
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to rename scoreboard', 'error');
     }
   };
@@ -290,10 +315,10 @@ const AdminDashboardInteractive = () => {
       try {
         const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
         if (error) throw error;
-        
-        await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+
+        await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
         showToast('Scoreboard deleted successfully', 'success');
-      } catch (err) {
+      } catch (_err) {
         showToast('Failed to delete scoreboard', 'error');
       } finally {
         setDeleteModal({ isOpen: false, scoreboard: null });
@@ -305,16 +330,16 @@ const AdminDashboardInteractive = () => {
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={!!user} onLogout={handleSignOut} />
 
-      <main className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="pt-20 landscape-mobile:pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-text-primary mb-2">
                 {isAdmin ? 'System Admin Dashboard' : 'My Scoreboards'}
               </h1>
               <p className="text-text-secondary">
-                {isAdmin 
-                  ? 'Oversee all scoreboards and manage system-wide content' 
+                {isAdmin
+                  ? 'Oversee all scoreboards and manage system-wide content'
                   : 'Manage your scoreboards and competition entries'}
               </p>
             </div>
@@ -339,7 +364,11 @@ const AdminDashboardInteractive = () => {
               )}
               {!isAdmin && (
                 <button
-                  onClick={() => setIsInviteModalOpen(true)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsInviteModalOpen(true);
+                  }}
                   className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
                   title="Invite Users"
                 >
@@ -348,7 +377,11 @@ const AdminDashboardInteractive = () => {
                 </button>
               )}
               <button
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsCreateModalOpen(true);
+                }}
                 className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
               >
                 <Icon name="PlusIcon" size={20} />
@@ -357,7 +390,7 @@ const AdminDashboardInteractive = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <StatsCard
               title="Total Scoreboards"
               value={totalCount || scoreboards.length}
@@ -389,7 +422,11 @@ const AdminDashboardInteractive = () => {
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
                   <div className="relative w-full lg:w-96">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <Icon name="MagnifyingGlassIcon" size={20} className="text-muted-foreground" />
+                      <Icon
+                        name="MagnifyingGlassIcon"
+                        size={20}
+                        className="text-muted-foreground"
+                      />
                     </div>
                     <input
                       type="text"
@@ -412,7 +449,10 @@ const AdminDashboardInteractive = () => {
                   <div className="flex flex-wrap items-center gap-4">
                     {isAdmin && (
                       <div className="flex items-center space-x-2">
-                        <label htmlFor="ownerFilter" className="text-sm font-medium text-text-secondary">
+                        <label
+                          htmlFor="ownerFilter"
+                          className="text-sm font-medium text-text-secondary"
+                        >
                           Owner:
                         </label>
                         <SearchableSelect
@@ -427,9 +467,9 @@ const AdminDashboardInteractive = () => {
                           ]}
                           value={selectedOwnerId}
                           onChange={setSelectedOwnerId}
-                          placeholder={loadingOwners ? "Loading owners..." : "Filter by owner..."}
+                          placeholder={loadingOwners ? 'Loading owners...' : 'Filter by owner...'}
                           emptyMessage="No owners found"
-                          className="min-w-[220px]"
+                          className="min-w-[140px] sm:min-w-[180px] md:min-w-[220px]"
                         />
                       </div>
                     )}
@@ -473,7 +513,7 @@ const AdminDashboardInteractive = () => {
                         key={scoreboard.id}
                         id={scoreboard.id}
                         title={scoreboard.title}
-                        description={scoreboard.subtitle || ''}
+                        description={scoreboard.description || ''}
                         entryCount={scoreboard.entryCount || 0}
                         createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
                         ownerName={isAdmin ? scoreboard.owner?.fullName : undefined}
@@ -502,7 +542,11 @@ const AdminDashboardInteractive = () => {
                 </>
               ) : (
                 <div className="bg-card border border-border rounded-lg p-12 text-center">
-                  <Icon name="MagnifyingGlassIcon" size={48} className="text-muted-foreground mx-auto mb-4" />
+                  <Icon
+                    name="MagnifyingGlassIcon"
+                    size={48}
+                    className="text-muted-foreground mx-auto mb-4"
+                  />
                   <h3 className="text-lg font-semibold text-text-primary mb-2">No Results Found</h3>
                   <p className="text-sm text-text-secondary">Try adjusting your search criteria</p>
                 </div>

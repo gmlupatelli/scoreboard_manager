@@ -53,7 +53,7 @@ const ScoreboardCard = ({
         ) : (
           <h3 className="text-lg font-semibold text-text-primary flex-1">{title}</h3>
         )}
-        
+
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
@@ -62,7 +62,7 @@ const ScoreboardCard = ({
           >
             <Icon name="EllipsisVerticalIcon" size={20} className="text-text-secondary" />
           </button>
-          
+
           {showMenu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
@@ -97,7 +97,9 @@ const ScoreboardCard = ({
         {description ? (
           <p className="text-sm text-text-secondary line-clamp-2">{description}</p>
         ) : (
-          <p className="text-sm text-text-secondary line-clamp-2 italic">No description available</p>
+          <p className="text-sm text-text-secondary line-clamp-2 italic">
+            No description available
+          </p>
         )}
       </div>
 
@@ -106,21 +108,21 @@ const ScoreboardCard = ({
       <div className="flex flex-col gap-2 mb-4">
         {ownerName && (
           <div className="flex items-center space-x-1 text-sm text-text-secondary">
-            <Icon name="UserIcon" size={16} />
+            <Icon name="UserIcon" size={20} />
             <span className="truncate">{ownerName}</span>
           </div>
         )}
-        <div className="flex items-center space-x-4 text-sm text-text-secondary">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-text-secondary">
           <div className="flex items-center space-x-1">
-            <Icon name={visibility === 'public' ? 'GlobeAltIcon' : 'LockClosedIcon'} size={16} />
+            <Icon name={visibility === 'public' ? 'GlobeAltIcon' : 'LockClosedIcon'} size={20} />
             <span>{visibility === 'public' ? 'Public' : 'Private'}</span>
           </div>
           <div className="flex items-center space-x-1">
-            <Icon name="UsersIcon" size={16} />
+            <Icon name="UsersIcon" size={20} />
             <span>{entryCount} entries</span>
           </div>
           <div className="flex items-center space-x-1">
-            <Icon name="CalendarIcon" size={16} />
+            <Icon name="CalendarIcon" size={20} />
             <span>{createdAt}</span>
           </div>
         </div>

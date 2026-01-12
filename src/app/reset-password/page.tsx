@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabase/client';
-import Header from '../../components/common/Header';
+import { supabase } from '@/lib/supabase/client';
+import Header from '@/components/common/Header';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -56,7 +56,7 @@ export default function ResetPasswordPage() {
           router.push('/login');
         }, 2000);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -84,7 +84,9 @@ export default function ResetPasswordPage() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 pt-20">
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
             <h1 className="text-2xl font-bold text-destructive mb-4">Invalid or Expired Link</h1>
-            <p className="text-muted-foreground mb-6">The password reset link is invalid or has expired. Please request a new one.</p>
+            <p className="text-muted-foreground mb-6">
+              The password reset link is invalid or has expired. Please request a new one.
+            </p>
             <Link
               href="/forgot-password"
               className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-md font-medium hover:opacity-90 transition-opacity"
@@ -122,7 +124,10 @@ export default function ResetPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     New Password
                   </label>
                   <input
@@ -139,7 +144,10 @@ export default function ResetPasswordPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Confirm Password
                   </label>
                   <input

@@ -12,7 +12,15 @@ interface EntryCardProps {
   index?: number;
 }
 
-export default function EntryCard({ rank, name, score, customStyles, scoreType = 'number', timeFormat = null, index = 0 }: EntryCardProps) {
+export default function EntryCard({
+  rank,
+  name,
+  score,
+  customStyles,
+  scoreType = 'number',
+  timeFormat = null,
+  index = 0,
+}: EntryCardProps) {
   const getPerRankColor = (rank: number): string => {
     if (customStyles) {
       if (rank === 1) return customStyles.rank1Color || '#ca8a04';
@@ -39,20 +47,20 @@ export default function EntryCard({ rank, name, score, customStyles, scoreType =
   const rankColor = getPerRankColor(rank);
   const rankIconName = getRankIcon(rank);
   const displayScore = formatScoreDisplay(score, scoreType, timeFormat);
-  const scoreIcon = scoreType === 'time' ? 'ClockIcon' : 'StarIcon';
-  
+  const _scoreIcon = scoreType === 'time' ? 'ClockIcon' : 'StarIcon';
+
   const isAlternateRow = index % 2 !== 0;
-  const textColor = isAlternateRow 
-    ? (customStyles?.alternateRowTextColor || customStyles?.textColor || 'var(--text-primary)')
-    : (customStyles?.textColor || 'var(--text-primary)');
+  const textColor = isAlternateRow
+    ? customStyles?.alternateRowTextColor || customStyles?.textColor || 'var(--text-primary)'
+    : customStyles?.textColor || 'var(--text-primary)';
 
   return (
-    <div 
+    <div
       className="rounded-lg p-4 hover:elevation-1 transition-smooth duration-150"
       style={{
-        backgroundColor: isAlternateRow 
-          ? (customStyles?.rowHoverColor || customStyles?.backgroundColor || 'var(--surface)')
-          : (customStyles?.backgroundColor || 'var(--surface)'),
+        backgroundColor: isAlternateRow
+          ? customStyles?.rowHoverColor || customStyles?.backgroundColor || 'var(--surface)'
+          : customStyles?.backgroundColor || 'var(--surface)',
         borderColor: customStyles?.borderColor || 'var(--border)',
         borderWidth: '1px',
         borderStyle: 'solid',
@@ -60,7 +68,7 @@ export default function EntryCard({ rank, name, score, customStyles, scoreType =
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 flex-1 min-w-0">
-          <div 
+          <div
             className="flex items-center justify-center w-12 h-12 rounded-lg border-2 flex-shrink-0"
             style={{
               backgroundColor: rank <= 3 ? `${rankColor}20` : 'var(--muted)',
@@ -75,23 +83,13 @@ export default function EntryCard({ rank, name, score, customStyles, scoreType =
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 
-              className="text-base font-semibold truncate"
-              style={{ color: textColor }}
-            >
+            <h3 className="text-base font-semibold truncate" style={{ color: textColor }}>
               {name}
             </h3>
-            <p 
-              className="text-sm"
-              style={{ color: textColor ? `${textColor}99` : 'var(--text-secondary)' }}
-            >
-              Rank #{rank}
-            </p>
           </div>
         </div>
-        <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-          <Icon name={scoreIcon} size={18} style={{ color: customStyles?.accentColor || 'var(--primary)' }} variant="solid" />
-          <span 
+        <div className="flex items-center flex-shrink-0 ml-4">
+          <span
             className="text-xl font-bold"
             style={{ color: customStyles?.accentColor || 'var(--primary)' }}
           >

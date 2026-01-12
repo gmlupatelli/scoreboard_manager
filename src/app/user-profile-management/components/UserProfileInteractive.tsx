@@ -19,9 +19,9 @@ interface Profile {
 }
 
 export default function UserProfileInteractive() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-  
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{
@@ -31,37 +31,37 @@ export default function UserProfileInteractive() {
   }>({
     show: false,
     message: '',
-    type: 'success'
+    type: 'success',
   });
 
   useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.id) return;
+
+      setLoading(true);
+      const { data, error } = await profileService.getProfile(user.id);
+
+      if (error) {
+        // If profile doesn't exist, create a default one from auth user data
+        const fallbackProfile: Profile = {
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || null,
+          created_at: user.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        setProfile(fallbackProfile);
+      } else if (data) {
+        setProfile(data);
+      }
+
+      setLoading(false);
+    };
+
     if (user?.id) {
       loadProfile();
     }
-  }, [user?.id]);
-
-  const loadProfile = async () => {
-    if (!user?.id) return;
-
-    setLoading(true);
-    const { data, error } = await profileService.getProfile(user.id);
-    
-    if (error) {
-      // If profile doesn't exist, create a default one from auth user data
-      const fallbackProfile: Profile = {
-        id: user.id,
-        email: user.email || '',
-        full_name: user.user_metadata?.full_name || null,
-        created_at: user.created_at || new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setProfile(fallbackProfile);
-    } else if (data) {
-      setProfile(data);
-    }
-    
-    setLoading(false);
-  };
+  }, [user]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ show: true, message, type });
@@ -71,7 +71,7 @@ export default function UserProfileInteractive() {
     if (!user?.id) return false;
 
     const { data, error } = await profileService.updateProfile(user.id, {
-      full_name: fullName
+      full_name: fullName,
     });
 
     if (error) {

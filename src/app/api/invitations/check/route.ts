@@ -1,15 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAnonClient } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-function getAnonClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-  
-  return createClient(supabaseUrl, supabaseAnonKey);
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,20 +25,20 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         has_valid_invitation: false,
-        invitation_id: null
+        invitation_id: null,
       });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       has_valid_invitation: !!invitation,
-      invitation_id: invitation ? (invitation as { id: string }).id : null
+      invitation_id: invitation ? (invitation as { id: string }).id : null,
     });
   } catch {
-    return NextResponse.json({ 
+    return NextResponse.json({
       has_valid_invitation: false,
-      invitation_id: null
+      invitation_id: null,
     });
   }
 }

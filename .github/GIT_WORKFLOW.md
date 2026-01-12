@@ -143,6 +143,7 @@ body (optional)
 - `test:` - Adding or updating tests
 - `chore:` - Maintenance tasks (dependencies, configs)
 - `perf:` - Performance improvements
+- `ci:` - CI/CD pipeline changes
 
 ### **Examples:**
 ```powershell
@@ -151,7 +152,70 @@ git commit -m "fix: standardize password minimum to 6 characters"
 git commit -m "refactor: improve localStorage error handling"
 git commit -m "docs: update README with deployment instructions"
 git commit -m "style: format code with Prettier"
+git commit -m "test: add Playwright E2E tests for mobile interactions"
 git commit -m "chore: update dependencies"
+```
+
+---
+
+## Testing
+
+### **Running E2E Tests**
+
+The project uses Playwright for comprehensive end-to-end testing.
+
+#### **Setup** (one-time)
+```powershell
+# Install dependencies
+npm install
+
+# Install Playwright browsers
+npx playwright install
+
+# Install system dependencies (Linux/WSL only)
+sudo npx playwright install-deps
+```
+
+#### **Running Tests**
+```powershell
+# Run all tests
+npm run test:e2e
+
+# Run tests in UI mode (interactive)
+npm run test:e2e:ui
+
+# Run tests in debug mode
+npm run test:e2e:debug
+
+# Run specific test file
+npx playwright test e2e/mobile.spec.ts
+
+# Run specific device/browser
+npx playwright test --project="Desktop Chrome"
+npx playwright test --project="Mobile iPhone SE"
+npx playwright test --project="Mobile Minimum"
+```
+
+#### **Test Coverage**
+- **Mobile Tests**: Touch targets, swipe gestures, landscape orientation, 320px viewport
+- **Desktop Tests**: Auth flows, CRUD operations, keyboard navigation, real-time updates
+- **Accessibility Tests**: WCAG compliance, ARIA labels, screen readers, focus management
+
+#### **Before Pushing Code**
+```powershell
+# 1. Run linting
+npm run lint
+
+# 2. Run type checking
+npm run type-check
+
+# 3. Run E2E tests (optional but recommended)
+npm run test:e2e
+
+# 4. If all pass, commit and push
+git add .
+git commit -m "feat: your changes"
+git push
 ```
 
 ---
@@ -453,64 +517,6 @@ supabase db url
 # Connect using psql (if installed)
 psql "$(supabase db url)"
 ```
-
----
-
-### **Automated Production Migrations**
-
-Production database migrations are **automatically applied** during Netlify builds:
-
-#### **How It Works:**
-1. Migration files in `supabase/migrations/` are committed to git
-2. Push to `main` branch triggers Netlify build
-3. Netlify runs `npm run build:prod` which:
-   - Links to production Supabase project using `SUPABASE_PROJECT_REF_PROD`
-   - Runs `supabase db push` to apply migrations
-   - Builds the Next.js app with `next build`
-4. If migration fails, build fails (production stays on previous version)
-
-#### **Netlify Environment Variables Required:**
-Set these in Netlify dashboard (**Site settings** → **Environment variables**):
-```
-SUPABASE_ACCESS_TOKEN=sbp_your_token_here
-SUPABASE_DB_PASSWORD=your_db_password_here
-SUPABASE_PROJECT_REF_PROD=bfbvcmfezdhdotmbgxsn
-```
-
-#### **Complete Workflow with Auto-Migrations:**
-```powershell
-# 1. Create and test migration in dev
-supabase link --project-ref kvorvygjgeelhybnstje
-supabase db push
-
-# 2. Commit migration file
-git add supabase/migrations/
-git commit -m "feat: add new database feature"
-
-# 3. Merge to dev and test
-git checkout dev
-git merge feature/your-feature
-git push origin dev
-# Verify at: https://dev--myscoreboardmanager.netlify.app
-
-# 4. Promote to main (triggers auto-migration + deploy)
-git checkout main
-git merge dev
-git push origin main
-# Netlify automatically:
-# - Installs Supabase CLI via npx
-# - Applies migration to production database
-# - Builds and deploys the app
-# Production: https://myscoreboardmanager.netlify.app
-```
-
-#### **Important Notes:**
-- ✅ **Always test migrations in dev first** before merging to main
-- ✅ **Migrations run before app build** - failed migrations prevent bad deploys
-- ✅ **Build logs show migration status** - check Netlify deploy logs if issues occur
-- ✅ **npm-based CLI** - more reliable than binary downloads
-- ⚠️ **Breaking migrations need phases** - add column first, then update code
-- ⚠️ **No rollback automation** - database changes persist even if deploy fails
 
 ---
 

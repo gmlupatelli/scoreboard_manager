@@ -27,9 +27,11 @@ export default function SystemAdminSettingsPage() {
   const [success, setSuccess] = useState('');
 
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
-      return { 'Authorization': `Bearer ${session.access_token}` };
+      return { Authorization: `Bearer ${session.access_token}` };
     }
     return {};
   };
@@ -43,14 +45,14 @@ export default function SystemAdminSettingsPage() {
         headers: {
           ...authHeaders,
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
+          Pragma: 'no-cache',
+        },
       });
       if (response.ok) {
         const data = await response.json();
         setSettings(data);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to load settings');
     }
   }, []);
@@ -65,16 +67,18 @@ export default function SystemAdminSettingsPage() {
         router.push('/dashboard');
         return;
       }
-      
+
       fetchSettings().finally(() => {
         setLoading(false);
       });
     }
   }, [user, userProfile, authLoading, router, fetchSettings]);
 
-  const handleToggle = async (field: 'allow_public_registration' | 'require_email_verification') => {
+  const handleToggle = async (
+    field: 'allow_public_registration' | 'require_email_verification'
+  ) => {
     if (!settings) return;
-    
+
     setSaving(true);
     setError('');
     setSuccess('');
@@ -85,15 +89,15 @@ export default function SystemAdminSettingsPage() {
       const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/settings', {
         method: 'PUT',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          ...authHeaders
+          ...authHeaders,
         },
         credentials: 'include',
         body: JSON.stringify({
           ...settings,
-          [field]: newValue
-        })
+          [field]: newValue,
+        }),
       });
 
       if (response.ok) {
@@ -126,7 +130,7 @@ export default function SystemAdminSettingsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header isAuthenticated={true} />
-      
+
       <main className="flex-1 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-8">
@@ -212,11 +216,16 @@ export default function SystemAdminSettingsPage() {
             {!settings?.allow_public_registration && (
               <div className="mt-6 p-4 bg-warning/10 border border-warning/30 rounded-lg">
                 <div className="flex items-start">
-                  <Icon name="InformationCircleIcon" size={20} className="text-warning mr-2 mt-0.5" />
+                  <Icon
+                    name="InformationCircleIcon"
+                    size={20}
+                    className="text-warning mr-2 mt-0.5"
+                  />
                   <div>
                     <p className="text-sm text-warning font-medium">Invite-Only Mode Active</p>
                     <p className="text-sm text-text-secondary mt-1">
-                      New users can only register if they have received an invitation from an existing user.
+                      New users can only register if they have received an invitation from an
+                      existing user.
                     </p>
                   </div>
                 </div>

@@ -68,7 +68,7 @@ export function parseTimeToMilliseconds(input: string, format: TimeFormat): numb
 
 export function formatMillisecondsToTime(ms: number, format: TimeFormat): string {
   if (ms < 0) ms = 0;
-  
+
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

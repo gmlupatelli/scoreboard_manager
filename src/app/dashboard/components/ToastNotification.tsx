@@ -41,7 +41,9 @@ const ToastNotification = ({ message, type, isVisible, onClose }: ToastNotificat
 
   return (
     <div className="fixed bottom-4 right-4 z-50 animate-slide-up">
-      <div className={`${bgColor} ${textColor} border rounded-lg p-4 flex items-center space-x-3 elevation-2 min-w-[300px]`}>
+      <div
+        className={`${bgColor} ${textColor} border rounded-lg p-4 flex items-center space-x-3 elevation-2 min-w-[300px]`}
+      >
         <Icon name={iconName} size={24} />
         <p className="flex-1 text-sm font-medium">{message}</p>
         <button onClick={onClose} className="hover:opacity-70 transition-smooth">

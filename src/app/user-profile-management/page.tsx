@@ -8,7 +8,7 @@ import Footer from '@/components/common/Footer';
 import UserProfileInteractive from './components/UserProfileInteractive';
 
 export default function UserProfileManagementPage() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {

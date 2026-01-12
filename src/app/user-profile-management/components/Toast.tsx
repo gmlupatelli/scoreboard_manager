@@ -26,7 +26,7 @@ export default function Toast({ message, type, onClose }: ToastProps) {
       await navigator.clipboard.writeText(message);
       setCanCopy(false);
       setTimeout(() => setCanCopy(true), 2000);
-    } catch (err) {
+    } catch (_err) {
       console.error('Failed to copy message');
     }
   };
@@ -90,12 +90,7 @@ export default function Toast({ message, type, onClose }: ToastProps) {
               title="Copy error message"
             >
               {canCopy ? (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -104,12 +99,7 @@ export default function Toast({ message, type, onClose }: ToastProps) {
                   />
                 </svg>
               ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -129,12 +119,7 @@ export default function Toast({ message, type, onClose }: ToastProps) {
             }}
             className={`flex-shrink-0 ${textColor} hover:opacity-70`}
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"

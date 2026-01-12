@@ -49,7 +49,11 @@ export default function DangerZoneSection({ onDeleteAccount }: DangerZoneSection
           {/* Warning Message */}
           <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
             <div className="flex gap-3">
-              <Icon name="ExclamationTriangleIcon" size={24} className="text-destructive flex-shrink-0" />
+              <Icon
+                name="ExclamationTriangleIcon"
+                size={24}
+                className="text-destructive flex-shrink-0"
+              />
               <div className="flex-1">
                 <h3 className="font-semibold text-destructive mb-2">
                   This action cannot be undone

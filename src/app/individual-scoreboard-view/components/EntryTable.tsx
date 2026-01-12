@@ -16,7 +16,12 @@ interface EntryTableProps {
   timeFormat?: TimeFormat | null;
 }
 
-export default function EntryTable({ entries, customStyles, scoreType = 'number', timeFormat = null }: EntryTableProps) {
+export default function EntryTable({
+  entries,
+  customStyles,
+  scoreType = 'number',
+  timeFormat = null,
+}: EntryTableProps) {
   const getRankColor = (rank: number): string | undefined => {
     if (customStyles) {
       if (rank === 1) return customStyles.rank1Color || '#ca8a04';
@@ -47,19 +52,19 @@ export default function EntryTable({ entries, customStyles, scoreType = 'number'
       <table className="w-full">
         <thead style={{ backgroundColor: customStyles?.headerColor || 'var(--muted)' }}>
           <tr>
-            <th 
+            <th
               className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider w-20"
               style={{ color: customStyles?.headerTextColor || 'var(--text-secondary)' }}
             >
               Rank
             </th>
-            <th 
+            <th
               className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
               style={{ color: customStyles?.headerTextColor || 'var(--text-secondary)' }}
             >
               Name
             </th>
-            <th 
+            <th
               className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider w-32"
               style={{ color: customStyles?.headerTextColor || 'var(--text-secondary)' }}
             >
@@ -72,23 +77,26 @@ export default function EntryTable({ entries, customStyles, scoreType = 'number'
             const rankIcon = getRankIcon(entry?.rank || 0);
             const rankColor = getRankColor(entry?.rank || 0);
             const isAlternateRow = index % 2 !== 0;
-            const textColor = isAlternateRow 
-              ? (customStyles?.alternateRowTextColor || customStyles?.textColor || 'var(--text-primary)')
-              : (customStyles?.textColor || 'var(--text-primary)');
+            const textColor = isAlternateRow
+              ? customStyles?.alternateRowTextColor ||
+                customStyles?.textColor ||
+                'var(--text-primary)'
+              : customStyles?.textColor || 'var(--text-primary)';
 
             return (
-              <tr 
-                key={entry?.id} 
+              <tr
+                key={entry?.id}
                 className="transition-colors"
-                style={{ 
-                  backgroundColor: index % 2 === 0 
-                    ? (customStyles?.backgroundColor || 'var(--surface)')
-                    : (customStyles?.rowHoverColor || 'var(--muted)'),
+                style={{
+                  backgroundColor:
+                    index % 2 === 0
+                      ? customStyles?.backgroundColor || 'var(--surface)'
+                      : customStyles?.rowHoverColor || 'var(--muted)',
                   borderBottom: `1px solid ${customStyles?.borderColor || 'var(--border)'}`,
                 }}
               >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div 
+                  <div
                     className="flex items-center space-x-2 font-semibold"
                     style={{ color: rankColor || textColor }}
                   >
@@ -97,15 +105,12 @@ export default function EntryTable({ entries, customStyles, scoreType = 'number'
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span 
-                    className="text-sm font-medium"
-                    style={{ color: textColor }}
-                  >
+                  <span className="text-sm font-medium" style={{ color: textColor }}>
                     {entry?.name || 'Unknown'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <span 
+                  <span
                     className="text-sm font-semibold"
                     style={{ color: customStyles?.accentColor || 'var(--primary)' }}
                   >

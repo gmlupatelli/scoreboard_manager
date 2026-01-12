@@ -49,7 +49,7 @@ export default function SystemAdminInvitationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -57,17 +57,19 @@ export default function SystemAdminInvitationsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   const [inviters, setInviters] = useState<Inviter[]>([]);
   const [loadingInviters, setLoadingInviters] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  
+
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
-      return { 'Authorization': `Bearer ${session.access_token}` };
+      return { Authorization: `Bearer ${session.access_token}` };
     }
     return {};
   };
@@ -78,7 +80,7 @@ export default function SystemAdminInvitationsPage() {
       const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/invitations/inviters', {
         credentials: 'include',
-        headers: authHeaders
+        headers: authHeaders,
       });
       if (response.ok) {
         const data = await response.json();
@@ -91,42 +93,45 @@ export default function SystemAdminInvitationsPage() {
     }
   }, []);
 
-  const fetchInvitations = useCallback(async (page: number) => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      const authHeaders = await getAuthHeaders();
-      const params = new URLSearchParams({
-        paginated: 'true',
-        page: page.toString(),
-        limit: PAGE_SIZE.toString(),
-      });
-      
-      if (debouncedSearch) params.append('search', debouncedSearch);
-      if (statusFilter) params.append('status', statusFilter);
-      if (ownerFilter) params.append('ownerId', ownerFilter);
-      
-      const response = await fetch(`/api/invitations?${params.toString()}`, {
-        credentials: 'include',
-        headers: authHeaders
-      });
-      
-      if (response.ok) {
-        const result: PaginatedResponse = await response.json();
-        setInvitations(result.data);
-        setTotalPages(result.totalPages);
-        setTotalCount(result.totalCount);
-        setCurrentPage(result.page);
-      } else {
+  const fetchInvitations = useCallback(
+    async (page: number) => {
+      setLoading(true);
+      setError('');
+
+      try {
+        const authHeaders = await getAuthHeaders();
+        const params = new URLSearchParams({
+          paginated: 'true',
+          page: page.toString(),
+          limit: PAGE_SIZE.toString(),
+        });
+
+        if (debouncedSearch) params.append('search', debouncedSearch);
+        if (statusFilter) params.append('status', statusFilter);
+        if (ownerFilter) params.append('ownerId', ownerFilter);
+
+        const response = await fetch(`/api/invitations?${params.toString()}`, {
+          credentials: 'include',
+          headers: authHeaders,
+        });
+
+        if (response.ok) {
+          const result: PaginatedResponse = await response.json();
+          setInvitations(result.data);
+          setTotalPages(result.totalPages);
+          setTotalCount(result.totalCount);
+          setCurrentPage(result.page);
+        } else {
+          setError('Failed to load invitations');
+        }
+      } catch {
         setError('Failed to load invitations');
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setError('Failed to load invitations');
-    } finally {
-      setLoading(false);
-    }
-  }, [debouncedSearch, statusFilter, ownerFilter]);
+    },
+    [debouncedSearch, statusFilter, ownerFilter]
+  );
 
   useEffect(() => {
     if (!authLoading) {
@@ -138,7 +143,7 @@ export default function SystemAdminInvitationsPage() {
         router.push('/dashboard');
         return;
       }
-      
+
       fetchInviters();
     }
   }, [user, userProfile, authLoading, router, fetchInviters]);
@@ -147,7 +152,7 @@ export default function SystemAdminInvitationsPage() {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     searchTimeoutRef.current = setTimeout(() => {
       setDebouncedSearch(searchQuery);
     }, SEARCH_DEBOUNCE_MS);
@@ -164,13 +169,13 @@ export default function SystemAdminInvitationsPage() {
       setCurrentPage(1);
       fetchInvitations(1);
     }
-  }, [debouncedSearch, statusFilter, ownerFilter, user, userProfile]);
+  }, [debouncedSearch, statusFilter, ownerFilter, user, userProfile?.role, fetchInvitations]);
 
   useEffect(() => {
     if (user && userProfile?.role === 'system_admin' && currentPage > 1) {
       fetchInvitations(currentPage);
     }
-  }, [currentPage]);
+  }, [currentPage, user, userProfile?.role, fetchInvitations]);
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {
@@ -178,13 +183,15 @@ export default function SystemAdminInvitationsPage() {
       const response = await fetch(`/api/invitations/${invitationId}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: authHeaders
+        headers: authHeaders,
       });
 
       if (response.ok) {
-        setInvitations(prev => prev.map(inv => 
-          inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
-        ));
+        setInvitations((prev) =>
+          prev.map((inv) =>
+            inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
+          )
+        );
         setSuccess('Invitation cancelled');
         setTimeout(() => setSuccess(''), 3000);
       } else {
@@ -200,11 +207,16 @@ export default function SystemAdminInvitationsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-warning/10 text-warning';
-      case 'accepted': return 'bg-success/10 text-success';
-      case 'expired': return 'bg-muted text-text-secondary';
-      case 'cancelled': return 'bg-destructive/10 text-destructive';
-      default: return 'bg-muted text-text-secondary';
+      case 'pending':
+        return 'bg-warning/10 text-warning';
+      case 'accepted':
+        return 'bg-success/10 text-success';
+      case 'expired':
+        return 'bg-muted text-text-secondary';
+      case 'cancelled':
+        return 'bg-destructive/10 text-destructive';
+      default:
+        return 'bg-muted text-text-secondary';
     }
   };
 
@@ -220,31 +232,31 @@ export default function SystemAdminInvitationsPage() {
 
     const pages: (number | string)[] = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
       pages.push(1);
-      
+
       if (currentPage > 3) {
         pages.push('...');
       }
-      
+
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-      
+
       for (let i = start; i <= end; i++) {
         if (!pages.includes(i)) {
           pages.push(i);
         }
       }
-      
+
       if (currentPage < totalPages - 2) {
         pages.push('...');
       }
-      
+
       if (!pages.includes(totalPages)) {
         pages.push(totalPages);
       }
@@ -259,8 +271,8 @@ export default function SystemAdminInvitationsPage() {
         >
           <Icon name="ChevronLeftIcon" size={16} />
         </button>
-        
-        {pages.map((page, index) => (
+
+        {pages.map((page, index) =>
           typeof page === 'number' ? (
             <button
               key={index}
@@ -278,8 +290,8 @@ export default function SystemAdminInvitationsPage() {
               {page}
             </span>
           )
-        ))}
-        
+        )}
+
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
@@ -305,7 +317,7 @@ export default function SystemAdminInvitationsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header isAuthenticated={true} />
-      
+
       <main className="flex-1 pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-8">
@@ -388,7 +400,7 @@ export default function SystemAdminInvitationsPage() {
                     ]}
                     value={ownerFilter}
                     onChange={setOwnerFilter}
-                    placeholder={loadingInviters ? "Loading..." : "Filter by inviter..."}
+                    placeholder={loadingInviters ? 'Loading...' : 'Filter by inviter...'}
                     emptyMessage="No inviters found"
                     className="min-w-[200px]"
                   />
@@ -433,7 +445,11 @@ export default function SystemAdminInvitationsPage() {
               </div>
             ) : invitations.length === 0 ? (
               <div className="text-center py-12">
-                <Icon name="EnvelopeIcon" size={48} className="mx-auto text-text-secondary opacity-50 mb-4" />
+                <Icon
+                  name="EnvelopeIcon"
+                  size={48}
+                  className="mx-auto text-text-secondary opacity-50 mb-4"
+                />
                 <p className="text-text-secondary">
                   {debouncedSearch || statusFilter || ownerFilter
                     ? 'No invitations match your filters.'
@@ -446,25 +462,44 @@ export default function SystemAdminInvitationsPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-border bg-muted/30">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Invitee Email</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Invited By</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Status</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Created</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">Expires</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-text-secondary">Actions</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                          Invitee Email
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                          Invited By
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                          Status
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                          Created
+                        </th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                          Expires
+                        </th>
+                        <th className="text-right py-3 px-4 text-sm font-medium text-text-secondary">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {invitations.map((invitation) => (
-                        <tr key={invitation.id} className="border-b border-border last:border-b-0 hover:bg-muted/20 transition-smooth">
+                        <tr
+                          key={invitation.id}
+                          className="border-b border-border last:border-b-0 hover:bg-muted/20 transition-smooth"
+                        >
                           <td className="py-3 px-4 text-sm text-text-primary font-medium">
                             {invitation.invitee_email}
                           </td>
                           <td className="py-3 px-4 text-sm text-text-secondary">
-                            {invitation.inviter?.full_name || invitation.inviter?.email || 'Unknown'}
+                            {invitation.inviter?.full_name ||
+                              invitation.inviter?.email ||
+                              'Unknown'}
                           </td>
                           <td className="py-3 px-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(invitation.status)}`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(invitation.status)}`}
+                            >
                               {invitation.status}
                             </span>
                           </td>
