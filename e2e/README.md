@@ -12,37 +12,49 @@ npx playwright install
 
 ## Test Data Management
 
-### Refresh Test Data (Recommended)
-**Use this to reset all test users and data to a clean state:**
+### Refresh Test Data (Default - Automated Users Only)
+**Resets automated test users while preserving manual testing users:**
 ```bash
 npm run refresh-test-data
 ```
 
 This script:
-- ✅ Deletes and recreates all 5 test users with fresh credentials
-- ✅ Removes all existing test data (scoreboards, entries, invitations)
-- ✅ Seeds fresh data for john@example.com and sarah@example.com
-- ✅ Leaves admin, siteadmin, and jane clean for testing
+- ✅ Deletes and recreates 3 automated test users (admin, john, sarah)
+- ✅ Removes test data for automated users only
+- ✅ Seeds fresh data for john and sarah (scoreboards + invitations)
+- ✅ **Preserves siteadmin and jane data intact**
 - ✅ All passwords reset to `test123`
 
 **When to run:**
 - Before first test run on a new environment
-- After manual testing that modified test data
-- When test users are in an inconsistent state
+- When automated test users are in an inconsistent state
 - After database schema changes
 
-**Test Users:**
-- `admin@example.com` / `test123` - System admin (automated testing)
-- `john@example.com` / `test123` - User with 2 scoreboards (automated testing)
-- `sarah@example.com` / `test123` - User with 2 scoreboards (automated testing)
-- `siteadmin@example.com` / `test123` - System admin (manual testing)
-- `jane@example.com` / `test123` - User (manual testing)
-
-### Legacy Test Seeding (UI-based)
+### Full Reset (All Users)
+**Completely resets ALL test users including manual testing users:**
 ```bash
-npm run test:seed
+npm run refresh-test-data:full
 ```
-*Note: The new `refresh-test-data` script is faster and more reliable.*
+
+Use this when:
+- Manual user data is impacting automated tests
+- You want a completely clean slate
+- Setting up a fresh test environment
+
+### Automated Test Users
+| User | Role | Data |
+|------|------|------|
+| `admin@example.com` | system_admin | Clean for testing |
+| `john@example.com` | user | 2 scoreboards, 2 invitations |
+| `sarah@example.com` | user | 2 scoreboards with entries |
+
+### Manual Test Users (Preserved by default)
+| User | Role | Notes |
+|------|------|-------|
+| `siteadmin@example.com` | system_admin | For manual testing |
+| `jane@example.com` | user | For manual testing |
+
+**All passwords: `test123`**
 
 ## Running Tests
 
@@ -149,34 +161,6 @@ Additional projects can be enabled in `playwright.config.ts`:
 - ✅ Reduced motion support
 - ✅ RTL direction support
 
-## Manual Testing Checklist (320px)
-
-### Visual Verification
-- [ ] No horizontal overflow on any page
-- [ ] All text is readable (minimum 14px)
-- [ ] Touch targets are at least 44x44px
-- [ ] Images scale properly
-- [ ] Modals fit within viewport
-
-### Interaction Testing
-- [ ] All buttons are tappable
-- [ ] Forms are usable
-- [ ] Swipe gestures work smoothly
-- [ ] Scrolling is smooth
-- [ ] No content is hidden or cut off
-
-### Landscape Mode
-- [ ] Header reduces height (64px → 48px)
-- [ ] Vertical spacing reduces (25%)
-- [ ] Content is accessible
-- [ ] No excessive scrolling needed
-
-### Performance
-- [ ] Page loads in < 3 seconds
-- [ ] Animations are smooth (60fps)
-- [ ] No layout shifts
-- [ ] Touch response is immediate
-
 ## CI/CD Integration
 
 Tests are configured to run in CI environments with:
@@ -184,6 +168,9 @@ Tests are configured to run in CI environments with:
 - Single worker for stability
 - Automatic screenshots on failure
 - HTML report generation
+- Trace capture on first retry
+- Video retention on failure only
+- Fail-fast if `.only()` is left in tests
 
 ## Debugging Tips
 

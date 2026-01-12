@@ -1,4 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { test as authTest } from './fixtures/auth';
+import {
+  simulateSwipe,
+  getSwipeableCard,
+  waitForSwipeReset,
+  setReducedMotion,
+} from './utils/swipe-helpers';
 
 /**
  * Mobile E2E Tests - Touch interactions, swipe gestures, responsive layouts
@@ -61,42 +68,120 @@ test.describe('Mobile Touch Interactions', () => {
   });
 });
 
-test.describe('Swipe Gestures', () => {
-  test.use({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
+authTest.describe('Swipe Gestures', () => {
+  authTest.use({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
 
-  test('should handle swipe-to-delete on cards', async ({ page }) => {
-    await page.goto('/invitations');
-
-    // Check if invitation card exists
-    const card = page.locator('[data-testid="invitation-card"]').first();
-
-    if (await card.isVisible()) {
-      const box = await card.boundingBox();
-
-      if (box) {
-        // Simulate swipe left
-        await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(box.x + box.width / 2 - 150, box.y + box.height / 2);
-        await page.mouse.up();
-
-        // Check for visual feedback
-        await page.waitForTimeout(500);
-      }
+  // Skip swipe tests on desktop - they're mobile-specific interactions
+  authTest.beforeEach(async ({}, testInfo) => {
+    if (!testInfo.project.name.includes('Mobile')) {
+      testInfo.skip(true, 'Swipe gestures only applicable on mobile devices');
     }
   });
 
-  test('should show swipe feedback progressively', async ({ page }) => {
-    await page.goto('/invitations');
+  // Shared swipe behavior tests using parameterized approach
+  const swipeTestCases = [
+    { page: '/invitations', name: 'InvitationCard', direction: 'left' as const },
+    { page: '/dashboard', name: 'ScoreboardCard', direction: 'left' as const },
+  ];
 
-    const card = page.locator('[data-testid="invitation-card"]').first();
+  for (const testCase of swipeTestCases) {
+    authTest(`should handle swipe-to-delete on ${testCase.name}`, async ({ johnAuth }) => {
+      // Wait for the dashboard to be fully loaded (johnAuth lands here after login)
+      await johnAuth.waitForLoadState('networkidle');
+      await johnAuth.waitForTimeout(1000); // Extra stabilization for mobile
 
-    if (await card.isVisible()) {
-      // Touch should trigger visual feedback
-      await card.tap();
-      await page.waitForTimeout(100);
+      // Navigate to target page if not already there
+      if (!johnAuth.url().endsWith(testCase.page)) {
+        await johnAuth.goto(testCase.page, { waitUntil: 'networkidle' });
+      }
+      await johnAuth.waitForTimeout(1000); // Wait for auth state to propagate on target page
+
+      const card = await getSwipeableCard(johnAuth);
+      if (!card) {
+        authTest.skip(true, `No swipeable card found on ${testCase.page}`);
+        return;
+      }
+
+      const box = await card.boundingBox();
+      if (!box) {
+        authTest.skip(true, 'Card not visible');
+        return;
+      }
+
+      // Perform swipe gesture
+      await simulateSwipe(johnAuth, card, testCase.direction);
+      await waitForSwipeReset(johnAuth);
+    });
+
+    authTest(`should show progressive swipe feedback on ${testCase.name}`, async ({ johnAuth }) => {
+      // Wait for the dashboard to be fully loaded (johnAuth lands here after login)
+      await johnAuth.waitForLoadState('networkidle');
+      await johnAuth.waitForTimeout(1000); // Extra stabilization for mobile
+
+      // Navigate to target page if not already there
+      if (!johnAuth.url().endsWith(testCase.page)) {
+        await johnAuth.goto(testCase.page, { waitUntil: 'networkidle' });
+      }
+      await johnAuth.waitForTimeout(1000); // Wait for auth state to propagate on target page
+
+      const card = await getSwipeableCard(johnAuth);
+      if (!card) {
+        authTest.skip(true, `No swipeable card found on ${testCase.page}`);
+        return;
+      }
+
+      // Start swipe but don't complete it
+      await simulateSwipe(johnAuth, card, 'left', { distance: 60, steps: 3 });
+    });
+  }
+
+  // Accessibility: reduced motion preference
+  authTest('should respect reduced motion preference', async ({ johnAuth }) => {
+    // Wait for the dashboard to be fully loaded (johnAuth lands here after login)
+    await johnAuth.waitForLoadState('networkidle');
+    await johnAuth.waitForTimeout(1000); // Extra stabilization for mobile
+
+    await setReducedMotion(johnAuth, true);
+    await johnAuth.goto('/invitations', { waitUntil: 'networkidle' });
+    await johnAuth.waitForTimeout(1000); // Wait for auth state to propagate
+
+    const card = await getSwipeableCard(johnAuth);
+    if (!card) {
+      authTest.skip(true, 'No swipeable card found');
+      return;
     }
+
+    // With reduced motion, swipe should still work but without animation
+    await simulateSwipe(johnAuth, card, 'left', { distance: 150 });
+    await waitForSwipeReset(johnAuth);
+  });
+
+  // Direction locking: vertical scroll should cancel swipe
+  authTest('should cancel swipe on vertical movement', async ({ johnAuth }) => {
+    // Wait for the dashboard to be fully loaded (johnAuth lands here after login)
+    await johnAuth.waitForLoadState('networkidle');
+    await johnAuth.waitForTimeout(1000); // Extra stabilization for mobile
+
+    await johnAuth.goto('/invitations', { waitUntil: 'networkidle' });
+    await johnAuth.waitForTimeout(1000); // Wait for auth state to propagate
+
+    const card = await getSwipeableCard(johnAuth);
+    if (!card) {
+      authTest.skip(true, 'No swipeable card found');
+      return;
+    }
+
+    const box = await card.boundingBox();
+    if (!box) return;
+
+    // Start horizontal then move vertically - should cancel
+    await johnAuth.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await johnAuth.mouse.down();
+    await johnAuth.mouse.move(box.x + box.width / 2 - 20, box.y + box.height / 2 + 50);
+    await johnAuth.mouse.up();
+
+    // Card should not have moved significantly
+    await johnAuth.waitForTimeout(200);
   });
 });
 

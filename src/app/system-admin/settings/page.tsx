@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthGuard, useAbortableFetch, useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
@@ -18,61 +16,55 @@ interface SystemSettings {
 }
 
 export default function SystemAdminSettingsPage() {
-  const router = useRouter();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { isAuthorized, isChecking, getAuthHeaders } = useAuthGuard({
+    requiredRole: 'system_admin',
+  });
+  const { execute } = useAbortableFetch();
+  const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      return { Authorization: `Bearer ${session.access_token}` };
-    }
-    return {};
-  };
-
   const fetchSettings = useCallback(async () => {
     try {
       const authHeaders = await getAuthHeaders();
-      const response = await fetch('/api/settings', {
-        credentials: 'include',
-        cache: 'no-store',
-        headers: {
-          ...authHeaders,
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          Pragma: 'no-cache',
+      const response = await execute(
+        '/api/settings',
+        {
+          credentials: 'include',
+          cache: 'no-store',
+          headers: {
+            ...authHeaders,
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+          },
         },
-      });
-      if (response.ok) {
+        'settings'
+      );
+      if (response && response.ok) {
         const data = await response.json();
-        setSettings(data);
+        if (isMounted()) {
+          setSettings(data);
+        }
       }
     } catch (_err) {
-      setError('Failed to load settings');
+      if (isMounted()) {
+        setError('Failed to load settings');
+      }
     }
-  }, []);
+  }, [getAuthHeaders, execute, isMounted]);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      if (userProfile?.role !== 'system_admin') {
-        router.push('/dashboard');
-        return;
-      }
-
+    if (isAuthorized) {
       fetchSettings().finally(() => {
-        setLoading(false);
+        if (isMounted()) {
+          setLoading(false);
+        }
       });
     }
-  }, [user, userProfile, authLoading, router, fetchSettings]);
+  }, [isAuthorized, fetchSettings, isMounted]);
 
   const handleToggle = async (
     field: 'allow_public_registration' | 'require_email_verification'
@@ -102,9 +94,11 @@ export default function SystemAdminSettingsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setSettings(data);
-        setSuccess('Settings updated successfully');
-        setTimeout(() => setSuccess(''), 3000);
+        if (isMounted()) {
+          setSettings(data);
+          setSuccess('Settings updated successfully');
+          setTimeoutSafe(() => setSuccess(''), 3000, 'success-clear');
+        }
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to update settings');
@@ -116,7 +110,7 @@ export default function SystemAdminSettingsPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (isChecking || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

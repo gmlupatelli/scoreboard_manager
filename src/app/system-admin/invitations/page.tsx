@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthGuard, useAbortableFetch, useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
@@ -43,8 +41,11 @@ const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 
 export default function SystemAdminInvitationsPage() {
-  const router = useRouter();
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { isAuthorized, isChecking, getAuthHeaders } = useAuthGuard({
+    requiredRole: 'system_admin',
+  });
+  const { execute } = useAbortableFetch();
+  const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -64,34 +65,32 @@ export default function SystemAdminInvitationsPage() {
 
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      return { Authorization: `Bearer ${session.access_token}` };
-    }
-    return {};
-  };
-
   const fetchInviters = useCallback(async () => {
     setLoadingInviters(true);
     try {
       const authHeaders = await getAuthHeaders();
-      const response = await fetch('/api/invitations/inviters', {
-        credentials: 'include',
-        headers: authHeaders,
-      });
-      if (response.ok) {
+      const response = await execute(
+        '/api/invitations/inviters',
+        {
+          credentials: 'include',
+          headers: authHeaders,
+        },
+        'inviters'
+      );
+      if (response && response.ok) {
         const data = await response.json();
-        setInviters(data);
+        if (isMounted()) {
+          setInviters(data);
+        }
       }
     } catch {
       // Silently fail
     } finally {
-      setLoadingInviters(false);
+      if (isMounted()) {
+        setLoadingInviters(false);
+      }
     }
-  }, []);
+  }, [getAuthHeaders, execute, isMounted]);
 
   const fetchInvitations = useCallback(
     async (page: number) => {
@@ -110,43 +109,46 @@ export default function SystemAdminInvitationsPage() {
         if (statusFilter) params.append('status', statusFilter);
         if (ownerFilter) params.append('ownerId', ownerFilter);
 
-        const response = await fetch(`/api/invitations?${params.toString()}`, {
-          credentials: 'include',
-          headers: authHeaders,
-        });
+        const response = await execute(
+          `/api/invitations?${params.toString()}`,
+          {
+            credentials: 'include',
+            headers: authHeaders,
+          },
+          'invitations'
+        );
 
-        if (response.ok) {
+        if (response && response.ok) {
           const result: PaginatedResponse = await response.json();
-          setInvitations(result.data);
-          setTotalPages(result.totalPages);
-          setTotalCount(result.totalCount);
-          setCurrentPage(result.page);
-        } else {
-          setError('Failed to load invitations');
+          if (isMounted()) {
+            setInvitations(result.data);
+            setTotalPages(result.totalPages);
+            setTotalCount(result.totalCount);
+            setCurrentPage(result.page);
+          }
+        } else if (response) {
+          if (isMounted()) {
+            setError('Failed to load invitations');
+          }
         }
       } catch {
-        setError('Failed to load invitations');
+        if (isMounted()) {
+          setError('Failed to load invitations');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted()) {
+          setLoading(false);
+        }
       }
     },
-    [debouncedSearch, statusFilter, ownerFilter]
+    [debouncedSearch, statusFilter, ownerFilter, getAuthHeaders, execute, isMounted]
   );
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      if (userProfile?.role !== 'system_admin') {
-        router.push('/dashboard');
-        return;
-      }
-
+    if (isAuthorized) {
       fetchInviters();
     }
-  }, [user, userProfile, authLoading, router, fetchInviters]);
+  }, [isAuthorized, fetchInviters]);
 
   useEffect(() => {
     if (searchTimeoutRef.current) {
@@ -165,43 +167,47 @@ export default function SystemAdminInvitationsPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    if (user && userProfile?.role === 'system_admin') {
+    if (isAuthorized) {
       setCurrentPage(1);
       fetchInvitations(1);
     }
-  }, [debouncedSearch, statusFilter, ownerFilter, user, userProfile?.role, fetchInvitations]);
+  }, [debouncedSearch, statusFilter, ownerFilter, isAuthorized, fetchInvitations]);
 
   useEffect(() => {
-    if (user && userProfile?.role === 'system_admin' && currentPage > 1) {
+    if (isAuthorized && currentPage > 1) {
       fetchInvitations(currentPage);
     }
-  }, [currentPage, user, userProfile?.role, fetchInvitations]);
+  }, [currentPage, isAuthorized, fetchInvitations]);
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {
       const authHeaders = await getAuthHeaders();
-      const response = await fetch(`/api/invitations/${invitationId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: authHeaders,
-      });
+      const response = await execute(
+        `/api/invitations/${invitationId}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: authHeaders,
+        },
+        `cancel-${invitationId}`
+      );
 
-      if (response.ok) {
+      if (response && response.ok) {
         setInvitations((prev) =>
           prev.map((inv) =>
             inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
           )
         );
         setSuccess('Invitation cancelled');
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
+        setTimeoutSafe(() => setSuccess(''), 3000, 'success-clear');
+      } else if (response) {
         const data = await response.json();
         setError(data.error || 'Failed to cancel invitation');
-        setTimeout(() => setError(''), 3000);
+        setTimeoutSafe(() => setError(''), 3000, 'error-clear');
       }
     } catch {
       setError('Failed to cancel invitation');
-      setTimeout(() => setError(''), 3000);
+      setTimeoutSafe(() => setError(''), 3000, 'error-clear');
     }
   };
 
@@ -303,7 +309,7 @@ export default function SystemAdminInvitationsPage() {
     );
   };
 
-  if (authLoading) {
+  if (isChecking) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

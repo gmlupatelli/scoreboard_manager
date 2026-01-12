@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useTimeoutRef } from '@/hooks';
 import { scoreboardService } from '../../../services/scoreboardService';
 import {
   Scoreboard,
@@ -34,6 +35,7 @@ const ScoreboardManagementInteractive = () => {
   const searchParams = useSearchParams();
   const scoreboardId = searchParams.get('id');
   const { user, userProfile, loading: authLoading } = useAuth();
+  const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
 
   const [isHydrated, setIsHydrated] = useState(false);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
@@ -79,11 +81,11 @@ const ScoreboardManagementInteractive = () => {
 
       if (!scoreboardId) {
         showToast('No scoreboard selected. Redirecting to dashboard...', 'error');
-        setTimeout(() => router.push('/dashboard'), 2000);
+        setTimeoutSafe(() => router.push('/dashboard'), 2000, 'redirect-no-id');
         return;
       }
     }
-  }, [user, authLoading, scoreboardId, router]);
+  }, [user, authLoading, scoreboardId, router, setTimeoutSafe]);
 
   const recalculateRanks = useCallback(
     (entriesList: ScoreboardEntry[]): ScoreboardEntry[] => {
@@ -141,16 +143,28 @@ const ScoreboardManagementInteractive = () => {
       setFilteredEntries(entriesWithRanks);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load scoreboard data';
-      setError(errorMessage);
-      showToast(errorMessage, 'error');
+      if (isMounted()) {
+        setError(errorMessage);
+        showToast(errorMessage, 'error');
+      }
 
       // Redirect to dashboard after showing error
-      setTimeout(() => router.push('/dashboard'), 3000);
+      setTimeoutSafe(() => router.push('/dashboard'), 3000, 'redirect-error');
     } finally {
-      setLoading(false);
-      setIsHydrated(true);
+      if (isMounted()) {
+        setLoading(false);
+        setIsHydrated(true);
+      }
     }
-  }, [scoreboardId, user?.id, userProfile?.role, router, recalculateRanks]);
+  }, [
+    scoreboardId,
+    user?.id,
+    userProfile?.role,
+    router,
+    recalculateRanks,
+    setTimeoutSafe,
+    isMounted,
+  ]);
 
   // Load scoreboard and entries (wait for userProfile to be loaded for role check)
   useEffect(() => {
@@ -454,7 +468,9 @@ const ScoreboardManagementInteractive = () => {
                   />
                 </button>
               </div>
-              <p className={`text-sm text-text-secondary ${!scoreboard.description ? 'italic' : ''}`}>
+              <p
+                className={`text-sm text-text-secondary ${!scoreboard.description ? 'italic' : ''}`}
+              >
                 {scoreboard.description || 'No description available'}
               </p>
             </div>

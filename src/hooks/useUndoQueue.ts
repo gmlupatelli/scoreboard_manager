@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 export interface UndoAction {
   id: string;
@@ -27,33 +26,20 @@ const MAX_VISIBLE_TOASTS = 3;
  */
 export function useUndoQueue() {
   const [toasts, setToasts] = useState<QueuedToast[]>([]);
-  const router = useRouter();
   const timerRefs = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const recentActions = useRef<UndoAction[]>([]);
 
   // Clean up timers on unmount
   useEffect(() => {
+    // Capture ref value for cleanup
     const timers = timerRefs.current;
+    const actions = recentActions.current;
     return () => {
       timers.forEach((timer) => clearTimeout(timer));
       timers.clear();
+      actions.length = 0;
     };
   }, []);
-
-  // Cancel all toasts on navigation
-  useEffect(() => {
-    const handleRouteChange = () => {
-      setToasts([]);
-      timerRefs.current.forEach((timer) => clearTimeout(timer));
-      timerRefs.current.clear();
-      recentActions.current = [];
-    };
-
-    // Listen for route changes
-    return () => {
-      handleRouteChange();
-    };
-  }, [router]);
 
   // Check for batching opportunity
   const shouldBatch = useCallback(() => {

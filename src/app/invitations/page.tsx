@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthGuard, useAbortableFetch } from '@/hooks';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
@@ -21,30 +19,25 @@ interface Invitation {
 }
 
 export default function InvitationsPage() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { isAuthorized, isChecking, getAuthHeaders } = useAuthGuard();
+  const { execute } = useAbortableFetch();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      return { Authorization: `Bearer ${session.access_token}` };
-    }
-    return {};
-  };
-
   const fetchInvitations = useCallback(async () => {
     try {
       const authHeaders = await getAuthHeaders();
-      const response = await fetch('/api/invitations', {
-        credentials: 'include',
-        headers: authHeaders,
-      });
-      if (response.ok) {
+      const response = await execute(
+        '/api/invitations',
+        {
+          credentials: 'include',
+          headers: authHeaders,
+        },
+        'invitations'
+      );
+
+      if (response && response.ok) {
         const data = await response.json();
         setInvitations(data);
       }
@@ -53,28 +46,28 @@ export default function InvitationsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getAuthHeaders, execute]);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+    if (isAuthorized) {
       fetchInvitations();
     }
-  }, [user, authLoading, router, fetchInvitations]);
+  }, [isAuthorized, fetchInvitations]);
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {
       const authHeaders = await getAuthHeaders();
-      const response = await fetch(`/api/invitations/${invitationId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: authHeaders,
-      });
+      const response = await execute(
+        `/api/invitations/${invitationId}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: authHeaders,
+        },
+        `cancel-${invitationId}`
+      );
 
-      if (response.ok) {
+      if (response && response.ok) {
         setInvitations((prev) =>
           prev.map((inv) =>
             inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
@@ -104,7 +97,7 @@ export default function InvitationsPage() {
   const pendingCount = invitations.filter((inv) => inv.status === 'pending').length;
   const acceptedCount = invitations.filter((inv) => inv.status === 'accepted').length;
 
-  if (authLoading || loading) {
+  if (isChecking || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

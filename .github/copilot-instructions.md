@@ -265,6 +265,120 @@ const [error, setError] = useState<string | null>(null);
 
 ---
 
+## Custom Hooks
+
+The project includes several custom hooks located in `src/hooks/`. Import them from `@/hooks`.
+
+### useAuthGuard
+Centralized authentication guard with role-based access control. Prevents redirect loops with internal tracking.
+
+```typescript
+import { useAuthGuard } from '@/hooks';
+
+// Basic auth guard (redirects to login if not authenticated)
+const { isAuthorized, isChecking, user, userProfile, getAuthHeaders } = useAuthGuard();
+
+// Role-based guard (redirects to dashboard if not admin)
+const { isAuthorized, isChecking, getAuthHeaders } = useAuthGuard({ 
+  requiredRole: 'system_admin' 
+});
+
+// Usage
+if (isChecking) return <LoadingSpinner />;
+if (!isAuthorized) return null; // Will redirect automatically
+
+// Get auth headers for API calls
+const headers = await getAuthHeaders();
+```
+
+**When to use:**
+- ✅ Protecting pages that require authentication
+- ✅ Role-based page access (admin pages)
+- ✅ Getting auth headers for API requests
+
+**What it provides:**
+- `isAuthorized`: boolean - true when user has required access
+- `isChecking`: boolean - true during auth check
+- `user`: Supabase User object or null
+- `userProfile`: User profile with role or null
+- `getAuthHeaders`: async function returning `{ Authorization: string }`
+
+### useAbortableFetch
+Wrapper around fetch that automatically handles AbortController. Cancels in-flight requests on unmount.
+
+```typescript
+import { useAbortableFetch } from '@/hooks';
+
+const { execute, abort, abortAll } = useAbortableFetch();
+
+// Make a request with a unique key for tracking
+const response = await execute('/api/data', {
+  method: 'POST',
+  headers: await getAuthHeaders(),
+  body: JSON.stringify(data),
+}, 'my-request-key');
+
+// Returns null if aborted, otherwise the Response
+if (response && response.ok) {
+  const data = await response.json();
+}
+
+// Manually abort a specific request
+abort('my-request-key');
+
+// Abort all pending requests
+abortAll();
+```
+
+**When to use:**
+- ✅ Any fetch call in a component that might unmount
+- ✅ Search/filter requests that may be superseded
+- ✅ Preventing state updates after unmount
+
+### useTimeoutRef
+Safe setTimeout wrapper with automatic cleanup on unmount. Tracks mount state.
+
+```typescript
+import { useTimeoutRef } from '@/hooks';
+
+const { set: setTimeoutSafe, clear, clearAll, isMounted } = useTimeoutRef();
+
+// Set a timeout with a unique key
+setTimeoutSafe(() => {
+  if (isMounted()) {
+    setSuccess('Operation complete!');
+  }
+}, 3000, 'success-message');
+
+// Clear a specific timeout
+clear('success-message');
+
+// Clear all timeouts
+clearAll();
+
+// Check mount state before state updates in async callbacks
+const handleAsync = async () => {
+  const result = await someAsyncOp();
+  if (isMounted()) {
+    setData(result);
+  }
+};
+```
+
+**When to use:**
+- ✅ Delayed redirects after success/error messages
+- ✅ Auto-clearing toast/error messages
+- ✅ Any setTimeout in a component
+- ✅ Checking mount state in async callbacks
+
+### Other Hooks
+
+- **useInfiniteScroll**: IntersectionObserver-based infinite scroll
+- **useSwipeGesture**: Mobile swipe gesture detection
+- **useUndoQueue**: Undo queue with toast notifications
+
+---
+
 ## Service Layer Pattern
 
 ### Service Structure

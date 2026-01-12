@@ -43,6 +43,19 @@ async function performLogin(page: Page, user: AuthUser) {
 
   // Wait for redirect to dashboard (allow up to 45s for slower mobile viewports)
   await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 45000 });
+  // Ensure page is fully stable before returning to test
+  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
+  // Wait for authenticated header (logout button or user menu appears)
+  await page
+    .waitForSelector(
+      '[data-testid="user-menu"], button:has-text("Logout"), button:has-text("Sign Out")',
+      { timeout: 10000 }
+    )
+    .catch(() => {
+      // If no user menu found, wait a bit more for auth state to propagate
+    });
+  await page.waitForTimeout(500);
 }
 
 /**

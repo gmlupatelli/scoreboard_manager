@@ -66,7 +66,10 @@ export default function InvitationCard({
   };
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-border">
+    <div
+      className="relative overflow-hidden rounded-lg border border-border"
+      data-testid="swipeable-card"
+    >
       {/* Swipe background indicator */}
       {swipeState.isSwiping && (
         <div

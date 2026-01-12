@@ -1,19 +1,16 @@
 /**
- * Refresh Test Data Script (Automated Users Only)
+ * Refresh Test Data Script (FULL NUKE)
  *
- * Default test data reset - only clears automated test users, preserving manual testing users.
- * Use this for regular test runs to avoid resetting siteadmin and jane data.
+ * Complete test data reset - clears ALL test users including manual testing users.
+ * Use this when manual user data is impacting automated tests.
  *
  * What it does:
- * 1. Deletes and recreates only 3 automated test users (admin, john, sarah)
- * 2. Removes existing test data for automated users only
- * 3. Seeds fresh data for john and sarah
+ * 1. Deletes and recreates ALL 5 test users (admin, john, sarah, siteadmin, jane)
+ * 2. Removes all existing test data (scoreboards, entries, invitations)
+ * 3. Seeds fresh data for all users
  * 4. Seeds invitations for john (for swipe tests)
- * 5. Leaves siteadmin and jane data INTACT
  *
- * Usage: npm run refresh-test-data
- *
- * For full reset including manual users: npm run refresh-test-data:full
+ * Usage: npm run refresh-test-data:full
  *
  * Prerequisites:
  * - .env.test must be configured with SUPABASE credentials
@@ -54,8 +51,8 @@ if (!supabaseUrl || !serviceRoleKey) {
   process.exit(1);
 }
 
-// Automated test users only (manual users siteadmin and jane are NOT touched)
-const AUTOMATED_TEST_USERS = [
+// Test users configuration - ALL users (automated + manual)
+const TEST_USERS = [
   {
     email: 'admin@example.com',
     password: 'test123',
@@ -77,16 +74,21 @@ const AUTOMATED_TEST_USERS = [
     name: 'Sarah Smith',
     purpose: 'Automated test user',
   },
+  {
+    email: 'siteadmin@example.com',
+    password: 'test123',
+    role: 'system_admin',
+    name: 'Site Admin',
+    purpose: 'Manual test admin',
+  },
+  {
+    email: 'jane@example.com',
+    password: 'test123',
+    role: 'user',
+    name: 'Jane Cooper',
+    purpose: 'Manual test user',
+  },
 ] as const;
-
-// All known test users (for protecting from cleanup)
-const ALL_TEST_USER_EMAILS = [
-  'admin@example.com',
-  'john@example.com',
-  'sarah@example.com',
-  'siteadmin@example.com',
-  'jane@example.com',
-];
 
 // Invitations for swipe testing (sent by john)
 const JOHN_INVITATIONS = [
@@ -155,6 +157,50 @@ const SARAH_SCOREBOARDS = [
       { name: 'Player 3', score: 4800 },
       { name: 'Player 4', score: 4500 },
       { name: 'Player 5', score: 4200 },
+    ],
+  },
+];
+
+const SITEADMIN_SCOREBOARDS = [
+  {
+    title: 'Admin Dashboard Metrics',
+    description: 'System-wide performance tracking',
+    score_type: 'number' as const,
+    sort_order: 'desc' as const,
+    visibility: 'private' as const,
+    entries: [
+      { name: 'Total Users', score: 1542 },
+      { name: 'Active Sessions', score: 387 },
+      { name: 'API Calls Today', score: 9821 },
+    ],
+  },
+];
+
+const JANE_SCOREBOARDS = [
+  {
+    title: "Jane's Fitness Tracker",
+    description: 'Weekly workout scores',
+    score_type: 'number' as const,
+    sort_order: 'desc' as const,
+    visibility: 'private' as const,
+    entries: [
+      { name: 'Monday', score: 450 },
+      { name: 'Tuesday', score: 520 },
+      { name: 'Wednesday', score: 380 },
+      { name: 'Thursday', score: 610 },
+      { name: 'Friday', score: 490 },
+    ],
+  },
+  {
+    title: "Jane's Book Club Ratings",
+    description: 'Monthly book ratings',
+    score_type: 'number' as const,
+    sort_order: 'desc' as const,
+    visibility: 'public' as const,
+    entries: [
+      { name: 'The Great Gatsby', score: 95 },
+      { name: '1984', score: 92 },
+      { name: 'To Kill a Mockingbird', score: 88 },
     ],
   },
 ];
@@ -420,7 +466,11 @@ async function _cleanupTestData() {
 async function seedScoreboard(
   supabase: SupabaseServiceClient,
   userId: string,
-  scoreboard: (typeof JOHN_SCOREBOARDS)[0] | (typeof SARAH_SCOREBOARDS)[0]
+  scoreboard:
+    | (typeof JOHN_SCOREBOARDS)[0]
+    | (typeof SARAH_SCOREBOARDS)[0]
+    | (typeof SITEADMIN_SCOREBOARDS)[0]
+    | (typeof JANE_SCOREBOARDS)[0]
 ) {
   // Insert scoreboard with generated UUID
   const scoreboardId = randomUUID();
@@ -578,9 +628,8 @@ async function cleanupOrphanedData(supabase: SupabaseServiceClient) {
  * Main refresh function
  */
 async function main() {
-  console.log('🔄 Starting test data refresh (automated users only)...\n');
-  console.log('ℹ️  Manual test users (siteadmin, jane) will NOT be touched.\n');
-  console.log('   Use "npm run refresh-test-data:full" to reset all users.\n');
+  console.log('🔄 Starting FULL test data refresh (all users)...\n');
+  console.log('⚠️  This will reset ALL test users including manual testing users!\n');
 
   const supabase = getServiceRoleClient();
 
@@ -588,13 +637,12 @@ async function main() {
     // Step 1: Clean up orphaned data first
     await cleanupOrphanedData(supabase);
 
-    // Step 2: Cleanup - delete users not in ALL_TEST_USER_EMAILS (non-test users)
+    // Step 2: Complete cleanup - delete ALL users not in TEST_USERS
     console.log('🗑️  Removing non-test users...\n');
 
     const { data: allAuthUsers } = await supabase.auth.admin.listUsers();
-    const usersToDelete = allAuthUsers.users.filter(
-      (u) => !ALL_TEST_USER_EMAILS.includes(u.email || '')
-    );
+    const testUserEmails: string[] = TEST_USERS.map((u) => u.email);
+    const usersToDelete = allAuthUsers.users.filter((u) => !testUserEmails.includes(u.email || ''));
 
     if (usersToDelete.length > 0) {
       console.log(`Found ${usersToDelete.length} non-test user(s) to delete:\n`);
@@ -611,11 +659,11 @@ async function main() {
       console.log('No non-test users found to delete.\n');
     }
 
-    // Step 3: Delete and recreate ONLY automated test users
-    console.log('👥 Managing automated test users...');
+    // Step 3: Delete and recreate all test users
+    console.log('👥 Managing test users...');
     const createdUsers: { [key: string]: string } = {};
 
-    for (const user of AUTOMATED_TEST_USERS) {
+    for (const user of TEST_USERS) {
       console.log(`\n  Processing ${user.email} (${user.purpose})...`);
 
       // First, get the user ID if they exist (for data cleanup)
@@ -637,7 +685,7 @@ async function main() {
       console.log(`  ✓ Created ${user.email} with role: ${user.role}`);
     }
 
-    console.log('\n✅ Automated users created successfully\n');
+    console.log('\n✅ All users created successfully\n');
 
     // Step 4: Seed John's scoreboards
     console.log("📝 Seeding John's scoreboards...");
@@ -662,17 +710,34 @@ async function main() {
       console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
     }
 
+    // Step 6: Seed Site Admin's scoreboards
+    console.log("\n📝 Seeding Site Admin's scoreboards...");
+    const siteadminUserId = createdUsers['siteadmin@example.com'];
+
+    for (const scoreboard of SITEADMIN_SCOREBOARDS) {
+      const result = await seedScoreboard(supabase, siteadminUserId, scoreboard);
+      console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+    }
+
+    // Step 7: Seed Jane's scoreboards
+    console.log("\n📝 Seeding Jane's scoreboards...");
+    const janeUserId = createdUsers['jane@example.com'];
+
+    for (const scoreboard of JANE_SCOREBOARDS) {
+      const result = await seedScoreboard(supabase, janeUserId, scoreboard);
+      console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+    }
+
     // Success summary
-    console.log('\n✅ Test data refresh completed successfully!\n');
+    console.log('\n✅ FULL test data refresh completed successfully!\n');
     console.log('📊 Summary:');
-    console.log('  Users refreshed (automated):');
+    console.log('  Users created:');
     console.log('    - admin@example.com (system_admin) - Clean for testing');
     console.log('    - john@example.com (user) - 2 scoreboards, 2 invitations');
     console.log('    - sarah@example.com (user) - 2 scoreboards with entries');
-    console.log('  Users preserved (manual):');
-    console.log('    - siteadmin@example.com (system_admin) - Data intact');
-    console.log('    - jane@example.com (user) - Data intact');
-    console.log('\n  All automated user passwords: test123\n');
+    console.log('    - siteadmin@example.com (system_admin) - 1 scoreboard with entries');
+    console.log('    - jane@example.com (user) - 2 scoreboards with entries');
+    console.log('\n  All passwords: test123\n');
   } catch (error) {
     console.error('\n❌ Refresh failed:', error);
     process.exit(1);

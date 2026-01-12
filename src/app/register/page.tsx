@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
 import Icon from '@/components/ui/AppIcon';
 
@@ -14,6 +15,7 @@ interface SystemSettings {
 export default function RegisterPage() {
   const router = useRouter();
   const { signUp, loading: authLoading } = useAuth();
+  const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -109,14 +111,22 @@ export default function RegisterPage() {
           });
         }
         setSuccess(true);
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+        setTimeoutSafe(
+          () => {
+            router.push('/login');
+          },
+          2000,
+          'redirect'
+        );
       }
     } catch (_err) {
-      setError('An unexpected error occurred');
+      if (isMounted()) {
+        setError('An unexpected error occurred');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted()) {
+        setLoading(false);
+      }
     }
   };
 

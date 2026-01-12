@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useAuthGuard } from '../../../hooks/useAuthGuard';
 import { scoreboardService } from '../../../services/scoreboardService';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import { Scoreboard as ScoreboardModel, ScoreType, TimeFormat } from '../../../types/models';
@@ -35,7 +36,8 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 const AdminDashboardInteractive = () => {
   const router = useRouter();
-  const { user, userProfile, loading: authLoading, signOut, isSystemAdmin } = useAuth();
+  const { user, userProfile, signOut, isSystemAdmin } = useAuth();
+  const { isAuthorized, isChecking } = useAuthGuard();
   const [scoreboards, setScoreboards] = useState<ScoreboardModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -65,32 +67,12 @@ const AdminDashboardInteractive = () => {
   // Cache isSystemAdmin result to avoid function reference changes
   const isAdmin = isSystemAdmin();
 
-  // Track if we've finished the initial auth check
-  const [authChecked, setAuthChecked] = useState(false);
-
-  useEffect(() => {
-    // Wait a bit after auth finishes loading to allow session to fully establish
-    if (!authLoading) {
-      const timer = setTimeout(() => {
-        setAuthChecked(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [authLoading]);
-
-  useEffect(() => {
-    // Only redirect to login after auth is fully checked and there's no user
-    if (authChecked && !user) {
-      router.push('/login');
-    }
-  }, [user, authChecked, router]);
-
   // Load owners for system admin dropdown
   useEffect(() => {
-    if (user && userProfile && isAdmin) {
+    if (isAuthorized && user && userProfile && isAdmin) {
       loadOwners();
     }
-  }, [user, userProfile, isAdmin]);
+  }, [isAuthorized, user, userProfile, isAdmin]);
 
   const loadOwners = async () => {
     setLoadingOwners(true);
@@ -192,11 +174,11 @@ const AdminDashboardInteractive = () => {
   // Sort is always done client-side, never triggers a reload
   // Wait for userProfile to be loaded before fetching to ensure isAdmin is correct
   useEffect(() => {
-    if (user && userProfile) {
+    if (isAuthorized && user && userProfile) {
       // Always fetch with default sort (date desc), sorting is done client-side
       loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
     }
-  }, [user, userProfile, debouncedSearch, selectedOwnerId, loadScoreboards]);
+  }, [isAuthorized, user, userProfile, debouncedSearch, selectedOwnerId, loadScoreboards]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -411,7 +393,7 @@ const AdminDashboardInteractive = () => {
             />
           </div>
 
-          {loading ? (
+          {loading || isChecking ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
               <p className="text-muted-foreground mt-4">Loading scoreboards...</p>

@@ -1,32 +1,40 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
+import { useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
+    if (hasCheckedRef.current) return;
+    hasCheckedRef.current = true;
+
     // Check if user is coming from a valid password reset link
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setIsValidToken(true);
-      } else {
-        setIsValidToken(false);
+      if (isMounted()) {
+        if (data.session) {
+          setIsValidToken(true);
+        } else {
+          setIsValidToken(false);
+        }
       }
     };
     checkSession();
-  }, []);
+  }, [isMounted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,19 +55,29 @@ export default function ResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
 
+      if (!isMounted()) return;
+
       if (error) {
         setError(error.message);
       } else {
         setSuccess(true);
         // Redirect to login after 2 seconds
-        setTimeout(() => {
-          router.push('/login');
-        }, 2000);
+        setTimeoutSafe(
+          () => {
+            router.push('/login');
+          },
+          2000,
+          'redirect'
+        );
       }
     } catch (_err) {
-      setError('An unexpected error occurred');
+      if (isMounted()) {
+        setError('An unexpected error occurred');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted()) {
+        setLoading(false);
+      }
     }
   };
 

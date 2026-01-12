@@ -12,6 +12,20 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 2026 - Race Condition Fixes & Custom Hooks
+- **Created three new reusable hooks** to eliminate race conditions:
+  - `useAuthGuard`: Centralized auth guard with role-based access, prevents redirect loops
+  - `useAbortableFetch`: AbortController wrapper that auto-cancels on unmount
+  - `useTimeoutRef`: Safe setTimeout with auto-cleanup and mount state tracking
+- **Fixed 11 race condition issues** across the codebase:
+  - Eliminated arbitrary 500ms timeout patterns in favor of proper auth state checks
+  - Added mount state tracking to prevent state updates after unmount
+  - Replaced raw `setTimeout` calls with `setTimeoutSafe` for proper cleanup
+  - Fixed Supabase client recreation issues by using shared client instances
+  - Added `isMounted()` checks in async callbacks
+- **Removed unused imports** and cleaned up dependency arrays
+- **Added hook unit tests** for `useAuthGuard`, `useAbortableFetch`, and `useTimeoutRef`
+
 ### January 11, 2026 - Mobile Optimization & E2E Testing
 - **Comprehensive mobile responsiveness** targeting minimum viewport of 320px (iPhone SE)
   - Optimized all modals for iPhone SE with responsive padding and stacked buttons
@@ -164,6 +178,19 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - **Styling**: Tailwind CSS with custom theme (coral #f77174, orange #eba977, navy #38385e/#20203e)
 - **Components**: React components with TypeScript
 - **State Management**: React Context (AuthContext)
+- **Custom Hooks**: See below
+
+### Custom Hooks
+Located in `src/hooks/` with barrel export from `@/hooks`:
+
+| Hook | Purpose |
+|------|---------|
+| `useAuthGuard` | Authentication guard with role-based access. Returns `{isAuthorized, isChecking, user, userProfile, getAuthHeaders}`. Prevents redirect loops. |
+| `useAbortableFetch` | AbortController wrapper for fetch. Auto-cancels on unmount. Returns `{execute, abort, abortAll}`. |
+| `useTimeoutRef` | Safe setTimeout with auto-cleanup. Returns `{set, clear, clearAll, isMounted}`. |
+| `useInfiniteScroll` | IntersectionObserver-based infinite scroll. |
+| `useSwipeGesture` | Mobile swipe gesture detection. |
+| `useUndoQueue` | Undo queue with toast notifications. |
 
 ### Backend Integration
 - **Database**: Supabase PostgreSQL
