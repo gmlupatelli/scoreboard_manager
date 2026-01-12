@@ -520,6 +520,61 @@ psql "$(supabase db url)"
 
 ---
 
+### **Migration Squashing (Periodic Cleanup)**
+
+When migrations accumulate (10+ files) or the schema is stable, squash them into a baseline:
+
+#### **When to Squash**
+- Schema is stable after multiple changes
+- 10+ migration files cluttering the folder
+- Starting fresh after manual database changes
+- Major version release milestone
+
+#### **Squashing Process**
+
+```powershell
+# 1. Ensure all migrations are applied to production
+supabase link --project-ref $env:SUPABASE_PROJECT_REF_PROD
+supabase migration list  # Verify all applied
+
+# 2. Archive old migrations
+mkdir docs/migrations-archive -Force
+Move-Item supabase/migrations/*.sql docs/migrations-archive/
+
+# 3. Clear remote migration history (run in Supabase SQL Editor)
+# DELETE FROM supabase_migrations.schema_migrations;
+
+# 4. Create new baseline
+supabase migration new baseline
+
+# 5. Document schema in baseline (as comments, SELECT 1; as no-op)
+# See existing baseline for format
+
+# 6. Commit and push
+git add .
+git commit -m "chore: squash migrations into baseline"
+git push origin main
+```
+
+#### **File Locations**
+| Location | Purpose |
+|----------|---------|
+| `supabase/migrations/` | Active migrations (run by `db push`) |
+| `docs/migrations-archive/` | Historical reference only |
+
+#### **Baseline Format**
+```sql
+-- No-op for existing databases
+SELECT 1;
+
+-- Schema documentation in comments
+/*
+CREATE TABLE example (...);
+*/
+```
+
+---
+
 ### **Best Practices for Database Changes**
 
 1. **Always test in dev first**
