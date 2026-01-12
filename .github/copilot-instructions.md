@@ -374,7 +374,6 @@ const handleAsync = async () => {
 ### Other Hooks
 
 - **useInfiniteScroll**: IntersectionObserver-based infinite scroll
-- **useSwipeGesture**: Mobile swipe gesture detection
 - **useUndoQueue**: Undo queue with toast notifications
 
 ---

@@ -8,7 +8,7 @@
  * 1. Deletes and recreates only 3 automated test users (admin, john, sarah)
  * 2. Removes existing test data for automated users only
  * 3. Seeds fresh data for john and sarah
- * 4. Seeds invitations for john (for swipe tests)
+ * 4. Seeds invitations for john (for invitation tests)
  * 5. Leaves siteadmin and jane data INTACT
  *
  * Usage: npm run refresh-test-data
@@ -88,7 +88,7 @@ const ALL_TEST_USER_EMAILS = [
   'jane@example.com',
 ];
 
-// Invitations for swipe testing (sent by john)
+// Invitations for invitation testing (sent by john)
 const JOHN_INVITATIONS = [
   { invitee_email: 'testinvite1@fake.test' },
   { invitee_email: 'testinvite2@fake.test' },
@@ -466,7 +466,7 @@ async function seedScoreboard(
 }
 
 /**
- * Seed invitations for a user (for swipe testing)
+ * Seed invitations for a user (for invitation testing)
  */
 async function seedInvitations(
   supabase: SupabaseServiceClient,
@@ -648,10 +648,10 @@ async function main() {
       console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
     }
 
-    // Step 4b: Seed John's invitations (for swipe testing)
+    // Step 4b: Seed John's invitations (for invitation testing)
     console.log("\n📧 Seeding John's invitations...");
     const invitationsCount = await seedInvitations(supabase, johnUserId, JOHN_INVITATIONS);
-    console.log(`  ✓ Created ${invitationsCount} invitations for swipe testing`);
+    console.log(`  ✓ Created ${invitationsCount} invitations for invitation testing`);
 
     // Step 5: Seed Sarah's scoreboards
     console.log("\n📝 Seeding Sarah's scoreboards...");
