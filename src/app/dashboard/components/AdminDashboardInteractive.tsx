@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAuthGuard } from '../../../hooks/useAuthGuard';
 import { scoreboardService } from '../../../services/scoreboardService';
-import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
+import { useInfiniteScroll, useUndoQueue } from '../../../hooks';
 import { Scoreboard as ScoreboardModel, ScoreType, TimeFormat } from '../../../types/models';
 import Header from '@/components/common/Header';
+import UndoToast from '@/components/common/UndoToast';
 import ScoreboardCard from './ScoreboardCard';
 import CreateScoreboardModal from './CreateScoreboardModal';
-import DeleteConfirmationModal from './DeleteConfirmationModal';
 import InviteUserModal from './InviteUserModal';
 import ToastNotification from './ToastNotification';
 import EmptyState from './EmptyState';
@@ -38,18 +38,12 @@ const AdminDashboardInteractive = () => {
   const router = useRouter();
   const { user, userProfile, signOut, isSystemAdmin } = useAuth();
   const { isAuthorized, isChecking } = useAuthGuard();
+  const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
   const [scoreboards, setScoreboards] = useState<ScoreboardModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [_error, setError] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean;
-    scoreboard: ScoreboardModel | null;
-  }>({
-    isOpen: false,
-    scoreboard: null,
-  });
   const [toast, setToast] = useState<ToastState>({ message: '', type: 'info', isVisible: false });
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'entries'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -63,9 +57,28 @@ const AdminDashboardInteractive = () => {
   const [loadingOwners, setLoadingOwners] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const pendingDeletesRef = useRef<
+    Map<string, { scoreboard: ScoreboardModel; timerId: NodeJS.Timeout }>
+  >(new Map());
 
   // Cache isSystemAdmin result to avoid function reference changes
   const isAdmin = isSystemAdmin();
+
+  // Execute all pending deletes on unmount (Option A: execute on navigation)
+  useEffect(() => {
+    const pendingDeletes = pendingDeletesRef.current;
+    return () => {
+      pendingDeletes.forEach(async ({ scoreboard, timerId }) => {
+        clearTimeout(timerId);
+        try {
+          await scoreboardService.deleteScoreboard(scoreboard.id);
+        } catch {
+          // Silent failure on unmount
+        }
+      });
+      pendingDeletes.clear();
+    };
+  }, []);
 
   // Load owners for system admin dropdown
   useEffect(() => {
@@ -288,24 +301,52 @@ const AdminDashboardInteractive = () => {
     }
   };
 
-  const handleDeleteConfirmation = (scoreboard: ScoreboardModel) => {
-    setDeleteModal({ isOpen: true, scoreboard });
-  };
+  const handleDeleteScoreboard = (scoreboard: ScoreboardModel) => {
+    const deleteId = `delete-${scoreboard.id}`;
 
-  const confirmDelete = async () => {
-    if (deleteModal.scoreboard) {
+    // Optimistically remove from UI
+    setScoreboards((prev) => prev.filter((s) => s.id !== scoreboard.id));
+    setTotalCount((prev) => prev - 1);
+
+    // Set up delayed API delete (5 seconds)
+    const timerId = setTimeout(async () => {
+      pendingDeletesRef.current.delete(deleteId);
       try {
-        const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
-        if (error) throw error;
-
-        await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
-        showToast('Scoreboard deleted successfully', 'success');
-      } catch (_err) {
+        const { error } = await scoreboardService.deleteScoreboard(scoreboard.id);
+        if (error) {
+          // Restore on error
+          setScoreboards((prev) => [...prev, scoreboard]);
+          setTotalCount((prev) => prev + 1);
+          showToast('Failed to delete scoreboard', 'error');
+        }
+      } catch {
+        // Restore on error
+        setScoreboards((prev) => [...prev, scoreboard]);
+        setTotalCount((prev) => prev + 1);
         showToast('Failed to delete scoreboard', 'error');
-      } finally {
-        setDeleteModal({ isOpen: false, scoreboard: null });
       }
-    }
+    }, 5000);
+
+    // Track pending delete
+    pendingDeletesRef.current.set(deleteId, { scoreboard, timerId });
+
+    // Add undo action
+    addUndoAction({
+      id: deleteId,
+      message: `Deleted "${scoreboard.title}"`,
+      timestamp: Date.now(),
+      undo: async () => {
+        // Cancel the pending delete
+        const pending = pendingDeletesRef.current.get(deleteId);
+        if (pending) {
+          clearTimeout(pending.timerId);
+          pendingDeletesRef.current.delete(deleteId);
+        }
+        // Restore to UI
+        setScoreboards((prev) => [...prev, scoreboard]);
+        setTotalCount((prev) => prev + 1);
+      },
+    });
   };
 
   return (
@@ -501,7 +542,7 @@ const AdminDashboardInteractive = () => {
                         ownerName={isAdmin ? scoreboard.owner?.fullName : undefined}
                         visibility={scoreboard.visibility}
                         onRename={handleRenameScoreboard}
-                        onDelete={() => handleDeleteConfirmation(scoreboard)}
+                        onDelete={() => handleDeleteScoreboard(scoreboard)}
                         onNavigate={handleNavigateToScoreboard}
                       />
                     ))}
@@ -546,19 +587,23 @@ const AdminDashboardInteractive = () => {
         onCreate={handleCreateScoreboard}
       />
 
-      <DeleteConfirmationModal
-        isOpen={deleteModal.isOpen}
-        scoreboardTitle={deleteModal.scoreboard?.title || ''}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteModal({ isOpen: false, scoreboard: null })}
-      />
-
       <ToastNotification
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
         onClose={() => setToast({ ...toast, isVisible: false })}
       />
+
+      {/* Undo toasts for delete operations */}
+      {toasts.map((undoToast, index) => (
+        <UndoToast
+          key={undoToast.id}
+          toast={undoToast}
+          onUndo={() => executeUndo(undoToast.id)}
+          onDismiss={() => removeToast(undoToast.id)}
+          index={index}
+        />
+      ))}
 
       <InviteUserModal
         isOpen={isInviteModalOpen}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useTimeoutRef } from '@/hooks';
+import { useTimeoutRef, useUndoQueue } from '@/hooks';
 import { scoreboardService } from '../../../services/scoreboardService';
 import {
   Scoreboard,
@@ -14,6 +14,7 @@ import {
 } from '../../../types/models';
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
+import UndoToast from '@/components/common/UndoToast';
 import EntryRow from './EntryRow';
 import EntryCard from './EntryCard';
 import AddEntryModal from './AddEntryModal';
@@ -36,6 +37,10 @@ const ScoreboardManagementInteractive = () => {
   const scoreboardId = searchParams.get('id');
   const { user, userProfile, loading: authLoading } = useAuth();
   const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
+  const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
+  const pendingDeletesRef = useRef<
+    Map<string, { entry: ScoreboardEntry; timerId: NodeJS.Timeout }>
+  >(new Map());
 
   const [isHydrated, setIsHydrated] = useState(false);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
@@ -70,6 +75,22 @@ const ScoreboardManagementInteractive = () => {
   const [isSavingStyles, setIsSavingStyles] = useState(false);
   const [isStyleSectionExpanded, setIsStyleSectionExpanded] = useState(false);
   const [isEmbedSectionExpanded, setIsEmbedSectionExpanded] = useState(false);
+
+  // Execute all pending deletes on unmount (Option A: execute on navigation)
+  useEffect(() => {
+    const pendingDeletes = pendingDeletesRef.current;
+    return () => {
+      pendingDeletes.forEach(async ({ entry, timerId }) => {
+        clearTimeout(timerId);
+        try {
+          await scoreboardService.deleteEntry(entry.id);
+        } catch {
+          // Silent failure on unmount
+        }
+      });
+      pendingDeletes.clear();
+    };
+  }, []);
 
   // Redirect if not authenticated or no scoreboard ID
   useEffect(() => {
@@ -300,22 +321,48 @@ const ScoreboardManagementInteractive = () => {
   };
 
   const handleDeleteEntry = (id: string) => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Delete Entry',
-      message: 'Are you sure you want to delete this entry? This action cannot be undone.',
-      onConfirm: async () => {
-        try {
-          const { error } = await scoreboardService.deleteEntry(id);
-          if (error) throw error;
+    const entryToDelete = entries.find((e) => e.id === id);
+    if (!entryToDelete) return;
 
-          await loadScoreboardData();
-          showToast('Entry deleted successfully', 'success');
-        } catch (_err) {
+    const deleteId = `delete-entry-${id}`;
+
+    // Optimistically remove from UI
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+
+    // Set up delayed API delete (5 seconds)
+    const timerId = setTimeout(async () => {
+      pendingDeletesRef.current.delete(deleteId);
+      try {
+        const { error } = await scoreboardService.deleteEntry(id);
+        if (error) {
+          // Restore on error
+          setEntries((prev) => [...prev, entryToDelete]);
           showToast('Failed to delete entry', 'error');
-        } finally {
-          setConfirmModal({ ...confirmModal, isOpen: false });
         }
+      } catch {
+        // Restore on error
+        setEntries((prev) => [...prev, entryToDelete]);
+        showToast('Failed to delete entry', 'error');
+      }
+    }, 5000);
+
+    // Track pending delete
+    pendingDeletesRef.current.set(deleteId, { entry: entryToDelete, timerId });
+
+    // Add undo action
+    addUndoAction({
+      id: deleteId,
+      message: `Deleted "${entryToDelete.name}"`,
+      timestamp: Date.now(),
+      undo: async () => {
+        // Cancel the pending delete
+        const pending = pendingDeletesRef.current.get(deleteId);
+        if (pending) {
+          clearTimeout(pending.timerId);
+          pendingDeletesRef.current.delete(deleteId);
+        }
+        // Restore to UI
+        setEntries((prev) => [...prev, entryToDelete]);
       },
     });
   };
@@ -756,6 +803,17 @@ const ScoreboardManagementInteractive = () => {
         isVisible={toast.isVisible}
         onClose={() => setToast({ ...toast, isVisible: false })}
       />
+
+      {/* Undo toasts for delete operations */}
+      {toasts.map((undoToast, index) => (
+        <UndoToast
+          key={undoToast.id}
+          toast={undoToast}
+          onUndo={() => executeUndo(undoToast.id)}
+          onDismiss={() => removeToast(undoToast.id)}
+          index={index}
+        />
+      ))}
     </div>
   );
 };

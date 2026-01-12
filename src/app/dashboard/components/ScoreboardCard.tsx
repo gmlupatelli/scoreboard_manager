@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
-import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 interface ScoreboardCardProps {
   id: string;
@@ -15,7 +14,6 @@ interface ScoreboardCardProps {
   onRename: (id: string, newTitle: string) => void;
   onDelete: () => void;
   onNavigate: (id: string) => void;
-  canSwipe?: boolean;
 }
 
 const ScoreboardCard = ({
@@ -29,29 +27,10 @@ const ScoreboardCard = ({
   onRename,
   onDelete,
   onNavigate,
-  canSwipe = false,
 }: ScoreboardCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
   const [showMenu, setShowMenu] = useState(false);
-
-  const { ref: swipeRef, swipeState } = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft: onDelete,
-    disabled: !canSwipe || isEditing,
-  });
-
-  const getSwipeBackground = () => {
-    if (!swipeState.isSwiping || swipeState.direction !== 'left') return undefined;
-    return `rgba(220, 38, 38, ${swipeState.progress * 0.2})`; // Destructive color
-  };
-
-  const getSwipeTransform = () => {
-    if (!swipeState.isSwiping || !swipeState.direction) return undefined;
-    const maxTranslate = 100;
-    const translate =
-      swipeState.progress * maxTranslate * (swipeState.direction === 'left' ? -1 : 1);
-    return `translateX(${translate}px)`;
-  };
 
   const handleRename = () => {
     if (editedTitle.trim() && editedTitle !== title) {
@@ -63,36 +42,10 @@ const ScoreboardCard = ({
   return (
     <div
       className="relative overflow-hidden rounded-lg border border-border"
-      data-testid="swipeable-card"
+      data-testid="scoreboard-card"
     >
-      {/* Swipe background indicator */}
-      {swipeState.isSwiping && swipeState.direction === 'left' && (
-        <div
-          className="absolute inset-0 flex items-center justify-center transition-opacity"
-          style={{
-            backgroundColor: getSwipeBackground(),
-          }}
-        >
-          <Icon
-            name="TrashIcon"
-            size={32}
-            className="text-destructive transition-transform"
-            style={{
-              opacity: swipeState.progress,
-              transform: `scale(${0.5 + swipeState.progress * 0.5})`,
-            }}
-          />
-        </div>
-      )}
-
       {/* Card content */}
-      <div
-        ref={swipeRef}
-        className="relative bg-card p-6 hover-lift flex flex-col h-full"
-        style={{
-          transform: getSwipeTransform(),
-        }}
-      >
+      <div className="relative bg-card p-6 hover-lift flex flex-col h-full">
         <div className="flex items-start justify-between mb-4">
           {isEditing ? (
             <input

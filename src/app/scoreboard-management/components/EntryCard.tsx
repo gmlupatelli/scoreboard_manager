@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
-import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { ScoreType, TimeFormat } from '@/types/models';
 import {
   formatScoreDisplay,
@@ -23,7 +22,6 @@ interface EntryCardProps {
   onDelete: (id: string) => void;
   scoreType?: ScoreType;
   timeFormat?: TimeFormat | null;
-  canSwipe?: boolean;
 }
 
 const EntryCard = ({
@@ -32,7 +30,6 @@ const EntryCard = ({
   onDelete,
   scoreType = 'number',
   timeFormat = null,
-  canSwipe = false,
 }: EntryCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(entry.name);
@@ -55,12 +52,6 @@ const EntryCard = ({
     setNameError('');
     setScoreError('');
   };
-
-  const { ref: swipeRef, swipeState } = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft: () => onDelete(entry.id),
-    onSwipeRight: () => handleStartEdit(),
-    disabled: !canSwipe || isEditing,
-  });
 
   const validateName = (value: string): boolean => {
     if (value.length < 1 || value.length > 100) {
@@ -129,26 +120,6 @@ const EntryCard = ({
     setNameError('');
     setScoreError('');
     setIsEditing(false);
-  };
-
-  const getSwipeBackground = () => {
-    if (!swipeState.isSwiping) return undefined;
-
-    if (swipeState.direction === 'left') {
-      return `rgba(220, 38, 38, ${swipeState.progress * 0.2})`; // Destructive color (delete)
-    } else if (swipeState.direction === 'right') {
-      return `rgba(59, 130, 246, ${swipeState.progress * 0.2})`; // Primary color (edit)
-    }
-    return undefined;
-  };
-
-  const getSwipeTransform = () => {
-    if (!swipeState.isSwiping || !swipeState.direction) return undefined;
-
-    const maxTranslate = 100;
-    const translate =
-      swipeState.progress * maxTranslate * (swipeState.direction === 'left' ? -1 : 1);
-    return `translateX(${translate}px)`;
   };
 
   const displayScore = formatScoreDisplay(entry.score, scoreType, timeFormat);
@@ -220,38 +191,10 @@ const EntryCard = ({
   return (
     <div
       className="relative overflow-hidden rounded-lg border border-border"
-      data-testid="swipeable-card"
+      data-testid="entry-card"
     >
-      {/* Swipe background indicator */}
-      {swipeState.isSwiping && (
-        <div
-          className="absolute inset-0 flex items-center justify-center transition-opacity"
-          style={{
-            backgroundColor: getSwipeBackground(),
-          }}
-        >
-          <Icon
-            name={swipeState.direction === 'left' ? 'TrashIcon' : 'PencilIcon'}
-            size={32}
-            className={`${
-              swipeState.direction === 'left' ? 'text-destructive' : 'text-primary'
-            } transition-transform`}
-            style={{
-              opacity: swipeState.progress,
-              transform: `scale(${0.5 + swipeState.progress * 0.5})`,
-            }}
-          />
-        </div>
-      )}
-
       {/* Card content */}
-      <div
-        ref={swipeRef}
-        className="relative bg-card p-4 elevation-1 hover:elevation-2 transition-smooth duration-150"
-        style={{
-          transform: getSwipeTransform(),
-        }}
-      >
+      <div className="relative bg-card p-4 elevation-1 hover:elevation-2 transition-smooth duration-150">
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium text-text-secondary">Rank #{entry.rank}</span>
           <div className="flex items-center space-x-2">

@@ -1,7 +1,6 @@
 'use client';
 
 import Icon from '@/components/ui/AppIcon';
-import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 interface InvitationCardProps {
   id: string;
@@ -11,7 +10,6 @@ interface InvitationCardProps {
   expiresAt: string;
   onCancel?: () => void;
   onAccept?: () => void;
-  canSwipe?: boolean;
 }
 
 const getStatusColor = (status: string): string => {
@@ -36,70 +34,15 @@ export default function InvitationCard({
   createdAt,
   expiresAt,
   onCancel,
-  onAccept,
-  canSwipe = false,
+  onAccept: _onAccept,
 }: InvitationCardProps) {
-  const { ref: swipeRef, swipeState } = useSwipeGesture<HTMLDivElement>({
-    onSwipeLeft: status === 'pending' && onCancel ? onCancel : undefined,
-    onSwipeRight: status === 'pending' && onAccept ? onAccept : undefined,
-    disabled: !canSwipe || status !== 'pending',
-  });
-
-  const getSwipeBackground = () => {
-    if (!swipeState.isSwiping) return undefined;
-
-    if (swipeState.direction === 'left') {
-      return `rgba(220, 38, 38, ${swipeState.progress * 0.2})`; // Destructive color
-    } else if (swipeState.direction === 'right') {
-      return `rgba(34, 197, 94, ${swipeState.progress * 0.2})`; // Success color
-    }
-    return undefined;
-  };
-
-  const getSwipeTransform = () => {
-    if (!swipeState.isSwiping || !swipeState.direction) return undefined;
-
-    const maxTranslate = 100;
-    const translate =
-      swipeState.progress * maxTranslate * (swipeState.direction === 'left' ? -1 : 1);
-    return `translateX(${translate}px)`;
-  };
-
   return (
     <div
       className="relative overflow-hidden rounded-lg border border-border"
-      data-testid="swipeable-card"
+      data-testid="invitation-card"
     >
-      {/* Swipe background indicator */}
-      {swipeState.isSwiping && (
-        <div
-          className="absolute inset-0 flex items-center justify-center transition-opacity"
-          style={{
-            backgroundColor: getSwipeBackground(),
-          }}
-        >
-          <Icon
-            name={swipeState.direction === 'left' ? 'XMarkIcon' : 'CheckIcon'}
-            size={32}
-            className={`${
-              swipeState.direction === 'left' ? 'text-destructive' : 'text-success'
-            } transition-transform`}
-            style={{
-              opacity: swipeState.progress,
-              transform: `scale(${0.5 + swipeState.progress * 0.5})`,
-            }}
-          />
-        </div>
-      )}
-
       {/* Card content */}
-      <div
-        ref={swipeRef}
-        className="relative bg-surface p-4 transition-transform"
-        style={{
-          transform: getSwipeTransform(),
-        }}
-      >
+      <div className="relative bg-surface p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">

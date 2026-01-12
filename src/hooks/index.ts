@@ -6,7 +6,6 @@
  * - Abortable fetch requests (useAbortableFetch)
  * - Timeout management (useTimeoutRef)
  * - Infinite scrolling (useInfiniteScroll)
- * - Swipe gestures (useSwipeGesture)
  * - Undo queue (useUndoQueue)
  */
 
@@ -18,7 +17,6 @@ export { useAbortableFetch } from './useAbortableFetch';
 
 // UI & Interactions
 export { useInfiniteScroll } from './useInfiniteScroll';
-export { useSwipeGesture } from './useSwipeGesture';
 export { useUndoQueue } from './useUndoQueue';
 
 // Utilities

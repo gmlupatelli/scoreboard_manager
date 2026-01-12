@@ -133,8 +133,6 @@ Additional projects can be enabled in `playwright.config.ts`:
 - ✅ Touch target sizes (minimum 44x44px)
 - ✅ Mobile header display
 - ✅ Metadata wrapping on narrow screens
-- ✅ Swipe-to-delete gestures
-- ✅ Progressive swipe feedback
 - ✅ Landscape orientation adjustments
 - ✅ Minimum viewport (320px) compatibility
 - ✅ Button stacking in modals
@@ -198,7 +196,6 @@ Tests are configured to run in CI environments with:
 
 - Real-time WebSocket connections may not work in test environment
 - Some tests require authenticated session mocking
-- Swipe gestures tested with mouse events (not actual touch)
 
 ## Contributing
 

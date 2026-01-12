@@ -32,19 +32,15 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
   - Fixed ScoreboardCard metadata wrapping and increased touch targets to 20px (44x44px minimum)
   - Added landscape orientation support with custom Tailwind variant (`landscape-mobile`)
   - Adjusted breakpoints to treat tablets (1024px+) as desktop view
-- **Swipe gesture system** with Pointer Events API and touch fallback
-  - Direction locking (35° threshold), progressive feedback (30fps throttling)
-  - 120px swipe threshold with online status validation
-  - RTL-aware swipe directions for bidirectional language support
 - **Undo toast system** with batching and 5-second timers
   - 3-toast stacking with countdown progress bars
   - Batch actions (4+ within 2 seconds) to reduce notification spam
   - Navigation cancellation for clean UX
-- **Invitations page conversion** to responsive card view with swipe-to-cancel
+- **Invitations page conversion** to responsive card view
 - **Playwright E2E testing infrastructure**
   - 9 device profiles: Desktop (Chrome/Firefox/Safari), Tablet, Mobile (iPhone 12/SE/Minimum/Landscape), Android
   - 3 comprehensive test suites: mobile.spec.ts, desktop.spec.ts, accessibility.spec.ts
-  - Tests cover: touch interactions, swipe gestures, keyboard navigation, WCAG compliance, RTL support
+  - Tests cover: touch interactions, keyboard navigation, WCAG compliance, RTL support
   - Manual testing checklist for 320px viewport validation
 
 ### January 10, 2026 - JWT Migration & Build Safety Improvements
@@ -189,7 +185,6 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 | `useAbortableFetch` | AbortController wrapper for fetch. Auto-cancels on unmount. Returns `{execute, abort, abortAll}`. |
 | `useTimeoutRef` | Safe setTimeout with auto-cleanup. Returns `{set, clear, clearAll, isMounted}`. |
 | `useInfiniteScroll` | IntersectionObserver-based infinite scroll. |
-| `useSwipeGesture` | Mobile swipe gesture detection. |
 | `useUndoQueue` | Undo queue with toast notifications. |
 
 ### Backend Integration
@@ -295,7 +290,7 @@ npx playwright test --project="Mobile iPhone SE"
 ```
 
 **Test Coverage:**
-- **Mobile Tests** (`e2e/mobile.spec.ts`): Touch targets (44x44px), swipe gestures, landscape orientation, 320px viewport
+- **Mobile Tests** (`e2e/mobile.spec.ts`): Touch targets (44x44px), landscape orientation, 320px viewport
 - **Desktop Tests** (`e2e/desktop.spec.ts`): Auth flows, CRUD operations, keyboard navigation, real-time updates
 - **Accessibility Tests** (`e2e/accessibility.spec.ts`): WCAG compliance, ARIA labels, screen readers, focus management
 
@@ -389,7 +384,6 @@ The application can also run on Replit:
 │   │   └── AuthContext.tsx           # Authentication context
 │   ├── hooks/
 │   │   ├── useInfiniteScroll.ts      # Infinite scroll hook
-│   │   ├── useSwipeGesture.ts        # Swipe gesture hook
 │   │   └── useUndoQueue.ts           # Undo queue management
 │   ├── lib/
 │   │   └── supabase/
@@ -477,6 +471,4 @@ Place SQL migration files in `supabase/migrations/` with timestamp prefix (e.g.,
 - Debounced search uses direct state control (not SearchInterface component) to avoid double-debouncing
 - All database functions have SET search_path = public, pg_temp for security
 - Cache-Control headers prevent stale content in Replit's iframe proxy
-- Swipe gestures use Pointer Events API with touch event fallback for older Android devices
-- RTL language support via Tailwind custom variant and direction-aware swipe actions
 - Undo toast system batches rapid actions (4+ within 2 seconds) to reduce notification spam
