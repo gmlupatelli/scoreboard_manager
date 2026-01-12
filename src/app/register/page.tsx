@@ -248,7 +248,7 @@ export default function RegisterPage() {
                     </label>
                     <input
                       id="password"
-                      name="new-password"
+                      name="password"
                       type="password"
                       autoComplete="new-password"
                       value={password}
@@ -266,7 +266,7 @@ export default function RegisterPage() {
                     </label>
                     <input
                       id="confirmPassword"
-                      name="confirm-password"
+                      name="confirmPassword"
                       type="password"
                       autoComplete="new-password"
                       value={confirmPassword}

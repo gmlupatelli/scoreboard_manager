@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
+import Button from '@/components/ui/Button';
 import Footer from '@/components/common/Footer';
 import Header from '@/components/common/Header';
 
@@ -137,8 +138,9 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={false} />
 
-      {/* Hero Section */}
-      <section className="relative pt-20 sm:pt-24 md:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <main>
+        {/* Hero Section */}
+        <section className="relative pt-20 sm:pt-24 md:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
         <div className="relative max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -155,20 +157,24 @@ export default function Home() {
                 Perfect for tournaments, leagues, and competitions of any size.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link
+                <Button
                   href="/register"
-                  className="inline-flex items-center justify-center space-x-2 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-white rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-smooth duration-150 hover-lift elevation-1"
+                  variant="primary"
+                  size="lg"
+                  icon="ArrowRightIcon"
+                  iconPosition="right"
                 >
-                  <span>Create an Account</span>
-                  <Icon name="ArrowRightIcon" size={20} />
-                </Link>
-                <Link
+                  Create an Account
+                </Button>
+                <Button
                   href="/public-scoreboard-list"
-                  className="inline-flex items-center justify-center space-x-2 px-6 sm:px-8 py-3 sm:py-4 bg-surface border-2 border-border text-text-primary rounded-lg font-semibold text-base sm:text-lg hover:bg-muted transition-smooth duration-150"
+                  variant="outline"
+                  size="lg"
+                  icon="TrophyIcon"
+                  iconPosition="left"
                 >
-                  <Icon name="TrophyIcon" size={20} />
-                  <span>Scoreboards</span>
-                </Link>
+                  Scoreboards
+                </Button>
               </div>
               <div className="flex items-center space-x-4 sm:space-x-6 md:space-x-8 mt-8 pt-8 border-t border-border">
                 <div>
@@ -314,6 +320,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      </main>
 
       <Footer />
     </div>

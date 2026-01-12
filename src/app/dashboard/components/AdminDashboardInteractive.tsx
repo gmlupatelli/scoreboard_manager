@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
@@ -182,18 +182,22 @@ const AdminDashboardInteractive = () => {
     };
   }, [searchQuery]);
 
-  // Initial load and reload when debounced search, owner filter, or sort changes
+  // Effect for data fetching - ONLY depends on search and owner filter
+  // Sort is always done client-side, never triggers a reload
+  // Wait for userProfile to be loaded before fetching to ensure isAdmin is correct
   useEffect(() => {
-    if (user) {
-      loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+    if (user && userProfile) {
+      // Always fetch with default sort (date desc), sorting is done client-side
+      loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
     }
-  }, [user, debouncedSearch, selectedOwnerId, sortBy, sortOrder]);
+  }, [user, userProfile, debouncedSearch, selectedOwnerId, loadScoreboards]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadScoreboards(false, debouncedSearch, selectedOwnerId, offset, sortBy, sortOrder);
+      // Always fetch with default sort (date desc), sorting is done client-side
+      loadScoreboards(false, debouncedSearch, selectedOwnerId, offset, 'date', 'desc');
     }
-  }, [loadingMore, hasMore, offset, debouncedSearch, selectedOwnerId, sortBy, sortOrder]);
+  }, [loadingMore, hasMore, offset, debouncedSearch, selectedOwnerId, loadScoreboards]);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasMore,
@@ -224,7 +228,7 @@ const AdminDashboardInteractive = () => {
         throw error;
       }
 
-      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
       return { success: true, message: 'Scoreboard created successfully', scoreboardId: data?.id };
     } catch (err) {
       return { success: false, message: 'Failed to create scoreboard' };
@@ -236,7 +240,7 @@ const AdminDashboardInteractive = () => {
       const { error } = await scoreboardService.deleteScoreboard(id);
       if (error) throw error;
       
-      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
       return { success: true };
     } catch (err) {
       return { success: false };
@@ -261,20 +265,33 @@ const AdminDashboardInteractive = () => {
     ? Math.round(totalEntries / scoreboards.length) 
     : 0;
 
-  // Client-side sorting only for 'entries' (date and name sorting is done server-side)
-  const sortedScoreboards = sortBy === 'entries' 
-    ? [...scoreboards].sort((a, b) => {
-        const comparison = (a.entryCount || 0) - (b.entryCount || 0);
-        return sortOrder === 'asc' ? comparison : -comparison;
-      })
-    : scoreboards;
+  // Client-side sorting for all sort types
+  const sortedScoreboards = useMemo(() => {
+    const sorted = [...scoreboards];
+    sorted.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'name':
+          comparison = (a.title || '').localeCompare(b.title || '');
+          break;
+        case 'date':
+          comparison = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+          break;
+        case 'entries':
+          comparison = (a.entryCount || 0) - (b.entryCount || 0);
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    return sorted;
+  }, [scoreboards, sortBy, sortOrder]);
 
   const handleRenameScoreboard = async (id: string, newTitle: string) => {
     try {
       const { error } = await scoreboardService.updateScoreboard(id, { title: newTitle });
       if (error) throw error;
       
-      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
       showToast('Scoreboard renamed successfully', 'success');
     } catch (err) {
       showToast('Failed to rename scoreboard', 'error');
@@ -291,7 +308,7 @@ const AdminDashboardInteractive = () => {
         const { error } = await scoreboardService.deleteScoreboard(deleteModal.scoreboard.id);
         if (error) throw error;
         
-        await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, sortBy, sortOrder);
+        await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
         showToast('Scoreboard deleted successfully', 'success');
       } catch (err) {
         showToast('Failed to delete scoreboard', 'error');
@@ -339,7 +356,7 @@ const AdminDashboardInteractive = () => {
               )}
               {!isAdmin && (
                 <button
-                  onClick={() => setIsInviteModalOpen(true)}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsInviteModalOpen(true); }}
                   className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
                   title="Invite Users"
                 >
@@ -348,7 +365,7 @@ const AdminDashboardInteractive = () => {
                 </button>
               )}
               <button
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsCreateModalOpen(true); }}
                 className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
               >
                 <Icon name="PlusIcon" size={20} />

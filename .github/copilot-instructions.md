@@ -325,43 +325,30 @@ export const resourceService = {
 
 ## API Route Pattern
 
+### Shared API Client Utilities
+The project uses shared utility functions in `src/lib/supabase/apiClient.ts`:
+
+```typescript
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
+
+// getAuthClient(token) - Creates client authenticated with user's JWT
+// getServiceRoleClient() - Creates admin client (returns null if key not configured)
+// extractBearerToken(authHeader) - Extracts token from Authorization header
+```
+
 ### Standard API Route Structure
 ```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-function getAuthClient(token: string) {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      global: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    }
-  );
-}
-
-function getServiceRoleClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    }
-  );
-}
-
 export async function POST(request: NextRequest) {
   try {
-    // 1. Validate Authorization header
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    // 1. Extract and validate token
+    const token = extractBearerToken(request.headers.get('Authorization'));
+    if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -369,7 +356,6 @@ export async function POST(request: NextRequest) {
     }
     
     // 2. Get authenticated user
-    const token = authHeader.substring(7);
     const authClient = getAuthClient(token);
     const { data: { user }, error: authError } = await authClient.auth.getUser();
     
@@ -391,8 +377,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // 5. Process request
-    const { data, error } = await authClient
+    // 5. Process request (use serviceClient for admin operations)
+    const serviceClient = getServiceRoleClient();
+    const dbClient = serviceClient || authClient;
+    
+    const { data, error } = await dbClient
       .from('table_name')
       .insert({ ...body, owner_id: user.id })
       .select()

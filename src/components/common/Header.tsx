@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
+import Button from '@/components/ui/Button';
 import Logo from '@/components/ui/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { ScoreboardCustomStyles } from '@/types/models';
@@ -130,7 +131,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150 min-w-[44px] min-h-[44px]"
                   style={customStyles ? textStyle : undefined}
                   aria-label="User menu"
                   aria-expanded={isUserMenuOpen}
@@ -207,22 +208,26 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               </div>
             ) : (
               <>
-                <Link
+                <Button
                   href="/register"
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium border border-border text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  variant="outline"
+                  size="sm"
+                  icon="UserPlusIcon"
+                  iconPosition="left"
                   style={customStyles ? { borderColor: customStyles.borderColor, color: customStyles.textColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
                 >
-                  <Icon name="UserPlusIcon" size={18} />
-                  <span>Sign Up</span>
-                </Link>
-                <Link
+                  Sign Up
+                </Button>
+                <Button
                   href="/login"
-                  className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-white hover:opacity-90 transition-smooth duration-150 hover-lift"
+                  variant="primary"
+                  size="sm"
+                  icon="ArrowRightOnRectangleIcon"
+                  iconPosition="left"
                   style={customStyles ? { backgroundColor: customStyles.accentColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
                 >
-                  <Icon name="ArrowRightOnRectangleIcon" size={18} />
-                  <span>Login</span>
-                </Link>
+                  Login
+                </Button>
               </>
             )}
           </div>
@@ -230,7 +235,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150"
+              className="p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150 min-w-[44px] min-h-[44px]"
               style={customStyles ? textStyle : undefined}
               aria-label="Toggle menu"
               aria-expanded={isMobileMenuOpen}
@@ -352,22 +357,28 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Link
+                  <Button
                     href="/register"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium border border-border text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                    variant="outline"
+                    size="md"
+                    icon="UserPlusIcon"
+                    iconPosition="left"
+                    fullWidth
                     style={customStyles ? { borderColor: customStyles.borderColor, color: customStyles.textColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
                   >
-                    <Icon name="UserPlusIcon" size={20} />
-                    <span>Sign Up</span>
-                  </Link>
-                  <Link
+                    Sign Up
+                  </Button>
+                  <Button
                     href="/login"
-                    className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium bg-primary text-white hover:opacity-90 transition-smooth duration-150"
+                    variant="primary"
+                    size="md"
+                    icon="ArrowRightOnRectangleIcon"
+                    iconPosition="left"
+                    fullWidth
                     style={customStyles ? { backgroundColor: customStyles.accentColor } : undefined}
                   >
-                    <Icon name="ArrowRightOnRectangleIcon" size={20} />
-                    <span>Login</span>
-                  </Link>
+                    Login
+                  </Button>
                 </div>
               )}
             </div>

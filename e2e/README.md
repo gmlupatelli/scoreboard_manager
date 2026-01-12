@@ -10,12 +10,59 @@ npm install
 npx playwright install
 ```
 
+## Test Data Management
+
+### Refresh Test Data (Recommended)
+**Use this to reset all test users and data to a clean state:**
+```bash
+npm run refresh-test-data
+```
+
+This script:
+- ✅ Deletes and recreates all 5 test users with fresh credentials
+- ✅ Removes all existing test data (scoreboards, entries, invitations)
+- ✅ Seeds fresh data for john@example.com and sarah@example.com
+- ✅ Leaves admin, siteadmin, and jane clean for testing
+- ✅ All passwords reset to `test123`
+
+**When to run:**
+- Before first test run on a new environment
+- After manual testing that modified test data
+- When test users are in an inconsistent state
+- After database schema changes
+
+**Test Users:**
+- `admin@example.com` / `test123` - System admin (automated testing)
+- `john@example.com` / `test123` - User with 2 scoreboards (automated testing)
+- `sarah@example.com` / `test123` - User with 2 scoreboards (automated testing)
+- `siteadmin@example.com` / `test123` - System admin (manual testing)
+- `jane@example.com` / `test123` - User (manual testing)
+
+### Legacy Test Seeding (UI-based)
+```bash
+npm run test:seed
+```
+*Note: The new `refresh-test-data` script is faster and more reliable.*
+
 ## Running Tests
 
-### All Tests
+### All Tests (Standard)
 ```bash
 npm run test:e2e
 ```
+Runs tests across all enabled projects: Desktop Chrome, Mobile iPhone 12, Mobile Minimum.
+Uses HTML reporter with traces and videos on failure.
+
+### Fast Mode (Development)
+```bash
+npm run test:e2e:fast
+```
+Optimized for rapid development feedback:
+- ✅ Only Desktop Chrome (single project)
+- ✅ 6 parallel workers
+- ✅ No retries
+- ✅ Minimal traces/videos
+- ✅ List reporter for quick output
 
 ### UI Mode (Interactive)
 ```bash
@@ -37,22 +84,36 @@ npx playwright test e2e/mobile.spec.ts
 npx playwright test --project="Desktop Chrome"
 ```
 
+### Fast Mode with Specific File
+```bash
+npm run test:e2e:fast -- e2e/desktop.spec.ts
+```
+
 ## Test Projects
 
-### Desktop
-- **Desktop Chrome** - 1920x1080
-- **Desktop Firefox** - 1920x1080
-- **Desktop Safari** - 1920x1080
+### Currently Enabled Projects
 
-### Tablet
-- **Tablet** - 1024x768 (iPad Pro)
+| Project | Viewport | Description |
+|---------|----------|-------------|
+| **Desktop Chrome** | 1920x1080 | Primary desktop browser |
+| **Mobile iPhone 12** | 390x844 | Standard mobile |
+| **Mobile Minimum** | 320x568 | Smallest supported viewport |
 
-### Mobile
-- **Mobile iPhone 12** - 390x844
-- **Mobile iPhone SE** - 375x667
-- **Mobile Minimum** - 320x568 (smallest target)
-- **Mobile Landscape** - 844x390
-- **Mobile Android** - 393x851 (Pixel 5)
+### Available (Commented Out)
+Additional projects can be enabled in `playwright.config.ts`:
+- Desktop Firefox - 1920x1080
+- Desktop Safari - 1920x1080
+- Tablet (iPad Pro) - 1024x768
+- Mobile iPhone SE - 375x667
+- Mobile Landscape - 844x390
+- Mobile Android (Pixel 5) - 393x851
+
+### Configuration Files
+
+| Config | Command | Use Case |
+|--------|---------|----------|
+| `playwright.config.ts` | `npm run test:e2e` | Full test suite with all enabled projects |
+| `playwright.config.fast.ts` | `npm run test:e2e:fast` | Fast iteration, Desktop Chrome only |
 
 ## Test Coverage
 

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthClient, extractBearerToken } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -19,20 +20,10 @@ function getAnonClient() {
   return createClient(supabaseUrl, supabaseAnonKey);
 }
 
-function getAuthClient(token: string) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-  
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
-  });
-}
-
-function getServiceRoleClient() {
+/**
+ * Service role client with additional settings options for settings route
+ */
+function getSettingsServiceClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
   
@@ -61,7 +52,7 @@ export async function GET() {
 
   try {
     // Use service role client first to bypass RLS and get accurate settings
-    const serviceClient = getServiceRoleClient();
+    const serviceClient = getSettingsServiceClient();
     
     if (serviceClient) {
       const { data: serviceData, error: serviceError } = await serviceClient
@@ -102,13 +93,12 @@ export async function PUT(request: NextRequest) {
   };
 
   try {
-    const authHeader = request.headers.get('Authorization');
+    const token = extractBearerToken(request.headers.get('Authorization'));
     
-    if (!authHeader?.startsWith('Bearer ')) {
+    if (!token) {
       return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401, headers });
     }
     
-    const token = authHeader.substring(7);
     const authClient = getAuthClient(token);
     
     const { data: { user }, error: authError } = await authClient.auth.getUser();
@@ -117,7 +107,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers });
     }
 
-    const serviceClient = getServiceRoleClient();
+    const serviceClient = getSettingsServiceClient();
     const dbClient = serviceClient || authClient;
 
     const { data: profile } = await dbClient

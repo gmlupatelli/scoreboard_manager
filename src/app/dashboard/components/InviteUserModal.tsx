@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Icon from '@/components/ui/AppIcon';
 
@@ -11,10 +11,16 @@ interface InviteUserModalProps {
 }
 
 export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUserModalProps) {
+  const [isHydrated, setIsHydrated] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  if (!isHydrated) return null;
   if (!isOpen) return null;
 
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
@@ -66,17 +72,25 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/80" onClick={handleClose} />
-      <div className="relative bg-card border border-border rounded-lg shadow-lg w-full max-w-[calc(100vw-2rem)] sm:max-w-md mx-4 elevation-3">
+    <>
+      <div className="fixed inset-0 bg-black/80 z-[1010]" onClick={handleClose} />
+      <div className="fixed inset-0 flex items-center justify-center z-[1011] p-4 pointer-events-none">
+        <div 
+          role="dialog" 
+          aria-modal="true" 
+          aria-labelledby="invite-modal-title" 
+          className="relative bg-card border border-border rounded-lg shadow-lg w-full max-w-[calc(100vw-2rem)] sm:max-w-md elevation-3 pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
         <div className="flex items-center justify-between p-4 sm:p-6 landscape-mobile:p-3 border-b border-border">
-          <h2 className="text-xl font-semibold text-text-primary flex items-center">
+          <h2 id="invite-modal-title" className="text-xl font-semibold text-text-primary flex items-center">
             <Icon name="EnvelopeIcon" size={24} className="mr-2 text-primary" />
             Invite User
           </h2>
           <button
             onClick={handleClose}
-            className="p-2 rounded-md hover:bg-muted transition-smooth duration-150"
+            className="p-2 rounded-md hover:bg-muted transition-smooth duration-150 min-w-[44px] min-h-[44px]"
+            aria-label="Close modal"
           >
             <Icon name="XMarkIcon" size={20} className="text-text-secondary" />
           </button>
@@ -111,14 +125,14 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted transition-smooth duration-150"
+              className="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted transition-smooth duration-150 min-w-[44px] min-h-[44px]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !email}
-              className="flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50"
+              className="flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 min-w-[44px] min-h-[44px]"
             >
               {loading ? (
                 <>
@@ -134,7 +148,8 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
             </button>
           </div>
         </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

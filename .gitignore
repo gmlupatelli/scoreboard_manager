@@ -3,6 +3,7 @@
 .env.local
 .env.*.local
 .env.production.local
+.env.test
 
 # Node modules
 node_modules/
