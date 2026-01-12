@@ -1,26 +1,32 @@
 /**
  * Refresh Test Data Script
- * 
+ *
  * Comprehensive test data reset:
  * 1. Deletes and recreates all 5 test users (admin, john, sarah, siteadmin, jane)
  * 2. Calls cleanup API to remove existing test data
  * 3. Seeds fresh data for john and sarah
  * 4. Leaves admin, siteadmin, and jane clean for testing
- * 
+ *
  * Usage: npm run refresh-test-data
- * 
+ *
  * Prerequisites:
  * - .env.test must be configured with SUPABASE credentials
  * - TEST_CLEANUP_API_KEY must be set
  * - Application should be running on localhost:5000 (optional - only for cleanup)
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from 'dotenv';
 import { randomUUID } from 'crypto';
 import type { Database } from '../../src/types/database.types';
+
+// Type aliases for database operations
+type SupabaseServiceClient = SupabaseClient<Database>;
+type ScoreboardRow = Database['public']['Tables']['scoreboards']['Row'];
+type ScoreboardEntryRow = Database['public']['Tables']['scoreboard_entries']['Row'];
+type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
 
 // ES module compatibility
 const __filename = fileURLToPath(import.meta.url);
@@ -36,7 +42,9 @@ const cleanupApiKey = process.env.TEST_CLEANUP_API_KEY;
 const baseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
 
 if (!supabaseUrl || !serviceRoleKey) {
-  console.error('❌ Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY');
+  console.error(
+    '❌ Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY'
+  );
   process.exit(1);
 }
 
@@ -83,7 +91,7 @@ const TEST_USERS = [
 const JOHN_SCOREBOARDS = [
   {
     title: "John's Private Scoreboard",
-    subtitle: 'Private test scoreboard for RBAC testing',
+    description: 'Private test scoreboard for RBAC testing',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
     visibility: 'private' as const,
@@ -97,7 +105,7 @@ const JOHN_SCOREBOARDS = [
   },
   {
     title: "John's Public Leaderboard",
-    subtitle: 'Public test scoreboard visible to all users',
+    description: 'Public test scoreboard visible to all users',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
     visibility: 'public' as const,
@@ -116,7 +124,7 @@ const JOHN_SCOREBOARDS = [
 const SARAH_SCOREBOARDS = [
   {
     title: "Sarah's Race Times",
-    subtitle: 'Public time-based scoreboard',
+    description: 'Public time-based scoreboard',
     score_type: 'time' as const,
     sort_order: 'asc' as const,
     visibility: 'public' as const,
@@ -130,7 +138,7 @@ const SARAH_SCOREBOARDS = [
   },
   {
     title: "Sarah's Game Scores",
-    subtitle: 'Public number-based scoreboard',
+    description: 'Public number-based scoreboard',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
     visibility: 'public' as const,
@@ -147,7 +155,7 @@ const SARAH_SCOREBOARDS = [
 const SITEADMIN_SCOREBOARDS = [
   {
     title: 'Admin Dashboard Metrics',
-    subtitle: 'System-wide performance tracking',
+    description: 'System-wide performance tracking',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
     visibility: 'private' as const,
@@ -162,7 +170,7 @@ const SITEADMIN_SCOREBOARDS = [
 const JANE_SCOREBOARDS = [
   {
     title: "Jane's Fitness Tracker",
-    subtitle: 'Weekly workout scores',
+    description: 'Weekly workout scores',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
     visibility: 'private' as const,
@@ -176,7 +184,7 @@ const JANE_SCOREBOARDS = [
   },
   {
     title: "Jane's Book Club Ratings",
-    subtitle: 'Monthly book ratings',
+    description: 'Monthly book ratings',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
     visibility: 'public' as const,
@@ -200,7 +208,7 @@ function getServiceRoleClient() {
     },
     global: {
       headers: {
-        'apikey': serviceRoleKey!,
+        apikey: serviceRoleKey!,
       },
     },
   });
@@ -209,21 +217,17 @@ function getServiceRoleClient() {
 /**
  * Delete data (scoreboards, entries, invitations) for a user before deleting the user
  */
-async function deleteUserData(
-  supabase: ReturnType<typeof getServiceRoleClient>,
-  userId: string,
-  userEmail: string
-) {
+async function deleteUserData(supabase: SupabaseServiceClient, userId: string, userEmail: string) {
   try {
     console.log(`  🗑️  Cleaning up data for ${userEmail}...`);
 
     // Step 1: Get all scoreboards owned by this user
-    const { data: scoreboards } = await (supabase as any)
+    const { data: scoreboards } = (await supabase
       .from('scoreboards')
       .select('id')
-      .eq('owner_id', userId);
+      .eq('owner_id', userId)) as { data: Pick<ScoreboardRow, 'id'>[] | null };
 
-    const scoreboardIds = scoreboards?.map((s: any) => s.id) || [];
+    const scoreboardIds = scoreboards?.map((s) => s.id) || [];
 
     let deletedEntries = 0;
     let deletedScoreboards = 0;
@@ -231,9 +235,9 @@ async function deleteUserData(
 
     // Step 2: Delete scoreboard entries (must be before scoreboards)
     if (scoreboardIds.length > 0) {
-      const { error: entriesError, count } = await (supabase as any)
+      const { error: entriesError, count } = await supabase
         .from('scoreboard_entries')
-        .delete()
+        .delete({ count: 'exact' })
         .in('scoreboard_id', scoreboardIds);
 
       if (!entriesError) {
@@ -242,9 +246,9 @@ async function deleteUserData(
     }
 
     // Step 3: Delete scoreboards
-    const { error: scoreboardsError, count: scoreboardsCount } = await (supabase as any)
+    const { error: scoreboardsError, count: scoreboardsCount } = await supabase
       .from('scoreboards')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('owner_id', userId);
 
     if (!scoreboardsError) {
@@ -252,9 +256,9 @@ async function deleteUserData(
     }
 
     // Step 4: Delete invitations sent BY this user
-    const { error: inviterError, count: inviterCount } = await (supabase as any)
+    const { error: inviterError, count: inviterCount } = await supabase
       .from('invitations')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('inviter_id', userId);
 
     if (!inviterError) {
@@ -262,17 +266,18 @@ async function deleteUserData(
     }
 
     // Step 5: Delete invitations sent TO this user
-    const { error: inviteeError, count: inviteeCount } = await (supabase as any)
+    const { error: inviteeError, count: inviteeCount } = await supabase
       .from('invitations')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('invitee_email', userEmail);
 
     if (!inviteeError) {
       deletedInvitations += inviteeCount || 0;
     }
 
-    console.log(`  ✓ Deleted ${deletedEntries} entries, ${deletedScoreboards} scoreboards, ${deletedInvitations} invitations`);
-
+    console.log(
+      `  ✓ Deleted ${deletedEntries} entries, ${deletedScoreboards} scoreboards, ${deletedInvitations} invitations`
+    );
   } catch (error) {
     console.warn(`  ⚠️  Error cleaning up data for ${userEmail}:`, error);
   }
@@ -281,29 +286,32 @@ async function deleteUserData(
 /**
  * Delete user from Supabase Auth and user_profiles
  */
-async function deleteUser(supabase: ReturnType<typeof getServiceRoleClient>, email: string) {
+async function deleteUser(supabase: SupabaseServiceClient, email: string) {
   try {
     // Get user by email from Auth
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
-    
+    const {
+      data: { users },
+      error: listError,
+    } = await supabase.auth.admin.listUsers();
+
     if (listError) {
       console.warn(`  ⚠️  Failed to list users: ${listError.message}`);
       return false;
     }
 
-    const user = users?.find(u => u.email === email);
-    
+    const user = users?.find((u) => u.email === email);
+
     if (user) {
       // Delete ALL profiles with this email (catches orphaned profiles too)
       console.log(`  🗑️  Deleting all profiles for ${email}...`);
-      
-      const profileDeleteResult: any = await supabase
+
+      const { error: profileError } = await supabase
         .from('user_profiles')
         .delete()
         .eq('email', email);
-      
-      if (profileDeleteResult.error) {
-        console.warn(`  ⚠️  Failed to delete profiles: ${profileDeleteResult.error.message}`);
+
+      if (profileError) {
+        console.warn(`  ⚠️  Failed to delete profiles: ${profileError.message}`);
       } else {
         console.log(`  ✓ All profiles deleted`);
       }
@@ -311,12 +319,12 @@ async function deleteUser(supabase: ReturnType<typeof getServiceRoleClient>, ema
       // Delete user from Auth
       console.log(`  🗑️  Deleting auth user ${email}...`);
       const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
-      
+
       if (deleteError) {
         console.warn(`  ⚠️  Failed to delete from auth: ${deleteError.message}`);
         return false;
       }
-      
+
       console.log(`  ✓ Auth user deleted`);
     } else {
       // Check if orphaned profile exists
@@ -324,18 +332,18 @@ async function deleteUser(supabase: ReturnType<typeof getServiceRoleClient>, ema
         .from('user_profiles')
         .select('id')
         .eq('email', email);
-      
+
       if (profiles && profiles.length > 0) {
         console.log(`  🗑️  Deleting orphaned profile for ${email}...`);
-        
+
         // Delete orphaned profile
-        const profileDeleteResult: any = await supabase
+        const { error: orphanedProfileError } = await supabase
           .from('user_profiles')
           .delete()
           .eq('email', email);
-        
-        if (profileDeleteResult.error) {
-          console.warn(`  ⚠️  Failed to delete orphaned profile: ${profileDeleteResult.error.message}`);
+
+        if (orphanedProfileError) {
+          console.warn(`  ⚠️  Failed to delete orphaned profile: ${orphanedProfileError.message}`);
         } else {
           console.log(`  ✓ Orphaned profile deleted`);
         }
@@ -355,7 +363,7 @@ async function deleteUser(supabase: ReturnType<typeof getServiceRoleClient>, ema
  * Create user in Supabase Auth and user_profiles
  */
 async function createUser(
-  supabase: ReturnType<typeof getServiceRoleClient>,
+  supabase: SupabaseServiceClient,
   email: string,
   password: string,
   role: string,
@@ -382,18 +390,18 @@ async function createUser(
 
     // Update user profile (trigger already created it)
     // Wait a bit for trigger to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const profileUpdateResult = await (supabase as any)
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const { error: profileUpdateError } = await supabase
       .from('user_profiles')
       .update({
         full_name: name,
         role: role as 'user' | 'system_admin',
-      })
+      } as never)
       .eq('id', authData.user.id);
 
-    if (profileUpdateResult.error) {
-      throw new Error(`Profile update failed: ${profileUpdateResult.error.message}`);
+    if (profileUpdateError) {
+      throw new Error(`Profile update failed: ${profileUpdateError.message}`);
     }
 
     return authData.user.id;
@@ -405,7 +413,7 @@ async function createUser(
 /**
  * Call cleanup API to remove existing test data
  */
-async function cleanupTestData() {
+async function _cleanupTestData() {
   if (!cleanupApiKey) {
     console.log('⚠️  No TEST_CLEANUP_API_KEY found, skipping cleanup API call');
     return true;
@@ -425,7 +433,9 @@ async function cleanupTestData() {
         return true;
       }
       const error = await response.json();
-      console.warn(`⚠️  Cleanup API returned ${response.status}: ${error.error || 'Unknown error'}`);
+      console.warn(
+        `⚠️  Cleanup API returned ${response.status}: ${error.error || 'Unknown error'}`
+      );
       return false;
     }
 
@@ -435,7 +445,7 @@ async function cleanupTestData() {
     console.log(`  - ${result.deletedEntries || 0} entries`);
     console.log(`  - ${result.deletedInvitations || 0} invitations`);
     return true;
-  } catch (error) {
+  } catch (_error) {
     console.log('⚠️  Could not connect to cleanup API (app may not be running)');
     return true; // Continue anyway
   }
@@ -445,49 +455,53 @@ async function cleanupTestData() {
  * Seed scoreboard with entries for a user
  */
 async function seedScoreboard(
-  supabase: ReturnType<typeof getServiceRoleClient>,
+  supabase: SupabaseServiceClient,
   userId: string,
-  scoreboard: typeof JOHN_SCOREBOARDS[0] | typeof SARAH_SCOREBOARDS[0] | typeof SITEADMIN_SCOREBOARDS[0] | typeof JANE_SCOREBOARDS[0]
+  scoreboard:
+    | (typeof JOHN_SCOREBOARDS)[0]
+    | (typeof SARAH_SCOREBOARDS)[0]
+    | (typeof SITEADMIN_SCOREBOARDS)[0]
+    | (typeof JANE_SCOREBOARDS)[0]
 ) {
   // Insert scoreboard with generated UUID
   const scoreboardId = randomUUID();
-  const { data: scoreboardData, error: scoreboardError } = await supabase
+  const { data: scoreboardData, error: scoreboardError } = (await supabase
     .from('scoreboards')
     .insert({
       id: scoreboardId,
       owner_id: userId,
       title: scoreboard.title,
-      subtitle: scoreboard.subtitle,
+      description: scoreboard.description,
       score_type: scoreboard.score_type,
       sort_order: scoreboard.sort_order,
       visibility: scoreboard.visibility,
       time_format: 'time_format' in scoreboard ? scoreboard.time_format : null,
-    } as any)
+    } as never)
     .select()
-    .single();
+    .single()) as { data: ScoreboardRow | null; error: Error | null };
 
   if (scoreboardError) {
     throw new Error(`Failed to create scoreboard: ${scoreboardError.message}`);
   }
 
   // Insert entries with generated UUIDs
-  const entries = scoreboard.entries.map(entry => ({
+  const entries = scoreboard.entries.map((entry) => ({
     id: randomUUID(),
-    scoreboard_id: (scoreboardData as any).id,
+    scoreboard_id: scoreboardData?.id || scoreboardId,
     name: entry.name,
     score: entry.score,
   }));
 
   const { error: entriesError } = await supabase
     .from('scoreboard_entries')
-    .insert(entries as any);
+    .insert(entries as never);
 
   if (entriesError) {
     throw new Error(`Failed to create entries: ${entriesError.message}`);
   }
 
   return {
-    scoreboardId: (scoreboardData as any).id,
+    scoreboardId: scoreboardData?.id || scoreboardId,
     entriesCount: entries.length,
   };
 }
@@ -495,73 +509,79 @@ async function seedScoreboard(
 /**
  * Clean up orphaned data (scoreboards without valid owners, entries without valid scoreboards)
  */
-async function cleanupOrphanedData(supabase: ReturnType<typeof getServiceRoleClient>) {
+async function cleanupOrphanedData(supabase: SupabaseServiceClient) {
   console.log('🧹 Cleaning up orphaned data...\n');
 
   try {
     // Step 1: Get all valid user IDs from user_profiles
-    const { data: profiles } = await (supabase as any)
-      .from('user_profiles')
-      .select('id');
-    
-    const validUserIds = profiles?.map((p: any) => p.id) || [];
-    
+    const { data: profiles } = (await supabase.from('user_profiles').select('id')) as {
+      data: Pick<UserProfileRow, 'id'>[] | null;
+    };
+
+    const validUserIds = (profiles || []).map((p) => p.id);
+
     // Step 2: Delete scoreboards with invalid owner_id
-    const { data: allScoreboards } = await (supabase as any)
+    const { data: allScoreboards } = (await supabase
       .from('scoreboards')
-      .select('id, owner_id');
-    
-    const orphanedScoreboards = allScoreboards?.filter((s: any) => !validUserIds.includes(s.owner_id)) || [];
-    
+      .select('id, owner_id')) as { data: Pick<ScoreboardRow, 'id' | 'owner_id'>[] | null };
+
+    const orphanedScoreboards = (allScoreboards || []).filter(
+      (s) => !validUserIds.includes(s.owner_id)
+    );
+
     if (orphanedScoreboards.length > 0) {
       console.log(`  Found ${orphanedScoreboards.length} orphaned scoreboard(s)`);
-      
+
       // Delete entries for these orphaned scoreboards first
-      const orphanedScoreboardIds = orphanedScoreboards.map((s: any) => s.id);
-      const { count: entriesCount } = await (supabase as any)
+      const orphanedScoreboardIds = orphanedScoreboards.map((s) => s.id);
+      const { count: entriesCount } = await supabase
         .from('scoreboard_entries')
-        .delete()
+        .delete({ count: 'exact' })
         .in('scoreboard_id', orphanedScoreboardIds);
-      
+
       console.log(`  ✓ Deleted ${entriesCount || 0} entries from orphaned scoreboards`);
-      
+
       // Delete the orphaned scoreboards
-      const { count: scoreboardsCount } = await (supabase as any)
+      const { count: scoreboardsCount } = await supabase
         .from('scoreboards')
-        .delete()
+        .delete({ count: 'exact' })
         .in('id', orphanedScoreboardIds);
-      
+
       console.log(`  ✓ Deleted ${scoreboardsCount || 0} orphaned scoreboards`);
     } else {
       console.log('  No orphaned scoreboards found');
     }
-    
+
     // Step 3: Get all valid scoreboard IDs
-    const { data: validScoreboards } = await (supabase as any)
-      .from('scoreboards')
-      .select('id');
-    
-    const validScoreboardIds = validScoreboards?.map((s: any) => s.id) || [];
-    
+    const { data: validScoreboards } = (await supabase.from('scoreboards').select('id')) as {
+      data: Pick<ScoreboardRow, 'id'>[] | null;
+    };
+
+    const validScoreboardIds = (validScoreboards || []).map((s) => s.id);
+
     // Step 4: Delete entries with invalid scoreboard_id
-    const { data: allEntries } = await (supabase as any)
+    const { data: allEntries } = (await supabase
       .from('scoreboard_entries')
-      .select('id, scoreboard_id');
-    
-    const orphanedEntries = allEntries?.filter((e: any) => !validScoreboardIds.includes(e.scoreboard_id)) || [];
-    
+      .select('id, scoreboard_id')) as {
+      data: Pick<ScoreboardEntryRow, 'id' | 'scoreboard_id'>[] | null;
+    };
+
+    const orphanedEntries = (allEntries || []).filter(
+      (e) => !validScoreboardIds.includes(e.scoreboard_id)
+    );
+
     if (orphanedEntries.length > 0) {
-      const orphanedEntryIds = orphanedEntries.map((e: any) => e.id);
-      const { count: entriesCount } = await (supabase as any)
+      const orphanedEntryIds = orphanedEntries.map((e) => e.id);
+      const { count: entriesCount } = await supabase
         .from('scoreboard_entries')
-        .delete()
+        .delete({ count: 'exact' })
         .in('id', orphanedEntryIds);
-      
+
       console.log(`  ✓ Deleted ${entriesCount || 0} orphaned entries`);
     } else {
       console.log('  No orphaned entries found');
     }
-    
+
     console.log('');
   } catch (error) {
     console.warn('  ⚠️  Error cleaning up orphaned data:', error);
@@ -582,11 +602,11 @@ async function main() {
 
     // Step 2: Complete cleanup - delete ALL users not in TEST_USERS
     console.log('🗑️  Removing non-test users...\n');
-    
+
     const { data: allAuthUsers } = await supabase.auth.admin.listUsers();
-    const testUserEmails: string[] = TEST_USERS.map(u => u.email);
-    const usersToDelete = allAuthUsers.users.filter(u => !testUserEmails.includes(u.email || ''));
-    
+    const testUserEmails: string[] = TEST_USERS.map((u) => u.email);
+    const usersToDelete = allAuthUsers.users.filter((u) => !testUserEmails.includes(u.email || ''));
+
     if (usersToDelete.length > 0) {
       console.log(`Found ${usersToDelete.length} non-test user(s) to delete:\n`);
       for (const user of usersToDelete) {
@@ -608,23 +628,23 @@ async function main() {
 
     for (const user of TEST_USERS) {
       console.log(`\n  Processing ${user.email} (${user.purpose})...`);
-      
+
       // First, get the user ID if they exist (for data cleanup)
       const { data: authUser } = await supabase.auth.admin.listUsers();
       const existingUser = authUser.users.find((u) => u.email === user.email);
-      
+
       // Delete user's data before deleting the user
       if (existingUser) {
         await deleteUserData(supabase, existingUser.id, user.email);
       }
-      
+
       // Delete existing user
       await deleteUser(supabase, user.email);
-      
+
       // Create new user
       const userId = await createUser(supabase, user.email, user.password, user.role, user.name);
       createdUsers[user.email] = userId;
-      
+
       console.log(`  ✓ Created ${user.email} with role: ${user.role}`);
     }
 
@@ -633,7 +653,7 @@ async function main() {
     // Step 4: Seed John's scoreboards
     console.log("📝 Seeding John's scoreboards...");
     const johnUserId = createdUsers['john@example.com'];
-    
+
     for (const scoreboard of JOHN_SCOREBOARDS) {
       const result = await seedScoreboard(supabase, johnUserId, scoreboard);
       console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
@@ -642,7 +662,7 @@ async function main() {
     // Step 5: Seed Sarah's scoreboards
     console.log("\n📝 Seeding Sarah's scoreboards...");
     const sarahUserId = createdUsers['sarah@example.com'];
-    
+
     for (const scoreboard of SARAH_SCOREBOARDS) {
       const result = await seedScoreboard(supabase, sarahUserId, scoreboard);
       console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
@@ -651,7 +671,7 @@ async function main() {
     // Step 6: Seed Site Admin's scoreboards
     console.log("\n📝 Seeding Site Admin's scoreboards...");
     const siteadminUserId = createdUsers['siteadmin@example.com'];
-    
+
     for (const scoreboard of SITEADMIN_SCOREBOARDS) {
       const result = await seedScoreboard(supabase, siteadminUserId, scoreboard);
       console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
@@ -660,7 +680,7 @@ async function main() {
     // Step 7: Seed Jane's scoreboards
     console.log("\n📝 Seeding Jane's scoreboards...");
     const janeUserId = createdUsers['jane@example.com'];
-    
+
     for (const scoreboard of JANE_SCOREBOARDS) {
       const result = await seedScoreboard(supabase, janeUserId, scoreboard);
       console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
@@ -676,7 +696,6 @@ async function main() {
     console.log('    - siteadmin@example.com (system_admin) - 1 scoreboard with entries');
     console.log('    - jane@example.com (user) - 2 scoreboards with entries');
     console.log('\n  All passwords: test123\n');
-
   } catch (error) {
     console.error('\n❌ Refresh failed:', error);
     process.exit(1);

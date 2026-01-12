@@ -17,10 +17,10 @@ export default defineConfig({
   workers: 6, // More parallel workers
   reporter: 'list', // Simpler reporter
   timeout: 30000,
-  
+
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',
-  
+
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000',
     trace: 'off', // Disable trace for speed

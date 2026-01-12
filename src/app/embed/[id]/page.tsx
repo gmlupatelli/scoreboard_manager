@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
@@ -31,7 +31,7 @@ const getRankIcon = (rank: number, styles: ScoreboardCustomStyles): string | nul
 export default function EmbedScoreboardPage() {
   const params = useParams();
   const scoreboardId = params?.id as string;
-  
+
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,27 +45,29 @@ export default function EmbedScoreboardPage() {
     setIsHydrated(true);
   }, []);
 
-  const loadEntriesOnly = async () => {
+  const loadEntriesOnly = useCallback(async () => {
     if (!scoreboardId) return;
-    
+
     try {
-      const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
-      
+      const { data: entriesData, error: entriesError } =
+        await scoreboardService.getScoreboardEntries(scoreboardId);
+
       if (!entriesError) {
         setEntries(entriesData || []);
       }
     } catch {}
-  };
+  }, [scoreboardId]);
 
-  const loadScoreboardData = async () => {
+  const loadScoreboardData = useCallback(async () => {
     if (!scoreboardId) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const { data: scoreboardData, error: scoreboardError } = await scoreboardService.getScoreboard(scoreboardId);
-      
+      const { data: scoreboardData, error: scoreboardError } =
+        await scoreboardService.getScoreboard(scoreboardId);
+
       if (scoreboardError) {
         setError(scoreboardError.message || 'Failed to load scoreboard');
         setIsLoading(false);
@@ -80,8 +82,9 @@ export default function EmbedScoreboardPage() {
 
       setScoreboard(scoreboardData);
 
-      const { data: entriesData, error: entriesError } = await scoreboardService.getScoreboardEntries(scoreboardId);
-      
+      const { data: entriesData, error: entriesError } =
+        await scoreboardService.getScoreboardEntries(scoreboardId);
+
       if (entriesError) {
         setError(entriesError.message || 'Failed to load entries');
         setIsLoading(false);
@@ -95,7 +98,7 @@ export default function EmbedScoreboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [scoreboardId]);
 
   useEffect(() => {
     if (!isHydrated || !scoreboardId) {
@@ -105,45 +108,42 @@ export default function EmbedScoreboardPage() {
       }
       return;
     }
-    
+
     loadScoreboardData();
 
-    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
-      scoreboardId,
-      {
-        onScoreboardChange: () => loadScoreboardData(),
-        onEntriesChange: () => loadEntriesOnly()
-      }
-    );
+    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(scoreboardId, {
+      onScoreboardChange: () => loadScoreboardData(),
+      onEntriesChange: () => loadEntriesOnly(),
+    });
 
     return () => unsubscribe();
-  }, [isHydrated, scoreboardId]);
+  }, [isHydrated, scoreboardId, loadScoreboardData, loadEntriesOnly]);
 
   const sortedEntries = useMemo(() => {
     const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
     const sorted = [...entries].sort((a, b) => {
       const scoreA = Number(a.score);
       const scoreB = Number(b.score);
-      
+
       if (scoreA !== scoreB) {
         return scoreboardSortOrder === 'desc' ? scoreB - scoreA : scoreA - scoreB;
       }
       return a.name.localeCompare(b.name);
     });
 
-    return sorted.map((entry, index): EntryWithRank => ({
-      ...entry,
-      rank: index + 1,
-    }));
+    return sorted.map(
+      (entry, index): EntryWithRank => ({
+        ...entry,
+        rank: index + 1,
+      })
+    );
   }, [entries, scoreboard?.sortOrder]);
 
   const filteredEntries = useMemo(() => {
     if (!searchQuery?.trim()) return sortedEntries;
 
     const query = searchQuery.toLowerCase();
-    return sortedEntries.filter((entry) =>
-      entry?.name?.toLowerCase()?.includes(query)
-    );
+    return sortedEntries.filter((entry) => entry?.name?.toLowerCase()?.includes(query));
   }, [sortedEntries, searchQuery]);
 
   const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
@@ -162,20 +162,20 @@ export default function EmbedScoreboardPage() {
 
   const getAppliedStyles = (): ScoreboardCustomStyles => {
     const lightPreset = getStylePreset('light');
-    
+
     if (!scoreboard?.customStyles) {
       return lightPreset;
     }
-    
+
     if (!shouldApplyStyles(scoreboard.styleScope)) {
       return lightPreset;
     }
-    
+
     if (scoreboard.customStyles.preset) {
       const presetStyles = getStylePreset(scoreboard.customStyles.preset);
       return { ...presetStyles, ...scoreboard.customStyles };
     }
-    
+
     return { ...lightPreset, ...scoreboard.customStyles };
   };
 
@@ -213,32 +213,39 @@ export default function EmbedScoreboardPage() {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen p-4"
       style={{
         backgroundColor: appliedStyles.backgroundColor,
         color: appliedStyles.textColor,
         fontFamily: appliedStyles.fontFamily,
-        ...customCssVars
+        ...customCssVars,
       }}
     >
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 text-center">
-          <h1 
+          <h1
             className="text-3xl sm:text-4xl font-bold mb-3"
             style={{ color: appliedStyles.titleTextColor || appliedStyles.textColor }}
           >
             {scoreboard.title}
           </h1>
-          {scoreboard.subtitle && (
-            <p 
+          {scoreboard.description && (
+            <p
               className="text-base sm:text-lg mb-4"
-              style={{ color: appliedStyles.titleTextColor ? `${appliedStyles.titleTextColor}cc` : `${appliedStyles.textColor}cc` }}
+              style={{
+                color: appliedStyles.titleTextColor
+                  ? `${appliedStyles.titleTextColor}cc`
+                  : `${appliedStyles.textColor}cc`,
+              }}
             >
-              {scoreboard.subtitle}
+              {scoreboard.description}
             </p>
           )}
-          <div className="text-sm" style={{ color: appliedStyles.titleTextColor || `${appliedStyles.textColor}99` }}>
+          <div
+            className="text-sm"
+            style={{ color: appliedStyles.titleTextColor || `${appliedStyles.textColor}99` }}
+          >
             Total Entries: {entries.length}
           </div>
         </div>
@@ -254,14 +261,14 @@ export default function EmbedScoreboardPage() {
         </div>
 
         {currentEntries.length === 0 ? (
-          <div 
+          <div
             className="text-center py-12 rounded-lg"
             style={{
               backgroundColor: appliedStyles.backgroundColor,
               borderColor: appliedStyles.borderColor,
               borderWidth: '1px',
               borderStyle: 'solid',
-              borderRadius: appliedStyles.borderRadius
+              borderRadius: appliedStyles.borderRadius,
             }}
           >
             <p style={{ color: appliedStyles.textColor }}>
@@ -270,26 +277,32 @@ export default function EmbedScoreboardPage() {
           </div>
         ) : (
           <>
-            <div 
+            <div
               className="overflow-hidden mb-4"
               style={{
                 borderColor: appliedStyles.borderColor,
                 borderWidth: '1px',
                 borderStyle: 'solid',
-                borderRadius: appliedStyles.borderRadius
+                borderRadius: appliedStyles.borderRadius,
               }}
             >
               <table className="w-full">
                 <thead>
-                  <tr 
-                    style={{ 
+                  <tr
+                    style={{
                       backgroundColor: appliedStyles.headerColor,
-                      color: appliedStyles.headerTextColor || appliedStyles.textColor
+                      color: appliedStyles.headerTextColor || appliedStyles.textColor,
                     }}
                   >
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Rank</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">{scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                      Rank
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">
+                      {scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -297,41 +310,45 @@ export default function EmbedScoreboardPage() {
                     const rankColor = getRankColor(entry.rank, appliedStyles);
                     const rankIconName = getRankIcon(entry.rank, appliedStyles);
                     const isAlternateRow = index % 2 !== 0;
-                    const textColor = isAlternateRow 
-                      ? (appliedStyles.alternateRowTextColor || appliedStyles.textColor)
+                    const textColor = isAlternateRow
+                      ? appliedStyles.alternateRowTextColor || appliedStyles.textColor
                       : appliedStyles.textColor;
-                    
+
                     return (
-                      <tr 
+                      <tr
                         key={entry.id}
                         className="transition-colors"
-                        style={{ 
-                          backgroundColor: index % 2 === 0 
-                            ? appliedStyles.backgroundColor
-                            : appliedStyles.rowHoverColor,
-                          borderBottom: `1px solid ${appliedStyles.borderColor}`
+                        style={{
+                          backgroundColor:
+                            index % 2 === 0
+                              ? appliedStyles.backgroundColor
+                              : appliedStyles.rowHoverColor,
+                          borderBottom: `1px solid ${appliedStyles.borderColor}`,
                         }}
                       >
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div 
+                          <div
                             className="flex items-center gap-2 font-semibold"
                             style={{ color: rankColor }}
                           >
-                            {rankIconName && <Icon name={rankIconName} size={18} style={{ color: rankColor }} />}
+                            {rankIconName && (
+                              <Icon name={rankIconName} size={18} style={{ color: rankColor }} />
+                            )}
                             <span className="text-sm">#{entry.rank}</span>
                           </div>
                         </td>
-                        <td 
-                          className="px-4 py-3 font-medium"
-                          style={{ color: textColor }}
-                        >
+                        <td className="px-4 py-3 font-medium" style={{ color: textColor }}>
                           {entry.name}
                         </td>
-                        <td 
+                        <td
                           className="px-4 py-3 text-right font-semibold"
                           style={{ color: appliedStyles.accentColor || appliedStyles.textColor }}
                         >
-                          {formatScoreDisplay(Number(entry.score), scoreboard?.scoreType || 'number', scoreboard?.timeFormat || null)}
+                          {formatScoreDisplay(
+                            Number(entry.score),
+                            scoreboard?.scoreType || 'number',
+                            scoreboard?.timeFormat || null
+                          )}
                         </td>
                       </tr>
                     );
@@ -343,27 +360,28 @@ export default function EmbedScoreboardPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between text-sm">
                 <span style={{ color: `${appliedStyles.textColor}99` }}>
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredEntries.length)} of {filteredEntries.length}
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredEntries.length)} of{' '}
+                  {filteredEntries.length}
                 </span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-1 rounded disabled:opacity-50"
                     style={{
                       backgroundColor: appliedStyles.accentColor,
-                      color: '#ffffff'
+                      color: '#ffffff',
                     }}
                   >
                     Previous
                   </button>
                   <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 rounded disabled:opacity-50"
                     style={{
                       backgroundColor: appliedStyles.accentColor,
-                      color: '#ffffff'
+                      color: '#ffffff',
                     }}
                   >
                     Next

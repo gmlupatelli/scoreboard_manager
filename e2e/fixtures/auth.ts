@@ -3,7 +3,7 @@
  * Provides helpers for real Supabase authentication flows
  */
 
-import { test as base, type Page, type BrowserContext } from '@playwright/test';
+import { test as base, type Page, type BrowserContext as _BrowserContext } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
@@ -40,7 +40,7 @@ async function performLogin(page: Page, user: AuthUser) {
   await page.fill('input[name="email"]', user.email);
   await page.fill('input[name="password"]', user.password);
   await page.click('button[type="submit"]');
-  
+
   // Wait for redirect to dashboard (allow up to 45s for slower mobile viewports)
   await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 45000 });
 }

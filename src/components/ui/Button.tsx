@@ -14,13 +14,15 @@ type BaseButtonProps = {
   disabled?: boolean;
 };
 
-type ButtonAsButton = BaseButtonProps & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'disabled'> & {
-  href?: never;
-};
+type ButtonAsButton = BaseButtonProps &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'disabled'> & {
+    href?: never;
+  };
 
-type ButtonAsLink = BaseButtonProps & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
-  href: string;
-};
+type ButtonAsLink = BaseButtonProps &
+  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & {
+    href: string;
+  };
 
 export type ButtonProps = ButtonAsButton | ButtonAsLink;
 
@@ -41,14 +43,19 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg transition-smooth duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px] min-h-[44px]';
+    const baseClasses =
+      'inline-flex items-center justify-center font-semibold rounded-lg transition-smooth duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px] min-h-[44px]';
 
     const variantClasses = {
-      primary: 'bg-primary text-primary-foreground hover:opacity-90 focus:ring-primary elevation-1 hover-lift',
-      secondary: 'bg-secondary text-secondary-foreground hover:opacity-90 focus:ring-secondary elevation-1 hover-lift',
+      primary:
+        'bg-primary text-primary-foreground hover:opacity-90 focus:ring-primary elevation-1 hover-lift',
+      secondary:
+        'bg-secondary text-secondary-foreground hover:opacity-90 focus:ring-secondary elevation-1 hover-lift',
       ghost: 'bg-transparent text-text-primary hover:bg-muted focus:ring-muted',
-      danger: 'bg-destructive text-destructive-foreground hover:opacity-90 focus:ring-destructive elevation-1 hover-lift',
-      outline: 'bg-surface border-2 border-border text-text-primary hover:bg-muted focus:ring-border',
+      danger:
+        'bg-destructive text-destructive-foreground hover:opacity-90 focus:ring-destructive elevation-1 hover-lift',
+      outline:
+        'bg-surface border-2 border-border text-text-primary hover:bg-muted focus:ring-border',
     };
 
     const sizeClasses = {
@@ -67,14 +74,15 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
 
     const widthClass = fullWidth ? 'w-full' : '';
 
-    const combinedClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`.trim();
+    const combinedClasses =
+      `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className}`.trim();
 
     const renderIcon = (position: 'left' | 'right') => {
       if (!icon || iconPosition !== position) return null;
-      
+
       return (
         <Icon
-          name={icon as any}
+          name={icon}
           size={defaultIconSize}
           className={position === 'left' ? 'mr-2' : 'ml-2'}
         />
@@ -125,7 +133,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       return (
         <Link
           href={href}
-          ref={ref as any}
+          ref={ref as React.Ref<HTMLAnchorElement>}
           className={combinedClasses}
           {...linkProps}
         >
@@ -137,7 +145,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
     // Render as button
     return (
       <button
-        ref={ref as any}
+        ref={ref as React.Ref<HTMLButtonElement>}
         className={combinedClasses}
         disabled={disabled || isLoading}
         {...(props as ButtonHTMLAttributes<HTMLButtonElement>)}

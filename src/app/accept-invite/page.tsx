@@ -41,7 +41,7 @@ function AcceptInviteContent() {
             // Set the session using the tokens from the invite link
             const { error: sessionError } = await supabase.auth.setSession({
               access_token: accessToken,
-              refresh_token: refreshToken
+              refresh_token: refreshToken,
             });
 
             if (!sessionError) {
@@ -55,11 +55,13 @@ function AcceptInviteContent() {
         }
 
         // Fallback: check for existing session
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session) {
           setHasSession(true);
         }
-      } catch (err) {
+      } catch (_err) {
         // No session, user needs to set password
       } finally {
         setCheckingSession(false);
@@ -90,8 +92,8 @@ function AcceptInviteContent() {
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
         data: {
-          full_name: fullName
-        }
+          full_name: fullName,
+        },
       });
 
       if (updateError) {
@@ -99,12 +101,14 @@ function AcceptInviteContent() {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user?.email) {
         await fetch('/api/invitations/accept', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: user.email, fullName: fullName.trim() })
+          body: JSON.stringify({ email: user.email, fullName: fullName.trim() }),
         });
       }
 
@@ -112,7 +116,7 @@ function AcceptInviteContent() {
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to set password. Please try again.');
     } finally {
       setLoading(false);
@@ -139,9 +143,7 @@ function AcceptInviteContent() {
               <Logo size={60} />
             </div>
             <h1 className="text-2xl font-bold text-text-primary mb-2">Invalid Invitation</h1>
-            <p className="text-text-secondary">
-              This invitation link is invalid or has expired.
-            </p>
+            <p className="text-text-secondary">This invitation link is invalid or has expired.</p>
           </div>
 
           <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 mb-6">
@@ -149,7 +151,9 @@ function AcceptInviteContent() {
               <Icon name="ExclamationTriangleIcon" size={20} className="text-warning mr-2 mt-0.5" />
               <div className="text-sm text-text-secondary">
                 <p className="font-medium text-warning">Invitation not found</p>
-                <p className="mt-1">Please ask the person who invited you to send a new invitation.</p>
+                <p className="mt-1">
+                  Please ask the person who invited you to send a new invitation.
+                </p>
               </div>
             </div>
           </div>
@@ -234,7 +238,10 @@ function AcceptInviteContent() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-primary mb-2">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-text-primary mb-2"
+            >
               Confirm Password
             </label>
             <input
@@ -274,14 +281,16 @@ function AcceptInviteContent() {
 
 export default function AcceptInvitePage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-text-secondary">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-text-secondary">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <AcceptInviteContent />
     </Suspense>
   );

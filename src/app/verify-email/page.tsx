@@ -29,7 +29,7 @@ function VerifyEmailContent() {
 
       const { error } = await supabase.auth.verifyOtp({
         token_hash,
-        type: type as 'email_change' | 'signup' | 'email'
+        type: type as 'email_change' | 'signup' | 'email',
       });
 
       if (error) {
@@ -90,12 +90,8 @@ function VerifyEmailContent() {
             <div className="mb-6">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             </div>
-            <h1 className="text-2xl font-bold text-text-primary mb-4">
-              Verifying your email...
-            </h1>
-            <p className="text-text-secondary">
-              Please wait while we confirm your email address.
-            </p>
+            <h1 className="text-2xl font-bold text-text-primary mb-4">Verifying your email...</h1>
+            <p className="text-text-secondary">Please wait while we confirm your email address.</p>
           </>
         )}
 
@@ -104,15 +100,9 @@ function VerifyEmailContent() {
             <div className="mb-6">
               <Icon name="CheckCircleIcon" size={64} className="mx-auto text-green-500" />
             </div>
-            <h1 className="text-2xl font-bold text-text-primary mb-4">
-              Email Verified!
-            </h1>
-            <p className="text-text-secondary mb-4">
-              Your email has been confirmed successfully.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Redirecting to dashboard...
-            </p>
+            <h1 className="text-2xl font-bold text-text-primary mb-4">Email Verified!</h1>
+            <p className="text-text-secondary mb-4">Your email has been confirmed successfully.</p>
+            <p className="text-sm text-muted-foreground">Redirecting to dashboard...</p>
           </>
         )}
 
@@ -121,9 +111,7 @@ function VerifyEmailContent() {
             <div className="mb-6">
               <Icon name="ExclamationCircleIcon" size={64} className="mx-auto text-red-500" />
             </div>
-            <h1 className="text-2xl font-bold text-text-primary mb-4">
-              Verification Failed
-            </h1>
+            <h1 className="text-2xl font-bold text-text-primary mb-4">Verification Failed</h1>
             <p className="text-text-secondary mb-6">
               {errorMessage || 'The verification link may have expired or already been used.'}
             </p>
@@ -156,14 +144,16 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-text-secondary">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-text-secondary">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <VerifyEmailContent />
     </Suspense>
   );

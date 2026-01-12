@@ -14,16 +14,24 @@ export default function TermsOfServicePage() {
 
           <div className="bg-card border border-border rounded-lg p-8 space-y-8">
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">1. Acceptance of Terms</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                1. Acceptance of Terms
+              </h2>
               <p className="text-text-secondary leading-relaxed">
-                By accessing or using Scoreboard Manager, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our service.
+                By accessing or using Scoreboard Manager, you agree to be bound by these Terms of
+                Service. If you do not agree to these terms, please do not use our service.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">2. Description of Service</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                2. Description of Service
+              </h2>
               <p className="text-text-secondary leading-relaxed">
-                Scoreboard Manager provides a web-based platform for creating, managing, and displaying scoreboards for various competitions, tournaments, and events. Our service allows users to track scores in real-time and share them publicly or keep them private.
+                Scoreboard Manager provides a web-based platform for creating, managing, and
+                displaying scoreboards for various competitions, tournaments, and events. Our
+                service allows users to track scores in real-time and share them publicly or keep
+                them private.
               </p>
             </section>
 
@@ -43,10 +51,14 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">4. User Content</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
-                You retain ownership of all content you create through our service. By posting content, you grant us a non-exclusive, worldwide license to use, display, and distribute your content solely for the purpose of operating and improving our service.
+                You retain ownership of all content you create through our service. By posting
+                content, you grant us a non-exclusive, worldwide license to use, display, and
+                distribute your content solely for the purpose of operating and improving our
+                service.
               </p>
               <p className="text-text-secondary leading-relaxed">
-                You are responsible for ensuring that your content does not violate any third-party rights or applicable laws.
+                You are responsible for ensuring that your content does not violate any third-party
+                rights or applicable laws.
               </p>
             </section>
 
@@ -66,51 +78,69 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">6. Service Availability</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                6. Service Availability
+              </h2>
               <p className="text-text-secondary leading-relaxed">
-                We strive to maintain high availability of our service, but we do not guarantee uninterrupted access. We may temporarily suspend the service for maintenance, updates, or due to circumstances beyond our control.
+                We strive to maintain high availability of our service, but we do not guarantee
+                uninterrupted access. We may temporarily suspend the service for maintenance,
+                updates, or due to circumstances beyond our control.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">7. Limitation of Liability</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                7. Limitation of Liability
+              </h2>
               <p className="text-text-secondary leading-relaxed">
-                To the maximum extent permitted by law, Scoreboard Manager shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service.
+                To the maximum extent permitted by law, Scoreboard Manager shall not be liable for
+                any indirect, incidental, special, consequential, or punitive damages resulting from
+                your use of or inability to use the service.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">8. Indemnification</h2>
               <p className="text-text-secondary leading-relaxed">
-                You agree to indemnify and hold harmless Scoreboard Manager and its affiliates from any claims, damages, or expenses arising from your use of the service or violation of these terms.
+                You agree to indemnify and hold harmless Scoreboard Manager and its affiliates from
+                any claims, damages, or expenses arising from your use of the service or violation
+                of these terms.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">9. Termination</h2>
               <p className="text-text-secondary leading-relaxed">
-                We reserve the right to suspend or terminate your account at any time for violation of these terms or for any other reason at our sole discretion. You may also delete your account at any time by contacting us.
+                We reserve the right to suspend or terminate your account at any time for violation
+                of these terms or for any other reason at our sole discretion. You may also delete
+                your account at any time by contacting us.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">10. Changes to Terms</h2>
               <p className="text-text-secondary leading-relaxed">
-                We may modify these Terms of Service at any time. We will notify users of significant changes by posting a notice on our website. Continued use of the service after changes constitutes acceptance of the new terms.
+                We may modify these Terms of Service at any time. We will notify users of
+                significant changes by posting a notice on our website. Continued use of the service
+                after changes constitutes acceptance of the new terms.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">11. Governing Law</h2>
               <p className="text-text-secondary leading-relaxed">
-                These Terms of Service shall be governed by and construed in accordance with applicable laws, without regard to conflict of law principles.
+                These Terms of Service shall be governed by and construed in accordance with
+                applicable laws, without regard to conflict of law principles.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">12. Contact Information</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                12. Contact Information
+              </h2>
               <p className="text-text-secondary leading-relaxed">
-                For any questions regarding these Terms of Service, please contact us at legal@scoreboardmanager.com.
+                For any questions regarding these Terms of Service, please contact us at
+                legal@scoreboardmanager.com.
               </p>
             </section>
           </div>

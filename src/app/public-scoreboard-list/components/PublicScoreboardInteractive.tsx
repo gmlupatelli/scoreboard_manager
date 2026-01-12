@@ -13,7 +13,7 @@ const PAGE_SIZE = 30;
 const SEARCH_DEBOUNCE_MS = 300;
 
 const PublicScoreboardInteractive = () => {
-  const router = useRouter();
+  const _router = useRouter();
   const [scoreboards, setScoreboards] = useState<Scoreboard[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -25,56 +25,73 @@ const PublicScoreboardInteractive = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [offset, setOffset] = useState(0);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  // Track offset in a ref to avoid recreating the callback
+  const offsetRef = useRef(0);
 
-  const loadPublicScoreboards = useCallback(async (isInitial = true, search = '', sort: 'newest' | 'oldest' | 'title' = 'newest') => {
-    if (isInitial) {
-      setLoading(true);
-      setOffset(0);
-      setScoreboards([]);
-    } else {
-      setLoadingMore(true);
-    }
-    setError('');
+  // Keep ref in sync with state
+  useEffect(() => {
+    offsetRef.current = offset;
+  }, [offset]);
 
-    try {
-      const currentOffset = isInitial ? 0 : offset;
-      const { data, error, hasMore: more, totalCount: count } = 
-        await scoreboardService.getPublicScoreboardsPaginated({
+  const loadPublicScoreboards = useCallback(
+    async (isInitial = true, search = '', sort: 'newest' | 'oldest' | 'title' = 'newest') => {
+      if (isInitial) {
+        setLoading(true);
+        setOffset(0);
+        offsetRef.current = 0;
+        setScoreboards([]);
+      } else {
+        setLoadingMore(true);
+      }
+      setError('');
+
+      try {
+        const currentOffset = isInitial ? 0 : offsetRef.current;
+        const {
+          data,
+          error,
+          hasMore: more,
+          totalCount: count,
+        } = await scoreboardService.getPublicScoreboardsPaginated({
           limit: PAGE_SIZE,
           offset: currentOffset,
           search: search || undefined,
           sortBy: sort,
         });
-      
-      if (error) {
-        setError(error.message);
-      } else {
-        if (isInitial) {
-          setScoreboards(data || []);
+
+        if (error) {
+          setError(error.message);
         } else {
-          setScoreboards(prev => [...prev, ...(data || [])]);
+          if (isInitial) {
+            setScoreboards(data || []);
+          } else {
+            setScoreboards((prev) => [...prev, ...(data || [])]);
+          }
+          setHasMore(more);
+          setTotalCount(count);
+          const newOffset = currentOffset + (data?.length || 0);
+          setOffset(newOffset);
+          offsetRef.current = newOffset;
         }
-        setHasMore(more);
-        setTotalCount(count);
-        setOffset(currentOffset + (data?.length || 0));
+      } catch {
+        setError('Failed to load scoreboards');
+      } finally {
+        if (isInitial) {
+          setLoading(false);
+        } else {
+          setLoadingMore(false);
+        }
       }
-    } catch {
-      setError('Failed to load scoreboards');
-    } finally {
-      if (isInitial) {
-        setLoading(false);
-      } else {
-        setLoadingMore(false);
-      }
-    }
-  }, [offset]);
+    },
+    []
+  );
 
   // Debounce search input
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     searchTimeoutRef.current = setTimeout(() => {
       setDebouncedSearch(searchQuery);
     }, SEARCH_DEBOUNCE_MS);
@@ -89,7 +106,7 @@ const PublicScoreboardInteractive = () => {
   // Load scoreboards when debounced search or sortBy changes
   useEffect(() => {
     loadPublicScoreboards(true, debouncedSearch, sortBy);
-  }, [debouncedSearch, sortBy]);
+  }, [debouncedSearch, sortBy, loadPublicScoreboards]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -103,7 +120,6 @@ const PublicScoreboardInteractive = () => {
     onLoadMore: handleLoadMore,
   });
 
-
   return (
     <>
       <Header isAuthenticated={false} />
@@ -114,12 +130,18 @@ const PublicScoreboardInteractive = () => {
               <Icon name="TrophyIcon" size={32} className="text-primary" />
               <h1 className="text-3xl font-bold text-foreground">Public Scoreboards</h1>
             </div>
-            <p className="text-muted-foreground">Browse and view public scoreboards from the community</p>
+            <p className="text-muted-foreground">
+              Browse and view public scoreboards from the community
+            </p>
           </div>
 
           <div className="mb-6 flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px] relative">
-              <Icon name="MagnifyingGlassIcon" size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              <Icon
+                name="MagnifyingGlassIcon"
+                size={18}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+              />
               <input
                 type="text"
                 value={searchQuery}
@@ -130,7 +152,7 @@ const PublicScoreboardInteractive = () => {
             </div>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
               className="px-4 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="newest">Newest First</option>
@@ -168,7 +190,9 @@ const PublicScoreboardInteractive = () => {
               <Icon name="InboxIcon" size={48} className="mx-auto text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-foreground mb-2">No scoreboards found</p>
               <p className="text-muted-foreground">
-                {searchQuery ? 'Try adjusting your search query' : 'No public scoreboards available yet'}
+                {searchQuery
+                  ? 'Try adjusting your search query'
+                  : 'No public scoreboards available yet'}
               </p>
             </div>
           ) : (
@@ -178,7 +202,7 @@ const PublicScoreboardInteractive = () => {
                   <PublicScoreboardCard key={scoreboard?.id} scoreboard={scoreboard} />
                 ))}
               </div>
-              
+
               {/* Infinite scroll trigger */}
               <div ref={loadMoreRef} className="py-8 flex justify-center">
                 {loadingMore && (

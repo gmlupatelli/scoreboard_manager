@@ -6,7 +6,11 @@ interface StatsOverviewProps {
   activeCompetitions: number;
 }
 
-const StatsOverview = ({ totalScoreboards, totalEntries, activeCompetitions }: StatsOverviewProps) => {
+const StatsOverview = ({
+  totalScoreboards,
+  totalEntries,
+  activeCompetitions,
+}: StatsOverviewProps) => {
   const stats = [
     {
       label: 'Total Scoreboards',
@@ -43,8 +47,10 @@ const StatsOverview = ({ totalScoreboards, totalEntries, activeCompetitions }: S
               <p className="text-text-secondary text-sm mb-1">{stat.label}</p>
               <p className="text-3xl font-bold text-text-primary">{stat.value}</p>
             </div>
-            <div className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-              <Icon name={stat.icon as any} size={24} className={stat.color} />
+            <div
+              className={`w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}
+            >
+              <Icon name={stat.icon} size={24} className={stat.color} />
             </div>
           </div>
         </div>

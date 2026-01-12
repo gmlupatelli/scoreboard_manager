@@ -6,7 +6,8 @@ import ScoreboardManagementInteractive from './components/ScoreboardManagementIn
 
 export const metadata: Metadata = {
   title: 'Scoreboard Management - Scoreboard Manager',
-  description: 'Manage scoreboard entries with comprehensive CRUD operations, CSV import, search filtering, and real-time ranking updates for competition participants.',
+  description:
+    'Manage scoreboard entries with comprehensive CRUD operations, CSV import, search filtering, and real-time ranking updates for competition participants.',
 };
 
 function ScoreboardManagementLoading() {

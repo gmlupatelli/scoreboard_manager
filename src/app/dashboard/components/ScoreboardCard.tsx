@@ -53,7 +53,7 @@ const ScoreboardCard = ({
         ) : (
           <h3 className="text-lg font-semibold text-text-primary flex-1">{title}</h3>
         )}
-        
+
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
@@ -62,7 +62,7 @@ const ScoreboardCard = ({
           >
             <Icon name="EllipsisVerticalIcon" size={20} className="text-text-secondary" />
           </button>
-          
+
           {showMenu && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
@@ -97,7 +97,9 @@ const ScoreboardCard = ({
         {description ? (
           <p className="text-sm text-text-secondary line-clamp-2">{description}</p>
         ) : (
-          <p className="text-sm text-text-secondary line-clamp-2 italic">No description available</p>
+          <p className="text-sm text-text-secondary line-clamp-2 italic">
+            No description available
+          </p>
         )}
       </div>
 

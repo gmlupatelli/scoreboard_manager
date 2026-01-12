@@ -4,20 +4,20 @@ import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/s
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const token = extractBearerToken(request.headers.get('Authorization'));
-    
+
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     const authClient = getAuthClient(token);
-    
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await authClient.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -60,7 +60,7 @@ export async function DELETE(
         const invitedUser = authUsers?.users?.find(
           (u) => u.email?.toLowerCase() === invitation.invitee_email.toLowerCase()
         );
-        
+
         if (invitedUser) {
           // Delete the auth user
           await serviceClient.auth.admin.deleteUser(invitedUser.id);

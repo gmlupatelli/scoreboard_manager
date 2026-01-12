@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getServiceRoleClient } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -9,31 +9,11 @@ export const runtime = 'nodejs';
  * Deletes test data for automated test users: admin@example.com, john@example.com, sarah@example.com
  * Does NOT clean manual test users: siteadmin@example.com, jane@example.com
  * Protected by TEST_CLEANUP_API_KEY environment variable
- * 
+ *
  * Usage:
  * POST /api/test/cleanup
  * Headers: { 'x-cleanup-api-key': 'your-key-here' }
  */
-
-function getServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return null;
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-    db: {
-      schema: 'public',
-    },
-  });
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,26 +22,17 @@ export async function POST(request: NextRequest) {
     const expectedKey = process.env.TEST_CLEANUP_API_KEY;
 
     if (!expectedKey) {
-      return NextResponse.json(
-        { error: 'Cleanup API not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Cleanup API not configured' }, { status: 500 });
     }
 
     if (!apiKey || apiKey !== expectedKey) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Invalid API key' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized - Invalid API key' }, { status: 401 });
     }
 
     // 2. Get service role client
     const serviceClient = getServiceRoleClient();
     if (!serviceClient) {
-      return NextResponse.json(
-        { error: 'Service client configuration error' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Service client configuration error' }, { status: 500 });
     }
 
     // 3. Get user IDs for automated test users (admin, john, sarah)
@@ -179,12 +150,8 @@ export async function POST(request: NextRequest) {
       deletedInvitations,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Test cleanup error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error during cleanup' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error during cleanup' }, { status: 500 });
   }
 }

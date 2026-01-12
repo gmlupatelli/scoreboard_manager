@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '../../contexts/AuthContext';
-import Header from '../../components/common/Header';
+import { useAuth } from '@/contexts/AuthContext';
+import Header from '@/components/common/Header';
 import Icon from '@/components/ui/AppIcon';
 
 interface SystemSettings {
@@ -34,7 +34,7 @@ export default function RegisterPage() {
           const settings: SystemSettings = await response.json();
           setIsPublicRegistrationAllowed(settings.allow_public_registration);
         }
-      } catch (err) {
+      } catch (_err) {
         setIsPublicRegistrationAllowed(true);
       } finally {
         setCheckingSettings(false);
@@ -46,10 +46,12 @@ export default function RegisterPage() {
 
   const checkInvitation = async (emailToCheck: string) => {
     if (!emailToCheck) return;
-    
+
     setCheckingInvitation(true);
     try {
-      const response = await fetch(`/api/invitations/check?email=${encodeURIComponent(emailToCheck)}`);
+      const response = await fetch(
+        `/api/invitations/check?email=${encodeURIComponent(emailToCheck)}`
+      );
       if (response.ok) {
         const data = await response.json();
         setHasValidInvitation(data.has_valid_invitation);
@@ -57,7 +59,7 @@ export default function RegisterPage() {
           setError('');
         }
       }
-    } catch (err) {
+    } catch (_err) {
       // Silently fail
     } finally {
       setCheckingInvitation(false);
@@ -103,7 +105,7 @@ export default function RegisterPage() {
           await fetch('/api/invitations/accept', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email.toLowerCase().trim() })
+            body: JSON.stringify({ email: email.toLowerCase().trim() }),
           });
         }
         setSuccess(true);
@@ -111,7 +113,7 @@ export default function RegisterPage() {
           router.push('/login');
         }, 2000);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -161,16 +163,23 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
           <div className="bg-card border border-border rounded-lg shadow-lg p-8">
             <h1 className="text-3xl font-bold text-center mb-2 text-foreground">Create Account</h1>
-            <p className="text-center text-muted-foreground mb-8">Start managing your scoreboards today</p>
+            <p className="text-center text-muted-foreground mb-8">
+              Start managing your scoreboards today
+            </p>
 
             {!isPublicRegistrationAllowed && !hasValidInvitation && (
               <div className="mb-6 bg-warning/10 border border-warning/30 rounded-lg p-4">
                 <div className="flex items-start">
-                  <Icon name="InformationCircleIcon" size={20} className="text-warning mr-2 mt-0.5" />
+                  <Icon
+                    name="InformationCircleIcon"
+                    size={20}
+                    className="text-warning mr-2 mt-0.5"
+                  />
                   <div>
                     <p className="text-sm font-medium text-warning">Invite-Only Registration</p>
                     <p className="text-sm text-text-secondary mt-1">
-                      Registration is currently restricted to invited users. Please use the invitation link sent to your email.
+                      Registration is currently restricted to invited users. Please use the
+                      invitation link sent to your email.
                     </p>
                   </div>
                 </div>
@@ -202,7 +211,10 @@ export default function RegisterPage() {
               {(isPublicRegistrationAllowed || hasValidInvitation) && (
                 <>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-foreground mb-2"
+                    >
                       Email Address
                     </label>
                     <div className="relative">
@@ -226,7 +238,10 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-2">
+                    <label
+                      htmlFor="fullName"
+                      className="block text-sm font-medium text-foreground mb-2"
+                    >
                       Full Name
                     </label>
                     <input
@@ -243,7 +258,10 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
+                    <label
+                      htmlFor="password"
+                      className="block text-sm font-medium text-foreground mb-2"
+                    >
                       Password
                     </label>
                     <input
@@ -261,7 +279,10 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground mb-2">
+                    <label
+                      htmlFor="confirmPassword"
+                      className="block text-sm font-medium text-foreground mb-2"
+                    >
                       Confirm Password
                     </label>
                     <input

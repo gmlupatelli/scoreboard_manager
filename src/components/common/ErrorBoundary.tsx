@@ -37,7 +37,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
@@ -66,12 +66,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <Icon name="ExclamationTriangleIcon" size={24} className="text-destructive" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-text-primary">
-                  Something went wrong
-                </h2>
-                <p className="text-sm text-text-secondary">
-                  An unexpected error occurred
-                </p>
+                <h2 className="text-xl font-semibold text-text-primary">Something went wrong</h2>
+                <p className="text-sm text-text-secondary">An unexpected error occurred</p>
               </div>
             </div>
 
@@ -91,7 +87,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 Try Again
               </button>
               <button
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = '/')}
                 className="flex-1 px-4 py-2 border border-border text-text-primary rounded-md font-medium hover:bg-muted transition-colors"
               >
                 Go Home

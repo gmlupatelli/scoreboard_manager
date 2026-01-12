@@ -7,9 +7,14 @@ interface ScoreboardHeaderProps {
   customStyles?: ScoreboardCustomStyles | null;
 }
 
-export default function ScoreboardHeader({ title, description, totalEntries, customStyles }: ScoreboardHeaderProps) {
+export default function ScoreboardHeader({
+  title,
+  description,
+  totalEntries,
+  customStyles,
+}: ScoreboardHeaderProps) {
   return (
-    <div 
+    <div
       className="border-b"
       style={{
         backgroundColor: customStyles?.backgroundColor || 'var(--surface)',
@@ -19,33 +24,35 @@ export default function ScoreboardHeader({ title, description, totalEntries, cus
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 
+        <h1
           className="text-3xl sm:text-4xl font-bold mb-3"
-          style={{ 
+          style={{
             color: customStyles?.titleTextColor || 'var(--text-primary)',
             fontFamily: customStyles?.fontFamily || 'inherit',
           }}
         >
           {title}
         </h1>
-        <p 
+        <p
           className="text-base sm:text-lg mb-4 max-w-3xl"
-          style={{ 
-            color: customStyles?.titleTextColor ? `${customStyles.titleTextColor}cc` : 'var(--text-secondary)',
+          style={{
+            color: customStyles?.titleTextColor
+              ? `${customStyles.titleTextColor}cc`
+              : 'var(--text-secondary)',
             fontFamily: customStyles?.fontFamily || 'inherit',
           }}
         >
           {description}
         </p>
-        <div 
+        <div
           className="flex items-center space-x-2 text-sm"
-          style={{ 
+          style={{
             color: customStyles?.titleTextColor || 'var(--text-secondary)',
             fontFamily: customStyles?.fontFamily || 'inherit',
           }}
         >
           <span className="font-medium">Total Entries:</span>
-          <span 
+          <span
             className="px-3 py-1 rounded-md font-semibold"
             style={{
               backgroundColor: customStyles?.accentColor || 'var(--muted)',

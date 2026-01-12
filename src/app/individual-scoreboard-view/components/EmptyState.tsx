@@ -16,7 +16,7 @@ export default function EmptyState({ searchQuery }: EmptyStateProps) {
       <p className="text-text-secondary text-center max-w-md">
         {searchQuery
           ? `No entries match your search for "${searchQuery}". Try adjusting your search terms.`
-          : 'This scoreboard doesn\'t have any entries yet. Check back later for updates.'}
+          : "This scoreboard doesn't have any entries yet. Check back later for updates."}
       </p>
     </div>
   );

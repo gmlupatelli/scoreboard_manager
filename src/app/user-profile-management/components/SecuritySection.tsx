@@ -19,12 +19,12 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
   }>({
     score: 0,
     label: '',
-    color: 'bg-gray-300'
+    color: 'bg-gray-300',
   });
 
   const calculatePasswordStrength = (password: string) => {
     let score = 0;
-    
+
     if (password.length >= 8) score++;
     if (password.length >= 12) score++;
     if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
@@ -37,7 +37,7 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
       { score: 2, label: 'Fair', color: 'bg-orange-500' },
       { score: 3, label: 'Good', color: 'bg-yellow-500' },
       { score: 4, label: 'Strong', color: 'bg-green-500' },
-      { score: 5, label: 'Very Strong', color: 'bg-green-600' }
+      { score: 5, label: 'Very Strong', color: 'bg-green-600' },
     ];
 
     return strengthMap[score];
@@ -103,14 +103,12 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
   return (
     <div className="bg-card border border-border rounded-lg elevation-1 p-6">
       <h2 className="text-xl font-semibold text-text-primary mb-6">Security Settings</h2>
-      
+
       <div className="space-y-6">
         {/* Password Section */}
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">
-            Password
-          </label>
-          
+          <label className="block text-sm font-medium text-text-secondary mb-2">Password</label>
+
           {!showPasswordForm ? (
             <div className="flex items-center justify-between">
               <span className="text-text-primary">••••••••</span>
@@ -134,7 +132,7 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
                   }`}
                   placeholder="New password"
                 />
-                
+
                 {/* Password Strength Indicator */}
                 {newPassword && (
                   <div className="mt-2">
@@ -170,15 +168,11 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
               </div>
 
               {/* Error Message */}
-              {passwordError && (
-                <p className="text-sm text-destructive">{passwordError}</p>
-              )}
+              {passwordError && <p className="text-sm text-destructive">{passwordError}</p>}
 
               {/* Password Requirements */}
               <div className="bg-surface border border-border rounded-lg p-4">
-                <p className="text-sm font-medium text-text-primary mb-2">
-                  Password Requirements:
-                </p>
+                <p className="text-sm font-medium text-text-primary mb-2">Password Requirements:</p>
                 <ul className="text-sm text-text-secondary space-y-1">
                   <li className="flex items-center gap-2">
                     <span className={newPassword.length >= 8 ? 'text-success' : ''}>
@@ -187,7 +181,9 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
                     At least 8 characters
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className={/(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) ? 'text-success' : ''}>
+                    <span
+                      className={/(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) ? 'text-success' : ''}
+                    >
                       {/(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) ? '✓' : '○'}
                     </span>
                     Uppercase and lowercase letters

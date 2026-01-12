@@ -13,7 +13,7 @@ import { getAppliedScoreboardStyles, getStylePreset } from '@/utils/stylePresets
 export default function ScoreboardViewLayout() {
   const searchParams = useSearchParams();
   const scoreboardId = searchParams?.get('id') || null;
-  
+
   const [isHydrated, setIsHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
@@ -26,12 +26,12 @@ export default function ScoreboardViewLayout() {
   useEffect(() => {
     const loadScoreboard = async () => {
       if (!isHydrated || !scoreboardId) return;
-      
+
       setIsLoading(true);
       try {
         const { data } = await scoreboardService.getScoreboard(scoreboardId);
         setScoreboard(data);
-        
+
         if (data) {
           const styles = getAppliedScoreboardStyles(data, 'main');
           setAppliedStyles(styles);
@@ -48,17 +48,14 @@ export default function ScoreboardViewLayout() {
     // Set up real-time subscription to detect scoreboard changes
     if (!isHydrated || !scoreboardId) return;
 
-    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(
-      scoreboardId,
-      {
-        onScoreboardChange: () => {
-          loadScoreboard();
-        },
-        onEntriesChange: () => {
-          // Entries are handled by ScoreboardInteractive
-        }
-      }
-    );
+    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(scoreboardId, {
+      onScoreboardChange: () => {
+        loadScoreboard();
+      },
+      onEntriesChange: () => {
+        // Entries are handled by ScoreboardInteractive
+      },
+    });
 
     return () => {
       unsubscribe();
@@ -90,7 +87,11 @@ export default function ScoreboardViewLayout() {
   return (
     <div
       className="min-h-screen flex flex-col"
-      style={appliedStyles?.backgroundColor ? { backgroundColor: appliedStyles.backgroundColor } : undefined}
+      style={
+        appliedStyles?.backgroundColor
+          ? { backgroundColor: appliedStyles.backgroundColor }
+          : undefined
+      }
     >
       <Header isAuthenticated={false} customStyles={appliedStyles} />
       <main className="pt-16 flex-1">

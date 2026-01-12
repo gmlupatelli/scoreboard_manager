@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { Database } from '@/types/database.types';
 
 export interface ProfileUpdateData {
   full_name?: string;
@@ -22,10 +23,10 @@ export const profileService = {
       }
 
       return { data: data ?? null, error: null };
-    } catch (error) {
-      return { 
-        data: null, 
-        error: 'Failed to fetch profile. Please try again.' 
+    } catch (_error) {
+      return {
+        data: null,
+        error: 'Failed to fetch profile. Please try again.',
       };
     }
   },
@@ -39,7 +40,7 @@ export const profileService = {
       // Update Supabase Auth user metadata so it reflects in Supabase dashboard
       if (updates.full_name) {
         const { error: authError } = await supabase.auth.updateUser({
-          data: { full_name: updates.full_name }
+          data: { full_name: updates.full_name },
         });
 
         if (authError) {
@@ -48,12 +49,13 @@ export const profileService = {
       }
 
       // Also update user_profiles table
+      const updateData = {
+        full_name: updates.full_name,
+        updated_at: new Date().toISOString(),
+      } as Database['public']['Tables']['user_profiles']['Update'];
       const { data, error } = await supabase
         .from('user_profiles')
-        .update({
-          full_name: updates.full_name,
-          updated_at: new Date().toISOString()
-        } as any)
+        .update(updateData as never)
         .eq('id', userId)
         .select()
         .single();
@@ -63,24 +65,24 @@ export const profileService = {
       }
 
       return { data: data ?? null, error: null };
-    } catch (error) {
-      return { 
-        data: null, 
-        error: 'Failed to update profile. Please try again.' 
+    } catch (_error) {
+      return {
+        data: null,
+        error: 'Failed to update profile. Please try again.',
       };
     }
   },
 
   /**
    * Update user email (requires Supabase Auth API)
-   * Note: This only initiates the email change - the actual email update 
+   * Note: This only initiates the email change - the actual email update
    * happens in Supabase Auth after the user verifies the new address.
    * The user_profiles table is updated after verification in verify-email page.
    */
   async updateEmail(newEmail: string) {
     try {
       const { error } = await supabase.auth.updateUser({
-        email: newEmail
+        email: newEmail,
       });
 
       if (error) {
@@ -91,10 +93,10 @@ export const profileService = {
       // The new email is stored in user.new_email until verified
 
       return { success: true, error: null };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: 'Failed to update email. Please try again.' 
+    } catch (_error) {
+      return {
+        success: false,
+        error: 'Failed to update email. Please try again.',
       };
     }
   },
@@ -105,12 +107,13 @@ export const profileService = {
    */
   async syncProfileEmail(userId: string, verifiedEmail: string) {
     try {
+      const updateData = {
+        email: verifiedEmail,
+        updated_at: new Date().toISOString(),
+      } as Database['public']['Tables']['user_profiles']['Update'];
       const { error } = await supabase
         .from('user_profiles')
-        .update({ 
-          email: verifiedEmail,
-          updated_at: new Date().toISOString()
-        } as any)
+        .update(updateData as never)
         .eq('id', userId);
 
       if (error) {
@@ -118,10 +121,10 @@ export const profileService = {
       }
 
       return { success: true, error: null };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: 'Failed to sync profile email.' 
+    } catch (_error) {
+      return {
+        success: false,
+        error: 'Failed to sync profile email.',
       };
     }
   },
@@ -130,7 +133,11 @@ export const profileService = {
    * Ensure user profile exists after signup verification
    * Creates the profile if it doesn't exist
    */
-  async ensureProfileExists(user: { id: string; email?: string; user_metadata?: { full_name?: string; role?: string } }) {
+  async ensureProfileExists(user: {
+    id: string;
+    email?: string;
+    user_metadata?: { full_name?: string; role?: string };
+  }) {
     try {
       // Check if profile already exists
       const { data: existingProfile } = await supabase
@@ -144,26 +151,25 @@ export const profileService = {
       }
 
       // Create the profile if it doesn't exist
-      const { error } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: user.id,
-          email: user.email || '',
-          full_name: user.user_metadata?.full_name || null,
-          role: user.user_metadata?.role || 'user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as any);
+      const insertData = {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || '',
+        role: (user.user_metadata?.role as 'system_admin' | 'user') || 'user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as Database['public']['Tables']['user_profiles']['Insert'];
+      const { error } = await supabase.from('user_profiles').insert(insertData as never);
 
       if (error) {
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: 'Failed to create user profile.' 
+    } catch (_error) {
+      return {
+        success: false,
+        error: 'Failed to create user profile.',
       };
     }
   },
@@ -174,7 +180,7 @@ export const profileService = {
   async resendEmailVerification(pendingEmail: string) {
     try {
       const { error } = await supabase.auth.updateUser({
-        email: pendingEmail
+        email: pendingEmail,
       });
 
       if (error) {
@@ -182,10 +188,10 @@ export const profileService = {
       }
 
       return { success: true, error: null };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: 'Failed to resend verification email. Please try again.' 
+    } catch (_error) {
+      return {
+        success: false,
+        error: 'Failed to resend verification email. Please try again.',
       };
     }
   },
@@ -196,7 +202,7 @@ export const profileService = {
   async changePassword(newPassword: string) {
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password: newPassword,
       });
 
       if (error) {
@@ -204,10 +210,10 @@ export const profileService = {
       }
 
       return { success: true, error: null };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: 'Failed to change password. Please try again.' 
+    } catch (_error) {
+      return {
+        success: false,
+        error: 'Failed to change password. Please try again.',
       };
     }
   },
@@ -217,8 +223,10 @@ export const profileService = {
    */
   async deleteAccount(_userId: string) {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.access_token) {
         return { success: false, error: 'Not authenticated' };
       }
@@ -227,8 +235,8 @@ export const profileService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        }
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       const data = await response.json();
@@ -243,10 +251,10 @@ export const profileService = {
 
       return { success: true, error: null };
     } catch {
-      return { 
-        success: false, 
-        error: 'Failed to delete account. Please try again.' 
+      return {
+        success: false,
+        error: 'Failed to delete account. Please try again.',
       };
     }
-  }
+  },
 };

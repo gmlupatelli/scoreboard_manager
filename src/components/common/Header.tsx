@@ -22,41 +22,55 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
   const router = useRouter();
   const { userProfile, user, signOut } = useAuth();
 
-  const headerStyle = customStyles ? {
-    backgroundColor: customStyles.backgroundColor,
-    borderColor: customStyles.borderColor,
-    fontFamily: customStyles.fontFamily || 'inherit',
-  } : undefined;
+  const headerStyle = customStyles
+    ? {
+        backgroundColor: customStyles.backgroundColor,
+        borderColor: customStyles.borderColor,
+        fontFamily: customStyles.fontFamily || 'inherit',
+      }
+    : undefined;
 
-  const textStyle = customStyles ? {
-    color: customStyles.textColor,
-    fontFamily: customStyles.fontFamily || 'inherit',
-  } : undefined;
+  const textStyle = customStyles
+    ? {
+        color: customStyles.textColor,
+        fontFamily: customStyles.fontFamily || 'inherit',
+      }
+    : undefined;
 
-  const accentStyle = customStyles ? {
-    backgroundColor: customStyles.accentColor,
-    fontFamily: customStyles.fontFamily || 'inherit',
-  } : undefined;
+  const _accentStyle = customStyles
+    ? {
+        backgroundColor: customStyles.accentColor,
+        fontFamily: customStyles.fontFamily || 'inherit',
+      }
+    : undefined;
 
-  const primaryStyle = customStyles ? {
-    backgroundColor: customStyles.accentColor,
-    fontFamily: customStyles.fontFamily || 'inherit',
-  } : undefined;
+  const primaryStyle = customStyles
+    ? {
+        backgroundColor: customStyles.accentColor,
+        fontFamily: customStyles.fontFamily || 'inherit',
+      }
+    : undefined;
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  const publicNavItems: any[] = [];
+  interface NavItem {
+    label: string;
+    path: string;
+    icon: string;
+  }
+
+  const publicNavItems: NavItem[] = [];
 
   const adminNavItems = [
     { label: 'Dashboard', path: '/dashboard', icon: 'HomeIcon' },
     { label: 'Manage Scoreboards', path: '/scoreboard-management', icon: 'Cog6ToothIcon' },
   ];
 
-  const navItems = isAuthenticated ? adminNavItems : publicNavItems;
+  const _navItems = isAuthenticated ? adminNavItems : publicNavItems;
 
-  const isActivePath = (path: string) => pathname === path;
+  const _isActivePath = (path: string) => pathname === path;
 
   const handleLogout = async () => {
     setIsUserMenuOpen(false);
@@ -72,7 +86,10 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
   const displayName = userProfile?.fullName || user?.email || 'User';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-[1000] border-b border-border bg-surface elevation-1" style={customStyles ? headerStyle : undefined}>
+    <header
+      className="fixed top-0 left-0 right-0 z-[1000] border-b border-border bg-surface elevation-1"
+      style={customStyles ? headerStyle : undefined}
+    >
       <nav className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 landscape-mobile:h-12">
           <div className="flex items-center">
@@ -136,7 +153,10 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   aria-label="User menu"
                   aria-expanded={isUserMenuOpen}
                 >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary" style={primaryStyle}>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center bg-primary"
+                    style={primaryStyle}
+                  >
                     <Icon name="UserIcon" size={18} className="text-white" />
                   </div>
                   <span className="text-sm font-medium">{displayName}</span>
@@ -153,7 +173,17 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                       className="fixed inset-0 z-[1009]"
                       onClick={() => setIsUserMenuOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-48 border border-border rounded-md elevation-2 z-[1010] bg-popover" style={customStyles ? { backgroundColor: customStyles.backgroundColor, borderColor: customStyles.borderColor } : undefined}>
+                    <div
+                      className="absolute right-0 mt-2 w-48 border border-border rounded-md elevation-2 z-[1010] bg-popover"
+                      style={
+                        customStyles
+                          ? {
+                              backgroundColor: customStyles.backgroundColor,
+                              borderColor: customStyles.borderColor,
+                            }
+                          : undefined
+                      }
+                    >
                       <div className="py-1">
                         <Link
                           href="/dashboard"
@@ -214,7 +244,15 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   size="sm"
                   icon="UserPlusIcon"
                   iconPosition="left"
-                  style={customStyles ? { borderColor: customStyles.borderColor, color: customStyles.textColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
+                  style={
+                    customStyles
+                      ? {
+                          borderColor: customStyles.borderColor,
+                          color: customStyles.textColor,
+                          fontFamily: customStyles.fontFamily || 'inherit',
+                        }
+                      : undefined
+                  }
                 >
                   Sign Up
                 </Button>
@@ -224,7 +262,14 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   size="sm"
                   icon="ArrowRightOnRectangleIcon"
                   iconPosition="left"
-                  style={customStyles ? { backgroundColor: customStyles.accentColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
+                  style={
+                    customStyles
+                      ? {
+                          backgroundColor: customStyles.accentColor,
+                          fontFamily: customStyles.fontFamily || 'inherit',
+                        }
+                      : undefined
+                  }
                 >
                   Login
                 </Button>
@@ -246,7 +291,10 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
         </div>
 
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border" style={customStyles ? { borderColor: customStyles.borderColor } : undefined}>
+          <div
+            className="md:hidden border-t border-border"
+            style={customStyles ? { borderColor: customStyles.borderColor } : undefined}
+          >
             {!isAuthenticated && (
               <div className="px-2 pt-2 pb-3 space-y-1">
                 <Link
@@ -297,14 +345,25 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               </div>
             )}
 
-            <div className="border-t border-border px-2 pt-4 pb-3" style={customStyles ? { borderColor: customStyles.borderColor } : undefined}>
+            <div
+              className="border-t border-border px-2 pt-4 pb-3"
+              style={customStyles ? { borderColor: customStyles.borderColor } : undefined}
+            >
               {isAuthenticated ? (
                 <div className="space-y-1">
                   <div className="flex items-center px-3 py-2">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary" style={customStyles ? { backgroundColor: customStyles.accentColor } : undefined}>
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-primary"
+                      style={
+                        customStyles ? { backgroundColor: customStyles.accentColor } : undefined
+                      }
+                    >
                       <Icon name="UserIcon" size={20} className="text-white" />
                     </div>
-                    <span className="ml-3 text-base font-medium text-text-primary" style={customStyles ? { color: customStyles.textColor } : undefined}>
+                    <span
+                      className="ml-3 text-base font-medium text-text-primary"
+                      style={customStyles ? { color: customStyles.textColor } : undefined}
+                    >
                       {displayName}
                     </span>
                   </div>
@@ -364,7 +423,15 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     icon="UserPlusIcon"
                     iconPosition="left"
                     fullWidth
-                    style={customStyles ? { borderColor: customStyles.borderColor, color: customStyles.textColor, fontFamily: customStyles.fontFamily || 'inherit' } : undefined}
+                    style={
+                      customStyles
+                        ? {
+                            borderColor: customStyles.borderColor,
+                            color: customStyles.textColor,
+                            fontFamily: customStyles.fontFamily || 'inherit',
+                          }
+                        : undefined
+                    }
                   >
                     Sign Up
                   </Button>

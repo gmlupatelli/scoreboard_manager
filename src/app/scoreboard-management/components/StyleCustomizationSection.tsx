@@ -5,14 +5,14 @@ import Icon from '@/components/ui/AppIcon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import { ScoreboardCustomStyles } from '@/types/models';
 import { safeLocalStorage } from '@/utils/localStorage';
-import { 
-  STYLE_PRESETS, 
-  PRESET_LABELS, 
-  PRESET_DESCRIPTIONS, 
+import {
+  STYLE_PRESETS,
+  PRESET_LABELS,
+  PRESET_DESCRIPTIONS,
   CUSTOMIZABLE_PROPERTIES,
   RANK_CUSTOMIZATION_PROPERTIES,
   RANK_ICON_OPTIONS,
-  getStylePreset 
+  getStylePreset,
 } from '@/utils/stylePresets';
 
 interface StyleCustomizationSectionProps {
@@ -66,7 +66,7 @@ export default function StyleCustomizationSection({
 
   const handlePresetChange = (preset: string) => {
     setSelectedPreset(preset);
-    
+
     // If selecting 'custom', try to load from localStorage first
     if (preset === 'custom') {
       const cachedCustom = loadCustomStylesFromCache();
@@ -80,21 +80,26 @@ export default function StyleCustomizationSection({
       const presetStyles = getStylePreset(preset);
       setCustomStyles({ ...presetStyles, preset: preset as ScoreboardCustomStyles['preset'] });
     }
-    
+
     setHasChanges(true);
   };
 
-  const handlePropertyChange = (key: string, value: string) => {
+  // Helper to safely get a style property value
+  const getStyleValue = (key: keyof ScoreboardCustomStyles): string | undefined => {
+    return customStyles[key] as string | undefined;
+  };
+
+  const handlePropertyChange = (key: keyof ScoreboardCustomStyles, value: string) => {
     const updatedStyles = {
       ...customStyles,
       [key]: value,
       preset: 'custom' as const,
     };
-    
+
     setCustomStyles(updatedStyles);
     setSelectedPreset('custom');
     setHasChanges(true);
-    
+
     // Save to localStorage so custom changes persist
     saveCustomStylesToCache(updatedStyles);
   };
@@ -109,7 +114,7 @@ export default function StyleCustomizationSection({
     if (customStyles.preset === 'custom') {
       saveCustomStylesToCache(customStyles);
     }
-    
+
     await onSave(customStyles, scope);
     setHasChanges(false);
   };
@@ -151,10 +156,10 @@ export default function StyleCustomizationSection({
             </p>
           </div>
         </div>
-        <Icon 
-          name={isExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'} 
-          size={20} 
-          className="text-text-secondary" 
+        <Icon
+          name={isExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'}
+          size={20}
+          className="text-text-secondary"
         />
       </button>
 
@@ -162,16 +167,21 @@ export default function StyleCustomizationSection({
         <div className="px-6 pb-6 border-t border-border pt-4">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="flex gap-3">
-              <Icon name="InformationCircleIcon" size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+              <Icon
+                name="InformationCircleIcon"
+                size={20}
+                className="text-blue-600 flex-shrink-0 mt-0.5"
+              />
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-1">How styling works</p>
                 <p className="mb-2">
-                  Choose a preset theme or customize individual colors. You can apply styles to just the embedded 
-                  version, the main public view, or both. Changes are saved automatically when you click Save.
+                  Choose a preset theme or customize individual colors. You can apply styles to just
+                  the embedded version, the main public view, or both. Changes are saved
+                  automatically when you click Save.
                 </p>
                 <p className="mb-2">
-                  Colors accept HEX (#ffffff), RGBA (rgba(255, 255, 255, 0.8)), or the keyword "transparent" 
-                  for see-through backgrounds.
+                  Colors accept HEX (#ffffff), RGBA (rgba(255, 255, 255, 0.8)), or the keyword
+                  "transparent" for see-through backgrounds.
                 </p>
               </div>
             </div>
@@ -219,7 +229,7 @@ export default function StyleCustomizationSection({
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <div 
+                    <div
                       className="w-4 h-4 rounded-full border border-gray-300"
                       style={{ backgroundColor: STYLE_PRESETS[preset].backgroundColor }}
                     />
@@ -246,12 +256,22 @@ export default function StyleCustomizationSection({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {RANK_CUSTOMIZATION_PROPERTIES.map((rankProp) => (
-                <div key={rankProp.rank} className="p-4 bg-muted/50 rounded-lg border border-border">
+                <div
+                  key={rankProp.rank}
+                  className="p-4 bg-muted/50 rounded-lg border border-border"
+                >
                   <div className="flex items-center gap-2 mb-3">
-                    <Icon 
-                      name={(customStyles as any)[rankProp.iconKey] || 'TrophyIcon'} 
-                      size={20} 
-                      style={{ color: (customStyles as any)[rankProp.colorKey] || rankProp.defaultColor }}
+                    <Icon
+                      name={
+                        getStyleValue(rankProp.iconKey as keyof ScoreboardCustomStyles) ||
+                        'TrophyIcon'
+                      }
+                      size={20}
+                      style={{
+                        color:
+                          getStyleValue(rankProp.colorKey as keyof ScoreboardCustomStyles) ||
+                          rankProp.defaultColor,
+                      }}
                     />
                     <span className="font-medium text-sm text-text-primary">{rankProp.label}</span>
                   </div>
@@ -259,15 +279,31 @@ export default function StyleCustomizationSection({
                     <div>
                       <label className="block text-xs text-text-secondary mb-1">Color</label>
                       <ColorPicker
-                        value={(customStyles as any)[rankProp.colorKey] || rankProp.defaultColor}
-                        onChange={(color) => handlePropertyChange(rankProp.colorKey, color)}
+                        value={
+                          getStyleValue(rankProp.colorKey as keyof ScoreboardCustomStyles) ||
+                          rankProp.defaultColor
+                        }
+                        onChange={(color) =>
+                          handlePropertyChange(
+                            rankProp.colorKey as keyof ScoreboardCustomStyles,
+                            color
+                          )
+                        }
                       />
                     </div>
                     <div>
                       <label className="block text-xs text-text-secondary mb-1">Icon</label>
                       <select
-                        value={(customStyles as any)[rankProp.iconKey] || 'TrophyIcon'}
-                        onChange={(e) => handlePropertyChange(rankProp.iconKey, e.target.value)}
+                        value={
+                          getStyleValue(rankProp.iconKey as keyof ScoreboardCustomStyles) ||
+                          'TrophyIcon'
+                        }
+                        onChange={(e) =>
+                          handlePropertyChange(
+                            rankProp.iconKey as keyof ScoreboardCustomStyles,
+                            e.target.value
+                          )
+                        }
                         className="w-full px-2 py-2 border border-border rounded-md text-sm bg-background text-text-primary"
                       >
                         {RANK_ICON_OPTIONS.map((opt) => (
@@ -288,9 +324,7 @@ export default function StyleCustomizationSection({
               <label className="block text-sm font-medium text-text-primary">
                 Custom Properties
               </label>
-              <span className="text-xs text-text-secondary">
-                Fine-tune individual settings
-              </span>
+              <span className="text-xs text-text-secondary">Fine-tune individual settings</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {CUSTOMIZABLE_PROPERTIES.map((prop) => (
@@ -301,13 +335,23 @@ export default function StyleCustomizationSection({
                   <p className="text-xs text-text-secondary mb-1">{prop.description}</p>
                   {prop.type === 'color' ? (
                     <ColorPicker
-                      value={(customStyles as any)[prop.key] || '#ffffff'}
-                      onChange={(color) => handlePropertyChange(prop.key, color)}
+                      value={getStyleValue(prop.key as keyof ScoreboardCustomStyles) || '#ffffff'}
+                      onChange={(color) =>
+                        handlePropertyChange(prop.key as keyof ScoreboardCustomStyles, color)
+                      }
                     />
                   ) : prop.type === 'select' && prop.options ? (
                     <select
-                      value={(customStyles as any)[prop.key] || prop.options[0].value}
-                      onChange={(e) => handlePropertyChange(prop.key, e.target.value)}
+                      value={
+                        getStyleValue(prop.key as keyof ScoreboardCustomStyles) ||
+                        prop.options[0].value
+                      }
+                      onChange={(e) =>
+                        handlePropertyChange(
+                          prop.key as keyof ScoreboardCustomStyles,
+                          e.target.value
+                        )
+                      }
                       className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background text-text-primary"
                     >
                       {prop.options.map((opt) => (
@@ -323,20 +367,15 @@ export default function StyleCustomizationSection({
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-text-primary mb-3">
-              Preview
-            </label>
-            <div 
+            <label className="block text-sm font-medium text-text-primary mb-3">Preview</label>
+            <div
               className="p-4"
               style={{
                 backgroundColor: customStyles.backgroundColor,
                 fontFamily: customStyles.fontFamily,
               }}
             >
-              <div 
-                className="text-center mb-3"
-                style={{ color: customStyles.headerColor }}
-              >
+              <div className="text-center mb-3" style={{ color: customStyles.headerColor }}>
                 <h4 className="font-bold" style={{ color: customStyles.textColor }}>
                   Sample Scoreboard
                 </h4>
@@ -344,18 +383,33 @@ export default function StyleCustomizationSection({
                   Preview of your style settings
                 </p>
               </div>
-              <table 
+              <table
                 className="w-full text-sm overflow-hidden"
                 style={{
                   borderRadius: customStyles.borderRadius,
-                  border: `1px solid ${customStyles.borderColor}`
+                  border: `1px solid ${customStyles.borderColor}`,
                 }}
               >
                 <thead>
                   <tr style={{ backgroundColor: customStyles.headerColor }}>
-                    <th className="px-3 py-2 text-left" style={{ color: customStyles.headerTextColor }}>Rank</th>
-                    <th className="px-3 py-2 text-left" style={{ color: customStyles.headerTextColor }}>Name</th>
-                    <th className="px-3 py-2 text-right" style={{ color: customStyles.headerTextColor }}>Score</th>
+                    <th
+                      className="px-3 py-2 text-left"
+                      style={{ color: customStyles.headerTextColor }}
+                    >
+                      Rank
+                    </th>
+                    <th
+                      className="px-3 py-2 text-left"
+                      style={{ color: customStyles.headerTextColor }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      className="px-3 py-2 text-right"
+                      style={{ color: customStyles.headerTextColor }}
+                    >
+                      Score
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -365,32 +419,42 @@ export default function StyleCustomizationSection({
                     { rank: 3, name: 'Sam Wilson', score: 2200 },
                   ].map((entry, idx) => {
                     const isAlternateRow = idx % 2 !== 0;
-                    const textColor = isAlternateRow && customStyles.alternateRowTextColor 
-                      ? customStyles.alternateRowTextColor 
-                      : customStyles.textColor;
-                    
+                    const textColor =
+                      isAlternateRow && customStyles.alternateRowTextColor
+                        ? customStyles.alternateRowTextColor
+                        : customStyles.textColor;
+
                     return (
-                    <tr 
-                      key={entry.rank}
-                      style={{ 
-                        backgroundColor: idx % 2 === 0 ? customStyles.backgroundColor : customStyles.rowHoverColor,
-                        borderBottom: `1px solid ${customStyles.borderColor}`
-                      }}
-                    >
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-2" style={{ color: getRankColor(entry.rank) }}>
-                          <Icon name={getRankIcon(entry.rank)} size={18} />
-                          <span className="font-semibold">#{entry.rank}</span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2" style={{ color: textColor }}>
-                        {entry.name}
-                      </td>
-                      <td className="px-3 py-2 text-right font-semibold" style={{ color: customStyles.accentColor }}>
-                        {entry.score.toLocaleString()}
-                      </td>
-                    </tr>
-                  );
+                      <tr
+                        key={entry.rank}
+                        style={{
+                          backgroundColor:
+                            idx % 2 === 0
+                              ? customStyles.backgroundColor
+                              : customStyles.rowHoverColor,
+                          borderBottom: `1px solid ${customStyles.borderColor}`,
+                        }}
+                      >
+                        <td className="px-3 py-2">
+                          <div
+                            className="flex items-center gap-2"
+                            style={{ color: getRankColor(entry.rank) }}
+                          >
+                            <Icon name={getRankIcon(entry.rank)} size={18} />
+                            <span className="font-semibold">#{entry.rank}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2" style={{ color: textColor }}>
+                          {entry.name}
+                        </td>
+                        <td
+                          className="px-3 py-2 text-right font-semibold"
+                          style={{ color: customStyles.accentColor }}
+                        >
+                          {entry.score.toLocaleString()}
+                        </td>
+                      </tr>
+                    );
                   })}
                 </tbody>
               </table>

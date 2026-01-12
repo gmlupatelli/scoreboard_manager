@@ -17,10 +17,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 4, // Run 4 tests in parallel locally
   reporter: 'html',
   timeout: 30000, // 30 seconds per test
-  
+
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',
-  
+
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000',
     trace: 'on-first-retry',

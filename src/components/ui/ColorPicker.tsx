@@ -99,7 +99,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setTextInput(newValue);
-    
+
     // Try to parse and update the color picker
     try {
       const parsed = parseColor(newValue);
@@ -126,9 +126,10 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
           className="w-10 h-10 rounded border border-border cursor-pointer flex-shrink-0"
           style={{
             backgroundColor: rgbaToString(rgbaColor),
-            backgroundImage: rgbaColor.a < 1 
-              ? 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%)'
-              : 'none',
+            backgroundImage:
+              rgbaColor.a < 1
+                ? 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%)'
+                : 'none',
             backgroundSize: '8px 8px',
             backgroundPosition: '0 0, 4px 4px',
           }}
@@ -150,7 +151,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
           style={{ minWidth: '240px' }}
         >
           <RgbaColorPicker color={rgbaColor} onChange={handleColorChange} />
-          
+
           <div className="mt-3 space-y-2">
             <div>
               <label className="block text-xs text-text-secondary mb-1">
@@ -166,7 +167,7 @@ export default function ColorPicker({ value, onChange, label }: ColorPickerProps
                 className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
               />
             </div>
-            
+
             <div className="text-xs text-text-secondary pt-2 border-t border-border">
               <div className="font-medium mb-1">Current: {textInput}</div>
               <div className="text-[10px] opacity-70">

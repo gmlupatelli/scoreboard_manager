@@ -22,15 +22,17 @@ interface Invitation {
 
 export default function InvitationsPage() {
   const router = useRouter();
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
-      return { 'Authorization': `Bearer ${session.access_token}` };
+      return { Authorization: `Bearer ${session.access_token}` };
     }
     return {};
   };
@@ -40,13 +42,13 @@ export default function InvitationsPage() {
       const authHeaders = await getAuthHeaders();
       const response = await fetch('/api/invitations', {
         credentials: 'include',
-        headers: authHeaders
+        headers: authHeaders,
       });
       if (response.ok) {
         const data = await response.json();
         setInvitations(data);
       }
-    } catch (err) {
+    } catch (_err) {
       // Silently handle error
     } finally {
       setLoading(false);
@@ -69,32 +71,38 @@ export default function InvitationsPage() {
       const response = await fetch(`/api/invitations/${invitationId}`, {
         method: 'DELETE',
         credentials: 'include',
-        headers: authHeaders
+        headers: authHeaders,
       });
 
       if (response.ok) {
-        setInvitations(prev => prev.map(inv => 
-          inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
-        ));
+        setInvitations((prev) =>
+          prev.map((inv) =>
+            inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
+          )
+        );
       }
-    } catch (err) {
+    } catch (_err) {
       // Silently handle error
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const _getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-warning/10 text-warning';
-      case 'accepted': return 'bg-success/10 text-success';
-      case 'expired': return 'bg-muted text-text-secondary';
-      case 'cancelled': return 'bg-destructive/10 text-destructive';
-      default: return 'bg-muted text-text-secondary';
+      case 'pending':
+        return 'bg-warning/10 text-warning';
+      case 'accepted':
+        return 'bg-success/10 text-success';
+      case 'expired':
+        return 'bg-muted text-text-secondary';
+      case 'cancelled':
+        return 'bg-destructive/10 text-destructive';
+      default:
+        return 'bg-muted text-text-secondary';
     }
   };
 
-
-  const pendingCount = invitations.filter(inv => inv.status === 'pending').length;
-  const acceptedCount = invitations.filter(inv => inv.status === 'accepted').length;
+  const pendingCount = invitations.filter((inv) => inv.status === 'pending').length;
+  const acceptedCount = invitations.filter((inv) => inv.status === 'accepted').length;
 
   if (authLoading || loading) {
     return (
@@ -110,7 +118,7 @@ export default function InvitationsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header isAuthenticated={true} />
-      
+
       <main className="flex-1 pt-20 landscape-mobile:pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
@@ -182,9 +190,17 @@ export default function InvitationsPage() {
             <div className="p-6">
               {invitations.length === 0 ? (
                 <div className="text-center py-12">
-                  <Icon name="EnvelopeIcon" size={48} className="mx-auto text-text-secondary opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium text-text-primary mb-2">No invitations sent yet</h3>
-                  <p className="text-text-secondary mb-6">Start inviting users to join the platform.</p>
+                  <Icon
+                    name="EnvelopeIcon"
+                    size={48}
+                    className="mx-auto text-text-secondary opacity-50 mb-4"
+                  />
+                  <h3 className="text-lg font-medium text-text-primary mb-2">
+                    No invitations sent yet
+                  </h3>
+                  <p className="text-text-secondary mb-6">
+                    Start inviting users to join the platform.
+                  </p>
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="inline-flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth font-medium"

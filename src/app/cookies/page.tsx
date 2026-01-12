@@ -16,31 +16,52 @@ export default function CookiePolicyPage() {
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">1. What Are Cookies</h2>
               <p className="text-text-secondary leading-relaxed">
-                Cookies are small text files that are stored on your device when you visit a website. They are widely used to make websites work more efficiently and to provide information to website owners.
+                Cookies are small text files that are stored on your device when you visit a
+                website. They are widely used to make websites work more efficiently and to provide
+                information to website owners.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">2. How We Use Cookies</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                2. How We Use Cookies
+              </h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 Scoreboard Manager uses cookies for the following purposes:
               </p>
               <ul className="list-disc list-inside text-text-secondary space-y-2 ml-4">
-                <li><strong className="text-text-primary">Essential Cookies:</strong> Required for the operation of our website, including authentication and session management.</li>
-                <li><strong className="text-text-primary">Functionality Cookies:</strong> Allow us to remember your preferences and provide enhanced features.</li>
-                <li><strong className="text-text-primary">Analytics Cookies:</strong> Help us understand how visitors interact with our website so we can improve our service.</li>
+                <li>
+                  <strong className="text-text-primary">Essential Cookies:</strong> Required for the
+                  operation of our website, including authentication and session management.
+                </li>
+                <li>
+                  <strong className="text-text-primary">Functionality Cookies:</strong> Allow us to
+                  remember your preferences and provide enhanced features.
+                </li>
+                <li>
+                  <strong className="text-text-primary">Analytics Cookies:</strong> Help us
+                  understand how visitors interact with our website so we can improve our service.
+                </li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">3. Types of Cookies We Use</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                3. Types of Cookies We Use
+              </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-text-secondary text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 font-semibold text-text-primary">Cookie Name</th>
-                      <th className="text-left py-3 px-4 font-semibold text-text-primary">Purpose</th>
-                      <th className="text-left py-3 px-4 font-semibold text-text-primary">Duration</th>
+                      <th className="text-left py-3 px-4 font-semibold text-text-primary">
+                        Cookie Name
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-text-primary">
+                        Purpose
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-text-primary">
+                        Duration
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -65,9 +86,13 @@ export default function CookiePolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">4. Third-Party Cookies</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                4. Third-Party Cookies
+              </h2>
               <p className="text-text-secondary leading-relaxed">
-                We may use third-party services that set their own cookies, such as analytics providers. These third parties have their own privacy policies governing the use of their cookies.
+                We may use third-party services that set their own cookies, such as analytics
+                providers. These third parties have their own privacy policies governing the use of
+                their cookies.
               </p>
             </section>
 
@@ -77,32 +102,48 @@ export default function CookiePolicyPage() {
                 You can control and manage cookies in several ways:
               </p>
               <ul className="list-disc list-inside text-text-secondary space-y-2 ml-4">
-                <li><strong className="text-text-primary">Browser Settings:</strong> Most browsers allow you to refuse or accept cookies, delete existing cookies, and set preferences for certain websites.</li>
-                <li><strong className="text-text-primary">Private Browsing:</strong> Using private or incognito mode prevents cookies from being stored after your session.</li>
+                <li>
+                  <strong className="text-text-primary">Browser Settings:</strong> Most browsers
+                  allow you to refuse or accept cookies, delete existing cookies, and set
+                  preferences for certain websites.
+                </li>
+                <li>
+                  <strong className="text-text-primary">Private Browsing:</strong> Using private or
+                  incognito mode prevents cookies from being stored after your session.
+                </li>
               </ul>
               <p className="text-text-secondary leading-relaxed mt-4">
-                Please note that blocking certain cookies may affect the functionality of our website and your user experience.
+                Please note that blocking certain cookies may affect the functionality of our
+                website and your user experience.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">6. Essential Cookies</h2>
               <p className="text-text-secondary leading-relaxed">
-                Some cookies are essential for the operation of our website. These cookies enable core functionality such as security, network management, and account access. You cannot opt out of these cookies as the website cannot function properly without them.
+                Some cookies are essential for the operation of our website. These cookies enable
+                core functionality such as security, network management, and account access. You
+                cannot opt out of these cookies as the website cannot function properly without
+                them.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">7. Updates to This Policy</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                7. Updates to This Policy
+              </h2>
               <p className="text-text-secondary leading-relaxed">
-                We may update this Cookie Policy from time to time to reflect changes in our practices or for operational, legal, or regulatory reasons. We encourage you to review this page periodically for the latest information on our cookie practices.
+                We may update this Cookie Policy from time to time to reflect changes in our
+                practices or for operational, legal, or regulatory reasons. We encourage you to
+                review this page periodically for the latest information on our cookie practices.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">8. Contact Us</h2>
               <p className="text-text-secondary leading-relaxed">
-                If you have any questions about our use of cookies, please contact us at privacy@scoreboardmanager.com.
+                If you have any questions about our use of cookies, please contact us at
+                privacy@scoreboardmanager.com.
               </p>
             </section>
           </div>

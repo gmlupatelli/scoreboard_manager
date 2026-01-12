@@ -36,7 +36,7 @@ export default function EmbedCodeSection({
   const getIframeCode = () => {
     const width = embedWidth.includes('%') ? embedWidth : `${embedWidth}px`;
     const height = embedHeight.includes('%') ? embedHeight : `${embedHeight}px`;
-    
+
     return `<iframe
   src="${getEmbedUrl()}"
   width="${width}"
@@ -53,8 +53,7 @@ export default function EmbedCodeSection({
       await navigator.clipboard.writeText(getIframeCode());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-    }
+    } catch {}
   };
 
   const handleCopyUrl = async () => {
@@ -62,8 +61,7 @@ export default function EmbedCodeSection({
       await navigator.clipboard.writeText(getEmbedUrl());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-    }
+    } catch {}
   };
 
   const handleOpenPreview = () => {
@@ -85,10 +83,10 @@ export default function EmbedCodeSection({
             </p>
           </div>
         </div>
-        <Icon 
-          name={isExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'} 
-          size={20} 
-          className="text-text-secondary" 
+        <Icon
+          name={isExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'}
+          size={20}
+          className="text-text-secondary"
         />
       </button>
 
@@ -96,7 +94,11 @@ export default function EmbedCodeSection({
         <div className="px-6 pb-6 border-t border-border pt-4">
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
             <div className="flex gap-3">
-              <Icon name="LightBulbIcon" size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
+              <Icon
+                name="LightBulbIcon"
+                size={20}
+                className="text-amber-600 flex-shrink-0 mt-0.5"
+              />
               <div className="text-sm text-amber-800">
                 <p className="font-medium mb-1">How to embed your scoreboard</p>
                 <ol className="list-decimal list-inside space-y-1">
@@ -110,9 +112,7 @@ export default function EmbedCodeSection({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-text-primary mb-2">
-              Embed URL
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-2">Embed URL</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -125,22 +125,20 @@ export default function EmbedCodeSection({
                 className="px-4 py-2 bg-secondary/10 text-secondary rounded-md font-medium text-sm hover:bg-secondary/20 flex items-center gap-2"
               >
                 <Icon name="ClipboardDocumentIcon" size={16} />
-                Copy URL
+                <span className="hidden sm:inline">Copy URL</span>
               </button>
               <button
                 onClick={handleOpenPreview}
                 className="px-4 py-2 bg-primary/10 text-primary rounded-md font-medium text-sm hover:bg-primary/20 flex items-center gap-2"
               >
                 <Icon name="ArrowTopRightOnSquareIcon" size={16} />
-                Preview
+                <span className="hidden sm:inline">Preview</span>
               </button>
             </div>
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-text-primary mb-2">
-              Dimensions
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-2">Dimensions</label>
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="block text-xs text-text-secondary mb-1">Width</label>
@@ -175,14 +173,12 @@ export default function EmbedCodeSection({
 
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-text-primary">
-                Iframe Code
-              </label>
+              <label className="block text-sm font-medium text-text-primary">Iframe Code</label>
               <button
                 onClick={handleCopy}
                 className={`px-3 py-1.5 rounded-md font-medium text-sm flex items-center gap-2 transition-colors ${
-                  copied 
-                    ? 'bg-green-100 text-green-700' 
+                  copied
+                    ? 'bg-green-100 text-green-700'
                     : 'bg-primary text-primary-foreground hover:opacity-90'
                 }`}
               >
@@ -206,12 +202,19 @@ export default function EmbedCodeSection({
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <div className="flex gap-3">
-              <Icon name="InformationCircleIcon" size={20} className="text-gray-600 flex-shrink-0 mt-0.5" />
+              <Icon
+                name="InformationCircleIcon"
+                size={20}
+                className="text-gray-600 flex-shrink-0 mt-0.5"
+              />
               <div className="text-sm text-gray-700">
                 <p className="font-medium mb-1">Tips for best results</p>
                 <ul className="list-disc list-inside space-y-1 text-gray-600">
                   <li>The embed updates in real-time as scores change</li>
-                  <li>Use <code className="bg-gray-200 px-1 rounded">loading="lazy"</code> for better page performance</li>
+                  <li>
+                    Use <code className="bg-gray-200 px-1 rounded">loading="lazy"</code> for better
+                    page performance
+                  </li>
                   <li>Customize the appearance using the Style Customization section above</li>
                   <li>The embed works on both public and private scoreboards (via direct URL)</li>
                 </ul>

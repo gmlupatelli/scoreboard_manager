@@ -4,7 +4,8 @@ import ScoreboardViewLayout from './components/ScoreboardViewLayout';
 
 export const metadata: Metadata = {
   title: 'Scoreboard View - Scoreboard Manager',
-  description: 'View real-time competitive rankings with live score updates, search functionality, and paginated entry listings for comprehensive scoreboard monitoring.',
+  description:
+    'View real-time competitive rankings with live score updates, search functionality, and paginated entry listings for comprehensive scoreboard monitoring.',
 };
 
 export default function IndividualScoreboardViewPage() {

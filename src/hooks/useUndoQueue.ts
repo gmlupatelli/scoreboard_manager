@@ -33,9 +33,10 @@ export function useUndoQueue() {
 
   // Clean up timers on unmount
   useEffect(() => {
+    const timers = timerRefs.current;
     return () => {
-      timerRefs.current.forEach((timer) => clearTimeout(timer));
-      timerRefs.current.clear();
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
     };
   }, []);
 
@@ -184,7 +185,7 @@ export function useUndoQueue() {
       try {
         await toast.undo();
         removeToast(id);
-        
+
         // Clear recent actions if batch was undone
         if (toast.isBatch) {
           recentActions.current = [];

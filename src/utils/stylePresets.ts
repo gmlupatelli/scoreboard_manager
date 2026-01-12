@@ -158,8 +158,10 @@ export const PRESET_LABELS: Record<string, string> = {
 export const PRESET_DESCRIPTIONS: Record<string, string> = {
   light: 'Clean white background with subtle gray accents. Perfect for most websites.',
   dark: 'Dark gray background with light text. Great for dark-themed websites.',
-  transparent: 'See-through background that blends with your site. Borders and text remain visible.',
-  'high-contrast': 'Maximum contrast for accessibility. Yellow and green on black for easy reading.',
+  transparent:
+    'See-through background that blends with your site. Borders and text remain visible.',
+  'high-contrast':
+    'Maximum contrast for accessibility. Yellow and green on black for easy reading.',
   minimal: 'No borders or shadows. Ultra-clean look that integrates seamlessly.',
   custom: 'Your personalized styles. Edit any property to create your own unique look.',
 };
@@ -169,30 +171,33 @@ export function getStylePreset(preset: string): ScoreboardCustomStyles {
 }
 
 export function getAppliedScoreboardStyles(
-  scoreboard: { customStyles?: ScoreboardCustomStyles | null; styleScope?: 'main' | 'embed' | 'both' } | null | undefined,
+  scoreboard:
+    | { customStyles?: ScoreboardCustomStyles | null; styleScope?: 'main' | 'embed' | 'both' }
+    | null
+    | undefined,
   scope: 'main' | 'embed' = 'main'
 ): ScoreboardCustomStyles | null {
   const lightPreset = getStylePreset('light');
-  
+
   if (!scoreboard?.customStyles) {
     return null;
   }
-  
+
   const shouldApplyStyles = (scoreScope?: 'main' | 'embed' | 'both') => {
     if (scope === 'main') return scoreScope === 'main' || scoreScope === 'both';
     if (scope === 'embed') return scoreScope === 'embed' || scoreScope === 'both' || !scoreScope;
     return false;
   };
-  
+
   if (!shouldApplyStyles(scoreboard.styleScope)) {
     return null;
   }
-  
+
   if (scoreboard.customStyles.preset) {
     const presetStyles = getStylePreset(scoreboard.customStyles.preset);
     return { ...presetStyles, ...scoreboard.customStyles };
   }
-  
+
   return { ...lightPreset, ...scoreboard.customStyles };
 }
 

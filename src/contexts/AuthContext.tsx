@@ -4,7 +4,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase/client';
 import { UserProfile } from '../types/models';
+import { Database } from '../types/database.types';
 import { useRouter } from 'next/navigation';
+
+type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const _router = useRouter();
 
   useEffect(() => {
     // Get initial session
@@ -66,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
 
       if (data) {
-        const profile = data as any;
+        const profile = data as UserProfileRow;
         setUserProfile({
           id: profile.id,
           email: profile.email,

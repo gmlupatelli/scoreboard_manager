@@ -20,7 +20,13 @@ interface ImportCSVModalProps {
   timeFormat?: TimeFormat | null;
 }
 
-const ImportCSVModal = ({ isOpen, onClose, onImport, scoreType = 'number', timeFormat = null }: ImportCSVModalProps) => {
+const ImportCSVModal = ({
+  isOpen,
+  onClose,
+  onImport,
+  scoreType = 'number',
+  timeFormat = null,
+}: ImportCSVModalProps) => {
   const [isHydrated, setIsHydrated] = useState(false);
   const [csvContent, setCsvContent] = useState('');
   const [previewEntries, setPreviewEntries] = useState<CSVEntry[]>([]);
@@ -48,7 +54,10 @@ const ImportCSVModal = ({ isOpen, onClose, onImport, scoreType = 'number', timeF
 
   if (!isOpen) return null;
 
-  const validateEntry = (name: string, scoreStr: string): { isValid: boolean; score: number; error?: string } => {
+  const validateEntry = (
+    name: string,
+    scoreStr: string
+  ): { isValid: boolean; score: number; error?: string } => {
     if (name.length < 1 || name.length > 100) {
       return { isValid: false, score: 0, error: 'Name must be 1-100 characters' };
     }
@@ -86,7 +95,9 @@ const ImportCSVModal = ({ isOpen, onClose, onImport, scoreType = 'number', timeF
     lines.forEach((line, index) => {
       if (
         index === 0 &&
-        (line.toLowerCase().includes('name') || line.toLowerCase().includes('score') || line.toLowerCase().includes('time'))
+        (line.toLowerCase().includes('name') ||
+          line.toLowerCase().includes('score') ||
+          line.toLowerCase().includes('time'))
       ) {
         return;
       }
@@ -136,12 +147,14 @@ const ImportCSVModal = ({ isOpen, onClose, onImport, scoreType = 'number', timeF
   };
 
   const scoreLabel = scoreType === 'time' ? 'Time' : 'Score';
-  const exampleFormat = scoreType === 'time' && timeFormat
-    ? `John Doe, ${timeFormat === 'mm:ss' ? '5:30' : timeFormat === 'hh:mm:ss' ? '1:30:45' : '5:30.5'}`
-    : 'John Doe, 1500';
-  const formatDescription = scoreType === 'time' && timeFormat
-    ? `Times: ${timeFormat} format`
-    : 'Scores: Number between -1,000,000 and 1,000,000';
+  const exampleFormat =
+    scoreType === 'time' && timeFormat
+      ? `John Doe, ${timeFormat === 'mm:ss' ? '5:30' : timeFormat === 'hh:mm:ss' ? '1:30:45' : '5:30.5'}`
+      : 'John Doe, 1500';
+  const formatDescription =
+    scoreType === 'time' && timeFormat
+      ? `Times: ${timeFormat} format`
+      : 'Scores: Number between -1,000,000 and 1,000,000';
 
   return (
     <>
@@ -173,7 +186,9 @@ const ImportCSVModal = ({ isOpen, onClose, onImport, scoreType = 'number', timeF
                     value={csvContent}
                     onChange={(e) => setCsvContent(e.target.value)}
                     className="w-full h-64 px-3 py-2 border border-input rounded-md bg-surface text-text-primary placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-smooth duration-150 font-data text-sm"
-                    placeholder={exampleFormat + '\nJane Smith, ' + (scoreType === 'time' ? '6:15' : '1450')}
+                    placeholder={
+                      exampleFormat + '\nJane Smith, ' + (scoreType === 'time' ? '6:15' : '1450')
+                    }
                   />
                   <p className="text-xs text-text-secondary mt-2">
                     Format: Name, {scoreLabel} (one entry per line)
@@ -185,7 +200,9 @@ const ImportCSVModal = ({ isOpen, onClose, onImport, scoreType = 'number', timeF
                   </h3>
                   <ul className="text-xs text-text-secondary space-y-1 list-disc list-inside">
                     <li>Each line should contain: Name, {scoreLabel}</li>
-                    <li>Names: 1-100 characters (letters, numbers, spaces, hyphens, apostrophes)</li>
+                    <li>
+                      Names: 1-100 characters (letters, numbers, spaces, hyphens, apostrophes)
+                    </li>
                     <li>{formatDescription}</li>
                     <li>Optional header row will be automatically skipped</li>
                   </ul>

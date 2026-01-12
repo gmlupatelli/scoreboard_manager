@@ -139,7 +139,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
   const handleGestureMove = useCallback(
     (x: number, y: number) => {
       if (disabled || !isOnline()) return;
-      
+
       const state = gestureState.current;
       if (state.startX === 0) return;
 
@@ -149,7 +149,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       // Direction locking - only lock after significant movement
       if (!state.isLocked && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
         const angle = Math.abs(Math.atan2(deltaY, deltaX) * (180 / Math.PI));
-        
+
         // Lock to horizontal if angle is close to horizontal
         if (angle < directionLockAngle || angle > 180 - directionLockAngle) {
           state.isLocked = true;
@@ -185,7 +185,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
       // In RTL, swipe directions are semantically reversed
       const rtl = isRTL();
       const effectiveDirection = state.direction;
-      
+
       if (effectiveDirection === 'left') {
         // Left swipe
         if (rtl && onSwipeRight) {
@@ -214,7 +214,7 @@ export function useSwipeGesture<T extends HTMLElement = HTMLDivElement>(
     const handlePointerDown = (e: PointerEvent) => {
       // Only handle touch/pen input
       if (e.pointerType === 'mouse') return;
-      
+
       e.preventDefault();
       element.setPointerCapture(e.pointerId);
       handleGestureStart(e.clientX, e.clientY, e.pointerId);

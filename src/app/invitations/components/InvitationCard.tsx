@@ -30,7 +30,7 @@ const getStatusColor = (status: string): string => {
 };
 
 export default function InvitationCard({
-  id,
+  id: _id,
   email,
   status,
   createdAt,
@@ -47,7 +47,7 @@ export default function InvitationCard({
 
   const getSwipeBackground = () => {
     if (!swipeState.isSwiping) return undefined;
-    
+
     if (swipeState.direction === 'left') {
       return `rgba(220, 38, 38, ${swipeState.progress * 0.2})`; // Destructive color
     } else if (swipeState.direction === 'right') {
@@ -58,9 +58,10 @@ export default function InvitationCard({
 
   const getSwipeTransform = () => {
     if (!swipeState.isSwiping || !swipeState.direction) return undefined;
-    
+
     const maxTranslate = 100;
-    const translate = swipeState.progress * maxTranslate * (swipeState.direction === 'left' ? -1 : 1);
+    const translate =
+      swipeState.progress * maxTranslate * (swipeState.direction === 'left' ? -1 : 1);
     return `translateX(${translate}px)`;
   };
 
@@ -111,7 +112,9 @@ export default function InvitationCard({
                 <span className="hidden sm:inline text-border">|</span>
                 <span className="flex items-center gap-1">
                   <Icon name="ClockIcon" size={14} className="flex-shrink-0" />
-                  <span className="truncate">Expires {new Date(expiresAt).toLocaleDateString()}</span>
+                  <span className="truncate">
+                    Expires {new Date(expiresAt).toLocaleDateString()}
+                  </span>
                 </span>
               </div>
             </div>

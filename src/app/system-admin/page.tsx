@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SystemAdminLoginPage() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function SystemAdminLoginPage() {
         setError('Invalid system admin credentials');
       }
       // Redirect will happen in useEffect after profile loads
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -58,7 +58,12 @@ export default function SystemAdminLoginPage() {
         <div className="bg-card border border-border rounded-lg shadow-lg p-8">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-8 h-8 text-primary"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

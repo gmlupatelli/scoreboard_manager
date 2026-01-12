@@ -44,8 +44,8 @@
     "build:prod": "npm run migrate:prod && npm run build",
     "migrate:prod": "supabase link --project-ref \"$SUPABASE_PROJECT_REF\" && supabase db push",
     "start": "next start -H 0.0.0.0 -p 5000",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint . --ext .ts,.tsx,.js,.mjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.mjs --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md,json}\"",
     "serve": "next start -H 0.0.0.0 -p 5000",
     "type-check": "tsc --noEmit",
@@ -73,7 +73,8 @@
     "recharts": "^2.15.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
+    "@eslint/eslintrc": "^3.3.3",
+    "@eslint/js": "^9.39.2",
     "@netlify/plugin-nextjs": "^5.11.1",
     "@playwright/test": "^1.49.1",
     "@types/node": "^20",

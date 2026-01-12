@@ -28,33 +28,29 @@ export default function AccountDeletedPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      
+
       <main className="flex-grow flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full">
           <div className="bg-card border border-border rounded-lg p-8 text-center shadow-sm">
             <div className="flex justify-center mb-6">
               <Logo size={60} />
             </div>
-            
+
             <div className="mb-6">
-              <Icon 
-                name="HeartIcon" 
-                size={48} 
-                className="mx-auto text-primary" 
-              />
+              <Icon name="HeartIcon" size={48} className="mx-auto text-primary" />
             </div>
-            
-            <h1 className="text-2xl font-bold text-text-primary mb-4">
-              We're Sorry to See You Go
-            </h1>
-            
+
+            <h1 className="text-2xl font-bold text-text-primary mb-4">We're Sorry to See You Go</h1>
+
             <p className="text-text-secondary mb-6">
-              Your account has been successfully deleted. We hope you enjoyed using Scoreboard Manager and would love to have you back anytime.
+              Your account has been successfully deleted. We hope you enjoyed using Scoreboard
+              Manager and would love to have you back anytime.
             </p>
 
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-8">
               <p className="text-sm text-text-secondary">
-                If you ever change your mind, you're always welcome to create a new account and start fresh. We'll be here!
+                If you ever change your mind, you're always welcome to create a new account and
+                start fresh. We'll be here!
               </p>
             </div>
 
@@ -65,7 +61,7 @@ export default function AccountDeletedPage() {
               >
                 Create New Account
               </Link>
-              
+
               <Link
                 href="/"
                 className="block w-full px-6 py-3 bg-muted text-text-primary rounded-md hover:bg-muted/80 transition-smooth font-medium"

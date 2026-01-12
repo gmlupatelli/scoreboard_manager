@@ -10,7 +10,7 @@ export default function ContactPage() {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -18,17 +18,19 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     setSubmitted(true);
     setIsSubmitting(false);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -84,7 +86,10 @@ export default function ContactPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-text-primary mb-2">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-text-primary mb-2"
+                    >
                       Your Name
                     </label>
                     <input
@@ -99,7 +104,10 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-text-primary mb-2"
+                    >
                       Email Address
                     </label>
                     <input
@@ -115,7 +123,10 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-text-primary mb-2">
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-text-primary mb-2"
+                  >
                     Subject
                   </label>
                   <select
@@ -135,7 +146,10 @@ export default function ContactPage() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-text-primary mb-2">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-text-primary mb-2"
+                  >
                     Message
                   </label>
                   <textarea

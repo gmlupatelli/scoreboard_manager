@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { supabase } from '../../lib/supabase/client';
-import Header from '../../components/common/Header';
+import { supabase } from '@/lib/supabase/client';
+import Header from '@/components/common/Header';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
       } else {
         setSubmitted(true);
       }
-    } catch (err) {
+    } catch (_err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -40,13 +40,18 @@ export default function ForgotPasswordPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Reset Password</h1>
-            <p className="text-center text-muted-foreground">Enter your email address and we'll send you a link to reset your password</p>
+            <p className="text-center text-muted-foreground">
+              Enter your email address and we'll send you a link to reset your password
+            </p>
           </div>
 
           {submitted ? (
             <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-4 rounded-md mb-6">
               <p className="font-medium mb-2">Check your email</p>
-              <p className="text-sm">We've sent a password reset link to <strong>{email}</strong>. Please check your inbox and follow the link to reset your password.</p>
+              <p className="text-sm">
+                We've sent a password reset link to <strong>{email}</strong>. Please check your
+                inbox and follow the link to reset your password.
+              </p>
               <p className="text-sm mt-3">If you don't see the email, check your spam folder.</p>
             </div>
           ) : (

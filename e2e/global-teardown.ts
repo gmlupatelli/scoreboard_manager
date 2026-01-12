@@ -37,14 +37,13 @@ async function globalTeardown() {
     }
 
     const result = await response.json();
-    
+
     console.log('✅ Test data cleaned successfully');
     console.log(`   Users cleaned: ${result.cleanedUsers?.join(', ') || 'none'}`);
     console.log(`   Entries deleted: ${result.deletedEntries || 0}`);
     console.log(`   Scoreboards deleted: ${result.deletedScoreboards || 0}`);
     console.log(`   Invitations deleted: ${result.deletedInvitations || 0}`);
     console.log(`   Timestamp: ${result.timestamp || 'N/A'}\n`);
-
   } catch (error) {
     console.error('❌ Error during cleanup:', error);
     // Don't fail the entire test run if cleanup fails

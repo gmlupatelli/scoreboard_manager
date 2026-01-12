@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { scoreboardService } from '../../../services/scoreboardService';
-import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles, ScoreType, TimeFormat } from '../../../types/models';
+import {
+  Scoreboard,
+  ScoreboardEntry,
+  ScoreboardCustomStyles,
+  ScoreType,
+  TimeFormat,
+} from '../../../types/models';
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
 import EntryRow from './EntryRow';
@@ -28,7 +34,7 @@ const ScoreboardManagementInteractive = () => {
   const searchParams = useSearchParams();
   const scoreboardId = searchParams.get('id');
   const { user, userProfile, loading: authLoading } = useAuth();
-  
+
   const [isHydrated, setIsHydrated] = useState(false);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
   const [entries, setEntries] = useState<ScoreboardEntry[]>([]);
@@ -52,12 +58,12 @@ const ScoreboardManagementInteractive = () => {
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {}
+    onConfirm: () => {},
   });
   const [toast, setToast] = useState<ToastState>({
     message: '',
     type: 'info',
-    isVisible: false
+    isVisible: false,
   });
   const [isSavingStyles, setIsSavingStyles] = useState(false);
   const [isStyleSectionExpanded, setIsStyleSectionExpanded] = useState(false);
@@ -70,7 +76,7 @@ const ScoreboardManagementInteractive = () => {
         router.push('/login');
         return;
       }
-      
+
       if (!scoreboardId) {
         showToast('No scoreboard selected. Redirecting to dashboard...', 'error');
         setTimeout(() => router.push('/dashboard'), 2000);
@@ -79,27 +85,38 @@ const ScoreboardManagementInteractive = () => {
     }
   }, [user, authLoading, scoreboardId, router]);
 
-  // Load scoreboard and entries (wait for userProfile to be loaded for role check)
-  useEffect(() => {
-    if (user && userProfile && scoreboardId) {
-      loadScoreboardData();
-    }
-  }, [user, userProfile, scoreboardId]);
+  const recalculateRanks = useCallback(
+    (entriesList: ScoreboardEntry[]): ScoreboardEntry[] => {
+      const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
+      const sorted = [...entriesList].sort((a, b) => {
+        if (a.score !== b.score) {
+          return scoreboardSortOrder === 'desc' ? b.score - a.score : a.score - b.score;
+        }
+        return a.name.localeCompare(b.name);
+      });
 
-  const loadScoreboardData = async () => {
+      return sorted.map((entry, index) => ({
+        ...entry,
+        rank: index + 1,
+      }));
+    },
+    [scoreboard?.sortOrder]
+  );
+
+  const loadScoreboardData = useCallback(async () => {
     if (!scoreboardId) return;
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       // Load scoreboard details - FIXED: Use getScoreboard instead of getScoreboardById
       const scoreboardResult = await scoreboardService.getScoreboard(scoreboardId);
-      
+
       if (scoreboardResult.error) {
         throw new Error(scoreboardResult.error.message || 'Failed to load scoreboard');
       }
-      
+
       if (!scoreboardResult.data) {
         throw new Error('Scoreboard not found');
       }
@@ -113,7 +130,7 @@ const ScoreboardManagementInteractive = () => {
 
       // Load entries for this scoreboard
       const entriesResult = await scoreboardService.getScoreboardEntries(scoreboardId);
-      
+
       if (entriesResult.error) {
         throw new Error(entriesResult.error.message || 'Failed to load entries');
       }
@@ -126,17 +143,24 @@ const ScoreboardManagementInteractive = () => {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load scoreboard data';
       setError(errorMessage);
       showToast(errorMessage, 'error');
-      
+
       // Redirect to dashboard after showing error
       setTimeout(() => router.push('/dashboard'), 3000);
     } finally {
       setLoading(false);
       setIsHydrated(true);
     }
-  };
+  }, [scoreboardId, user?.id, userProfile?.role, router, recalculateRanks]);
+
+  // Load scoreboard and entries (wait for userProfile to be loaded for role check)
+  useEffect(() => {
+    if (user && userProfile && scoreboardId) {
+      loadScoreboardData();
+    }
+  }, [user, userProfile, scoreboardId, loadScoreboardData]);
 
   useEffect(() => {
-    let filtered = entries.filter(entry =>
+    let filtered = entries.filter((entry) =>
       entry.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -156,22 +180,7 @@ const ScoreboardManagementInteractive = () => {
     const filteredWithRanks = recalculateRanks(filtered);
     setFilteredEntries(filteredWithRanks);
     setCurrentPage(1);
-  }, [searchQuery, entries, sortBy, sortOrder, scoreboard?.sortOrder]);
-
-  const recalculateRanks = (entriesList: ScoreboardEntry[]): ScoreboardEntry[] => {
-    const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
-    const sorted = [...entriesList].sort((a, b) => {
-      if (a.score !== b.score) {
-        return scoreboardSortOrder === 'desc' ? b.score - a.score : a.score - b.score;
-      }
-      return a.name.localeCompare(b.name);
-    });
-
-    return sorted.map((entry, index) => ({
-      ...entry,
-      rank: index + 1
-    }));
-  };
+  }, [searchQuery, entries, sortBy, sortOrder, scoreboard?.sortOrder, recalculateRanks]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type, isVisible: true });
@@ -179,7 +188,7 @@ const ScoreboardManagementInteractive = () => {
 
   const handleEditScoreboard = async (
     title: string,
-    subtitle: string,
+    description: string,
     visibility: 'public' | 'private',
     scoreType: ScoreType,
     sortOrder: 'asc' | 'desc',
@@ -187,7 +196,7 @@ const ScoreboardManagementInteractive = () => {
     scoreTypeChanged: boolean
   ) => {
     if (!scoreboard) return;
-    
+
     try {
       if (scoreTypeChanged && entries.length > 0) {
         const deleteResult = await scoreboardService.deleteAllEntries(scoreboard.id);
@@ -196,19 +205,19 @@ const ScoreboardManagementInteractive = () => {
 
       const { error } = await scoreboardService.updateScoreboard(scoreboard.id, {
         title,
-        subtitle,
+        description,
         visibility,
         scoreType,
         sortOrder,
-        timeFormat
+        timeFormat,
       });
-      
+
       if (error) throw error;
-      
+
       await loadScoreboardData();
       showToast(
-        scoreTypeChanged && entries.length > 0 
-          ? 'Scoreboard updated and entries cleared' 
+        scoreTypeChanged && entries.length > 0
+          ? 'Scoreboard updated and entries cleared'
           : 'Scoreboard details updated successfully',
         'success'
       );
@@ -217,18 +226,21 @@ const ScoreboardManagementInteractive = () => {
     }
   };
 
-  const handleSaveStyles = async (styles: ScoreboardCustomStyles, scope: 'main' | 'embed' | 'both') => {
+  const handleSaveStyles = async (
+    styles: ScoreboardCustomStyles,
+    scope: 'main' | 'embed' | 'both'
+  ) => {
     if (!scoreboard) return;
-    
+
     setIsSavingStyles(true);
     try {
       const { error } = await scoreboardService.updateScoreboard(scoreboard.id, {
         customStyles: styles,
-        styleScope: scope
+        styleScope: scope,
       });
-      
+
       if (error) throw error;
-      
+
       await loadScoreboardData();
       showToast('Style settings saved successfully', 'success');
     } catch {
@@ -240,35 +252,35 @@ const ScoreboardManagementInteractive = () => {
 
   const handleAddEntry = async (name: string, score: number) => {
     if (!scoreboard) return;
-    
+
     try {
       // FIXED: Use createEntry instead of addEntry
       const result = await scoreboardService.createEntry({
         scoreboardId: scoreboard.id,
         name,
         score,
-        details: null
+        details: null,
       });
-      
+
       if (result.error) throw result.error;
-      
+
       await loadScoreboardData();
       showToast('Entry added successfully', 'success');
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to add entry', 'error');
     }
   };
 
   const handleEditEntry = async (id: string, name: string, score: number) => {
     if (!scoreboard) return;
-    
+
     try {
       const { error } = await scoreboardService.updateEntry(id, { name, score });
       if (error) throw error;
-      
+
       await loadScoreboardData();
       showToast('Entry updated successfully', 'success');
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to update entry', 'error');
     }
   };
@@ -282,21 +294,21 @@ const ScoreboardManagementInteractive = () => {
         try {
           const { error } = await scoreboardService.deleteEntry(id);
           if (error) throw error;
-          
+
           await loadScoreboardData();
           showToast('Entry deleted successfully', 'success');
-        } catch (err) {
+        } catch (_err) {
           showToast('Failed to delete entry', 'error');
         } finally {
           setConfirmModal({ ...confirmModal, isOpen: false });
         }
-      }
+      },
     });
   };
 
   const handleImportCSV = async (importedEntries: { name: string; score: number }[]) => {
     if (!scoreboard) return;
-    
+
     try {
       // FIXED: Use createEntry instead of addEntry for each entry
       for (const entry of importedEntries) {
@@ -304,14 +316,14 @@ const ScoreboardManagementInteractive = () => {
           scoreboardId: scoreboard.id,
           name: entry.name,
           score: entry.score,
-          details: null
+          details: null,
         });
         if (result.error) throw result.error;
       }
-      
+
       await loadScoreboardData();
       showToast(`${importedEntries.length} entries imported successfully`, 'success');
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to import some entries', 'error');
     }
   };
@@ -320,7 +332,8 @@ const ScoreboardManagementInteractive = () => {
     setConfirmModal({
       isOpen: true,
       title: 'Clear All Entries',
-      message: 'Are you sure you want to delete all entries? This action cannot be undone and will remove all participant data from this scoreboard.',
+      message:
+        'Are you sure you want to delete all entries? This action cannot be undone and will remove all participant data from this scoreboard.',
       onConfirm: async () => {
         try {
           // Delete all entries
@@ -328,15 +341,15 @@ const ScoreboardManagementInteractive = () => {
             const { error } = await scoreboardService.deleteEntry(entry.id);
             if (error) throw error;
           }
-          
+
           await loadScoreboardData();
           showToast('All entries cleared successfully', 'success');
-        } catch (err) {
+        } catch (_err) {
           showToast('Failed to clear all entries', 'error');
         } finally {
           setConfirmModal({ ...confirmModal, isOpen: false });
         }
-      }
+      },
     });
   };
 
@@ -360,7 +373,7 @@ const ScoreboardManagementInteractive = () => {
     try {
       await navigator.clipboard.writeText(url);
       showToast('URL copied to clipboard', 'success');
-    } catch (err) {
+    } catch (_err) {
       showToast('Failed to copy URL', 'error');
     }
   };
@@ -396,8 +409,14 @@ const ScoreboardManagementInteractive = () => {
       <div className="min-h-screen bg-background pt-16 landscape-mobile:pt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
           <div className="bg-destructive/10 border border-destructive rounded-lg p-6 text-center">
-            <Icon name="ExclamationTriangleIcon" size={48} className="text-destructive mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-destructive mb-2">Unable to Load Scoreboard</h2>
+            <Icon
+              name="ExclamationTriangleIcon"
+              size={48}
+              className="text-destructive mx-auto mb-4"
+            />
+            <h2 className="text-xl font-semibold text-destructive mb-2">
+              Unable to Load Scoreboard
+            </h2>
             <p className="text-sm text-text-secondary mb-4">{error}</p>
             <button
               onClick={() => router.push('/dashboard')}
@@ -428,10 +447,16 @@ const ScoreboardManagementInteractive = () => {
                   className="p-1.5 rounded-md hover:bg-muted transition-smooth duration-150"
                   title="Edit scoreboard details"
                 >
-                  <Icon name="PencilIcon" size={18} className="text-text-secondary hover:text-primary" />
+                  <Icon
+                    name="PencilIcon"
+                    size={18}
+                    className="text-text-secondary hover:text-primary"
+                  />
                 </button>
               </div>
-              <p className={`text-sm text-text-secondary ${!scoreboard.subtitle ? 'italic' : ''}`}>{scoreboard.subtitle || 'No description available'}</p>
+              <p className={`text-sm text-text-secondary ${!scoreboard.description ? 'italic' : ''}`}>
+                {scoreboard.description || 'No description available'}
+              </p>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
@@ -448,7 +473,10 @@ const ScoreboardManagementInteractive = () => {
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Icon name={scoreboard.visibility === 'public' ? 'GlobeAltIcon' : 'LockClosedIcon'} size={18} />
+                <Icon
+                  name={scoreboard.visibility === 'public' ? 'GlobeAltIcon' : 'LockClosedIcon'}
+                  size={18}
+                />
                 <span className="capitalize">{scoreboard.visibility}</span>
               </div>
               <div className="flex items-center gap-2">
@@ -541,7 +569,10 @@ const ScoreboardManagementInteractive = () => {
                     >
                       <span>Rank</span>
                       {sortBy === 'rank' && (
-                        <Icon name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={14} />
+                        <Icon
+                          name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'}
+                          size={14}
+                        />
                       )}
                     </button>
                   </th>
@@ -552,7 +583,10 @@ const ScoreboardManagementInteractive = () => {
                     >
                       <span>Name</span>
                       {sortBy === 'name' && (
-                        <Icon name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={14} />
+                        <Icon
+                          name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'}
+                          size={14}
+                        />
                       )}
                     </button>
                   </th>
@@ -563,16 +597,21 @@ const ScoreboardManagementInteractive = () => {
                     >
                       <span>{scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}</span>
                       {sortBy === 'score' && (
-                        <Icon name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={14} />
+                        <Icon
+                          name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'}
+                          size={14}
+                        />
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-surface divide-y divide-border">
                 {currentEntries.length > 0 ? (
-                  currentEntries.map(entry => (
+                  currentEntries.map((entry) => (
                     <EntryRow
                       key={entry.id}
                       entry={{ ...entry, rank: entry.rank || 0 }}
@@ -588,7 +627,9 @@ const ScoreboardManagementInteractive = () => {
                       <div className="flex flex-col items-center space-y-3">
                         <Icon name="InboxIcon" size={48} className="text-muted-foreground" />
                         <p className="text-sm text-text-secondary">
-                          {searchQuery ? 'No entries found matching your search' : 'No entries yet. Add your first entry to get started.'}
+                          {searchQuery
+                            ? 'No entries found matching your search'
+                            : 'No entries yet. Add your first entry to get started.'}
                         </p>
                       </div>
                     </td>
@@ -600,7 +641,7 @@ const ScoreboardManagementInteractive = () => {
 
           <div className="lg:hidden p-4 space-y-4">
             {currentEntries.length > 0 ? (
-              currentEntries.map(entry => (
+              currentEntries.map((entry) => (
                 <EntryCard
                   key={entry.id}
                   entry={{ ...entry, rank: entry.rank || 0 }}
@@ -614,7 +655,9 @@ const ScoreboardManagementInteractive = () => {
               <div className="flex flex-col items-center space-y-3 py-12">
                 <Icon name="InboxIcon" size={48} className="text-muted-foreground" />
                 <p className="text-sm text-text-secondary text-center">
-                  {searchQuery ? 'No entries found matching your search' : 'No entries yet. Add your first entry to get started.'}
+                  {searchQuery
+                    ? 'No entries found matching your search'
+                    : 'No entries yet. Add your first entry to get started.'}
                 </p>
               </div>
             )}
@@ -624,11 +667,13 @@ const ScoreboardManagementInteractive = () => {
             <div className="px-6 py-4 border-t border-border">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-text-secondary">
-                  Showing {indexOfFirstEntry + 1} to {Math.min(indexOfLastEntry, filteredEntries.length)} of {filteredEntries.length} entries
+                  Showing {indexOfFirstEntry + 1} to{' '}
+                  {Math.min(indexOfLastEntry, filteredEntries.length)} of {filteredEntries.length}{' '}
+                  entries
                 </p>
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                     className="px-3 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -638,7 +683,7 @@ const ScoreboardManagementInteractive = () => {
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -672,7 +717,7 @@ const ScoreboardManagementInteractive = () => {
         onClose={() => setIsEditScoreboardModalOpen(false)}
         onSave={handleEditScoreboard}
         currentTitle={scoreboard?.title || ''}
-        currentSubtitle={scoreboard?.subtitle || ''}
+        currentDescription={scoreboard?.description || ''}
         currentVisibility={scoreboard?.visibility || 'public'}
         currentScoreType={scoreboard?.scoreType || 'number'}
         currentSortOrder={scoreboard?.sortOrder || 'desc'}

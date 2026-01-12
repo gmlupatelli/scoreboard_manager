@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { ScoreType, TimeFormat } from '@/types/models';
-import { formatScoreDisplay, parseTimeToMilliseconds, getTimeFormatPlaceholder } from '@/utils/timeUtils';
+import {
+  formatScoreDisplay,
+  parseTimeToMilliseconds,
+  getTimeFormatPlaceholder,
+} from '@/utils/timeUtils';
 
 interface Entry {
   id: string;
@@ -20,7 +24,13 @@ interface EntryRowProps {
   timeFormat?: TimeFormat | null;
 }
 
-const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = null }: EntryRowProps) => {
+const EntryRow = ({
+  entry,
+  onEdit,
+  onDelete,
+  scoreType = 'number',
+  timeFormat = null,
+}: EntryRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(entry.name);
   const [editScore, setEditScore] = useState(
@@ -144,7 +154,11 @@ const EntryRow = ({ entry, onEdit, onDelete, scoreType = 'number', timeFormat = 
               className={`w-full px-3 py-2 border rounded-md bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-ring transition-smooth duration-150 ${
                 scoreError ? 'border-destructive' : 'border-input'
               }`}
-              placeholder={scoreType === 'time' && timeFormat ? getTimeFormatPlaceholder(timeFormat) : 'Enter score'}
+              placeholder={
+                scoreType === 'time' && timeFormat
+                  ? getTimeFormatPlaceholder(timeFormat)
+                  : 'Enter score'
+              }
             />
             {scoreError && <p className="text-xs text-destructive mt-1">{scoreError}</p>}
           </div>

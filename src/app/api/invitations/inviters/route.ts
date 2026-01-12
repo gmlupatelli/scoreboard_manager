@@ -7,14 +7,17 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   try {
     const token = extractBearerToken(request.headers.get('Authorization'));
-    
+
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     const authClient = getAuthClient(token);
-    
-    const { data: { user }, error: authError } = await authClient.auth.getUser();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await authClient.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -41,7 +44,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: inviterError.message }, { status: 500 });
     }
 
-    const uniqueInviterIds = Array.from(new Set(inviterIds?.map(i => i.inviter_id).filter(Boolean)));
+    const uniqueInviterIds = Array.from(
+      new Set(inviterIds?.map((i) => i.inviter_id).filter(Boolean))
+    );
 
     if (uniqueInviterIds.length === 0) {
       return NextResponse.json([]);

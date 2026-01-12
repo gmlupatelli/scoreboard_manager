@@ -18,16 +18,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Service configuration error' }, { status: 500 });
     }
 
-    const adminClient = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
+    const adminClient = createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
 
     const normalizedEmail = email.toLowerCase().trim();
 
@@ -37,7 +33,7 @@ export async function POST(request: NextRequest) {
       .update({
         status: 'accepted',
         accepted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('invitee_email', normalizedEmail)
       .eq('status', 'pending');
@@ -52,7 +48,7 @@ export async function POST(request: NextRequest) {
         .from('user_profiles')
         .update({
           full_name: fullName,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('email', normalizedEmail);
 
@@ -63,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch (_err) {
     return NextResponse.json({ error: 'Failed to accept invitation' }, { status: 500 });
   }
 }
