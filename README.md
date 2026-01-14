@@ -12,6 +12,14 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 14, 2026 - GitHub Copilot Simple Browser Support
+- **Enabled iframe embedding in development mode** for GitHub Copilot Simple Browser
+  - Modified CSP `frame-ancestors` directive to allow all origins in development (`frame-ancestors *`)
+  - Removed `X-Frame-Options` header in development to prevent iframe blocking
+  - Maintained strict security in production with `frame-ancestors 'self'` and `X-Frame-Options: SAMEORIGIN`
+  - Allows UI element selection in Copilot while maintaining production security
+  - Uses `@dhiwise/component-tagger` for component data attributes
+
 ### January 2026 - Race Condition Fixes & Custom Hooks
 - **Created three new reusable hooks** to eliminate race conditions:
   - `useAuthGuard`: Centralized auth guard with role-based access, prevents redirect loops
@@ -225,6 +233,10 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 - **JWT Signing Keys**: Application uses modern ECC P-256 signing keys (enabled January 10, 2026)
 - **API Keys**: Publishable key is safe for client-side use; Secret key must never be exposed
 - **Build Safety**: Application can build without environment variables (uses empty string fallbacks)
+- **Iframe Security**: 
+  - Development mode allows iframe embedding (`frame-ancestors *`) for GitHub Copilot Simple Browser
+  - Production mode blocks unauthorized iframes (`frame-ancestors 'self'`, `X-Frame-Options: SAMEORIGIN`)
+  - Embed routes (`/embed/*`) always allow iframe embedding in all environments
 - **Runtime Guards**: Graceful error handling when configuration is missing
 
 ## Development

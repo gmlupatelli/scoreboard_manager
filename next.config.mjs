@@ -29,7 +29,12 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // Determine if we're in development mode
+    const isDevelopment = process.env.NODE_ENV === 'development';
+
     // Content Security Policy - standard (restricts framing)
+    // In development: Allow all frame-ancestors for GitHub Copilot Simple Browser
+    // In production: Restrict to same-origin only for security
     const cspHeader = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
@@ -37,7 +42,7 @@ const nextConfig = {
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-      "frame-ancestors 'self'",
+      isDevelopment ? 'frame-ancestors *' : "frame-ancestors 'self'",
       "base-uri 'self'",
       "form-action 'self'",
     ].join('; ');
@@ -134,10 +139,16 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
+          // X-Frame-Options: In development, omit to allow iframe embedding
+          // In production, restrict to same-origin
+          ...(isDevelopment
+            ? []
+            : [
+                {
+                  key: 'X-Frame-Options',
+                  value: 'SAMEORIGIN',
+                },
+              ]),
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
