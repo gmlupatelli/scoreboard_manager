@@ -29,18 +29,25 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // Skip CSP headers in development for VS Code Simple Browser compatibility
+    const isDev = process.env.NODE_ENV === 'development';
+    
     // Content Security Policy - standard (restricts framing)
-    const cspHeader = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
-      "frame-ancestors 'self'",
-      "base-uri 'self'",
-      "form-action 'self'",
-    ].join('; ');
+    // NOTE: In dev mode, we omit frame-ancestors entirely to allow VS Code Simple Browser
+    // (Electron bug: frame-ancestors * doesn't work with vscode-webview:// scheme)
+    const cspHeader = isDev 
+      ? "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"
+      : [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "font-src 'self' https://fonts.gstatic.com",
+          "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com",
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+          "frame-ancestors 'self'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ].join('; ');
 
     // Content Security Policy - embeddable (allows external framing)
     const cspHeaderEmbeddable = [
@@ -134,15 +141,16 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-          {
+          // X-Frame-Options for older browsers (CSP frame-ancestors takes precedence in modern browsers)
+          ...(!isDev ? [{
             key: 'X-Frame-Options',
             value: 'SAMEORIGIN',
-          },
+          }] : []),
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
-        ],
+        ].filter(Boolean),
       },
     ];
   },
