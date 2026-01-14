@@ -58,13 +58,13 @@ export default function Footer({ customStyles = null }: FooterProps) {
               Product
             </h2>
             <ul
-              className="space-y-2 text-sm text-text-secondary"
+              className="space-y-1 text-sm text-text-secondary"
               style={customStyles ? textStyle : undefined}
             >
               <li>
                 <Link
                   href="/#features"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Features
@@ -73,7 +73,7 @@ export default function Footer({ customStyles = null }: FooterProps) {
               <li>
                 <Link
                   href="/public-scoreboard-list"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Scoreboards
@@ -82,7 +82,7 @@ export default function Footer({ customStyles = null }: FooterProps) {
               <li>
                 <Link
                   href="/login"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Login
@@ -91,7 +91,7 @@ export default function Footer({ customStyles = null }: FooterProps) {
               <li>
                 <Link
                   href="/register"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Sign Up
@@ -107,13 +107,13 @@ export default function Footer({ customStyles = null }: FooterProps) {
               Company
             </h2>
             <ul
-              className="space-y-2 text-sm text-text-secondary"
+              className="space-y-1 text-sm text-text-secondary"
               style={customStyles ? textStyle : undefined}
             >
               <li>
                 <Link
                   href="/about"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   About Us
@@ -122,7 +122,7 @@ export default function Footer({ customStyles = null }: FooterProps) {
               <li>
                 <Link
                   href="/contact"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Contact
@@ -131,7 +131,7 @@ export default function Footer({ customStyles = null }: FooterProps) {
               <li>
                 <Link
                   href="/support"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Support
@@ -147,13 +147,13 @@ export default function Footer({ customStyles = null }: FooterProps) {
               Legal
             </h2>
             <ul
-              className="space-y-2 text-sm text-text-secondary"
+              className="space-y-1 text-sm text-text-secondary"
               style={customStyles ? textStyle : undefined}
             >
               <li>
                 <Link
                   href="/privacy"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Privacy Policy
@@ -162,7 +162,7 @@ export default function Footer({ customStyles = null }: FooterProps) {
               <li>
                 <Link
                   href="/terms"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Terms of Service
@@ -171,7 +171,7 @@ export default function Footer({ customStyles = null }: FooterProps) {
               <li>
                 <Link
                   href="/cookies"
-                  className="hover:opacity-80 transition-opacity text-text-secondary"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Cookie Policy
