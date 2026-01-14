@@ -431,13 +431,6 @@ The Supabase database includes:
 - `invitations` - User invitation tracking with status (pending/accepted/expired/cancelled)
 - Row Level Security (RLS) policies for secure data access
 
-## Supabase CLI Configuration
-The Supabase CLI is installed and configured for database migrations.
-
-### Project References
-- **Development**: `kvorvygjgeelhybnstje`
-- **Production**: `bfbvcmfezdhdotmbgxsn`
-
 ### Running Migrations
 ```bash
 # Link to target project

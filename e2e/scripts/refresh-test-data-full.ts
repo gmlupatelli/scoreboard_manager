@@ -5,12 +5,18 @@
  * Use this when manual user data is impacting automated tests.
  *
  * What it does:
- * 1. Deletes and recreates ALL 5 test users (admin, john, sarah, siteadmin, jane)
+ * 1. Deletes and recreates ALL test users (both automated and manual)
  * 2. Removes all existing test data (scoreboards, entries, invitations)
- * 3. Seeds fresh data for all users
- * 4. Seeds invitations for john (for invitation tests)
+ * 3. Seeds fresh data for users
+ * 4. Seeds invitations for invitation testing
  *
  * Usage: npm run refresh-test-data:full
+ *
+ * Credentials are loaded from .env.test using the numbered naming convention:
+ *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
+ *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
+ *   MANUAL_TEST_ADMIN_<N>_EMAIL / MANUAL_TEST_ADMIN_<N>_PASSWORD
+ *   MANUAL_TEST_USER_<N>_EMAIL / MANUAL_TEST_USER_<N>_PASSWORD
  *
  * Prerequisites:
  * - .env.test must be configured with SUPABASE credentials
@@ -51,44 +57,92 @@ if (!supabaseUrl || !serviceRoleKey) {
   process.exit(1);
 }
 
-// Test users configuration - ALL users (automated + manual)
-const TEST_USERS = [
-  {
-    email: 'admin@example.com',
-    password: 'test123',
-    role: 'system_admin',
-    name: 'Test Admin',
-    purpose: 'Automated test system admin',
-  },
-  {
-    email: 'john@example.com',
-    password: 'test123',
-    role: 'user',
-    name: 'John Doe',
-    purpose: 'Automated test user',
-  },
-  {
-    email: 'sarah@example.com',
-    password: 'test123',
-    role: 'user',
-    name: 'Sarah Smith',
-    purpose: 'Automated test user',
-  },
-  {
-    email: 'siteadmin@example.com',
-    password: 'test123',
-    role: 'system_admin',
-    name: 'Site Admin',
-    purpose: 'Manual test admin',
-  },
-  {
-    email: 'jane@example.com',
-    password: 'test123',
-    role: 'user',
-    name: 'Jane Cooper',
-    purpose: 'Manual test user',
-  },
-] as const;
+/**
+ * Parse test user credentials from environment variables
+ * Supports the numbered naming convention: AUTOMATED_TEST_ADMIN_<N>_EMAIL/PASSWORD
+ */
+interface TestUserConfig {
+  email: string;
+  password: string;
+  role: 'system_admin' | 'user';
+  name: string;
+  purpose: string;
+}
+
+function getAllTestUsers(): TestUserConfig[] {
+  const users: TestUserConfig[] = [];
+
+  // Parse AUTOMATED_TEST_ADMIN_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`AUTOMATED_TEST_ADMIN_${i}_EMAIL`];
+    const password = process.env[`AUTOMATED_TEST_ADMIN_${i}_PASSWORD`];
+    if (email && password) {
+      users.push({
+        email,
+        password,
+        role: 'system_admin',
+        name: `Test Admin ${i}`,
+        purpose: 'Automated test system admin',
+      });
+    }
+  }
+
+  // Parse AUTOMATED_TEST_USER_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`AUTOMATED_TEST_USER_${i}_EMAIL`];
+    const password = process.env[`AUTOMATED_TEST_USER_${i}_PASSWORD`];
+    if (email && password) {
+      users.push({
+        email,
+        password,
+        role: 'user',
+        name: `Test User ${i}`,
+        purpose: 'Automated test user',
+      });
+    }
+  }
+
+  // Parse MANUAL_TEST_ADMIN_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`MANUAL_TEST_ADMIN_${i}_EMAIL`];
+    const password = process.env[`MANUAL_TEST_ADMIN_${i}_PASSWORD`];
+    if (email && password) {
+      users.push({
+        email,
+        password,
+        role: 'system_admin',
+        name: `Manual Admin ${i}`,
+        purpose: 'Manual test system admin',
+      });
+    }
+  }
+
+  // Parse MANUAL_TEST_USER_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`MANUAL_TEST_USER_${i}_EMAIL`];
+    const password = process.env[`MANUAL_TEST_USER_${i}_PASSWORD`];
+    if (email && password) {
+      users.push({
+        email,
+        password,
+        role: 'user',
+        name: `Manual User ${i}`,
+        purpose: 'Manual test user',
+      });
+    }
+  }
+
+  return users;
+}
+
+// Load all test users from environment (both automated and manual)
+const TEST_USERS = getAllTestUsers();
+
+if (TEST_USERS.length === 0) {
+  console.error('❌ No test users found in environment variables');
+  console.error('   Please configure test users in .env.test');
+  process.exit(1);
+}
 
 // Invitations for invitation testing (sent by john)
 const JOHN_INVITATIONS = [
@@ -629,7 +683,7 @@ async function cleanupOrphanedData(supabase: SupabaseServiceClient) {
  */
 async function main() {
   console.log('🔄 Starting FULL test data refresh (all users)...\n');
-  console.log('⚠️  This will reset ALL test users including manual testing users!\n');
+  console.log(`⚠️  This will reset ALL ${TEST_USERS.length} test users including manual testing users!\n`);
 
   const supabase = getServiceRoleClient();
 
@@ -687,57 +741,70 @@ async function main() {
 
     console.log('\n✅ All users created successfully\n');
 
-    // Step 4: Seed John's scoreboards
-    console.log("📝 Seeding John's scoreboards...");
-    const johnUserId = createdUsers['john@example.com'];
+    // Step 4: Seed data for regular users
+    const regularUsers = TEST_USERS.filter(u => u.role === 'user');
+    
+    // Seed first regular user (if exists) with JOHN_SCOREBOARDS and invitations
+    if (regularUsers[0] && createdUsers[regularUsers[0].email]) {
+      const user1Email = regularUsers[0].email;
+      const user1Id = createdUsers[user1Email];
 
-    for (const scoreboard of JOHN_SCOREBOARDS) {
-      const result = await seedScoreboard(supabase, johnUserId, scoreboard);
-      console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      console.log(`📝 Seeding ${user1Email}'s scoreboards...`);
+      for (const scoreboard of JOHN_SCOREBOARDS) {
+        const result = await seedScoreboard(supabase, user1Id, scoreboard);
+        console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      }
+
+      console.log(`\n📧 Seeding ${user1Email}'s invitations...`);
+      const invitationsCount = await seedInvitations(supabase, user1Id, JOHN_INVITATIONS);
+      console.log(`  ✓ Created ${invitationsCount} invitations for invitation testing`);
     }
 
-    // Step 4b: Seed John's invitations (for invitation testing)
-    console.log("\n📧 Seeding John's invitations...");
-    const invitationsCount = await seedInvitations(supabase, johnUserId, JOHN_INVITATIONS);
-    console.log(`  ✓ Created ${invitationsCount} invitations for invitation testing`);
+    // Seed second regular user (if exists) with SARAH_SCOREBOARDS
+    if (regularUsers[1] && createdUsers[regularUsers[1].email]) {
+      const user2Email = regularUsers[1].email;
+      const user2Id = createdUsers[user2Email];
 
-    // Step 5: Seed Sarah's scoreboards
-    console.log("\n📝 Seeding Sarah's scoreboards...");
-    const sarahUserId = createdUsers['sarah@example.com'];
-
-    for (const scoreboard of SARAH_SCOREBOARDS) {
-      const result = await seedScoreboard(supabase, sarahUserId, scoreboard);
-      console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      console.log(`\n📝 Seeding ${user2Email}'s scoreboards...`);
+      for (const scoreboard of SARAH_SCOREBOARDS) {
+        const result = await seedScoreboard(supabase, user2Id, scoreboard);
+        console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      }
     }
 
-    // Step 6: Seed Site Admin's scoreboards
-    console.log("\n📝 Seeding Site Admin's scoreboards...");
-    const siteadminUserId = createdUsers['siteadmin@example.com'];
+    // Seed third regular user (if exists) with JANE_SCOREBOARDS
+    if (regularUsers[2] && createdUsers[regularUsers[2].email]) {
+      const user3Email = regularUsers[2].email;
+      const user3Id = createdUsers[user3Email];
 
-    for (const scoreboard of SITEADMIN_SCOREBOARDS) {
-      const result = await seedScoreboard(supabase, siteadminUserId, scoreboard);
-      console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      console.log(`\n📝 Seeding ${user3Email}'s scoreboards...`);
+      for (const scoreboard of JANE_SCOREBOARDS) {
+        const result = await seedScoreboard(supabase, user3Id, scoreboard);
+        console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      }
     }
 
-    // Step 7: Seed Jane's scoreboards
-    console.log("\n📝 Seeding Jane's scoreboards...");
-    const janeUserId = createdUsers['jane@example.com'];
+    // Seed admin users with SITEADMIN_SCOREBOARDS (first admin gets it)
+    const adminUsers = TEST_USERS.filter(u => u.role === 'system_admin');
+    if (adminUsers[0] && createdUsers[adminUsers[0].email]) {
+      const adminEmail = adminUsers[0].email;
+      const adminId = createdUsers[adminEmail];
 
-    for (const scoreboard of JANE_SCOREBOARDS) {
-      const result = await seedScoreboard(supabase, janeUserId, scoreboard);
-      console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      console.log(`\n📝 Seeding ${adminEmail}'s scoreboards...`);
+      for (const scoreboard of SITEADMIN_SCOREBOARDS) {
+        const result = await seedScoreboard(supabase, adminId, scoreboard);
+        console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      }
     }
 
     // Success summary
     console.log('\n✅ FULL test data refresh completed successfully!\n');
     console.log('📊 Summary:');
     console.log('  Users created:');
-    console.log('    - admin@example.com (system_admin) - Clean for testing');
-    console.log('    - john@example.com (user) - 2 scoreboards, 2 invitations');
-    console.log('    - sarah@example.com (user) - 2 scoreboards with entries');
-    console.log('    - siteadmin@example.com (system_admin) - 1 scoreboard with entries');
-    console.log('    - jane@example.com (user) - 2 scoreboards with entries');
-    console.log('\n  All passwords: test123\n');
+    for (const user of TEST_USERS) {
+      console.log(`    - ${user.email} (${user.role}) - ${user.purpose}`);
+    }
+    console.log('\n  Passwords: As configured in .env.test\n');
   } catch (error) {
     console.error('\n❌ Refresh failed:', error);
     process.exit(1);
