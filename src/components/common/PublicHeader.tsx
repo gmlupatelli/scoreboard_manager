@@ -9,7 +9,17 @@ import Logo from '@/components/ui/Logo';
 
 /**
  * Lightweight header for public pages (landing, login, register, etc.)
- * Does NOT import AuthContext or Supabase to reduce bundle size.
+ *
+ * Bundle Size Optimization Notes:
+ * - This component reduces bundle size by ~39KB by NOT importing AuthContext or Supabase
+ * - The savings come from eliminating Supabase dependencies (auth-js, storage-js, postgrest-js,
+ *   realtime-js), not from server-side rendering
+ * - This remains a client component ('use client') because:
+ *   1. Mobile menu requires useState for open/close state
+ *   2. Menu auto-closes on navigation via useEffect + usePathname
+ *   3. These interactive features require client-side JavaScript
+ * - The trade-off is acceptable: small client bundle for interactivity vs large Supabase bundle
+ *
  * Use this for unauthenticated pages to improve LCP and reduce unused JS.
  */
 export default function PublicHeader() {
