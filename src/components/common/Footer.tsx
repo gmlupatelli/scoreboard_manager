@@ -51,12 +51,12 @@ export default function Footer({ customStyles = null }: FooterProps) {
             </p>
           </div>
           <div>
-            <h4
-              className="font-semibold mb-4 text-text-primary"
+            <h2
+              className="font-semibold mb-4 text-text-primary text-base"
               style={customStyles ? headingStyle : undefined}
             >
               Product
-            </h4>
+            </h2>
             <ul
               className="space-y-2 text-sm text-text-secondary"
               style={customStyles ? textStyle : undefined}
@@ -100,12 +100,12 @@ export default function Footer({ customStyles = null }: FooterProps) {
             </ul>
           </div>
           <div>
-            <h4
-              className="font-semibold mb-4 text-text-primary"
+            <h2
+              className="font-semibold mb-4 text-text-primary text-base"
               style={customStyles ? headingStyle : undefined}
             >
               Company
-            </h4>
+            </h2>
             <ul
               className="space-y-2 text-sm text-text-secondary"
               style={customStyles ? textStyle : undefined}
@@ -140,12 +140,12 @@ export default function Footer({ customStyles = null }: FooterProps) {
             </ul>
           </div>
           <div>
-            <h4
-              className="font-semibold mb-4 text-text-primary"
+            <h2
+              className="font-semibold mb-4 text-text-primary text-base"
               style={customStyles ? headingStyle : undefined}
             >
               Legal
-            </h4>
+            </h2>
             <ul
               className="space-y-2 text-sm text-text-secondary"
               style={customStyles ? textStyle : undefined}

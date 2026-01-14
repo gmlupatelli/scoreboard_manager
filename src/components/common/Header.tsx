@@ -96,6 +96,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
             <Link
               href={isAuthenticated ? '/dashboard' : '/'}
               className="flex items-center space-x-3 hover-lift"
+              aria-label="Scoreboard Manager home"
             >
               <Logo size={40} />
               <span

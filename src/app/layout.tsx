@@ -1,5 +1,21 @@
 import '../styles/index.css';
 import { Providers } from './providers';
+import { Nunito_Sans, JetBrains_Mono } from 'next/font/google';
+
+const nunitoSans = Nunito_Sans({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-nunito-sans',
+  adjustFontFallback: false,
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono',
+});
 
 export const viewport = {
   width: 'device-width',
@@ -21,8 +37,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className={`${nunitoSans.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className={nunitoSans.className}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -13,6 +13,16 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Lighthouse performance monitoring
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+  [plugins.inputs.thresholds]
+    performance = 0.9
+    accessibility = 0.9
+    best-practices = 0.9
+    seo = 0.9
+
 # Custom build lifecycle hook to install Supabase CLI
 [build.processing]
   skip_processing = false
