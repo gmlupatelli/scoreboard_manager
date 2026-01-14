@@ -156,7 +156,7 @@ export default function Home() {
           <div className="relative max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-primary/10 rounded-full text-primary font-semibold text-sm mb-6">
+                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-primary/15 rounded-full text-accent font-semibold text-sm mb-6">
                   <Icon name="SparklesIcon" size={16} />
                   <span>Trusted by 10,000+ Event Organizers</span>
                 </div>
@@ -236,7 +236,7 @@ export default function Home() {
                           <span className="ml-2 font-semibold text-text-primary">#1</span>
                         </div>
                         <span className="font-medium text-text-primary">Sarah Johnson</span>
-                        <span className="text-lg font-bold text-primary text-right">98,500</span>
+                        <span className="text-lg font-bold text-accent text-right">98,500</span>
                       </div>
                       <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center">
@@ -244,7 +244,7 @@ export default function Home() {
                           <span className="ml-2 font-semibold text-text-primary">#2</span>
                         </div>
                         <span className="font-medium text-text-primary">Michael Chen</span>
-                        <span className="text-lg font-bold text-primary text-right">87,200</span>
+                        <span className="text-lg font-bold text-accent text-right">87,200</span>
                       </div>
                       <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center">
@@ -252,14 +252,14 @@ export default function Home() {
                           <span className="ml-2 font-semibold text-text-primary">#3</span>
                         </div>
                         <span className="font-medium text-text-primary">Emily Rodriguez</span>
-                        <span className="text-lg font-bold text-primary text-right">76,800</span>
+                        <span className="text-lg font-bold text-accent text-right">76,800</span>
                       </div>
                       <div className="grid grid-cols-[60px_1fr_100px] sm:grid-cols-[80px_1fr_120px] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors">
                         <div className="flex items-center">
                           <span className="ml-2 font-semibold text-text-primary">#4</span>
                         </div>
                         <span className="font-medium text-text-primary">David Kim</span>
-                        <span className="text-lg font-bold text-primary text-right">65,400</span>
+                        <span className="text-lg font-bold text-accent text-right">65,400</span>
                       </div>
                     </div>
                   </div>

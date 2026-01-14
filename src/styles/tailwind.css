@@ -14,7 +14,7 @@
     /* Border & Input */
     --color-border: #e2e8f0; /* slate-200 */
     --color-input: #e2e8f0; /* slate-200 */
-    --color-ring: #d94a4d; /* coral/salmon - darkened for WCAG AA contrast */
+    --color-ring: #c43e41; /* coral/salmon - matches primary for WCAG AA contrast */
 
     /* Card & Popover */
     --color-card: #ffffff; /* white */
@@ -27,7 +27,7 @@
     --color-muted-foreground: #38385e; /* secondary navy blue */
 
     /* Primary */
-    --color-primary: #d94a4d; /* coral/salmon - darkened for WCAG AA contrast */
+    --color-primary: #c43e41; /* coral/salmon - darkened for WCAG AA 4.5:1 contrast */
     --color-primary-foreground: #ffffff; /* white */
 
     /* Secondary */
