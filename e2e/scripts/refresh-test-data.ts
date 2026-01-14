@@ -111,7 +111,9 @@ const AUTOMATED_TEST_USERS = getAutomatedTestUsers();
 
 if (AUTOMATED_TEST_USERS.length === 0) {
   console.error('❌ No automated test users found in environment variables');
-  console.error('   Please configure AUTOMATED_TEST_ADMIN_<N> and/or AUTOMATED_TEST_USER_<N> in .env.test');
+  console.error(
+    '   Please configure AUTOMATED_TEST_ADMIN_<N> and/or AUTOMATED_TEST_USER_<N> in .env.test'
+  );
   process.exit(1);
 }
 
@@ -135,7 +137,7 @@ function getManualTestUserEmails(): string[] {
 }
 
 // All known test users (for protecting from cleanup)
-const AUTOMATED_TEST_USER_EMAILS = AUTOMATED_TEST_USERS.map(u => u.email);
+const AUTOMATED_TEST_USER_EMAILS = AUTOMATED_TEST_USERS.map((u) => u.email);
 const MANUAL_TEST_USER_EMAILS = getManualTestUserEmails();
 const ALL_TEST_USER_EMAILS = [...AUTOMATED_TEST_USER_EMAILS, ...MANUAL_TEST_USER_EMAILS];
 
@@ -694,7 +696,7 @@ async function main() {
     console.log('\n✅ Automated users created successfully\n');
 
     // Get first two regular users for seeding test data
-    const regularUsers = AUTOMATED_TEST_USERS.filter(u => u.role === 'user');
+    const regularUsers = AUTOMATED_TEST_USERS.filter((u) => u.role === 'user');
     const user1Email = regularUsers[0]?.email;
     const user2Email = regularUsers[1]?.email;
 

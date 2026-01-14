@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     // 3. Get automated test user emails from environment
     const automatedTestEmails = getAutomatedTestUserEmails();
-    
+
     if (automatedTestEmails.length === 0) {
       return NextResponse.json({
         message: 'No automated test users configured in environment',

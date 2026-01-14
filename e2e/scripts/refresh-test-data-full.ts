@@ -683,7 +683,9 @@ async function cleanupOrphanedData(supabase: SupabaseServiceClient) {
  */
 async function main() {
   console.log('🔄 Starting FULL test data refresh (all users)...\n');
-  console.log(`⚠️  This will reset ALL ${TEST_USERS.length} test users including manual testing users!\n`);
+  console.log(
+    `⚠️  This will reset ALL ${TEST_USERS.length} test users including manual testing users!\n`
+  );
 
   const supabase = getServiceRoleClient();
 
@@ -742,8 +744,8 @@ async function main() {
     console.log('\n✅ All users created successfully\n');
 
     // Step 4: Seed data for regular users
-    const regularUsers = TEST_USERS.filter(u => u.role === 'user');
-    
+    const regularUsers = TEST_USERS.filter((u) => u.role === 'user');
+
     // Seed first regular user (if exists) with JOHN_SCOREBOARDS and invitations
     if (regularUsers[0] && createdUsers[regularUsers[0].email]) {
       const user1Email = regularUsers[0].email;
@@ -785,7 +787,7 @@ async function main() {
     }
 
     // Seed admin users with SITEADMIN_SCOREBOARDS (first admin gets it)
-    const adminUsers = TEST_USERS.filter(u => u.role === 'system_admin');
+    const adminUsers = TEST_USERS.filter((u) => u.role === 'system_admin');
     if (adminUsers[0] && createdUsers[adminUsers[0].email]) {
       const adminEmail = adminUsers[0].email;
       const adminId = createdUsers[adminEmail];
