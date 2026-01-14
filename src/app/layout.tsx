@@ -20,14 +20,29 @@ const jetbrainsMono = JetBrains_Mono({
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#3b82f6',
 };
 
 export const metadata = {
   title: 'Scoreboard Manager - Live Rankings & Competition Tracking',
   description:
     'Professional scoreboard management system with real-time updates and comprehensive analytics',
+  manifest: '/manifest.json',
   icons: {
-    icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
+    icon: [
+      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Scoreboard Manager',
   },
 };
 
