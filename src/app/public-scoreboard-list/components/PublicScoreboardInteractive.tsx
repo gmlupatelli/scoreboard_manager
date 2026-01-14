@@ -5,7 +5,7 @@ import { scoreboardService } from '../../../services/scoreboardService';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import Icon from '@/components/ui/AppIcon';
 import PublicScoreboardCard from './PublicScoreboardCard';
-import Header from '../../../components/common/Header';
+import PublicHeader from '../../../components/common/PublicHeader';
 import { Scoreboard } from '../../../types/models';
 
 const PAGE_SIZE = 30;
@@ -120,7 +120,7 @@ const PublicScoreboardInteractive = () => {
 
   return (
     <>
-      <Header isAuthenticated={false} />
+      <PublicHeader />
       <div className="min-h-screen bg-background pt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">

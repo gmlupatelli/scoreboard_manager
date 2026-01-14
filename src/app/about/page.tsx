@@ -1,11 +1,11 @@
-import Header from '@/components/common/Header';
+import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 import Logo from '@/components/ui/Logo';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Header />
+      <PublicHeader />
       <main className="flex-1 pt-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">

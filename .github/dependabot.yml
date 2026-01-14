@@ -37,6 +37,35 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    # Ignore major version updates - handle these manually when current version is EOL.
+    # See docs/dependency-upgrade-policy.md for the rationale, process, and review cadence.
+    # GitHub Security Advisories will still alert on vulnerabilities
+    ignore:
+      # React ecosystem - major versions require coordinated migration
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
+      # Next.js - major versions have breaking changes
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
+      # TypeScript - major versions may require code changes
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Tailwind CSS - major versions have breaking changes
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+      # Supabase - major versions may have API changes
+      - dependency-name: "@supabase/supabase-js"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@supabase/ssr"
+        update-types: ["version-update:semver-major"]
     # Reviewers for security updates
     reviewers:
       - "gmlupatelli"
