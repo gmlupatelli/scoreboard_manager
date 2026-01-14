@@ -37,7 +37,8 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # Ignore major version updates - handle these manually when current version is EOL
+    # Ignore major version updates - handle these manually when current version is EOL.
+    # See docs/dependency-upgrade-policy.md for the rationale, process, and review cadence.
     # GitHub Security Advisories will still alert on vulnerabilities
     ignore:
       # React ecosystem - major versions require coordinated migration
