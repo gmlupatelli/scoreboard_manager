@@ -1,7 +1,7 @@
 import Icon from '@/components/ui/AppIcon';
 import Button from '@/components/ui/Button';
 import Footer from '@/components/common/Footer';
-import Header from '@/components/common/Header';
+import PublicHeader from '@/components/common/PublicHeader';
 
 interface FeatureCardProps {
   icon: string;
@@ -147,7 +147,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header isAuthenticated={false} />
+      <PublicHeader />
 
       <main>
         {/* Hero Section */}
