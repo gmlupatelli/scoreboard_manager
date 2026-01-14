@@ -2,7 +2,8 @@
 
 **Priority:** 🟡 Medium  
 **Dependencies:** Phase 1c (Supporter/Free Limits)  
-**Estimated Scope:** Large
+**Estimated Scope:** Large  
+**Status:** ✅ Implemented (January 2026)
 
 ## Overview
 
@@ -11,6 +12,17 @@ Implement Kiosk/TV mode for Supporters:
 - Carousel with scoreboard and custom slides
 - Image and PDF upload support
 - Configurable timing and order
+
+---
+
+## Implementation Summary
+
+- **Database Migration:** `supabase/migrations/20260114000000_add_kiosk_mode.sql`
+- **Service Layer:** `src/services/kioskService.ts`
+- **API Routes:** `/api/kiosk/[scoreboardId]/` (config, slides, upload, public access)
+- **Kiosk View:** `/kiosk/[id]` with carousel, controls, and PIN protection
+- **Management UI:** `KioskSettingsSection` in scoreboard management
+- **E2E Tests:** `e2e/kiosk.spec.ts`
 
 ---
 

@@ -24,6 +24,7 @@ import Toast from './Toast';
 import EditScoreboardModal from './EditScoreboardModal';
 import StyleCustomizationSection from './StyleCustomizationSection';
 import EmbedCodeSection from './EmbedCodeSection';
+import KioskSettingsSection from './KioskSettingsSection';
 
 interface ToastState {
   message: string;
@@ -75,6 +76,7 @@ const ScoreboardManagementInteractive = () => {
   const [isSavingStyles, setIsSavingStyles] = useState(false);
   const [isStyleSectionExpanded, setIsStyleSectionExpanded] = useState(false);
   const [isEmbedSectionExpanded, setIsEmbedSectionExpanded] = useState(false);
+  const [isKioskSectionExpanded, setIsKioskSectionExpanded] = useState(false);
 
   // Execute all pending deletes on unmount (Option A: execute on navigation)
   useEffect(() => {
@@ -579,6 +581,14 @@ const ScoreboardManagementInteractive = () => {
           scoreboardTitle={scoreboard.title}
           isExpanded={isEmbedSectionExpanded}
           onToggleExpanded={setIsEmbedSectionExpanded}
+        />
+
+        <KioskSettingsSection
+          scoreboardId={scoreboard.id}
+          scoreboardTitle={scoreboard.title}
+          isExpanded={isKioskSectionExpanded}
+          onToggle={() => setIsKioskSectionExpanded(!isKioskSectionExpanded)}
+          onShowToast={showToast}
         />
 
         <div className="bg-card border border-border rounded-lg elevation-1">

@@ -186,6 +186,76 @@ export interface Database {
           updated_at?: string;
         };
       };
+      kiosk_configs: {
+        Row: {
+          id: string;
+          scoreboard_id: string;
+          slide_duration_seconds: number;
+          scoreboard_position: number;
+          enabled: boolean;
+          pin_code: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          scoreboard_id: string;
+          slide_duration_seconds?: number;
+          scoreboard_position?: number;
+          enabled?: boolean;
+          pin_code?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          scoreboard_id?: string;
+          slide_duration_seconds?: number;
+          scoreboard_position?: number;
+          enabled?: boolean;
+          pin_code?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      kiosk_slides: {
+        Row: {
+          id: string;
+          kiosk_config_id: string;
+          position: number;
+          slide_type: 'image' | 'scoreboard';
+          image_url: string | null;
+          thumbnail_url: string | null;
+          duration_override_seconds: number | null;
+          file_name: string | null;
+          file_size: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          kiosk_config_id: string;
+          position: number;
+          slide_type: 'image' | 'scoreboard';
+          image_url?: string | null;
+          thumbnail_url?: string | null;
+          duration_override_seconds?: number | null;
+          file_name?: string | null;
+          file_size?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          kiosk_config_id?: string;
+          position?: number;
+          slide_type?: 'image' | 'scoreboard';
+          image_url?: string | null;
+          thumbnail_url?: string | null;
+          duration_override_seconds?: number | null;
+          file_name?: string | null;
+          file_size?: number | null;
+          created_at?: string;
+        };
+      };
     };
   };
 }

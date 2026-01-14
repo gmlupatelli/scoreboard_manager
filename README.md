@@ -12,6 +12,26 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 2026 - Kiosk/TV Mode
+- **Full-screen kiosk display mode** optimized for TV screens and public displays
+  - Dedicated `/kiosk/[id]` route with immersive full-screen experience
+  - Auto-rotating carousel with configurable slide duration (3-300 seconds)
+  - Support for multiple content types: scoreboard displays and uploaded images
+  - Smooth CSS transitions between slides with fade/slide animations
+- **Kiosk management interface** integrated into scoreboard management
+  - Enable/disable kiosk mode per scoreboard
+  - Configure slide duration and scoreboard position in carousel
+  - Add/remove/reorder slides with drag-and-drop
+  - Upload custom images (PNG, JPG, WebP, GIF) up to 5MB
+  - Optional PIN protection for private scoreboards
+- **Keyboard controls for kiosk view**:
+  - `Space` - Play/pause carousel
+  - `←`/`→` - Navigate between slides
+  - `F` - Toggle fullscreen mode
+  - `Escape` - Exit fullscreen
+- **Database schema**: New `kiosk_configs` and `kiosk_slides` tables with RLS policies
+- **E2E tests** for kiosk functionality in `e2e/kiosk.spec.ts`
+
 ### January 2026 - Race Condition Fixes & Custom Hooks
 - **Created three new reusable hooks** to eliminate race conditions:
   - `useAuthGuard`: Centralized auth guard with role-based access, prevents redirect loops
@@ -197,7 +217,8 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 1. Public scoreboard browsing with infinite scroll
 2. User authentication (login/register/forgot password)
 3. Scoreboard creation and management with public/private visibility
-4. System admin dashboard (oversight only, no scoreboard creation)
+4. **Kiosk/TV Mode**: Full-screen display with auto-rotating carousel for public displays
+5. System admin dashboard (oversight only, no scoreboard creation)
 5. Real-time score updates without screen flashing
 6. Server-side search across all scoreboards
 7. Owner filtering for admin users
