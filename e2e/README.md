@@ -10,6 +10,35 @@ npm install
 npx playwright install
 ```
 
+## Test User Configuration
+
+Test user credentials are configured in `.env.test` using a numbered naming convention that allows you to add more accounts as needed.
+
+### Naming Convention
+```bash
+# Automated test users (auto-cleaned between test runs)
+AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
+AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
+
+# Manual test users (NOT auto-cleaned, for manual testing)
+MANUAL_TEST_ADMIN_<N>_EMAIL / MANUAL_TEST_ADMIN_<N>_PASSWORD
+MANUAL_TEST_USER_<N>_EMAIL / MANUAL_TEST_USER_<N>_PASSWORD
+```
+
+### Default Test Users
+| Variable | Role | Purpose |
+|----------|------|---------|
+| `AUTOMATED_TEST_ADMIN_1` | system_admin | Admin for E2E tests |
+| `AUTOMATED_TEST_USER_1` | user | First regular user (seeded data) |
+| `AUTOMATED_TEST_USER_2` | user | Second regular user (seeded data) |
+
+### Adding More Test Users
+Simply add more numbered entries to `.env.test`:
+```bash
+AUTOMATED_TEST_USER_3_EMAIL=newuser@example.com
+AUTOMATED_TEST_USER_3_PASSWORD=secure_password
+```
+
 ## Test Data Management
 
 ### Refresh Test Data (Default - Automated Users Only)
@@ -19,11 +48,11 @@ npm run refresh-test-data
 ```
 
 This script:
-- ✅ Deletes and recreates 3 automated test users (admin, john, sarah)
+- ✅ Deletes and recreates automated test users (from `AUTOMATED_TEST_*` env vars)
 - ✅ Removes test data for automated users only
-- ✅ Seeds fresh data for john and sarah (scoreboards + invitations)
-- ✅ **Preserves siteadmin and jane data intact**
-- ✅ All passwords reset to `test123`
+- ✅ Seeds fresh data for the first two regular users (scoreboards + invitations)
+- ✅ **Preserves manual test user data intact**
+- ✅ Uses passwords from `.env.test` (no more standardized passwords)
 
 **When to run:**
 - Before first test run on a new environment
@@ -41,20 +70,18 @@ Use this when:
 - You want a completely clean slate
 - Setting up a fresh test environment
 
-### Automated Test Users
-| User | Role | Data |
-|------|------|------|
-| `admin@example.com` | system_admin | Clean for testing |
-| `john@example.com` | user | 2 scoreboards, 2 invitations |
-| `sarah@example.com` | user | 2 scoreboards with entries |
+### Test Users Summary
+Automated test users are read dynamically from environment variables.
+Manual test users (if configured) are preserved during regular test runs.
 
 ### Manual Test Users (Preserved by default)
-| User | Role | Notes |
-|------|------|-------|
-| `siteadmin@example.com` | system_admin | For manual testing |
-| `jane@example.com` | user | For manual testing |
-
-**All passwords: `test123`**
+Manual test users configured with `MANUAL_TEST_*` environment variables are preserved during regular test runs. Configure them in `.env.test` as needed:
+```bash
+MANUAL_TEST_ADMIN_1_EMAIL=siteadmin@example.com
+MANUAL_TEST_ADMIN_1_PASSWORD=your_password
+MANUAL_TEST_USER_1_EMAIL=jane@example.com
+MANUAL_TEST_USER_1_PASSWORD=your_password
+```
 
 ## Running Tests
 

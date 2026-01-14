@@ -1,6 +1,10 @@
 /**
  * Authentication Fixtures for Playwright Tests
  * Provides helpers for real Supabase authentication flows
+ *
+ * Credentials are loaded from .env.test using the numbered naming convention:
+ *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
+ *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
  */
 
 import { test as base, type Page, type BrowserContext as _BrowserContext } from '@playwright/test';
@@ -14,19 +18,23 @@ interface AuthUser {
   password: string;
 }
 
+/**
+ * Get test user credentials from environment variables
+ * Falls back to defaults if not configured (for backwards compatibility)
+ */
 const ADMIN: AuthUser = {
-  email: process.env.TEST_ADMIN_EMAIL || 'admin@scoreboard.com',
-  password: process.env.TEST_ADMIN_PASSWORD || 'admin123',
+  email: process.env.AUTOMATED_TEST_ADMIN_1_EMAIL || 'admin@example.com',
+  password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'admin123',
 };
 
 const JOHN: AuthUser = {
-  email: process.env.TEST_USER_JOHN_EMAIL || 'john@example.com',
-  password: process.env.TEST_USER_JOHN_PASSWORD || 'user123',
+  email: process.env.AUTOMATED_TEST_USER_1_EMAIL || 'john@example.com',
+  password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'user123',
 };
 
 const SARAH: AuthUser = {
-  email: process.env.TEST_USER_SARAH_EMAIL || 'sarah@example.com',
-  password: process.env.TEST_USER_SARAH_PASSWORD || 'test123',
+  email: process.env.AUTOMATED_TEST_USER_2_EMAIL || 'sarah@example.com',
+  password: process.env.AUTOMATED_TEST_USER_2_PASSWORD || 'sarah456',
 };
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';

@@ -6,7 +6,7 @@
  * It disables public registration which would break other tests
  */
 
-import { test, expect, TEST_USERS as _TEST_USERS } from './fixtures/auth';
+import { test, expect, TEST_USERS } from './fixtures/auth';
 import { logout as _logout } from './fixtures/auth';
 
 test.describe('Invite-Only Mode - Toggle Feature', () => {
@@ -15,11 +15,11 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // Login as admin
+    // Login as admin using credentials from fixtures
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
-    await page.fill('input[name="email"]', 'admin@example.com');
-    await page.fill('input[name="password"]', 'test123');
+    await page.fill('input[name="email"]', TEST_USERS.admin.email);
+    await page.fill('input[name="password"]', TEST_USERS.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/dashboard/, { timeout: 30000 });
 
