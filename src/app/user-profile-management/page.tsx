@@ -1,23 +1,14 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useAuthGuard } from '@/hooks';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import UserProfileInteractive from './components/UserProfileInteractive';
 
 export default function UserProfileManagementPage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { isAuthorized, isChecking } = useAuthGuard();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router?.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading) {
+  if (isChecking) {
     return (
       <>
         <Header isAuthenticated={false} />
@@ -31,7 +22,7 @@ export default function UserProfileManagementPage() {
     );
   }
 
-  if (!user) {
+  if (!isAuthorized) {
     return null;
   }
 

@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
 
 export default function LoginPage() {
   const router = useRouter();
   const { signIn, loading: authLoading } = useAuth();
+  const { set: setTimeoutSafe } = useTimeoutRef();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,9 +27,13 @@ export default function LoginPage() {
         setError(error.message);
       } else {
         // Small delay to allow Chrome to detect successful login for password saving
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 100);
+        setTimeoutSafe(
+          () => {
+            router.push('/dashboard');
+          },
+          100,
+          'redirect'
+        );
       }
     } catch (_err) {
       setError('An unexpected error occurred');

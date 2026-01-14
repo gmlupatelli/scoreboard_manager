@@ -13,13 +13,24 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Lighthouse performance monitoring
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+  [plugins.inputs.thresholds]
+    performance = 0.9
+    accessibility = 0.9
+    best-practices = 0.9
+    seo = 0.9
+
 # Custom build lifecycle hook to install Supabase CLI
 [build.processing]
   skip_processing = false
 
-# Production settings - migrations are managed manually via Supabase Dashboard
+# Production settings - runs migrations before build using npm-based Supabase CLI
+# Uses locally installed supabase from package.json (pinned version) for security
 [context.production]
-  command = "npm run build"
+  command = "npx supabase link --project-ref \"$SUPABASE_PROJECT_REF\" && npx supabase db push && npm run build"
   
 [context.production.environment]
   NEXT_PUBLIC_SITE_URL = "https://myscoreboardmanager.netlify.app"

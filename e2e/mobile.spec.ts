@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Mobile E2E Tests - Touch interactions, swipe gestures, responsive layouts
+ * Mobile E2E Tests - Touch interactions, responsive layouts
  */
 
 test.describe('Mobile Touch Interactions', () => {
@@ -61,45 +61,6 @@ test.describe('Mobile Touch Interactions', () => {
   });
 });
 
-test.describe('Swipe Gestures', () => {
-  test.use({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
-
-  test('should handle swipe-to-delete on cards', async ({ page }) => {
-    await page.goto('/invitations');
-
-    // Check if invitation card exists
-    const card = page.locator('[data-testid="invitation-card"]').first();
-
-    if (await card.isVisible()) {
-      const box = await card.boundingBox();
-
-      if (box) {
-        // Simulate swipe left
-        await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(box.x + box.width / 2 - 150, box.y + box.height / 2);
-        await page.mouse.up();
-
-        // Check for visual feedback
-        await page.waitForTimeout(500);
-      }
-    }
-  });
-
-  test('should show swipe feedback progressively', async ({ page }) => {
-    await page.goto('/invitations');
-
-    const card = page.locator('[data-testid="invitation-card"]').first();
-
-    if (await card.isVisible()) {
-      // Touch should trigger visual feedback
-      await card.tap();
-      await page.waitForTimeout(100);
-    }
-  });
-});
-
 test.describe('Landscape Orientation', () => {
   test.use({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
 
@@ -114,7 +75,7 @@ test.describe('Landscape Orientation', () => {
   });
 
   test('should reduce vertical spacing in landscape', async ({ page }) => {
-    await page.goto('/dashboard');
+    await page.goto('/');
 
     // Check that content fits without excessive scrolling
     const mainContent = page.locator('main');

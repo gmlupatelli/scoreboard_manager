@@ -41,6 +41,18 @@ const EntryCard = ({
   const [nameError, setNameError] = useState('');
   const [scoreError, setScoreError] = useState('');
 
+  const handleStartEdit = () => {
+    setIsEditing(true);
+    setEditName(entry.name);
+    setEditScore(
+      scoreType === 'time' && timeFormat
+        ? formatScoreDisplay(entry.score, scoreType, timeFormat)
+        : entry.score.toString()
+    );
+    setNameError('');
+    setScoreError('');
+  };
+
   const validateName = (value: string): boolean => {
     if (value.length < 1 || value.length > 100) {
       setNameError('Name must be 1-100 characters');
@@ -110,15 +122,6 @@ const EntryCard = ({
     setIsEditing(false);
   };
 
-  const handleStartEdit = () => {
-    setEditScore(
-      scoreType === 'time' && timeFormat
-        ? formatScoreDisplay(entry.score, scoreType, timeFormat)
-        : entry.score.toString()
-    );
-    setIsEditing(true);
-  };
-
   const displayScore = formatScoreDisplay(entry.score, scoreType, timeFormat);
   const scoreLabel = scoreType === 'time' ? 'Time' : 'Score';
 
@@ -186,34 +189,40 @@ const EntryCard = ({
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 elevation-1 hover:elevation-2 transition-smooth duration-150">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-text-secondary">Rank #{entry.rank}</span>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handleStartEdit}
-            className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
-            aria-label="Edit entry"
-          >
-            <Icon name="PencilIcon" size={18} />
-          </button>
-          <button
-            onClick={() => onDelete(entry.id)}
-            className="p-2 rounded-md text-destructive hover:bg-destructive/10 transition-smooth duration-150"
-            aria-label="Delete entry"
-          >
-            <Icon name="TrashIcon" size={18} />
-          </button>
+    <div
+      className="relative overflow-hidden rounded-lg border border-border"
+      data-testid="entry-card"
+    >
+      {/* Card content */}
+      <div className="relative bg-card p-4 elevation-1 hover:elevation-2 transition-smooth duration-150">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-text-secondary">Rank #{entry.rank}</span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleStartEdit}
+              className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+              aria-label="Edit entry"
+            >
+              <Icon name="PencilIcon" size={18} />
+            </button>
+            <button
+              onClick={() => onDelete(entry.id)}
+              className="p-2 rounded-md text-destructive hover:bg-destructive/10 transition-smooth duration-150"
+              aria-label="Delete entry"
+            >
+              <Icon name="TrashIcon" size={18} />
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="space-y-2">
-        <div>
-          <p className="text-xs text-text-secondary">Name</p>
-          <p className="text-sm font-medium text-text-primary">{entry.name}</p>
-        </div>
-        <div>
-          <p className="text-xs text-text-secondary">{scoreLabel}</p>
-          <p className="text-sm font-data font-medium text-text-primary">{displayScore}</p>
+        <div className="space-y-2">
+          <div>
+            <p className="text-xs text-text-secondary">Name</p>
+            <p className="text-sm font-medium text-text-primary">{entry.name}</p>
+          </div>
+          <div>
+            <p className="text-xs text-text-secondary">{scoreLabel}</p>
+            <p className="text-sm font-data font-medium text-text-primary">{displayScore}</p>
+          </div>
         </div>
       </div>
     </div>

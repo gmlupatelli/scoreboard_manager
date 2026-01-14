@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createBrowserClient } from '@supabase/ssr';
+import { supabase } from '@/lib/supabase/client';
+import { useTimeoutRef } from '@/hooks';
 import Icon from '@/components/ui/AppIcon';
 import Logo from '@/components/ui/Logo';
 
 function AcceptInviteContent() {
   const router = useRouter();
+  const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -18,16 +20,13 @@ function AcceptInviteContent() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [hasSession, setHasSession] = useState(false);
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase environment variables');
-  }
-
-  const supabase = createBrowserClient(supabaseUrl, supabaseKey);
+  // Track if invite flow has been processed to prevent re-runs
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
+    if (hasProcessedRef.current) return;
+    hasProcessedRef.current = true;
+
     const handleInviteFlow = async () => {
       try {
         // Check if we have tokens in the URL hash (from Supabase invite email)
@@ -47,8 +46,10 @@ function AcceptInviteContent() {
             if (!sessionError) {
               // Clear the hash from URL for cleaner appearance
               window.history.replaceState(null, '', window.location.pathname);
-              setHasSession(true);
-              setCheckingSession(false);
+              if (isMounted()) {
+                setHasSession(true);
+                setCheckingSession(false);
+              }
               return;
             }
           }
@@ -58,18 +59,22 @@ function AcceptInviteContent() {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        if (session) {
-          setHasSession(true);
+        if (isMounted()) {
+          if (session) {
+            setHasSession(true);
+          }
+          setCheckingSession(false);
         }
       } catch (_err) {
         // No session, user needs to set password
-      } finally {
-        setCheckingSession(false);
+        if (isMounted()) {
+          setCheckingSession(false);
+        }
       }
     };
 
     handleInviteFlow();
-  }, [supabase]);
+  }, [isMounted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +102,9 @@ function AcceptInviteContent() {
       });
 
       if (updateError) {
-        setError(updateError.message);
+        if (isMounted()) {
+          setError(updateError.message);
+        }
         return;
       }
 
@@ -112,14 +119,24 @@ function AcceptInviteContent() {
         });
       }
 
-      setSuccess(true);
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 2000);
+      if (isMounted()) {
+        setSuccess(true);
+        setTimeoutSafe(
+          () => {
+            router.push('/dashboard');
+          },
+          2000,
+          'redirect'
+        );
+      }
     } catch (_err) {
-      setError('Failed to set password. Please try again.');
+      if (isMounted()) {
+        setError('Failed to set password. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted()) {
+        setLoading(false);
+      }
     }
   };
 

@@ -2,7 +2,11 @@
  * Global Setup for Playwright E2E Tests
  *
  * Runs once before all test files.
- * Seeds test data for john@example.com and sarah@example.com.
+ * Seeds test data for automated test users.
+ *
+ * Credentials are loaded from .env.test using the numbered naming convention:
+ *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
+ *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
  */
 
 import { chromium, type FullConfig, type Page } from '@playwright/test';
@@ -20,21 +24,25 @@ interface TestUser {
   name: string;
 }
 
+/**
+ * Get test user credentials from environment variables
+ * Falls back to defaults if not configured (for backwards compatibility)
+ */
 const JOHN: TestUser = {
-  email: process.env.TEST_USER_JOHN_EMAIL || 'john@example.com',
-  password: process.env.TEST_USER_JOHN_PASSWORD || 'user123',
+  email: process.env.AUTOMATED_TEST_USER_1_EMAIL || 'john@example.com',
+  password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'user123',
   name: 'John Doe',
 };
 
 const SARAH: TestUser = {
-  email: process.env.TEST_USER_SARAH_EMAIL || 'sarah@example.com',
-  password: process.env.TEST_USER_SARAH_PASSWORD || 'test123',
+  email: process.env.AUTOMATED_TEST_USER_2_EMAIL || 'sarah@example.com',
+  password: process.env.AUTOMATED_TEST_USER_2_PASSWORD || 'sarah456',
   name: 'Sarah Smith',
 };
 
 const ADMIN: TestUser = {
-  email: process.env.TEST_USER_ADMIN_EMAIL || 'admin@example.com',
-  password: process.env.TEST_USER_ADMIN_PASSWORD || 'test123',
+  email: process.env.AUTOMATED_TEST_ADMIN_1_EMAIL || 'admin@example.com',
+  password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'admin123',
   name: 'Test Admin',
 };
 

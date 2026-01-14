@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/common/Header';
@@ -68,28 +68,39 @@ function EmailConfirmedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [countdown, setCountdown] = useState<number | null>(null);
+  const hasRedirectedRef = useRef(false);
 
   const type = searchParams.get('type') || 'generic';
   const config = confirmationTypes[type] || confirmationTypes.generic;
 
+  // Memoize config values to prevent unnecessary effect re-runs
+  const { autoRedirect, redirectDelay, redirectPath } = config;
+
   useEffect(() => {
-    if (config.autoRedirect) {
-      setCountdown(config.redirectDelay);
+    if (!autoRedirect || hasRedirectedRef.current) return;
 
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            clearInterval(timer);
-            router.push(config.redirectPath);
-            return 0;
+    setCountdown(redirectDelay);
+    let isMounted = true;
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          if (isMounted && !hasRedirectedRef.current) {
+            hasRedirectedRef.current = true;
+            router.push(redirectPath);
           }
-          return prev - 1;
-        });
-      }, 1000);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-      return () => clearInterval(timer);
-    }
-  }, [config.autoRedirect, config.redirectDelay, config.redirectPath, router]);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [autoRedirect, redirectDelay, redirectPath, router]);
 
   return (
     <div className="max-w-md w-full">

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { scoreboardService } from '../../../services/scoreboardService';
 import { useInfiniteScroll } from '../../../hooks/useInfiniteScroll';
 import Icon from '@/components/ui/AppIcon';
@@ -13,7 +12,6 @@ const PAGE_SIZE = 30;
 const SEARCH_DEBOUNCE_MS = 300;
 
 const PublicScoreboardInteractive = () => {
-  const _router = useRouter();
   const [scoreboards, setScoreboards] = useState<Scoreboard[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);

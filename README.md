@@ -12,25 +12,35 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 2026 - Race Condition Fixes & Custom Hooks
+- **Created three new reusable hooks** to eliminate race conditions:
+  - `useAuthGuard`: Centralized auth guard with role-based access, prevents redirect loops
+  - `useAbortableFetch`: AbortController wrapper that auto-cancels on unmount
+  - `useTimeoutRef`: Safe setTimeout with auto-cleanup and mount state tracking
+- **Fixed 11 race condition issues** across the codebase:
+  - Eliminated arbitrary 500ms timeout patterns in favor of proper auth state checks
+  - Added mount state tracking to prevent state updates after unmount
+  - Replaced raw `setTimeout` calls with `setTimeoutSafe` for proper cleanup
+  - Fixed Supabase client recreation issues by using shared client instances
+  - Added `isMounted()` checks in async callbacks
+- **Removed unused imports** and cleaned up dependency arrays
+- **Added hook unit tests** for `useAuthGuard`, `useAbortableFetch`, and `useTimeoutRef`
+
 ### January 11, 2026 - Mobile Optimization & E2E Testing
 - **Comprehensive mobile responsiveness** targeting minimum viewport of 320px (iPhone SE)
   - Optimized all modals for iPhone SE with responsive padding and stacked buttons
   - Fixed ScoreboardCard metadata wrapping and increased touch targets to 20px (44x44px minimum)
   - Added landscape orientation support with custom Tailwind variant (`landscape-mobile`)
   - Adjusted breakpoints to treat tablets (1024px+) as desktop view
-- **Swipe gesture system** with Pointer Events API and touch fallback
-  - Direction locking (35° threshold), progressive feedback (30fps throttling)
-  - 120px swipe threshold with online status validation
-  - RTL-aware swipe directions for bidirectional language support
 - **Undo toast system** with batching and 5-second timers
   - 3-toast stacking with countdown progress bars
   - Batch actions (4+ within 2 seconds) to reduce notification spam
   - Navigation cancellation for clean UX
-- **Invitations page conversion** to responsive card view with swipe-to-cancel
+- **Invitations page conversion** to responsive card view
 - **Playwright E2E testing infrastructure**
   - 9 device profiles: Desktop (Chrome/Firefox/Safari), Tablet, Mobile (iPhone 12/SE/Minimum/Landscape), Android
   - 3 comprehensive test suites: mobile.spec.ts, desktop.spec.ts, accessibility.spec.ts
-  - Tests cover: touch interactions, swipe gestures, keyboard navigation, WCAG compliance, RTL support
+  - Tests cover: touch interactions, keyboard navigation, WCAG compliance, RTL support
   - Manual testing checklist for 320px viewport validation
 
 ### January 10, 2026 - JWT Migration & Build Safety Improvements
@@ -164,6 +174,18 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - **Styling**: Tailwind CSS with custom theme (coral #f77174, orange #eba977, navy #38385e/#20203e)
 - **Components**: React components with TypeScript
 - **State Management**: React Context (AuthContext)
+- **Custom Hooks**: See below
+
+### Custom Hooks
+Located in `src/hooks/` with barrel export from `@/hooks`:
+
+| Hook | Purpose |
+|------|---------|
+| `useAuthGuard` | Authentication guard with role-based access. Returns `{isAuthorized, isChecking, user, userProfile, getAuthHeaders}`. Prevents redirect loops. |
+| `useAbortableFetch` | AbortController wrapper for fetch. Auto-cancels on unmount. Returns `{execute, abort, abortAll}`. |
+| `useTimeoutRef` | Safe setTimeout with auto-cleanup. Returns `{set, clear, clearAll, isMounted}`. |
+| `useInfiniteScroll` | IntersectionObserver-based infinite scroll. |
+| `useUndoQueue` | Undo queue with toast notifications. |
 
 ### Backend Integration
 - **Database**: Supabase PostgreSQL
@@ -268,7 +290,7 @@ npx playwright test --project="Mobile iPhone SE"
 ```
 
 **Test Coverage:**
-- **Mobile Tests** (`e2e/mobile.spec.ts`): Touch targets (44x44px), swipe gestures, landscape orientation, 320px viewport
+- **Mobile Tests** (`e2e/mobile.spec.ts`): Touch targets (44x44px), landscape orientation, 320px viewport
 - **Desktop Tests** (`e2e/desktop.spec.ts`): Auth flows, CRUD operations, keyboard navigation, real-time updates
 - **Accessibility Tests** (`e2e/accessibility.spec.ts`): WCAG compliance, ARIA labels, screen readers, focus management
 
@@ -362,7 +384,6 @@ The application can also run on Replit:
 │   │   └── AuthContext.tsx           # Authentication context
 │   ├── hooks/
 │   │   ├── useInfiniteScroll.ts      # Infinite scroll hook
-│   │   ├── useSwipeGesture.ts        # Swipe gesture hook
 │   │   └── useUndoQueue.ts           # Undo queue management
 │   ├── lib/
 │   │   └── supabase/
@@ -410,13 +431,6 @@ The Supabase database includes:
 - `invitations` - User invitation tracking with status (pending/accepted/expired/cancelled)
 - Row Level Security (RLS) policies for secure data access
 
-## Supabase CLI Configuration
-The Supabase CLI is installed and configured for database migrations.
-
-### Project References
-- **Development**: `kvorvygjgeelhybnstje`
-- **Production**: `bfbvcmfezdhdotmbgxsn`
-
 ### Running Migrations
 ```bash
 # Link to target project
@@ -450,6 +464,4 @@ Place SQL migration files in `supabase/migrations/` with timestamp prefix (e.g.,
 - Debounced search uses direct state control (not SearchInterface component) to avoid double-debouncing
 - All database functions have SET search_path = public, pg_temp for security
 - Cache-Control headers prevent stale content in Replit's iframe proxy
-- Swipe gestures use Pointer Events API with touch event fallback for older Android devices
-- RTL language support via Tailwind custom variant and direction-aware swipe actions
 - Undo toast system batches rapid actions (4+ within 2 seconds) to reduce notification spam

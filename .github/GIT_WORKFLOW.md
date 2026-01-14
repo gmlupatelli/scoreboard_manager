@@ -197,7 +197,7 @@ npx playwright test --project="Mobile Minimum"
 ```
 
 #### **Test Coverage**
-- **Mobile Tests**: Touch targets, swipe gestures, landscape orientation, 320px viewport
+- **Mobile Tests**: Touch targets, landscape orientation, 320px viewport
 - **Desktop Tests**: Auth flows, CRUD operations, keyboard navigation, real-time updates
 - **Accessibility Tests**: WCAG compliance, ARIA labels, screen readers, focus management
 

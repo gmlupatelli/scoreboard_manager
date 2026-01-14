@@ -5,10 +5,36 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**
+ * Parse automated test user emails from environment variables
+ * Reads AUTOMATED_TEST_ADMIN_<N>_EMAIL and AUTOMATED_TEST_USER_<N>_EMAIL
+ */
+function getAutomatedTestUserEmails(): string[] {
+  const emails: string[] = [];
+
+  // Parse AUTOMATED_TEST_ADMIN_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`AUTOMATED_TEST_ADMIN_${i}_EMAIL`];
+    if (email) emails.push(email);
+  }
+
+  // Parse AUTOMATED_TEST_USER_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`AUTOMATED_TEST_USER_${i}_EMAIL`];
+    if (email) emails.push(email);
+  }
+
+  return emails;
+}
+
+/**
  * Test Cleanup API Route
- * Deletes test data for automated test users: admin@example.com, john@example.com, sarah@example.com
- * Does NOT clean manual test users: siteadmin@example.com, jane@example.com
+ * Deletes test data for automated test users defined in .env.test
+ * Does NOT clean manual test users (MANUAL_TEST_*)
  * Protected by TEST_CLEANUP_API_KEY environment variable
+ *
+ * Credentials are read from:
+ *   AUTOMATED_TEST_ADMIN_<N>_EMAIL
+ *   AUTOMATED_TEST_USER_<N>_EMAIL
  *
  * Usage:
  * POST /api/test/cleanup
@@ -35,11 +61,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Service client configuration error' }, { status: 500 });
     }
 
-    // 3. Get user IDs for automated test users (admin, john, sarah)
+    // 3. Get automated test user emails from environment
+    const automatedTestEmails = getAutomatedTestUserEmails();
+
+    if (automatedTestEmails.length === 0) {
+      return NextResponse.json({
+        message: 'No automated test users configured in environment',
+        deletedEntries: 0,
+        deletedScoreboards: 0,
+        deletedInvitations: 0,
+      });
+    }
+
+    // 4. Get user IDs for automated test users
     const { data: profiles, error: profilesError } = await serviceClient
       .from('user_profiles')
       .select('id, email')
-      .in('email', ['admin@example.com', 'john@example.com', 'sarah@example.com']);
+      .in('email', automatedTestEmails);
 
     if (profilesError) {
       return NextResponse.json(

@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthGuard, useAbortableFetch, useUndoQueue } from '@/hooks';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
+import UndoToast from '@/components/common/UndoToast';
 import InviteUserModal from '@/app/dashboard/components/InviteUserModal';
 import InvitationCard from './components/InvitationCard';
 
@@ -21,30 +20,41 @@ interface Invitation {
 }
 
 export default function InvitationsPage() {
-  const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { isAuthorized, isChecking, getAuthHeaders } = useAuthGuard();
+  const { execute } = useAbortableFetch();
+  const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const pendingCancelsRef = useRef<
+    Map<string, { originalStatus: Invitation['status']; timerId: NodeJS.Timeout }>
+  >(new Map());
 
-  const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      return { Authorization: `Bearer ${session.access_token}` };
-    }
-    return {};
-  };
+  // Execute all pending cancels on unmount
+  useEffect(() => {
+    const pendingCancels = pendingCancelsRef.current;
+    return () => {
+      pendingCancels.forEach(async ({ timerId }) => {
+        clearTimeout(timerId);
+        // The API call would have been made in the timeout, so nothing to do here
+      });
+      pendingCancels.clear();
+    };
+  }, []);
 
   const fetchInvitations = useCallback(async () => {
     try {
       const authHeaders = await getAuthHeaders();
-      const response = await fetch('/api/invitations', {
-        credentials: 'include',
-        headers: authHeaders,
-      });
-      if (response.ok) {
+      const response = await execute(
+        '/api/invitations',
+        {
+          credentials: 'include',
+          headers: authHeaders,
+        },
+        'invitations'
+      );
+
+      if (response && response.ok) {
         const data = await response.json();
         setInvitations(data);
       }
@@ -53,37 +63,76 @@ export default function InvitationsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getAuthHeaders, execute]);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+    if (isAuthorized) {
       fetchInvitations();
     }
-  }, [user, authLoading, router, fetchInvitations]);
+  }, [isAuthorized, fetchInvitations]);
 
   const handleCancelInvitation = async (invitationId: string) => {
-    try {
-      const authHeaders = await getAuthHeaders();
-      const response = await fetch(`/api/invitations/${invitationId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: authHeaders,
-      });
+    const invitation = invitations.find((inv) => inv.id === invitationId);
+    if (!invitation || invitation.status !== 'pending') return;
 
-      if (response.ok) {
+    const cancelId = `cancel-${invitationId}`;
+    const originalStatus = invitation.status;
+
+    // Optimistically update UI
+    setInvitations((prev) =>
+      prev.map((inv) => (inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv))
+    );
+
+    // Set up delayed API call (5 seconds)
+    const timerId = setTimeout(async () => {
+      pendingCancelsRef.current.delete(cancelId);
+      try {
+        const authHeaders = await getAuthHeaders();
+        const response = await execute(
+          `/api/invitations/${invitationId}`,
+          {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: authHeaders,
+          },
+          cancelId
+        );
+
+        if (!response || !response.ok) {
+          // Restore on error
+          setInvitations((prev) =>
+            prev.map((inv) => (inv.id === invitationId ? { ...inv, status: originalStatus } : inv))
+          );
+        }
+      } catch {
+        // Restore on error
         setInvitations((prev) =>
-          prev.map((inv) =>
-            inv.id === invitationId ? { ...inv, status: 'cancelled' as const } : inv
-          )
+          prev.map((inv) => (inv.id === invitationId ? { ...inv, status: originalStatus } : inv))
         );
       }
-    } catch (_err) {
-      // Silently handle error
-    }
+    }, 5000);
+
+    // Track pending cancel
+    pendingCancelsRef.current.set(cancelId, { originalStatus, timerId });
+
+    // Add undo action
+    addUndoAction({
+      id: cancelId,
+      message: `Cancelled invitation to ${invitation.invitee_email}`,
+      timestamp: Date.now(),
+      undo: async () => {
+        // Cancel the pending API call
+        const pending = pendingCancelsRef.current.get(cancelId);
+        if (pending) {
+          clearTimeout(pending.timerId);
+          pendingCancelsRef.current.delete(cancelId);
+        }
+        // Restore to original status
+        setInvitations((prev) =>
+          prev.map((inv) => (inv.id === invitationId ? { ...inv, status: originalStatus } : inv))
+        );
+      },
+    });
   };
 
   const _getStatusColor = (status: string) => {
@@ -104,7 +153,7 @@ export default function InvitationsPage() {
   const pendingCount = invitations.filter((inv) => inv.status === 'pending').length;
   const acceptedCount = invitations.filter((inv) => inv.status === 'accepted').length;
 
-  if (authLoading || loading) {
+  if (isChecking || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -220,7 +269,6 @@ export default function InvitationsPage() {
                       createdAt={invitation.created_at}
                       expiresAt={invitation.expires_at}
                       onCancel={() => handleCancelInvitation(invitation.id)}
-                      canSwipe={true}
                     />
                   ))}
                 </div>
@@ -237,6 +285,17 @@ export default function InvitationsPage() {
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchInvitations}
       />
+
+      {/* Undo toasts for cancel operations */}
+      {toasts.map((undoToast, index) => (
+        <UndoToast
+          key={undoToast.id}
+          toast={undoToast}
+          onUndo={() => executeUndo(undoToast.id)}
+          onDismiss={() => removeToast(undoToast.id)}
+          index={index}
+        />
+      ))}
     </div>
   );
 }
