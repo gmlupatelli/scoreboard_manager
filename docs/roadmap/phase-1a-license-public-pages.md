@@ -8,6 +8,14 @@
 
 Add AGPL v3 license and update all public-facing pages to reflect the transition from a closed product to an open-source project with a hosted SaaS option.
 
+## Existing Components to Update
+
+The following components already exist and need modification:
+- `src/app/page.tsx` - Landing page (needs open source messaging)
+- `src/app/about/page.tsx` - About page (needs open source philosophy)
+- `src/components/common/Header.tsx` - Header navigation (needs pricing link)
+- `src/components/common/Footer.tsx` - Footer (needs GitHub link, license info)
+
 ---
 
 ## Issues
@@ -40,42 +48,48 @@ Add the GNU Affero General Public License v3 to the repository. This license:
 **Title:** Update landing page for open source + SaaS model
 
 **Description:**
-Redesign the landing page to communicate:
+Update the existing landing page (`src/app/page.tsx`) to communicate:
 1. This is an open-source project (AGPL v3)
 2. Users can self-host for free with full functionality
-3. A hosted SaaS option is available with free and Pro tiers
+3. A hosted SaaS option is available with free and Supporter tiers
 4. "Pay What You Want" pricing model
 
+**Current State:**
+- Landing page exists with feature cards, benefits, and testimonials
+- Already mentions "Team Collaboration" as a feature (keep as aspirational)
+- No open source messaging or GitHub links
+
 **Acceptance Criteria:**
-- [ ] Clear messaging about open-source nature
-- [ ] Link to GitHub repository prominently displayed
-- [ ] Self-hosting instructions or link to docs
+- [ ] Add "Open Source" badge/banner prominently displayed
+- [ ] Link to GitHub repository with star count badge
+- [ ] "Fork on GitHub" or "View Source" button
+- [ ] Self-hosting section with link to documentation
 - [ ] SaaS value proposition (convenience, no setup, support)
 - [ ] Pricing preview or link to pricing page
 - [ ] Call-to-action for both self-host and SaaS signup
 
 **Technical Notes:**
-- Update `src/app/page.tsx` or equivalent landing page component
-- Consider adding GitHub stars badge
-- Add "Fork on GitHub" or "View Source" button
+- Update `src/app/page.tsx`
+- Add GitHub stars badge using shields.io
+- Consider adding a "Why Open Source?" section
 
 ---
 
 ### Issue 1a.3: Create Pricing Page
 
-**Title:** Create pricing page with Free vs Pro comparison
+**Title:** Create pricing page with Free vs Supporter comparison
 
 **Description:**
 Create a dedicated pricing page that clearly shows:
 1. Free tier features and limitations
-2. Pro tier features and benefits
+2. Supporter tier features and benefits
 3. "Pay What You Want" model explanation
 4. Appreciation tiers with badges
 5. Self-hosting as an alternative
 
 **Acceptance Criteria:**
 - [ ] Route `/pricing` created
-- [ ] Free vs Pro comparison table
+- [ ] Free vs Supporter comparison table
 - [ ] Clear display of minimums ($5/month, $50/year)
 - [ ] Appreciation tiers explained with badges
 - [ ] FAQ section addressing common questions
@@ -88,21 +102,23 @@ Create a dedicated pricing page that clearly shows:
 Free Tier:
 - 2 public scoreboards
 - 50 entries per scoreboard
-- Standard themes
+- 10 history snapshots per scoreboard
+- All theme presets
 - Community support (GitHub Issues)
 
-Pro Tier ($5+/month or $50+/year):
+Supporter Tier ($5+/month or $50+/year):
 - Unlimited public scoreboards
 - Unlimited private scoreboards
 - Unlimited entries
-- Custom themes
-- No "Powered by" badge
-- Supporter badge & recognition
+- 100 history snapshots per scoreboard
+- Custom theme builder
+- No "Powered by" badge on embeds
+- Tier badge & recognition
 - Kiosk/TV Mode
 - Team collaboration
-- Priority email support
+- Priority email support (48h response)
 
-Appreciation Tiers:
+Appreciation Tiers (all receive same features):
 - $5-9/mo: Supporter 🙌
 - $10-24/mo: Champion 🏆
 - $25-49/mo: Legend 🌟
@@ -111,8 +127,9 @@ Appreciation Tiers:
 
 **Technical Notes:**
 - Create `src/app/pricing/page.tsx`
-- Reuse existing UI components where possible
+- Reuse existing UI components (Button, Icon, Header, Footer)
 - Make comparison table responsive
+- Add toggle for monthly/yearly pricing
 
 ---
 
@@ -121,19 +138,22 @@ Appreciation Tiers:
 **Title:** Update about page with open source information
 
 **Description:**
-Update the about page to include:
-1. Project history and mission
-2. Open source philosophy
-3. Contribution guidelines link
-4. Team/maintainer information
-5. Link to supporters page
+Update the existing about page (`src/app/about/page.tsx`) to include open source information.
+
+**Current State:**
+- About page exists with mission, features, and story sections
+- No mention of open source or GitHub
 
 **Acceptance Criteria:**
-- [ ] Open source mission statement
+- [ ] Add "Open Source" section explaining the philosophy
 - [ ] Link to GitHub repository
-- [ ] Link to CONTRIBUTING.md (if exists)
-- [ ] Acknowledgment of contributors
+- [ ] Link to CONTRIBUTING.md
+- [ ] Acknowledgment of contributors (or link to GitHub contributors)
 - [ ] Link to supporters page
+
+**Technical Notes:**
+- Update `src/app/about/page.tsx`
+- Add new section between existing sections
 
 ---
 
@@ -163,14 +183,22 @@ Create a CONTRIBUTING.md file to guide potential contributors on:
 **Title:** Update site footer and navigation for open source
 
 **Description:**
-Update the site footer and main navigation to include:
-1. Link to GitHub repository
-2. Link to pricing page
-3. Link to supporters page (when implemented)
-4. License information
+Update the existing footer (`src/components/common/Footer.tsx`) and header (`src/components/common/Header.tsx`) to include open source links.
+
+**Current State:**
+- Footer has Product, Company, and Legal sections
+- No GitHub link or license information
+- Header has basic navigation (Dashboard, Manage Scoreboards when authenticated)
+- No pricing link in navigation
 
 **Acceptance Criteria:**
 - [ ] GitHub link in footer with icon
-- [ ] Pricing link in navigation
+- [ ] Pricing link in footer under "Product" section
+- [ ] Supporters link in footer (when implemented)
 - [ ] License mention in footer (e.g., "Open source under AGPL v3")
-- [ ] Consistent navigation across all pages
+- [ ] Add pricing link to header navigation for unauthenticated users
+
+**Technical Notes:**
+- Update `src/components/common/Footer.tsx`
+- Update `src/components/common/Header.tsx`
+- Use existing Icon component for GitHub icon

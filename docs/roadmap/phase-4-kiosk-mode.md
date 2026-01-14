@@ -1,12 +1,12 @@
 # Phase 4: Kiosk/TV Mode
 
 **Priority:** 🟡 Medium  
-**Dependencies:** Phase 1c (Pro/Free Limits)  
+**Dependencies:** Phase 1c (Supporter/Free Limits)  
 **Estimated Scope:** Large
 
 ## Overview
 
-Implement Kiosk/TV mode for Pro users:
+Implement Kiosk/TV mode for Supporters:
 - Full-screen, TV-optimized display
 - Carousel with scoreboard and custom slides
 - Image and PDF upload support
@@ -34,7 +34,7 @@ Create a dedicated kiosk view that:
 - [ ] Large, readable typography
 - [ ] High contrast for visibility
 - [ ] Keyboard shortcut to exit (ESC)
-- [ ] Only accessible to Pro scoreboard owners
+- [ ] Only accessible to Supporter scoreboard owners
 
 ---
 

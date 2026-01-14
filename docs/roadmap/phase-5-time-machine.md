@@ -1,14 +1,16 @@
 # Phase 5: Time Machine (History)
 
 **Priority:** 🟢 Lower  
-**Dependencies:** Phase 1c (Pro/Free Limits)  
+**Dependencies:** Phase 1c (Supporter/Free Limits)  
 **Estimated Scope:** Medium
 
 ## Overview
 
 Implement a "Time Machine" feature for viewing scoreboard history:
 - Automatic snapshots on every change
-- Keep last 100 snapshots per scoreboard
+- Tier-based snapshot limits:
+  - **Free users:** 10 snapshots per scoreboard
+  - **Supporters:** 100 snapshots per scoreboard
 - macOS Time Machine-style UI for browsing
 - View-only (no restore functionality)
 
@@ -22,6 +24,12 @@ Implement a "Time Machine" feature for viewing scoreboard history:
 
 **Description:**
 Design schema to store point-in-time snapshots of scoreboard state.
+
+**Tier-Based Limits:**
+| Tier | Max Snapshots per Scoreboard |
+|------|------------------------------|
+| Free | 10 |
+| Supporter+ | 100 |
 
 **Proposed Schema:**
 
@@ -39,7 +47,7 @@ CREATE TABLE scoreboard_snapshots (
 CREATE INDEX idx_snapshots_scoreboard_created 
   ON scoreboard_snapshots(scoreboard_id, created_at DESC);
 
--- Limit to 100 snapshots per scoreboard (via trigger or app logic)
+-- Limit enforced via trigger (checks owner's subscription tier)
 ```
 
 **Snapshot Data Structure:**
@@ -96,23 +104,29 @@ Implement triggers/hooks to create snapshots when:
 
 ### Issue 5.3: Implement Snapshot Cleanup
 
-**Title:** Create cleanup mechanism for old snapshots
+**Title:** Create cleanup mechanism for old snapshots based on tier
 
 **Description:**
-Keep only the last 100 snapshots per scoreboard:
+Keep snapshots based on owner's subscription tier:
+- **Free users:** Keep last 10 snapshots
+- **Supporters:** Keep last 100 snapshots
 - Delete oldest when limit exceeded
-- Can be trigger or scheduled job
+- Limit checked on snapshot creation
 
 **Acceptance Criteria:**
-- [ ] Maximum 100 snapshots per scoreboard
-- [ ] Oldest deleted when new one created
-- [ ] Cleanup runs automatically
+- [ ] Check scoreboard owner's subscription tier
+- [ ] Apply correct limit (10 for Free, 100 for Supporter+)
+- [ ] Delete oldest snapshots when limit exceeded
+- [ ] Cleanup runs automatically on new snapshot
 - [ ] No orphaned snapshots
+- [ ] Graceful handling when user downgrades (keep existing, just cap new ones)
 
 **Implementation Options:**
-1. **Postgres Trigger** - Delete oldest after insert
-2. **Application Logic** - Check count and delete in transaction
-3. **Scheduled Job** - Periodic cleanup
+1. **Postgres Trigger** - Delete oldest after insert, checking owner tier
+2. **Application Logic** - Check count and tier, delete in transaction
+3. **Scheduled Job** - Periodic cleanup based on current tiers
+
+**Recommended:** Application logic for flexibility in checking subscription status.
 
 ---
 
@@ -211,5 +225,7 @@ Add entry point to Time Machine from scoreboard management view.
 - [ ] "View History" or clock icon button
 - [ ] Opens Time Machine modal/page
 - [ ] Only shown to scoreboard owner
-- [ ] Only shown for Pro users (or limit history for free?)
+- [ ] Free users see limited history (10 snapshots) with upgrade prompt
+- [ ] Supporters see full history (100 snapshots)
 - [ ] Disabled with tooltip if no snapshots exist
+- [ ] Show "Upgrade to keep more history" for free users near limit

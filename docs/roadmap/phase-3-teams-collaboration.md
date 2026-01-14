@@ -1,12 +1,12 @@
 # Phase 3: Teams & Collaboration
 
 **Priority:** 🟡 Medium  
-**Dependencies:** Phase 1c (Pro/Free Limits)  
+**Dependencies:** Phase 1c (Supporter/Free Limits)  
 **Estimated Scope:** Large
 
 ## Overview
 
-Implement team functionality allowing Pro users to:
+Implement team functionality allowing Supporters to:
 - Create teams
 - Invite team members
 - Share scoreboards with teams (dual ownership)

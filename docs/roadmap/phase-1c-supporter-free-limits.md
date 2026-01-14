@@ -1,4 +1,4 @@
-# Phase 1c: Pro/Free Limits & Enforcement
+# Phase 1c: Supporter/Free Limits & Enforcement
 
 **Priority:** 🔴 High  
 **Dependencies:** Phase 1b (LemonSqueezy Integration)  
@@ -10,6 +10,7 @@ Implement and enforce the limitations for free tier users:
 - 2 public scoreboards maximum
 - No private scoreboards
 - 50 entries per scoreboard maximum
+- 10 history snapshots per scoreboard maximum
 
 ---
 
@@ -24,13 +25,15 @@ Create a service that checks user limits based on subscription status:
 1. Count current public scoreboards
 2. Check if user can create more
 3. Check entry limits
-4. Check if feature is available
+4. Check history snapshot limits
+5. Check if feature is available
 
 **Acceptance Criteria:**
-- [ ] `limitsService` created
+- [ ] `limitsService` created in `src/services/limitsService.ts`
 - [ ] `canCreatePublicScoreboard(userId)` function
 - [ ] `canCreatePrivateScoreboard(userId)` function
 - [ ] `canAddEntry(scoreboardId)` function
+- [ ] `getMaxSnapshots(userId)` function
 - [ ] `getRemainingPublicScoreboards(userId)` function
 - [ ] `getRemainingEntries(scoreboardId)` function
 
@@ -38,23 +41,26 @@ Create a service that checks user limits based on subscription status:
 
 ```typescript
 interface UserLimits {
-  maxPublicScoreboards: number; // 2 for free, Infinity for pro
-  maxPrivateScoreboards: number; // 0 for free, Infinity for pro
-  maxEntriesPerScoreboard: number; // 50 for free, Infinity for pro
+  maxPublicScoreboards: number; // 2 for free, Infinity for supporter
+  maxPrivateScoreboards: number; // 0 for free, Infinity for supporter
+  maxEntriesPerScoreboard: number; // 50 for free, Infinity for supporter
+  maxSnapshotsPerScoreboard: number; // 10 for free, 100 for supporter
 }
 
-function getLimitsForUser(isPro: boolean): UserLimits {
-  if (isPro) {
+function getLimitsForUser(isSupporter: boolean): UserLimits {
+  if (isSupporter) {
     return {
       maxPublicScoreboards: Infinity,
       maxPrivateScoreboards: Infinity,
       maxEntriesPerScoreboard: Infinity,
+      maxSnapshotsPerScoreboard: 100,
     };
   }
   return {
     maxPublicScoreboards: 2,
     maxPrivateScoreboards: 0,
     maxEntriesPerScoreboard: 50,
+    maxSnapshotsPerScoreboard: 10,
   };
 }
 ```
@@ -83,8 +89,8 @@ Update scoreboard creation to:
 - Create Scoreboard Modal:
   - Show "2 of 2 public scoreboards used" for free users
   - Disable "Private" visibility option for free users
-  - Show lock icon with "Pro feature" tooltip on private option
-  - When at limit, show "Upgrade to Pro for unlimited scoreboards"
+  - Show lock icon with "Supporter feature" tooltip on private option
+  - When at limit, show "Become a Supporter for unlimited scoreboards"
 
 ---
 
@@ -145,21 +151,21 @@ Over-limit public scoreboard:
 │ My Third Scoreboard                 │
 │                                     │
 │ Your free plan allows 2 public      │
-│ scoreboards. Upgrade to edit or     │
-│ delete this scoreboard.             │
+│ scoreboards. Become a Supporter     │
+│ to edit this scoreboard.            │
 │                                     │
-│ [Upgrade to Pro]  [Delete]          │
+│ [Become a Supporter]  [Delete]      │
 └─────────────────────────────────────┘
 
 Private scoreboard (no longer accessible):
 ┌─────────────────────────────────────┐
-│ 🔒 Pro Feature                      │
+│ 🔒 Supporter Feature                 │
 │ My Private Scoreboard               │
 │                                     │
-│ Private scoreboards require Pro.    │
-│ Upgrade to access this scoreboard.  │
+│ Private scoreboards require a       │
+│ Supporter subscription.             │
 │                                     │
-│ [Upgrade to Pro]  [Delete]          │
+│ [Become a Supporter]  [Delete]      │
 └─────────────────────────────────────┘
 ```
 
@@ -202,14 +208,14 @@ Update API endpoints to validate subscription status:
 Add tasteful, non-intrusive upgrade prompts at key moments:
 1. When approaching limits
 2. When limits are reached
-3. When viewing Pro-only features
+3. When viewing Supporter-only features
 4. On dashboard for free users
 
 **Acceptance Criteria:**
 - [ ] Upgrade prompt component created
 - [ ] Shown when 80%+ of limits used
 - [ ] Shown when limit reached
-- [ ] Shown on Pro feature hover/click
+- [ ] Shown on Supporter feature hover/click
 - [ ] Links to pricing page
 - [ ] Can be dismissed (with cookie/localStorage)
 - [ ] Not annoying or aggressive
@@ -217,5 +223,6 @@ Add tasteful, non-intrusive upgrade prompts at key moments:
 **Design Guidelines:**
 - Subtle, helpful tone
 - Highlight benefits, not restrictions
+- "Become a Supporter" language (not "Upgrade to Pro")
 - Easy to dismiss
 - Don't block core functionality

@@ -7,10 +7,12 @@
 ## Overview
 
 Implement the appreciation tier system and supporter recognition features:
-- Tier badges based on payment amount
+- Tier badges based on payment amount (stored in database for performance)
 - "Created by" attribution on scoreboards
 - Public supporters page
-- Profile settings for visibility
+- Supporter preferences (stored on `subscriptions` table, tied to subscription lifecycle)
+
+> **Note:** Supporter preferences are stored on the `subscriptions` table (not `user_profiles`) so they're tied to the subscription lifecycle. When a subscription expires, preferences remain but attribution features become inactive.
 
 ---
 
@@ -21,7 +23,7 @@ Implement the appreciation tier system and supporter recognition features:
 **Title:** Implement appreciation tier calculation
 
 **Description:**
-Create logic to determine user's appreciation tier based on their subscription amount:
+Create logic to determine user's appreciation tier based on their subscription amount. Tier is stored in the `subscriptions` table for performance and auto-calculated via database trigger.
 
 | Monthly Amount | Tier | Badge |
 |----------------|------|-------|
@@ -32,12 +34,15 @@ Create logic to determine user's appreciation tier based on their subscription a
 
 For yearly subscriptions, divide by 12 to get monthly equivalent.
 
+> **Note:** All paying tiers have the same feature access. Tiers are for recognition only.
+
 **Acceptance Criteria:**
-- [ ] `getTier(amountCents, interval)` function created
+- [ ] `getTier(amountCents, interval)` utility function created
+- [ ] Database trigger auto-updates tier on subscription insert/update
 - [ ] Correctly handles monthly amounts
 - [ ] Correctly handles yearly amounts (divide by 12)
 - [ ] Returns tier name, badge emoji, and display info
-- [ ] Tier stored/cached on subscription record
+- [ ] Tier stored on subscription record (see Phase 1b schema)
 
 **Technical Notes:**
 
@@ -99,24 +104,24 @@ Create a badge component that displays the user's appreciation tier:
 **Description:**
 Show creator attribution on public and embed scoreboard views:
 - "Created by [Name]" text
-- Tier badge shown for Pro users
-- Toggleable in user settings
+- Tier badge shown for Supporters
+- Toggleable in subscription settings
 
 **Acceptance Criteria:**
 - [ ] Attribution shown on public scoreboard view
 - [ ] Attribution shown on embed view
 - [ ] Format: "Created by [Name] 🏆" (with tier badge)
-- [ ] Badge only shown for Pro users
-- [ ] Respects user's visibility toggle
+- [ ] Badge only shown for active Supporters
+- [ ] Respects user's visibility toggle (from subscription preferences)
 - [ ] Graceful when user opts out (no name shown)
+- [ ] Free users can still show name (without badge)
 
 **Display Logic:**
 ```
-If user.show_created_by === true:
-  If user has active subscription:
-    Show "Created by {displayName} {tierBadge}"
-  Else:
-    Show "Created by {displayName}"
+If subscription.show_created_by === true AND subscription.status === 'active':
+  Show "Created by {displayName} {tierBadge}"
+Else if user wants attribution but no active subscription:
+  Show "Created by {displayName}" (no badge)
 Else:
   Show nothing
 ```
@@ -125,28 +130,33 @@ Else:
 
 ### Issue 1d.4: Add Supporter Settings to Profile
 
-**Title:** Add supporter visibility settings to user profile
+**Title:** Add supporter visibility settings to subscription management
 
 **Description:**
-Add settings to user profile for controlling supporter visibility:
+Add settings to the subscription management page for controlling supporter visibility:
 1. Toggle "Show Created by" on scoreboards
 2. Toggle "Show on Supporters page"
 3. Custom display name for supporters page
 4. Preview of how they'll appear
 
+> **Note:** These settings are stored on the `subscriptions` table, not `user_profiles`, so they're tied to the subscription lifecycle.
+
 **Acceptance Criteria:**
-- [ ] Settings section in profile page
+- [ ] Settings section in `/account/subscription` page
 - [ ] Toggle: "Show my name on scoreboards I create"
 - [ ] Toggle: "Show me on the Supporters page"
-- [ ] Input: "Display name" (defaults to profile name)
-- [ ] Preview component showing current appearance
-- [ ] Settings saved to database
+- [ ] Input: "Display name" (defaults to profile full_name)
+- [ ] Preview component showing current appearance with tier badge
+- [ ] Settings saved to subscriptions table
+- [ ] Only visible to users with active subscription
 
-**Database Changes:**
+**Database Schema:**
+(Already included in Phase 1b subscriptions table)
 ```sql
-ALTER TABLE user_profiles ADD COLUMN show_created_by BOOLEAN DEFAULT true;
-ALTER TABLE user_profiles ADD COLUMN show_on_supporters_page BOOLEAN DEFAULT true;
-ALTER TABLE user_profiles ADD COLUMN supporter_display_name TEXT;
+-- On subscriptions table:
+show_created_by BOOLEAN NOT NULL DEFAULT true,
+show_on_supporters_page BOOLEAN NOT NULL DEFAULT true,
+supporter_display_name TEXT
 ```
 
 ---

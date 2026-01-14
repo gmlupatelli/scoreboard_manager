@@ -50,12 +50,15 @@ Create and configure LemonSqueezy account with:
 Design and implement database schema to track:
 1. User subscription status
 2. Payment history
-3. Subscription tier/amount
+3. Subscription tier/amount (stored for performance)
 4. Billing cycle
+5. Supporter preferences (display settings)
 
 **Acceptance Criteria:**
-- [ ] Migration file created
+- [ ] Migration file created following baseline pattern
 - [ ] Schema supports subscription tracking
+- [ ] Tier name stored directly for faster queries
+- [ ] Supporter preferences included in subscription table
 - [ ] RLS policies configured
 - [ ] Indexes for performance
 
@@ -75,6 +78,14 @@ CREATE TYPE subscription_status AS ENUM (
 -- Billing interval enum
 CREATE TYPE billing_interval AS ENUM ('monthly', 'yearly');
 
+-- Appreciation tier enum (stored for performance)
+CREATE TYPE appreciation_tier AS ENUM (
+  'supporter',
+  'champion', 
+  'legend',
+  'hall_of_famer'
+);
+
 -- Subscriptions table
 CREATE TABLE subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -92,6 +103,12 @@ CREATE TABLE subscriptions (
   billing_interval billing_interval NOT NULL,
   amount_cents INTEGER NOT NULL, -- Amount paid in cents
   currency TEXT NOT NULL DEFAULT 'USD',
+  tier appreciation_tier NOT NULL, -- Stored for faster queries
+  
+  -- Supporter preferences (tied to subscription)
+  show_created_by BOOLEAN NOT NULL DEFAULT true,
+  show_on_supporters_page BOOLEAN NOT NULL DEFAULT true,
+  supporter_display_name TEXT,
   
   -- Dates
   current_period_start TIMESTAMPTZ,
@@ -103,12 +120,14 @@ CREATE TABLE subscriptions (
   CONSTRAINT chk_amount_minimum CHECK (
     (billing_interval = 'monthly' AND amount_cents >= 500) OR
     (billing_interval = 'yearly' AND amount_cents >= 5000)
-  )
+  ),
+  CONSTRAINT chk_subscriptions_timestamps CHECK (created_at <= updated_at)
 );
 
 -- Indexes
 CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
+CREATE INDEX idx_subscriptions_tier ON subscriptions(tier);
 CREATE INDEX idx_subscriptions_lemonsqueezy_id ON subscriptions(lemonsqueezy_subscription_id);
 
 -- RLS
@@ -119,15 +138,69 @@ CREATE POLICY "Users can view own subscription"
   ON subscriptions FOR SELECT
   USING (auth.uid() = user_id);
 
--- Only service role can insert/update (via webhooks)
+-- Users can update their own preferences
+CREATE POLICY "Users can update own preferences"
+  ON subscriptions FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Service role can manage all subscriptions (via webhooks)
 CREATE POLICY "Service role can manage subscriptions"
   ON subscriptions FOR ALL
   USING (auth.role() = 'service_role');
+
+-- System admins can view all subscriptions
+CREATE POLICY "System admins can view all subscriptions"
+  ON subscriptions FOR SELECT
+  USING (is_system_admin());
+
+-- System admins can update subscriptions (for gifting)
+CREATE POLICY "System admins can update subscriptions"
+  ON subscriptions FOR ALL
+  USING (is_system_admin());
+
+-- Trigger to update tier when amount changes
+CREATE OR REPLACE FUNCTION calculate_appreciation_tier(amount_cents INTEGER, interval billing_interval)
+RETURNS appreciation_tier AS $$
+DECLARE
+  monthly_amount INTEGER;
+BEGIN
+  -- Convert yearly to monthly equivalent
+  monthly_amount := CASE 
+    WHEN interval = 'yearly' THEN amount_cents / 12 
+    ELSE amount_cents 
+  END;
+  
+  RETURN CASE
+    WHEN monthly_amount >= 5000 THEN 'hall_of_famer'
+    WHEN monthly_amount >= 2500 THEN 'legend'
+    WHEN monthly_amount >= 1000 THEN 'champion'
+    ELSE 'supporter'
+  END;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- Auto-update tier on insert/update
+CREATE OR REPLACE FUNCTION update_subscription_tier()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.tier := calculate_appreciation_tier(NEW.amount_cents, NEW.billing_interval);
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_subscription_tier
+  BEFORE INSERT OR UPDATE OF amount_cents, billing_interval ON subscriptions
+  FOR EACH ROW
+  EXECUTE FUNCTION update_subscription_tier();
 ```
 
 **Technical Notes:**
+- Tier is stored but auto-calculated via trigger for consistency
+- Supporter preferences are on subscriptions table (tied to subscription lifecycle)
+- System admins can view and modify subscriptions for user management
 - Consider adding a `payment_history` table for audit trail
-- Add trigger to update `updated_at` on changes
 
 ---
 
@@ -249,26 +322,35 @@ Create a page where users can:
 **Description:**
 Create reusable functions for subscription-related operations:
 1. Check if user has active subscription
-2. Get user's subscription tier
+2. Get user's subscription tier (from stored value)
 3. Get subscription details
 4. Check feature access
 
 **Acceptance Criteria:**
-- [ ] `subscriptionService` created
+- [ ] `subscriptionService` created in `src/services/subscriptionService.ts`
 - [ ] `hasActiveSubscription(userId)` function
-- [ ] `getSubscriptionTier(userId)` function
+- [ ] `getSubscriptionTier(userId)` function (reads stored tier)
 - [ ] `getSubscription(userId)` function
 - [ ] `canAccessFeature(userId, feature)` function
+- [ ] `isSupporter(userId)` helper for quick checks
 
 **Example Usage:**
 ```typescript
-// Check if user is Pro
-const isPro = await subscriptionService.hasActiveSubscription(userId);
+// Check if user is a Supporter (any paying tier)
+const isSupporter = await subscriptionService.isSupporter(userId);
 
-// Get tier for badge display
+// Get tier for badge display (reads stored value)
 const tier = await subscriptionService.getSubscriptionTier(userId);
 // Returns: 'supporter' | 'champion' | 'legend' | 'hall_of_famer' | null
 
 // Check specific feature
 const canUseKiosk = await subscriptionService.canAccessFeature(userId, 'kiosk_mode');
+
+// Get full subscription details
+const subscription = await subscriptionService.getSubscription(userId);
 ```
+
+**Technical Notes:**
+- Tier is stored in database, no need to compute on read
+- All Supporter tiers have same feature access
+- Feature gating is binary: Free vs Supporter (any tier)
