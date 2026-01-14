@@ -8,6 +8,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Optimize package imports for better tree-shaking
+  experimental: {
+    optimizePackageImports: ['@heroicons/react', '@supabase/supabase-js', 'recharts'],
+  },
   images: {
     remotePatterns: [
       {

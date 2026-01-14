@@ -8,6 +8,7 @@ const nunitoSans = Nunito_Sans({
   display: 'swap',
   variable: '--font-nunito-sans',
   adjustFontFallback: false,
+  preload: true,
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -15,6 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400'],
   display: 'swap',
   variable: '--font-jetbrains-mono',
+  preload: false, // Not critical - only used for code
 });
 
 export const viewport = {
@@ -54,6 +56,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${nunitoSans.variable} ${jetbrainsMono.variable}`}>
       <head>
+        {/* DNS prefetch for external services */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        {/* Preconnect for fonts - critical for LCP */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
