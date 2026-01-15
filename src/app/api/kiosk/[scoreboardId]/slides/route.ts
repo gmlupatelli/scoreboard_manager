@@ -250,6 +250,8 @@ export async function PUT(
 
     // Two-phase update to avoid unique constraint violation on (kiosk_config_id, position)
     // Phase 1: Set all positions to high temporary values (position >= 0 required by check constraint)
+    const phase1Updates: Array<{ id: string; originalPosition: number; tempPosition: number }> = [];
+
     for (let i = 0; i < slides.length; i++) {
       const slide = slides[i];
       if (!slide.id || typeof slide.position !== 'number') {
@@ -257,24 +259,65 @@ export async function PUT(
       }
 
       const tempPosition = 1000 + i; // Use high positive numbers to avoid conflicts
-      await updateClient
+      const { error: phase1Error } = await updateClient
         .from('kiosk_slides')
         .update({ position: tempPosition })
         .eq('id', slide.id)
         .eq('kiosk_config_id', kioskConfig.id);
+
+      if (phase1Error) {
+        // Phase 1 failed - return error immediately
+        return NextResponse.json(
+          { error: `Failed to update slide positions: ${phase1Error.message}` },
+          { status: 500 }
+        );
+      }
+
+      // Track successful Phase 1 updates for potential rollback
+      phase1Updates.push({
+        id: slide.id,
+        originalPosition: slide.position,
+        tempPosition,
+      });
     }
 
-    // Phase 2: Set all positions to their final values
+    // Phase 2: Set all positions to their final values with error tracking
+    const phase2Errors: Array<{ slideId: string; error: string }> = [];
+
     for (const slide of slides) {
       if (!slide.id || typeof slide.position !== 'number') {
         continue;
       }
 
-      await updateClient
+      const { error: phase2Error } = await updateClient
         .from('kiosk_slides')
         .update({ position: slide.position })
         .eq('id', slide.id)
         .eq('kiosk_config_id', kioskConfig.id);
+
+      if (phase2Error) {
+        phase2Errors.push({ slideId: slide.id, error: phase2Error.message });
+      }
+    }
+
+    // If any Phase 2 updates failed, attempt rollback to original positions
+    if (phase2Errors.length > 0) {
+      // Attempt to restore original positions for all slides that were in Phase 1
+      for (const update of phase1Updates) {
+        await updateClient
+          .from('kiosk_slides')
+          .update({ position: update.originalPosition })
+          .eq('id', update.id)
+          .eq('kiosk_config_id', kioskConfig.id);
+      }
+
+      return NextResponse.json(
+        {
+          error: 'Failed to reorder slides. Changes have been rolled back.',
+          details: phase2Errors,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true });
