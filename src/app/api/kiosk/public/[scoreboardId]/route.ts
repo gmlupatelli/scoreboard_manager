@@ -67,13 +67,14 @@ export async function GET(
       (slides || []).map(async (slide) => {
         if (slide.slide_type === 'image' && slide.image_url && serviceClient) {
           // image_url stores the storage path, generate a signed URL
-          const { data: signedUrlData } = await serviceClient.storage
+          const { data: signedUrlData, error: signedUrlError } = await serviceClient.storage
             .from('kiosk-slides')
             .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
 
+          // Return null if signed URL generation fails (don't expose raw storage paths)
           return {
             ...slide,
-            image_url: signedUrlData?.signedUrl || null,
+            image_url: signedUrlError || !signedUrlData?.signedUrl ? null : signedUrlData.signedUrl,
           };
         }
         return slide;

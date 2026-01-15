@@ -60,6 +60,7 @@ export default function KioskViewInteractive() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(Date.now());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -137,6 +138,7 @@ export default function KioskViewInteractive() {
       }
 
       setKioskData(data);
+      setLastFetchTime(Date.now()); // Track when we fetched new signed URLs
 
       // Check if PIN protection is enabled
       if (data.config.hasPinProtection && !isPinVerified) {
@@ -156,19 +158,24 @@ export default function KioskViewInteractive() {
     fetchKioskData();
   }, [fetchKioskData]);
 
-  // Refresh signed URLs before they expire (refresh at 80% of expiry time)
+  // Auto-refresh signed URLs before they expire (30 minutes)
   useEffect(() => {
-    if (!kioskData?.config.signedUrlExpirySeconds) return;
+    if (!kioskData) return;
 
-    const expirySeconds = kioskData.config.signedUrlExpirySeconds;
-    const refreshInterval = expirySeconds * 0.8 * 1000; // Refresh at 80% of expiry
+    const REFRESH_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 
-    const intervalId = setInterval(() => {
-      fetchKioskData();
-    }, refreshInterval);
+    const checkAndRefresh = () => {
+      const timeSinceLastFetch = Date.now() - lastFetchTime;
+      if (timeSinceLastFetch >= REFRESH_INTERVAL_MS) {
+        fetchKioskData();
+      }
+    };
+
+    // Check every minute if we need to refresh
+    const intervalId = setInterval(checkAndRefresh, 60 * 1000);
 
     return () => clearInterval(intervalId);
-  }, [kioskData?.config.signedUrlExpirySeconds, fetchKioskData]);
+  }, [kioskData, lastFetchTime, fetchKioskData]);
 
   // Auto-advance slides
   useEffect(() => {

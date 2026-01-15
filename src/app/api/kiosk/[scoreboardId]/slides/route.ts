@@ -150,22 +150,20 @@ export async function POST(
 
         // Generate signed URL for thumbnail
         if (slide.thumbnail_url) {
-          const { data: thumbSignedData } = await serviceClient.storage
+          const { data: thumbSignedData, error: thumbError } = await serviceClient.storage
             .from('kiosk-slides')
             .createSignedUrl(slide.thumbnail_url, SIGNED_URL_EXPIRY_SECONDS);
-          if (thumbSignedData?.signedUrl) {
-            result.thumbnail_url = thumbSignedData.signedUrl;
-          }
+          // Return null if signed URL generation fails (don't expose raw storage paths)
+          result.thumbnail_url = thumbError || !thumbSignedData?.signedUrl ? null : thumbSignedData.signedUrl;
         }
 
         // Generate signed URL for original image (fallback)
         if (slide.image_url) {
-          const { data: signedUrlData } = await serviceClient.storage
+          const { data: signedUrlData, error: signedUrlError } = await serviceClient.storage
             .from('kiosk-slides')
             .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
-          if (signedUrlData?.signedUrl) {
-            result.image_url = signedUrlData.signedUrl;
-          }
+          // Return null if signed URL generation fails (don't expose raw storage paths)
+          result.image_url = signedUrlError || !signedUrlData?.signedUrl ? null : signedUrlData.signedUrl;
         }
 
         slideWithSignedUrl = result;
