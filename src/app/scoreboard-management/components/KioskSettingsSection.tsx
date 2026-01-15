@@ -46,7 +46,7 @@ export default function KioskSettingsSection({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [config, setConfig] = useState<KioskConfig | null>(null);
+  const [_config, setConfig] = useState<KioskConfig | null>(null);
   const [slides, setSlides] = useState<KioskSlide[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [_lastFetchTime, setLastFetchTime] = useState<number | null>(null);
@@ -64,11 +64,22 @@ export default function KioskSettingsSection({
   // Track if slide order has been changed (pending save)
   const [hasSlideOrderChanges, setHasSlideOrderChanges] = useState(false);
 
+  // Keep ref in sync with state
+  useEffect(() => {
+    hasSlideOrderChangesRef.current = hasSlideOrderChanges;
+  }, [hasSlideOrderChanges]);
+
   // Track slides with failed images
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // Ref to prevent double loading
   const isLoadingRef = useRef(false);
+
+  // Ref to track if initial fetch has completed
+  const hasFetchedRef = useRef(false);
+
+  // Ref to track hasSlideOrderChanges without triggering callback recreation
+  const hasSlideOrderChangesRef = useRef(false);
 
   // Add initial scoreboard slide (called when no slides exist)
   const addInitialScoreboardSlide = useCallback(
@@ -121,12 +132,13 @@ export default function KioskSettingsSection({
           }
           const loadedSlides = data.slides || [];
           // Always update slides if forceRefresh, otherwise only if no pending changes
-          if (forceRefresh || !hasSlideOrderChanges) {
+          if (forceRefresh || !hasSlideOrderChangesRef.current) {
             setSlides(loadedSlides);
             setHasSlideOrderChanges(false);
           }
           setLastFetchTime(Date.now());
           setFailedImages(new Set()); // Clear failed images on fresh data
+          hasFetchedRef.current = true;
 
           // Auto-add scoreboard slide if no slides exist
           if (loadedSlides.length === 0) {
@@ -140,15 +152,16 @@ export default function KioskSettingsSection({
         isLoadingRef.current = false;
       }
     },
-    [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide, hasSlideOrderChanges]
+    [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]
   );
 
   useEffect(() => {
-    if (isExpanded && !config && !isLoading) {
-      // Only fetch if we have no config and aren't already loading
+    if (isExpanded && !hasFetchedRef.current && !isLoadingRef.current) {
+      // Only fetch once when first expanded
       loadKioskData();
     }
-  }, [isExpanded, config, isLoading, loadKioskData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExpanded]);
 
   // Save config
   const handleSaveConfig = async () => {
