@@ -34,18 +34,18 @@ SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime';
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables 
-    WHERE pubname = 'supabase_realtime' 
-    AND schemaname = 'public' 
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
     AND tablename = 'scoreboards'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.scoreboards;
   END IF;
-  
+
   IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables 
-    WHERE pubname = 'supabase_realtime' 
-    AND schemaname = 'public' 
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
     AND tablename = 'scoreboard_entries'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.scoreboard_entries;
@@ -85,18 +85,18 @@ ALTER TABLE public.scoreboard_entries REPLICA IDENTITY FULL;
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables 
-    WHERE pubname = 'supabase_realtime' 
-    AND schemaname = 'public' 
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
     AND tablename = 'scoreboards'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.scoreboards;
   END IF;
-  
+
   IF NOT EXISTS (
-    SELECT 1 FROM pg_publication_tables 
-    WHERE pubname = 'supabase_realtime' 
-    AND schemaname = 'public' 
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
     AND tablename = 'scoreboard_entries'
   ) THEN
     ALTER PUBLICATION supabase_realtime ADD TABLE public.scoreboard_entries;
@@ -118,8 +118,8 @@ NOTIFY pgrst, 'reload schema';
 ### Check Publication Status
 
 ```sql
-SELECT schemaname, tablename 
-FROM pg_publication_tables 
+SELECT schemaname, tablename
+FROM pg_publication_tables
 WHERE pubname = 'supabase_realtime';
 ```
 
@@ -132,10 +132,10 @@ Expected output:
 ### Check REPLICA IDENTITY
 
 ```sql
-SELECT c.relname, c.relreplident 
-FROM pg_class c 
-JOIN pg_namespace n ON c.relnamespace = n.oid 
-WHERE n.nspname = 'public' 
+SELECT c.relname, c.relreplident
+FROM pg_class c
+JOIN pg_namespace n ON c.relnamespace = n.oid
+WHERE n.nspname = 'public'
 AND c.relname IN ('scoreboards', 'scoreboard_entries');
 ```
 
@@ -150,6 +150,7 @@ Expected output (f = FULL):
 ### Error: "mismatch between server and client bindings"
 
 This typically occurs when:
+
 1. Tables are not in the `supabase_realtime` publication
 2. Schema changes were made but the cache wasn't refreshed
 3. Column types changed (e.g., TEXT → UUID migration)
@@ -159,6 +160,7 @@ This typically occurs when:
 ### Subscription status: CHANNEL_ERROR
 
 Check browser console for details. Common causes:
+
 - RLS policies blocking anonymous access to public scoreboards
 - Tables not enabled in publication
 - Network/WebSocket connection issues

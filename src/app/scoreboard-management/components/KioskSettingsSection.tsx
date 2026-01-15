@@ -25,7 +25,7 @@ interface KioskSlide {
 
 interface KioskSettingsSectionProps {
   scoreboardId: string;
-  scoreboardTitle: string;
+  _scoreboardTitle: string;
   isExpanded: boolean;
   onToggle: () => void;
   onShowToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -33,7 +33,7 @@ interface KioskSettingsSectionProps {
 
 export default function KioskSettingsSection({
   scoreboardId,
-  scoreboardTitle,
+  _scoreboardTitle,
   isExpanded,
   onToggle,
   onShowToast,
@@ -58,27 +58,30 @@ export default function KioskSettingsSection({
   const [draggedSlide, setDraggedSlide] = useState<string | null>(null);
 
   // Add initial scoreboard slide (called when no slides exist)
-  const addInitialScoreboardSlide = async (headers: Record<string, string>) => {
-    try {
-      const response = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
-        method: 'POST',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          slideType: 'scoreboard',
-        }),
-      });
+  const addInitialScoreboardSlide = useCallback(
+    async (headers: Record<string, string>) => {
+      try {
+        const response = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
+          method: 'POST',
+          headers: {
+            ...headers,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            slideType: 'scoreboard',
+          }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setSlides([data.slide]);
+        if (response.ok) {
+          const data = await response.json();
+          setSlides([data.slide]);
+        }
+      } catch (_error) {
+        // Silent fail - user can add slides manually
       }
-    } catch (_error) {
-      // Silent fail - user can add slides manually
-    }
-  };
+    },
+    [scoreboardId]
+  );
 
   // Load kiosk data
   const loadKioskData = useCallback(async () => {
@@ -111,7 +114,7 @@ export default function KioskSettingsSection({
     } finally {
       setIsLoading(false);
     }
-  }, [scoreboardId, getAuthHeaders, onShowToast]);
+  }, [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]);
 
   useEffect(() => {
     if (isExpanded && !config) {
@@ -267,7 +270,7 @@ export default function KioskSettingsSection({
   };
 
   // Add scoreboard slide
-  const handleAddScoreboardSlide = async () => {
+  const _handleAddScoreboardSlide = async () => {
     // Check if scoreboard slide already exists
     if (slides.some((s) => s.slide_type === 'scoreboard')) {
       onShowToast('Scoreboard slide already exists', 'info');
@@ -438,7 +441,9 @@ export default function KioskSettingsSection({
               <div className="pt-4">
                 <label className="flex items-center justify-between cursor-pointer">
                   <div>
-                    <span className="font-medium text-text-primary">Enable Kiosk / Presentation Mode</span>
+                    <span className="font-medium text-text-primary">
+                      Enable Kiosk / Presentation Mode
+                    </span>
                   </div>
                   <div className="relative">
                     <input

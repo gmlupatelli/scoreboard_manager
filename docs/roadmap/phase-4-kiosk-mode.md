@@ -8,6 +8,7 @@
 ## Overview
 
 Implement Kiosk/TV mode for Supporters:
+
 - Full-screen, TV-optimized display
 - Carousel with scoreboard and custom slides
 - Image and PDF upload support
@@ -34,6 +35,7 @@ Implement Kiosk/TV mode for Supporters:
 
 **Description:**
 Create a dedicated kiosk view that:
+
 - Is full-screen optimized
 - Has no browser chrome/navigation
 - Auto-hides cursor
@@ -41,6 +43,7 @@ Create a dedicated kiosk view that:
 - Large, readable fonts for TV viewing
 
 **Acceptance Criteria:**
+
 - [ ] Route `/scoreboard/:id/kiosk` created
 - [ ] Full-screen layout (no header/footer)
 - [ ] Large, readable typography
@@ -80,7 +83,7 @@ CREATE TABLE kiosk_slides (
   image_url TEXT, -- For image slides
   duration_override_seconds INTEGER, -- Optional per-slide duration
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   CONSTRAINT uq_kiosk_slides_position UNIQUE (kiosk_config_id, position)
 );
 
@@ -96,12 +99,14 @@ CREATE INDEX idx_kiosk_slides_config ON kiosk_slides(kiosk_config_id, position);
 
 **Description:**
 Allow users to upload slides:
+
 - Support PNG, JPG, WebP images
 - Support PDF (convert to images server-side)
 - Store in Supabase Storage
 - Generate thumbnails for management UI
 
 **Acceptance Criteria:**
+
 - [ ] Image upload (PNG, JPG, WebP)
 - [ ] PDF upload with server-side conversion
 - [ ] Files stored in Supabase Storage
@@ -110,6 +115,7 @@ Allow users to upload slides:
 - [ ] Secure upload (authenticated users only)
 
 **Technical Notes:**
+
 - Use Supabase Storage with RLS
 - For PDF conversion, consider:
   - `pdf-lib` for extraction
@@ -126,12 +132,14 @@ Allow users to upload slides:
 
 **Description:**
 Create a service that:
+
 - Accepts uploaded PDF
 - Extracts each page as an image
 - Stores images in Supabase Storage
 - Returns array of image URLs
 
 **Acceptance Criteria:**
+
 - [ ] PDF upload endpoint created
 - [ ] Each page converted to PNG/JPG
 - [ ] Images stored in storage
@@ -141,6 +149,7 @@ Create a service that:
 
 **Technical Notes:**
 Options for PDF conversion:
+
 1. **pdf-poppler** - Node wrapper for Poppler
 2. **pdf2pic** - Uses GraphicsMagick/ImageMagick
 3. **Serverless function** - Offload to external service
@@ -155,6 +164,7 @@ Recommendation: Start with `pdf2pic` or similar, can optimize later.
 
 **Description:**
 Create UI within scoreboard management for:
+
 - Enabling/disabling kiosk mode
 - Uploading slides
 - Reordering slides (drag & drop)
@@ -163,6 +173,7 @@ Create UI within scoreboard management for:
 - Preview
 
 **Acceptance Criteria:**
+
 - [ ] Kiosk settings section in scoreboard management
 - [ ] Enable/disable toggle
 - [ ] Upload button for images/PDF
@@ -174,6 +185,7 @@ Create UI within scoreboard management for:
 - [ ] Preview button to test
 
 **UI Mockup:**
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Kiosk Mode Settings                    [Enabled ✓]  │
@@ -202,6 +214,7 @@ Create UI within scoreboard management for:
 
 **Description:**
 Build the carousel that:
+
 - Rotates through slides automatically
 - Shows scoreboard at configured position
 - Respects duration settings
@@ -209,6 +222,7 @@ Build the carousel that:
 - Auto-advances
 
 **Acceptance Criteria:**
+
 - [ ] Automatic slide advancement
 - [ ] Configurable duration per slide
 - [ ] Smooth fade/slide transitions
@@ -217,6 +231,7 @@ Build the carousel that:
 - [ ] Handles slide loading gracefully
 
 **Technical Notes:**
+
 - Consider using Framer Motion for transitions
 - Preload next slide for smooth transition
 - Handle network issues gracefully
@@ -230,11 +245,13 @@ Build the carousel that:
 
 **Description:**
 Create shareable kiosk URLs:
+
 - Unique URL per scoreboard kiosk
 - Optional PIN protection
 - Access logging
 
 **Acceptance Criteria:**
+
 - [ ] Kiosk URL format: `/scoreboard/:id/kiosk`
 - [ ] Optional PIN protection setting
 - [ ] PIN entry screen if protected

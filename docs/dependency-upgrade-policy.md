@@ -5,6 +5,7 @@ This document outlines the strategy for managing dependencies in the Scoreboard 
 ## Overview
 
 We use a balanced approach to dependency management:
+
 - **Automated updates** for patch and minor versions via Dependabot
 - **Manual review** for major versions to prevent breaking changes
 - **Immediate action** for security vulnerabilities
@@ -14,6 +15,7 @@ We use a balanced approach to dependency management:
 Dependabot is configured in `.github/dependabot.yml` to:
 
 ### Schedule
+
 - **Frequency**: Weekly (Mondays at 6:00 AM ET)
 - **PR Limit**: 10 open PRs maximum
 
@@ -21,25 +23,26 @@ Dependabot is configured in `.github/dependabot.yml` to:
 
 Dependencies are grouped to reduce PR noise:
 
-| Group | Includes | Update Types |
-|-------|----------|--------------|
-| `production-dependencies` | All packages except dev tools | Minor, Patch |
-| `dev-dependencies` | @types/*, eslint*, prettier*, @playwright/*, typescript | Minor, Patch |
-| `github-actions` | All GitHub Actions | Minor, Patch |
+| Group                     | Includes                                                | Update Types |
+| ------------------------- | ------------------------------------------------------- | ------------ |
+| `production-dependencies` | All packages except dev tools                           | Minor, Patch |
+| `dev-dependencies`        | @types/_, eslint_, prettier*, @playwright/*, typescript | Minor, Patch |
+| `github-actions`          | All GitHub Actions                                      | Minor, Patch |
 
 ### Major Version Policy
 
 Major versions are **ignored by Dependabot** and handled manually. This applies to:
 
-| Package | Reason |
-|---------|--------|
-| `react`, `react-dom`, `@types/react*` | Major versions require coordinated migration |
-| `next`, `eslint-config-next` | Breaking changes between major versions |
-| `typescript` | May require code changes |
-| `tailwindcss` | Breaking changes in utility classes |
-| `@supabase/supabase-js`, `@supabase/ssr` | API changes between major versions |
+| Package                                  | Reason                                       |
+| ---------------------------------------- | -------------------------------------------- |
+| `react`, `react-dom`, `@types/react*`    | Major versions require coordinated migration |
+| `next`, `eslint-config-next`             | Breaking changes between major versions      |
+| `typescript`                             | May require code changes                     |
+| `tailwindcss`                            | Breaking changes in utility classes          |
+| `@supabase/supabase-js`, `@supabase/ssr` | API changes between major versions           |
 
 **When to upgrade major versions:**
+
 1. Current version reaches End of Life (EOL)
 2. New major version has critical features we need
 3. Security vulnerability requires major version upgrade
@@ -47,16 +50,19 @@ Major versions are **ignored by Dependabot** and handled manually. This applies 
 ## Update Workflow
 
 ### Patch Updates (x.x.PATCH)
+
 - **Risk**: Very Low
 - **Action**: Auto-merged after CI passes
 - **Examples**: Bug fixes, security patches
 
 ### Minor Updates (x.MINOR.x)
+
 - **Risk**: Low
 - **Action**: Review changelog, merge after CI passes
 - **Examples**: New features (backward compatible)
 
 ### Major Updates (MAJOR.x.x)
+
 - **Risk**: High
 - **Action**: Manual upgrade with dedicated branch
 - **Process**:
@@ -70,29 +76,33 @@ Major versions are **ignored by Dependabot** and handled manually. This applies 
 ## Security Updates
 
 ### GitHub Security Advisories
+
 - Dependabot Security Advisories are **always enabled**
 - Critical vulnerabilities trigger immediate PRs regardless of ignore rules
 - Security PRs are labeled with `security` for prioritization
 
 ### Response Timeline
-| Severity | Response Time | Action |
-|----------|---------------|--------|
-| Critical | 24 hours | Immediate patch or mitigation |
-| High | 48 hours | Priority review and merge |
-| Medium | 1 week | Standard review process |
-| Low | 2 weeks | Batch with regular updates |
+
+| Severity | Response Time | Action                        |
+| -------- | ------------- | ----------------------------- |
+| Critical | 24 hours      | Immediate patch or mitigation |
+| High     | 48 hours      | Priority review and merge     |
+| Medium   | 1 week        | Standard review process       |
+| Low      | 2 weeks       | Batch with regular updates    |
 
 ## Testing Requirements
 
 Before merging any dependency update:
 
 ### Automated Checks (Required)
+
 - [ ] CI pipeline passes (lint, type-check, build)
 - [ ] E2E tests pass (Chrome, Firefox)
 - [ ] No new TypeScript errors
 - [ ] No console errors in browser
 
 ### Manual Checks (Major Updates Only)
+
 - [ ] Review changelog for breaking changes
 - [ ] Test critical user flows manually
 - [ ] Verify no visual regressions
@@ -101,25 +111,27 @@ Before merging any dependency update:
 ## Monitoring
 
 ### Tools
+
 - **Dependabot**: Automated PR creation
 - **GitHub Security Advisories**: Vulnerability alerts
 - **npm audit**: Local security scanning
 - **CodeQL**: Code scanning for vulnerabilities
 
 ### Regular Review
+
 - Weekly: Review and merge Dependabot PRs
 - Monthly: Check for EOL packages
 - Quarterly: Evaluate major version upgrades
 
 ## Key Dependencies
 
-| Package | Current | LTS/Support | Notes |
-|---------|---------|-------------|-------|
-| Next.js | 14.x | Active | Upgrade to 15.x when stable |
-| React | 18.x | Active | Upgrade to 19.x with Next.js |
-| TypeScript | 5.x | Active | Follow Next.js recommendations |
-| Supabase JS | 2.x | Active | Monitor for v3 release |
-| Tailwind CSS | 3.x | Active | Upgrade to 4.x when stable |
+| Package      | Current | LTS/Support | Notes                          |
+| ------------ | ------- | ----------- | ------------------------------ |
+| Next.js      | 14.x    | Active      | Upgrade to 15.x when stable    |
+| React        | 18.x    | Active      | Upgrade to 19.x with Next.js   |
+| TypeScript   | 5.x     | Active      | Follow Next.js recommendations |
+| Supabase JS  | 2.x     | Active      | Monitor for v3 release         |
+| Tailwind CSS | 3.x     | Active      | Upgrade to 4.x when stable     |
 
 ## Commands
 

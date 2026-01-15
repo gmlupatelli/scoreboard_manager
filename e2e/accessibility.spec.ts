@@ -313,26 +313,29 @@ authTest.describe('Authenticated Accessibility', () => {
   });
 
   // Form accessibility in modal - viewport-independent
-  authTest('@full @desktop-only should have proper radio button groups in forms', async ({ johnAuth }) => {
-    await johnAuth.goto('/dashboard');
-    await johnAuth.waitForTimeout(1000);
+  authTest(
+    '@full @desktop-only should have proper radio button groups in forms',
+    async ({ johnAuth }) => {
+      await johnAuth.goto('/dashboard');
+      await johnAuth.waitForTimeout(1000);
 
-    const createButton = johnAuth.getByRole('button', { name: /create/i }).first();
-    await authExpect(createButton).toBeVisible();
+      const createButton = johnAuth.getByRole('button', { name: /create/i }).first();
+      await authExpect(createButton).toBeVisible();
 
-    await createButton.click();
-    await johnAuth.waitForTimeout(500);
+      await createButton.click();
+      await johnAuth.waitForTimeout(500);
 
-    const visibilityRadioPublic = johnAuth.locator('input[type="radio"][value="public"]');
-    const visibilityRadioPrivate = johnAuth.locator('input[type="radio"][value="private"]');
+      const visibilityRadioPublic = johnAuth.locator('input[type="radio"][value="public"]');
+      const visibilityRadioPrivate = johnAuth.locator('input[type="radio"][value="private"]');
 
-    await authExpect(visibilityRadioPublic).toBeVisible();
-    await authExpect(visibilityRadioPrivate).toBeVisible();
+      await authExpect(visibilityRadioPublic).toBeVisible();
+      await authExpect(visibilityRadioPrivate).toBeVisible();
 
-    const scoreTypeNumber = johnAuth.locator('input[type="radio"][value="number"]');
-    const scoreTypeTime = johnAuth.locator('input[type="radio"][value="time"]');
+      const scoreTypeNumber = johnAuth.locator('input[type="radio"][value="number"]');
+      const scoreTypeTime = johnAuth.locator('input[type="radio"][value="time"]');
 
-    await authExpect(scoreTypeNumber).toBeVisible();
-    await authExpect(scoreTypeTime).toBeVisible();
-  });
+      await authExpect(scoreTypeNumber).toBeVisible();
+      await authExpect(scoreTypeTime).toBeVisible();
+    }
+  );
 });

@@ -5,59 +5,63 @@ This document outlines the planned features and implementation phases for transi
 ## Overview
 
 ### Business Model
+
 - **Open Source License:** AGPL v3
 - **Self-hosted:** Full functionality, no restrictions
 - **SaaS (Hosted):** Freemium model with Supporter tier
 
 ### Payment Provider
+
 - **LemonSqueezy** (Merchant of Record - handles global taxes)
 - **Pay What You Want** model with minimums
 
 ### Pricing
-| Plan | Minimum | Notes |
-|------|---------|-------|
+
+| Plan    | Minimum  | Notes                           |
+| ------- | -------- | ------------------------------- |
 | Monthly | $5/month | Pay what you want above minimum |
-| Yearly | $50/year | ~2 months free (17% discount) |
+| Yearly  | $50/year | ~2 months free (17% discount)   |
 
 ### Appreciation Tiers
-| Monthly Amount | Tier | Badge | Feature Access |
-|----------------|------|-------|----------------|
-| $0 | Free | - | Basic features |
-| $5 - $9 | Supporter | 🙌 | All Supporter features |
-| $10 - $24 | Champion | 🏆 | All Supporter features |
-| $25 - $49 | Legend | 🌟 | All Supporter features |
-| $50+ | Hall of Famer | 👑 | All Supporter features |
+
+| Monthly Amount | Tier          | Badge | Feature Access         |
+| -------------- | ------------- | ----- | ---------------------- |
+| $0             | Free          | -     | Basic features         |
+| $5 - $9        | Supporter     | 🙌    | All Supporter features |
+| $10 - $24      | Champion      | 🏆    | All Supporter features |
+| $25 - $49      | Legend        | 🌟    | All Supporter features |
+| $50+           | Hall of Famer | 👑    | All Supporter features |
 
 > **Note:** All paying tiers ($5+) receive the same feature access. The appreciation tiers (Supporter, Champion, Legend, Hall of Famer) are recognition levels based on contribution amount, not feature gates.
 
 ## Free vs Supporter Comparison
 
-| Feature | Free | Supporter ($5+/mo) |
-|---------|------|-----|
-| Public scoreboards | 2 max | Unlimited |
-| Private scoreboards | ❌ | ✅ Unlimited |
-| Entries per scoreboard | 50 max | Unlimited |
-| History snapshots | 10 max | 100 max |
-| Themes | All presets | All presets + Custom |
-| "Powered by" badge (embed) | ✅ Shown | ❌ Hidden |
-| "Created by" attribution | Name only | Name + Tier Badge |
-| Kiosk Mode | ❌ | ✅ |
-| Teams & Collaboration | ❌ | ✅ |
-| Support | GitHub Issues | GitHub Issues + Email (48h) |
+| Feature                    | Free          | Supporter ($5+/mo)          |
+| -------------------------- | ------------- | --------------------------- |
+| Public scoreboards         | 2 max         | Unlimited                   |
+| Private scoreboards        | ❌            | ✅ Unlimited                |
+| Entries per scoreboard     | 50 max        | Unlimited                   |
+| History snapshots          | 10 max        | 100 max                     |
+| Themes                     | All presets   | All presets + Custom        |
+| "Powered by" badge (embed) | ✅ Shown      | ❌ Hidden                   |
+| "Created by" attribution   | Name only     | Name + Tier Badge           |
+| Kiosk Mode                 | ❌            | ✅                          |
+| Teams & Collaboration      | ❌            | ✅                          |
+| Support                    | GitHub Issues | GitHub Issues + Email (48h) |
 
 ## Implementation Phases
 
-| Phase | Name | Priority | Status |
-|-------|------|----------|--------|
-| 1a | [License & Public Pages](./phase-1a-license-public-pages.md) | 🔴 High | Not Started |
-| 1b | [LemonSqueezy Integration](./phase-1b-lemonsqueezy-integration.md) | 🔴 High | Not Started |
-| 1c | [Supporter/Free Limits](./phase-1c-supporter-free-limits.md) | 🔴 High | Not Started |
-| 1d | [Supporter Tiers & Recognition](./phase-1d-supporter-tiers.md) | 🔴 High | Not Started |
-| 1e | [Admin Management Pages](./phase-1e-admin-management.md) | 🔴 High | Not Started |
-| 2 | [Embed Branding](./phase-2-embed-branding.md) | 🔴 High | Not Started |
-| 3 | [Teams & Collaboration](./phase-3-teams-collaboration.md) | 🟡 Medium | Not Started |
-| 4 | [Kiosk/TV Mode](./phase-4-kiosk-mode.md) | 🟡 Medium | Not Started |
-| 5 | [Time Machine](./phase-5-time-machine.md) | 🟢 Lower | Not Started |
+| Phase | Name                                                               | Priority  | Status      |
+| ----- | ------------------------------------------------------------------ | --------- | ----------- |
+| 1a    | [License & Public Pages](./phase-1a-license-public-pages.md)       | 🔴 High   | Not Started |
+| 1b    | [LemonSqueezy Integration](./phase-1b-lemonsqueezy-integration.md) | 🔴 High   | Not Started |
+| 1c    | [Supporter/Free Limits](./phase-1c-supporter-free-limits.md)       | 🔴 High   | Not Started |
+| 1d    | [Supporter Tiers & Recognition](./phase-1d-supporter-tiers.md)     | 🔴 High   | Not Started |
+| 1e    | [Admin Management Pages](./phase-1e-admin-management.md)           | 🔴 High   | Not Started |
+| 2     | [Embed Branding](./phase-2-embed-branding.md)                      | 🔴 High   | Not Started |
+| 3     | [Teams & Collaboration](./phase-3-teams-collaboration.md)          | 🟡 Medium | Not Started |
+| 4     | [Kiosk/TV Mode](./phase-4-kiosk-mode.md)                           | 🟡 Medium | Not Started |
+| 5     | [Time Machine](./phase-5-time-machine.md)                          | 🟢 Lower  | Not Started |
 
 ## Existing Features (Already Implemented)
 

@@ -6,7 +6,7 @@
  * @full - Comprehensive responsive behavior coverage
  */
 
-import { test, expect, devices } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { test as authTest } from './fixtures/auth';
 
 // Mobile viewport configuration
@@ -47,8 +47,15 @@ test.describe('Mobile Touch Interactions', () => {
 
     // Either menu button visible or nav links visible (depends on design)
     const hasNavigation =
-      (await menuButton.first().isVisible().catch(() => false)) ||
-      (await page.locator('nav a').first().isVisible().catch(() => false));
+      (await menuButton
+        .first()
+        .isVisible()
+        .catch(() => false)) ||
+      (await page
+        .locator('nav a')
+        .first()
+        .isVisible()
+        .catch(() => false));
 
     expect(hasNavigation).toBeTruthy();
   });

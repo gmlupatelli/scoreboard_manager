@@ -1,7 +1,7 @@
 /**
  * System Admin Tests
  * Tests system admin exclusive features and permissions
- * 
+ *
  * All admin tests are marked @desktop-only since admin functionality
  * doesn't vary by viewport and is unlikely to be used on mobile devices.
  *
@@ -13,7 +13,9 @@
 import { test, expect } from './fixtures/auth';
 
 test.describe('System Admin - Dashboard Oversight', () => {
-  test('@fast @desktop-only admin should see owner filter dropdown in dashboard', async ({ adminAuth }) => {
+  test('@fast @desktop-only admin should see owner filter dropdown in dashboard', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/dashboard');
 
     const ownerFilter = adminAuth
@@ -22,7 +24,9 @@ test.describe('System Admin - Dashboard Oversight', () => {
     await expect(ownerFilter).toBeVisible();
   });
 
-  test('@full @desktop-only admin should see scoreboards from multiple owners', async ({ adminAuth }) => {
+  test('@full @desktop-only admin should see scoreboards from multiple owners', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/dashboard');
     await adminAuth.waitForTimeout(2000);
 
@@ -31,7 +35,9 @@ test.describe('System Admin - Dashboard Oversight', () => {
     expect(count).toBeGreaterThanOrEqual(0);
   });
 
-  test('@full @desktop-only admin should be able to filter scoreboards by owner', async ({ adminAuth }) => {
+  test('@full @desktop-only admin should be able to filter scoreboards by owner', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/dashboard');
     await adminAuth.waitForTimeout(2000);
 
@@ -66,7 +72,9 @@ test.describe('System Admin - Settings Management', () => {
     ).toBeVisible();
   });
 
-  test('@full @desktop-only admin should see allow_public_registration setting', async ({ adminAuth }) => {
+  test('@full @desktop-only admin should see allow_public_registration setting', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/system-admin/settings');
     await adminAuth.waitForTimeout(1000);
 
@@ -77,7 +85,9 @@ test.describe('System Admin - Settings Management', () => {
     await expect(publicRegToggle).toBeVisible();
   });
 
-  test('@full @desktop-only admin should see require_email_verification setting', async ({ adminAuth }) => {
+  test('@full @desktop-only admin should see require_email_verification setting', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/system-admin/settings');
     await adminAuth.waitForTimeout(1000);
 
@@ -90,7 +100,9 @@ test.describe('System Admin - Settings Management', () => {
 });
 
 test.describe('System Admin - Invitations Oversight', () => {
-  test('@fast @desktop-only admin should access system-wide invitations page', async ({ adminAuth }) => {
+  test('@fast @desktop-only admin should access system-wide invitations page', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/system-admin/invitations');
 
     await expect(adminAuth).toHaveURL(/\/system-admin\/invitations/);
@@ -108,7 +120,9 @@ test.describe('System Admin - Invitations Oversight', () => {
     expect(typeof isVisible).toBe('boolean');
   });
 
-  test('@full @desktop-only admin should see invitations from multiple users', async ({ adminAuth }) => {
+  test('@full @desktop-only admin should see invitations from multiple users', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/system-admin/invitations');
     await adminAuth.waitForTimeout(2000);
 
@@ -122,7 +136,9 @@ test.describe('System Admin - Invitations Oversight', () => {
 });
 
 test.describe('System Admin - Scoreboard Access', () => {
-  test('@full @desktop-only admin should be able to access another users scoreboard', async ({ adminAuth }) => {
+  test('@full @desktop-only admin should be able to access another users scoreboard', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/dashboard');
     await adminAuth.waitForTimeout(2000);
 
@@ -163,7 +179,9 @@ test.describe('System Admin - Scoreboard Access', () => {
 });
 
 test.describe('System Admin - Navigation', () => {
-  test('@fast @desktop-only admin should see system admin navigation links', async ({ adminAuth }) => {
+  test('@fast @desktop-only admin should see system admin navigation links', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/dashboard');
     await adminAuth.waitForTimeout(1000);
 
@@ -174,7 +192,9 @@ test.describe('System Admin - Navigation', () => {
     await expect(settingsButton.first()).toBeVisible();
   });
 
-  test('@full @desktop-only admin should be able to navigate to all admin pages', async ({ adminAuth }) => {
+  test('@full @desktop-only admin should be able to navigate to all admin pages', async ({
+    adminAuth,
+  }) => {
     await adminAuth.goto('/system-admin/settings');
     await expect(adminAuth).toHaveURL(/\/system-admin\/settings/);
 

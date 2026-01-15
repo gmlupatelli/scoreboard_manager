@@ -8,12 +8,12 @@ dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 /**
  * Playwright configuration for E2E testing
  * Tests mobile (375x667, 320x568), tablet (1024x768), and desktop (1920x1080)
- * 
+ *
  * Viewport Strategy:
  * - Desktop Chrome: Runs ALL tests (@fast + @full)
  * - Mobile iPhone 12: Skips @desktop-only tests (UI/responsive tests only)
  * - Mobile Minimum: Skips @desktop-only and @no-mobile tests (responsive only)
- * 
+ *
  * Test Tags:
  * - @desktop-only: Authorization, validation, keyboard navigation, static pages
  * - @no-mobile: Features designed for large screens (kiosk mode)

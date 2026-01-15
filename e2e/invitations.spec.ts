@@ -48,16 +48,19 @@ authTest.describe('User Invitations - Access & Display', () => {
   });
 
   // Functional - viewport-independent
-  authTest('@full @desktop-only sarah should have separate invitation list from john', async ({ sarahAuth }) => {
-    await sarahAuth.goto('/invitations');
-    await sarahAuth.waitForTimeout(2000);
+  authTest(
+    '@full @desktop-only sarah should have separate invitation list from john',
+    async ({ sarahAuth }) => {
+      await sarahAuth.goto('/invitations');
+      await sarahAuth.waitForTimeout(2000);
 
-    await expect(sarahAuth).toHaveURL(/\/invitations/);
+      await expect(sarahAuth).toHaveURL(/\/invitations/);
 
-    // Check that page renders
-    const pageContent = sarahAuth.locator('body');
-    await expect(pageContent).toBeVisible();
-  });
+      // Check that page renders
+      const pageContent = sarahAuth.locator('body');
+      await expect(pageContent).toBeVisible();
+    }
+  );
 });
 
 authTest.describe('Invitation Form', () => {
@@ -137,34 +140,39 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
   });
 
   // Admin settings - viewport-independent
-  authTest('@full @desktop-only admin should disable public registration', async ({ adminAuth }) => {
-    await adminAuth.goto('/system-admin/settings');
-    await adminAuth.waitForTimeout(1000);
+  authTest(
+    '@full @desktop-only admin should disable public registration',
+    async ({ adminAuth }) => {
+      await adminAuth.goto('/system-admin/settings');
+      await adminAuth.waitForTimeout(1000);
 
-    const publicRegToggle = adminAuth
-      .locator('input[type="checkbox"]')
-      .filter({
-        has: adminAuth.locator('~ text=/Public Registration/i'),
-      })
-      .or(adminAuth.locator('label:has-text("Public Registration")').locator('input'))
-      .or(adminAuth.locator('label:has-text("Allow Public Registration")').locator('input'))
-      .first();
+      const publicRegToggle = adminAuth
+        .locator('input[type="checkbox"]')
+        .filter({
+          has: adminAuth.locator('~ text=/Public Registration/i'),
+        })
+        .or(adminAuth.locator('label:has-text("Public Registration")').locator('input'))
+        .or(adminAuth.locator('label:has-text("Allow Public Registration")').locator('input'))
+        .first();
 
-    const exists = await publicRegToggle.isVisible().catch(() => false);
+      const exists = await publicRegToggle.isVisible().catch(() => false);
 
-    if (exists) {
-      const isChecked = await publicRegToggle.isChecked();
-      if (isChecked) {
-        await publicRegToggle.click();
-        await adminAuth.waitForTimeout(2000);
-        const newState = await publicRegToggle.isChecked();
-        expect(newState).toBe(false);
+      if (exists) {
+        const isChecked = await publicRegToggle.isChecked();
+        if (isChecked) {
+          await publicRegToggle.click();
+          await adminAuth.waitForTimeout(2000);
+          const newState = await publicRegToggle.isChecked();
+          expect(newState).toBe(false);
+        }
       }
     }
-  });
+  );
 
   // Functional - viewport-independent
-  test('@full @desktop-only registration page should require invitation code when disabled', async ({ page }) => {
+  test('@full @desktop-only registration page should require invitation code when disabled', async ({
+    page,
+  }) => {
     await page.goto('/register');
     await page.waitForTimeout(1000);
 
@@ -184,39 +192,46 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
   });
 
   // Admin settings - viewport-independent
-  authTest('@full @desktop-only admin should re-enable public registration', async ({ adminAuth }) => {
-    await adminAuth.goto('/system-admin/settings');
-    await adminAuth.waitForTimeout(1000);
+  authTest(
+    '@full @desktop-only admin should re-enable public registration',
+    async ({ adminAuth }) => {
+      await adminAuth.goto('/system-admin/settings');
+      await adminAuth.waitForTimeout(1000);
 
-    const publicRegToggle = adminAuth
-      .locator('input[type="checkbox"]')
-      .filter({
-        has: adminAuth.locator('~ text=/Public Registration/i'),
-      })
-      .or(adminAuth.locator('label:has-text("Public Registration")').locator('input'))
-      .or(adminAuth.locator('label:has-text("Allow Public Registration")').locator('input'))
-      .first();
+      const publicRegToggle = adminAuth
+        .locator('input[type="checkbox"]')
+        .filter({
+          has: adminAuth.locator('~ text=/Public Registration/i'),
+        })
+        .or(adminAuth.locator('label:has-text("Public Registration")').locator('input'))
+        .or(adminAuth.locator('label:has-text("Allow Public Registration")').locator('input'))
+        .first();
 
-    const exists = await publicRegToggle.isVisible().catch(() => false);
+      const exists = await publicRegToggle.isVisible().catch(() => false);
 
-    if (exists) {
-      const isChecked = await publicRegToggle.isChecked();
-      if (!isChecked) {
-        await publicRegToggle.click();
-        await adminAuth.waitForTimeout(2000);
-        const newState = await publicRegToggle.isChecked();
-        expect(newState).toBe(true);
+      if (exists) {
+        const isChecked = await publicRegToggle.isChecked();
+        if (!isChecked) {
+          await publicRegToggle.click();
+          await adminAuth.waitForTimeout(2000);
+          const newState = await publicRegToggle.isChecked();
+          expect(newState).toBe(true);
+        }
       }
     }
-  });
+  );
 
   // Functional - viewport-independent
-  test('@fast @desktop-only registration page should allow open registration when enabled', async ({ page }) => {
+  test('@fast @desktop-only registration page should allow open registration when enabled', async ({
+    page,
+  }) => {
     await page.goto('/register');
     await page.waitForTimeout(1000);
 
     const emailField = page.locator('input[name="email"]').or(page.locator('input[type="email"]'));
-    const passwordField = page.locator('input[name="password"]').or(page.locator('input[type="password"]'));
+    const passwordField = page
+      .locator('input[name="password"]')
+      .or(page.locator('input[type="password"]'));
 
     await expect(emailField.first()).toBeVisible();
     await expect(passwordField.first()).toBeVisible();
@@ -243,47 +258,53 @@ authTest.describe('Invite-Only Mode - Enforcement', () => {
   });
 
   // Functional - viewport-independent
-  authTest('@full @desktop-only unauthenticated user should see invitation requirement', async ({ page }) => {
-    await page.goto('/register');
-    await page.waitForTimeout(1000);
+  authTest(
+    '@full @desktop-only unauthenticated user should see invitation requirement',
+    async ({ page }) => {
+      await page.goto('/register');
+      await page.waitForTimeout(1000);
 
-    const inviteMessage = page.locator(
-      'text=/invite.*only|invitation.*required|registration.*restricted|invite.*registration/i'
-    );
-    const inviteField = page.locator('input[name="invitationCode"]');
-    const emailField = page.locator('input[name="email"]');
+      const inviteMessage = page.locator(
+        'text=/invite.*only|invitation.*required|registration.*restricted|invite.*registration/i'
+      );
+      const inviteField = page.locator('input[name="invitationCode"]');
+      const emailField = page.locator('input[name="email"]');
 
-    const hasInviteUI =
-      (await inviteMessage.isVisible().catch(() => false)) ||
-      (await inviteField.isVisible().catch(() => false));
-    const hasEmailField = await emailField.isVisible().catch(() => false);
+      const hasInviteUI =
+        (await inviteMessage.isVisible().catch(() => false)) ||
+        (await inviteField.isVisible().catch(() => false));
+      const hasEmailField = await emailField.isVisible().catch(() => false);
 
-    expect(hasInviteUI || hasEmailField).toBeTruthy();
-  });
+      expect(hasInviteUI || hasEmailField).toBeTruthy();
+    }
+  );
 
   // Functional - viewport-independent
-  authTest('@full @desktop-only registration without invitation code should fail', async ({ page }) => {
-    await page.goto('/register');
-    await page.waitForTimeout(1000);
+  authTest(
+    '@full @desktop-only registration without invitation code should fail',
+    async ({ page }) => {
+      await page.goto('/register');
+      await page.waitForTimeout(1000);
 
-    const emailField = page.locator('input[name="email"]');
-    const passwordField = page.locator('input[name="password"]');
-    const submitButton = page.locator('button[type="submit"]');
+      const emailField = page.locator('input[name="email"]');
+      const passwordField = page.locator('input[name="password"]');
+      const submitButton = page.locator('button[type="submit"]');
 
-    if ((await emailField.isVisible()) && (await submitButton.isVisible())) {
-      await emailField.fill('newuser@example.com');
-      await passwordField.fill('password123');
-      await submitButton.click();
-      await page.waitForTimeout(2000);
+      if ((await emailField.isVisible()) && (await submitButton.isVisible())) {
+        await emailField.fill('newuser@example.com');
+        await passwordField.fill('password123');
+        await submitButton.click();
+        await page.waitForTimeout(2000);
 
-      const errorMessage = page.locator('text=/error/i').or(page.locator('text=/invalid/i'));
-      const stillOnRegister = page.url().includes('/register');
+        const errorMessage = page.locator('text=/error/i').or(page.locator('text=/invalid/i'));
+        const stillOnRegister = page.url().includes('/register');
 
-      const registrationFailed =
-        (await errorMessage.isVisible().catch(() => false)) || stillOnRegister;
-      expect(registrationFailed).toBeTruthy();
+        const registrationFailed =
+          (await errorMessage.isVisible().catch(() => false)) || stillOnRegister;
+        expect(registrationFailed).toBeTruthy();
+      }
     }
-  });
+  );
 
   authTest.afterEach(async ({ adminAuth }) => {
     await adminAuth.goto('/system-admin/settings');
@@ -306,46 +327,52 @@ authTest.describe('Invite-Only Mode - Enforcement', () => {
 
 authTest.describe('Invite-Only Mode - Settings Persistence', () => {
   // Settings persistence - viewport-independent
-  authTest('@full @desktop-only setting changes should persist across page reloads', async ({ adminAuth }) => {
-    await adminAuth.goto('/system-admin/settings');
-    await adminAuth.waitForTimeout(1000);
-
-    const publicRegToggle = adminAuth
-      .locator('label:has-text("Public Registration")')
-      .locator('input')
-      .or(adminAuth.locator('input[type="checkbox"]').first());
-
-    if (await publicRegToggle.isVisible()) {
-      const initialState = await publicRegToggle.isChecked();
-
-      await publicRegToggle.click();
-      await adminAuth.waitForTimeout(2000);
-
-      await adminAuth.reload();
+  authTest(
+    '@full @desktop-only setting changes should persist across page reloads',
+    async ({ adminAuth }) => {
+      await adminAuth.goto('/system-admin/settings');
       await adminAuth.waitForTimeout(1000);
 
-      const newPublicRegToggle = adminAuth
+      const publicRegToggle = adminAuth
         .locator('label:has-text("Public Registration")')
         .locator('input')
         .or(adminAuth.locator('input[type="checkbox"]').first());
 
-      const newState = await newPublicRegToggle.isChecked();
-      expect(newState).toBe(!initialState);
+      if (await publicRegToggle.isVisible()) {
+        const initialState = await publicRegToggle.isChecked();
 
-      // Toggle back
-      await newPublicRegToggle.click();
-      await adminAuth.waitForTimeout(2000);
+        await publicRegToggle.click();
+        await adminAuth.waitForTimeout(2000);
+
+        await adminAuth.reload();
+        await adminAuth.waitForTimeout(1000);
+
+        const newPublicRegToggle = adminAuth
+          .locator('label:has-text("Public Registration")')
+          .locator('input')
+          .or(adminAuth.locator('input[type="checkbox"]').first());
+
+        const newState = await newPublicRegToggle.isChecked();
+        expect(newState).toBe(!initialState);
+
+        // Toggle back
+        await newPublicRegToggle.click();
+        await adminAuth.waitForTimeout(2000);
+      }
     }
-  });
+  );
 
   // Settings management - viewport-independent
-  authTest('@full @desktop-only multiple settings can be managed independently', async ({ adminAuth }) => {
-    await adminAuth.goto('/system-admin/settings');
-    await adminAuth.waitForTimeout(1000);
+  authTest(
+    '@full @desktop-only multiple settings can be managed independently',
+    async ({ adminAuth }) => {
+      await adminAuth.goto('/system-admin/settings');
+      await adminAuth.waitForTimeout(1000);
 
-    const allToggles = adminAuth.locator('button.rounded-full');
-    const toggleCount = await allToggles.count();
+      const allToggles = adminAuth.locator('button.rounded-full');
+      const toggleCount = await allToggles.count();
 
-    expect(toggleCount).toBeGreaterThanOrEqual(2);
-  });
+      expect(toggleCount).toBeGreaterThanOrEqual(2);
+    }
+  );
 });

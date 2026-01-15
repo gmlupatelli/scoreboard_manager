@@ -7,6 +7,7 @@
 ## Overview
 
 Create system admin pages for managing tiers, users, and subscriptions:
+
 - **Tier Management** - Configure appreciation tier thresholds and limits
 - **User Management** - View all users with subscription status
 - **Gift Subscriptions** - Admin ability to grant free subscriptions
@@ -23,12 +24,14 @@ These pages are for `system_admin` users only.
 
 **Description:**
 Create an admin page at `/system-admin/tier-management` where admins can:
+
 - View current tier thresholds
 - Modify tier amount ranges
 - Update tier names and badges
 - Configure tier-based feature limits
 
 **Acceptance Criteria:**
+
 - [ ] Page at `/system-admin/tier-management`
 - [ ] Requires `system_admin` role (useAuthGuard with role check)
 - [ ] Display current tier configuration
@@ -40,6 +43,7 @@ Create an admin page at `/system-admin/tier-management` where admins can:
 - [ ] Audit log of changes
 
 **UI Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ Tier Management                                              │
@@ -84,11 +88,12 @@ Create an admin page at `/system-admin/tier-management` where admins can:
 ```
 
 **Database Schema:**
+
 ```sql
 -- Add tier_configuration to system_settings
 -- Store as JSONB for flexibility
 
-ALTER TABLE system_settings 
+ALTER TABLE system_settings
 ADD COLUMN tier_configuration JSONB DEFAULT '{
   "free": {
     "maxScoreboards": 5,
@@ -130,6 +135,7 @@ ADD COLUMN tier_configuration JSONB DEFAULT '{
 
 **Description:**
 Create an admin page at `/system-admin/user-management` where admins can:
+
 - View all registered users
 - See user subscription status
 - Filter by subscription tier
@@ -137,6 +143,7 @@ Create an admin page at `/system-admin/user-management` where admins can:
 - View user details
 
 **Acceptance Criteria:**
+
 - [ ] Page at `/system-admin/user-management`
 - [ ] Requires `system_admin` role
 - [ ] Paginated user list
@@ -148,6 +155,7 @@ Create an admin page at `/system-admin/user-management` where admins can:
 - [ ] Export to CSV (optional)
 
 **UI Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ User Management                                                          │
@@ -166,6 +174,7 @@ Create an admin page at `/system-admin/user-management` where admins can:
 ```
 
 **API Endpoint:**
+
 ```typescript
 // GET /api/admin/users
 // Query params: page, limit, search, tier, status, sortBy, sortOrder
@@ -203,6 +212,7 @@ interface AdminUserView {
 
 **Description:**
 Create a detail view (modal or page) showing:
+
 - Full user profile
 - Subscription history
 - Scoreboards owned
@@ -210,6 +220,7 @@ Create a detail view (modal or page) showing:
 - Admin actions (gift subscription, change role)
 
 **Acceptance Criteria:**
+
 - [ ] Accessible from user management list
 - [ ] Shows complete user profile
 - [ ] Shows subscription history (all past subscriptions)
@@ -219,6 +230,7 @@ Create a detail view (modal or page) showing:
 - [ ] Breadcrumb navigation back to list
 
 **UI Layout:**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ ← Back to User Management                                    │
@@ -260,12 +272,14 @@ Create a detail view (modal or page) showing:
 
 **Description:**
 Allow system admins to grant free subscription access to users:
+
 - Select a tier to grant
 - Set duration (1 month, 3 months, 1 year, lifetime)
 - Optional internal note (reason for gift)
 - Does not involve LemonSqueezy (purely internal)
 
 **Acceptance Criteria:**
+
 - [ ] "Gift Subscription" button on user detail page
 - [ ] Modal to select tier and duration
 - [ ] Optional note field for admin
@@ -276,6 +290,7 @@ Allow system admins to grant free subscription access to users:
 - [ ] Email notification to user (optional toggle)
 
 **UI Layout:**
+
 ```
 ┌─────────────────────────────────────────┐
 │ Gift Subscription                        │
@@ -302,27 +317,29 @@ Allow system admins to grant free subscription access to users:
 ```
 
 **Database Changes:**
+
 ```sql
 -- Add source field to subscriptions table (if not already present)
-ALTER TABLE subscriptions 
+ALTER TABLE subscriptions
 ADD COLUMN source TEXT NOT NULL DEFAULT 'lemonsqueezy'
 CHECK (source IN ('lemonsqueezy', 'gift', 'promotional'));
 
 -- Add admin_note for gift subscriptions
-ALTER TABLE subscriptions 
+ALTER TABLE subscriptions
 ADD COLUMN admin_note TEXT;
 
 -- Add gifted_by for tracking who granted the gift
-ALTER TABLE subscriptions 
+ALTER TABLE subscriptions
 ADD COLUMN gifted_by UUID REFERENCES user_profiles(id);
 ```
 
 **API Endpoint:**
+
 ```typescript
 // POST /api/admin/users/:userId/gift-subscription
 interface GiftSubscriptionRequest {
   tier: 'supporter' | 'champion' | 'legend' | 'hall_of_famer';
-  durationMonths: number | null;  // null = lifetime
+  durationMonths: number | null; // null = lifetime
   note?: string;
   sendEmail: boolean;
 }
@@ -336,12 +353,14 @@ interface GiftSubscriptionRequest {
 
 **Description:**
 Track all admin actions for accountability:
+
 - Gift subscriptions granted
 - Tier configuration changes
 - User role changes
 - Any destructive admin actions
 
 **Acceptance Criteria:**
+
 - [ ] `admin_audit_log` table created
 - [ ] All admin actions logged automatically
 - [ ] Log includes: admin user, action type, target, details, timestamp
@@ -350,6 +369,7 @@ Track all admin actions for accountability:
 - [ ] Cannot be deleted (append-only)
 
 **Database Schema:**
+
 ```sql
 CREATE TABLE admin_audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -379,6 +399,7 @@ CREATE POLICY admin_audit_log_select ON admin_audit_log
 ```
 
 **Action Types:**
+
 - `gift_subscription_created`
 - `gift_subscription_revoked`
 - `user_role_changed`
@@ -393,17 +414,20 @@ CREATE POLICY admin_audit_log_select ON admin_audit_log
 
 **Description:**
 Update the existing system admin navigation to include new pages:
+
 - Tier Management
 - User Management
 - Audit Log
 
 **Acceptance Criteria:**
+
 - [ ] Navigation links added to admin sidebar/header
 - [ ] Active state shown for current page
 - [ ] Icons for each section
 - [ ] Consistent with existing admin UI
 
 **Files to Update:**
+
 - `src/app/system-admin/layout.tsx` or equivalent
 - Add navigation items for new pages
 

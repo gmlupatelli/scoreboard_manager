@@ -32,44 +32,44 @@ async function getJohnScoreboardId(page: Page): Promise<string | null> {
   try {
     // Navigate to dashboard
     await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 15000 });
-    
+
     // Wait for scoreboard cards to appear
     await page.waitForSelector('[data-testid="scoreboard-card"]', { timeout: 10000 });
-    
+
     // Look for a public scoreboard card (has "Public" badge or doesn't have "Private")
     // Try to find a card that doesn't have "Private" in its visibility indicator
     const cards = page.locator('[data-testid="scoreboard-card"]');
     const cardCount = await cards.count();
-    
+
     for (let i = 0; i < cardCount; i++) {
       const card = cards.nth(i);
       const cardText = await card.textContent();
-      
+
       // Skip private scoreboards
       if (cardText?.toLowerCase().includes('private')) {
         continue;
       }
-      
+
       // Found a public scoreboard - click its manage button
       const manageBtn = card.locator('button:has-text("Manage Scoreboard")');
       await manageBtn.waitFor({ state: 'visible', timeout: 5000 });
       await manageBtn.click();
-      
+
       // Wait for navigation to scoreboard management page
       await page.waitForURL('**/scoreboard-management?id=*', { timeout: 10000 });
-      
+
       // Extract the scoreboard ID from URL
       const url = page.url();
       const match = url.match(/id=([a-f0-9-]+)/);
       return match ? match[1] : null;
     }
-    
+
     // Fallback: just use the first card if no public ones found
     const card = cards.first();
     const manageBtn = card.locator('button:has-text("Manage Scoreboard")');
     await manageBtn.waitFor({ state: 'visible', timeout: 5000 });
     await manageBtn.click();
-    
+
     await page.waitForURL('**/scoreboard-management?id=*', { timeout: 10000 });
     const url = page.url();
     const match = url.match(/id=([a-f0-9-]+)/);
@@ -93,8 +93,11 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
     await page.waitForTimeout(500);
 
     // Expand kiosk section - look for the collapsible section toggle button
-    const kioskToggle = page.locator('button').filter({ hasText: /kiosk|presentation/i }).first();
-    
+    const kioskToggle = page
+      .locator('button')
+      .filter({ hasText: /kiosk|presentation/i })
+      .first();
+
     if (await kioskToggle.isVisible()) {
       // Click to expand if not already expanded
       await kioskToggle.click();
@@ -106,8 +109,11 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
 
     // Look for the enable toggle label - wait for it to appear after expansion
     await page.waitForTimeout(300);
-    const enableLabel = page.locator('label').filter({ hasText: /enable kiosk/i }).first();
-    
+    const enableLabel = page
+      .locator('label')
+      .filter({ hasText: /enable kiosk/i })
+      .first();
+
     if (await enableLabel.isVisible({ timeout: 3000 })) {
       // Check if already enabled by looking at the checkbox within
       const checkbox = enableLabel.locator('input[type="checkbox"]');
@@ -120,7 +126,7 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
       }
       return true;
     }
-    
+
     console.log('Enable kiosk label not found');
     return false;
   } catch (error) {
@@ -134,7 +140,9 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
 // ============================================================================
 
 test.describe('Kiosk Mode - Fast Tests', () => {
-  test('@fast @no-mobile should expand and collapse kiosk settings section', async ({ johnAuth }) => {
+  test('@fast @no-mobile should expand and collapse kiosk settings section', async ({
+    johnAuth,
+  }) => {
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 
@@ -142,7 +150,10 @@ test.describe('Kiosk Mode - Fast Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Find the kiosk/TV mode section toggle
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
 
     if (await kioskToggle.isVisible()) {
       // Click to expand
@@ -170,7 +181,10 @@ test.describe('Kiosk Mode - Fast Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -181,7 +195,12 @@ test.describe('Kiosk Mode - Fast Tests', () => {
       .locator('[role="switch"]')
       .first()
       .or(johnAuth.locator('input[type="checkbox"]').first())
-      .or(johnAuth.locator('button').filter({ hasText: /enable/i }).first());
+      .or(
+        johnAuth
+          .locator('button')
+          .filter({ hasText: /enable/i })
+          .first()
+      );
 
     if (await enableToggle.isVisible()) {
       const initialState =
@@ -215,7 +234,10 @@ test.describe('Kiosk Mode - Fast Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -252,7 +274,10 @@ test.describe('Kiosk Mode - Fast Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -296,7 +321,10 @@ test.describe('Kiosk Mode - Fast Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -339,7 +367,9 @@ test.describe('Kiosk Mode - Fast Tests', () => {
     await expect(body).toBeDefined();
   });
 
-  test('@fast @no-mobile should respond to keyboard controls in kiosk view', async ({ johnAuth }) => {
+  test('@fast @no-mobile should respond to keyboard controls in kiosk view', async ({
+    johnAuth,
+  }) => {
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 
@@ -369,7 +399,9 @@ test.describe('Kiosk Mode - Fast Tests', () => {
 test.describe('Kiosk Mode - Full Tests', () => {
   const testImagePath = path.join(__dirname, 'fixtures', 'test-image.png');
 
-  test('@full @no-mobile should upload a valid image and display in slide list', async ({ johnAuth }) => {
+  test('@full @no-mobile should upload a valid image and display in slide list', async ({
+    johnAuth,
+  }) => {
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 
@@ -377,7 +409,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -418,7 +453,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -444,7 +482,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -475,7 +516,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -522,7 +566,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -639,7 +686,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     await johnAuth.waitForLoadState('networkidle');
 
     // Expand kiosk section
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -687,7 +737,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     }
   });
 
-  test('@full @no-mobile should validate correct and incorrect PIN', async ({ johnAuth, context }) => {
+  test('@full @no-mobile should validate correct and incorrect PIN', async ({
+    johnAuth,
+    context,
+  }) => {
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 
@@ -695,7 +748,10 @@ test.describe('Kiosk Mode - Full Tests', () => {
     await johnAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
     await johnAuth.waitForLoadState('networkidle');
 
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -800,14 +856,19 @@ test.describe('Kiosk Mode - Full Tests', () => {
     // Skip visibility check as fullscreen mode can affect element visibility in Playwright
   });
 
-  test('@full @no-mobile should configure scoreboard position in carousel', async ({ johnAuth }) => {
+  test('@full @no-mobile should configure scoreboard position in carousel', async ({
+    johnAuth,
+  }) => {
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 
     await johnAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
     await johnAuth.waitForLoadState('networkidle');
 
-    const kioskToggle = johnAuth.locator('button').filter({ hasText: /kiosk|tv mode/i }).first();
+    const kioskToggle = johnAuth
+      .locator('button')
+      .filter({ hasText: /kiosk|tv mode/i })
+      .first();
     if (await kioskToggle.isVisible()) {
       await kioskToggle.click();
       await johnAuth.waitForTimeout(500);
@@ -892,7 +953,9 @@ test.describe('Kiosk Mode - Full Tests', () => {
 // ============================================================================
 
 test.describe('Kiosk Mode - Accessibility', () => {
-  test('@full @no-mobile should have proper ARIA labels on kiosk controls', async ({ johnAuth }) => {
+  test('@full @no-mobile should have proper ARIA labels on kiosk controls', async ({
+    johnAuth,
+  }) => {
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 

@@ -7,6 +7,7 @@
 ## Overview
 
 Implement a "Time Machine" feature for viewing scoreboard history:
+
 - Automatic snapshots on every change
 - Tier-based snapshot limits:
   - **Free users:** 10 snapshots per scoreboard
@@ -44,13 +45,14 @@ CREATE TABLE scoreboard_snapshots (
 );
 
 -- Index for efficient querying
-CREATE INDEX idx_snapshots_scoreboard_created 
+CREATE INDEX idx_snapshots_scoreboard_created
   ON scoreboard_snapshots(scoreboard_id, created_at DESC);
 
 -- Limit enforced via trigger (checks owner's subscription tier)
 ```
 
 **Snapshot Data Structure:**
+
 ```json
 {
   "scoreboard": {
@@ -77,12 +79,14 @@ CREATE INDEX idx_snapshots_scoreboard_created
 
 **Description:**
 Implement triggers/hooks to create snapshots when:
+
 - Entry is added
 - Entry is updated
 - Entry is deleted
 - Scoreboard settings change
 
 **Acceptance Criteria:**
+
 - [ ] Snapshot created on entry add
 - [ ] Snapshot created on entry update
 - [ ] Snapshot created on entry delete
@@ -92,6 +96,7 @@ Implement triggers/hooks to create snapshots when:
 - [ ] Respects 100 snapshot limit
 
 **Technical Notes:**
+
 - Can use Postgres triggers or application-level hooks
 - Consider debouncing rapid changes
 - Change descriptions examples:
@@ -108,12 +113,14 @@ Implement triggers/hooks to create snapshots when:
 
 **Description:**
 Keep snapshots based on owner's subscription tier:
+
 - **Free users:** Keep last 10 snapshots
 - **Supporters:** Keep last 100 snapshots
 - Delete oldest when limit exceeded
 - Limit checked on snapshot creation
 
 **Acceptance Criteria:**
+
 - [ ] Check scoreboard owner's subscription tier
 - [ ] Apply correct limit (10 for Free, 100 for Supporter+)
 - [ ] Delete oldest snapshots when limit exceeded
@@ -122,6 +129,7 @@ Keep snapshots based on owner's subscription tier:
 - [ ] Graceful handling when user downgrades (keep existing, just cap new ones)
 
 **Implementation Options:**
+
 1. **Postgres Trigger** - Delete oldest after insert, checking owner tier
 2. **Application Logic** - Check count and tier, delete in transaction
 3. **Scheduled Job** - Periodic cleanup based on current tiers
@@ -136,12 +144,14 @@ Keep snapshots based on owner's subscription tier:
 
 **Description:**
 Create a macOS Time Machine-inspired UI:
+
 - Timeline scrubber
 - Visual preview of past states
 - Date/time display
 - Smooth transitions between snapshots
 
 **Acceptance Criteria:**
+
 - [ ] Timeline component showing snapshot dates
 - [ ] Click to view any snapshot
 - [ ] Current state clearly marked
@@ -151,6 +161,7 @@ Create a macOS Time Machine-inspired UI:
 - [ ] Accessible to scoreboard owner only
 
 **UI Mockup:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Time Machine - My Scoreboard                      [X]   │
@@ -183,10 +194,12 @@ Create a macOS Time Machine-inspired UI:
 
 **Description:**
 Create API endpoints for:
+
 - List snapshots for a scoreboard
 - Get single snapshot details
 
 **Acceptance Criteria:**
+
 - [ ] `GET /api/scoreboards/:id/snapshots` - list snapshots
 - [ ] `GET /api/scoreboards/:id/snapshots/:snapshotId` - get snapshot
 - [ ] Pagination for list endpoint
@@ -194,6 +207,7 @@ Create API endpoints for:
 - [ ] Returns snapshot data and metadata
 
 **Response Format:**
+
 ```json
 {
   "snapshots": [
@@ -222,6 +236,7 @@ Create API endpoints for:
 Add entry point to Time Machine from scoreboard management view.
 
 **Acceptance Criteria:**
+
 - [ ] "View History" or clock icon button
 - [ ] Opens Time Machine modal/page
 - [ ] Only shown to scoreboard owner

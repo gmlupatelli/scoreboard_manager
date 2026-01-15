@@ -7,6 +7,7 @@
 ## Overview
 
 Implement and enforce the limitations for free tier users:
+
 - 2 public scoreboards maximum
 - No private scoreboards
 - 50 entries per scoreboard maximum
@@ -22,6 +23,7 @@ Implement and enforce the limitations for free tier users:
 
 **Description:**
 Create a service that checks user limits based on subscription status:
+
 1. Count current public scoreboards
 2. Check if user can create more
 3. Check entry limits
@@ -29,6 +31,7 @@ Create a service that checks user limits based on subscription status:
 5. Check if feature is available
 
 **Acceptance Criteria:**
+
 - [ ] `limitsService` created in `src/services/limitsService.ts`
 - [ ] `canCreatePublicScoreboard(userId)` function
 - [ ] `canCreatePrivateScoreboard(userId)` function
@@ -73,12 +76,14 @@ function getLimitsForUser(isSupporter: boolean): UserLimits {
 
 **Description:**
 Update scoreboard creation to:
+
 1. Check user's subscription status
 2. Count existing scoreboards
 3. Block creation if limit reached
 4. Show upgrade prompt for free users at limit
 
 **Acceptance Criteria:**
+
 - [ ] API validates limits before creating scoreboard
 - [ ] UI shows remaining scoreboard count for free users
 - [ ] UI disables/hides private option for free users
@@ -86,6 +91,7 @@ Update scoreboard creation to:
 - [ ] Clear error messages
 
 **UI Changes:**
+
 - Create Scoreboard Modal:
   - Show "2 of 2 public scoreboards used" for free users
   - Disable "Private" visibility option for free users
@@ -100,12 +106,14 @@ Update scoreboard creation to:
 
 **Description:**
 Update entry creation to:
+
 1. Check scoreboard owner's subscription status
 2. Count existing entries
 3. Block creation if limit reached
 4. Show upgrade prompt
 
 **Acceptance Criteria:**
+
 - [ ] API validates entry count before adding
 - [ ] UI shows "X of 50 entries" for free users
 - [ ] Warning shown when approaching limit (e.g., 45+)
@@ -113,6 +121,7 @@ Update entry creation to:
 - [ ] Upgrade prompt displayed
 
 **Technical Notes:**
+
 - Check the scoreboard owner's subscription, not the current user
 - Cached count may be needed for performance
 
@@ -124,12 +133,14 @@ Update entry creation to:
 
 **Description:**
 When a user's subscription expires or is cancelled:
+
 1. Existing scoreboards become read-only if over limit
 2. User can delete but not edit over-limit scoreboards
 3. Private scoreboards become inaccessible (but not deleted)
 4. Clear messaging about what happened
 
 **Acceptance Criteria:**
+
 - [ ] Over-limit scoreboards marked as read-only
 - [ ] Read-only scoreboards show clear indicator
 - [ ] Edit buttons disabled with explanation
@@ -138,6 +149,7 @@ When a user's subscription expires or is cancelled:
 - [ ] Dashboard shows upgrade prompt
 
 **Technical Notes:**
+
 - Don't delete user data on downgrade
 - Add `is_over_limit` computed property or flag
 - Consider background job to mark scoreboards on subscription expiry
@@ -177,12 +189,14 @@ Private scoreboard (no longer accessible):
 
 **Description:**
 Update API endpoints to validate subscription status:
+
 1. POST /scoreboards - check limits
 2. PATCH /scoreboards/:id - check if not read-only
 3. POST /scoreboards/:id/entries - check entry limits
 4. GET /scoreboards/:id - check private access
 
 **Acceptance Criteria:**
+
 - [ ] All scoreboard mutation endpoints check subscription
 - [ ] All entry mutation endpoints check limits
 - [ ] Appropriate HTTP status codes (403 for limit reached)
@@ -190,6 +204,7 @@ Update API endpoints to validate subscription status:
 - [ ] Rate limiting considerations
 
 **Error Response Format:**
+
 ```json
 {
   "error": "limit_reached",
@@ -206,12 +221,14 @@ Update API endpoints to validate subscription status:
 
 **Description:**
 Add tasteful, non-intrusive upgrade prompts at key moments:
+
 1. When approaching limits
 2. When limits are reached
 3. When viewing Supporter-only features
 4. On dashboard for free users
 
 **Acceptance Criteria:**
+
 - [ ] Upgrade prompt component created
 - [ ] Shown when 80%+ of limits used
 - [ ] Shown when limit reached
@@ -221,6 +238,7 @@ Add tasteful, non-intrusive upgrade prompts at key moments:
 - [ ] Not annoying or aggressive
 
 **Design Guidelines:**
+
 - Subtle, helpful tone
 - Highlight benefits, not restrictions
 - "Become a Supporter" language (not "Upgrade to Pro")

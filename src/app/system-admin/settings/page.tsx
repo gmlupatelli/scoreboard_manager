@@ -122,14 +122,11 @@ export default function SystemAdminSettingsPage() {
     setError('');
     try {
       const authHeaders = await getAuthHeaders();
-      const response = await fetch(
-        `/api/admin/orphan-files?older_than_minutes=${orphanMinutes}`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-          headers: authHeaders,
-        }
-      );
+      const response = await fetch(`/api/admin/orphan-files?older_than_minutes=${orphanMinutes}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: authHeaders,
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -229,7 +226,9 @@ export default function SystemAdminSettingsPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-text-primary">System Settings</h1>
-              <p className="text-text-secondary mt-1">Manage application-wide configuration and maintenance</p>
+              <p className="text-text-secondary mt-1">
+                Manage application-wide configuration and maintenance
+              </p>
             </div>
             <Link
               href="/dashboard"
@@ -421,13 +420,18 @@ export default function SystemAdminSettingsPage() {
                       <div className="space-y-3">
                         <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                           <div className="flex items-center mb-2">
-                            <Icon name="ExclamationTriangleIcon" size={20} className="text-warning mr-2" />
+                            <Icon
+                              name="ExclamationTriangleIcon"
+                              size={20}
+                              className="text-warning mr-2"
+                            />
                             <span className="text-sm text-warning font-medium">
                               Found {orphanInfo.count} orphan file(s)
                             </span>
                           </div>
                           <p className="text-sm text-text-secondary">
-                            Total size: {orphanInfo.totalSizeMB} MB ({orphanInfo.totalSizeBytes.toLocaleString()} bytes)
+                            Total size: {orphanInfo.totalSizeMB} MB (
+                            {orphanInfo.totalSizeBytes.toLocaleString()} bytes)
                           </p>
                         </div>
 
@@ -436,23 +440,36 @@ export default function SystemAdminSettingsPage() {
                           <table className="w-full text-sm">
                             <thead className="bg-muted sticky top-0">
                               <tr>
-                                <th className="text-left px-3 py-2 text-text-secondary font-medium">File Path</th>
-                                <th className="text-left px-3 py-2 text-text-secondary font-medium">Type</th>
-                                <th className="text-right px-3 py-2 text-text-secondary font-medium">Size</th>
-                                <th className="text-left px-3 py-2 text-text-secondary font-medium">Uploaded</th>
+                                <th className="text-left px-3 py-2 text-text-secondary font-medium">
+                                  File Path
+                                </th>
+                                <th className="text-left px-3 py-2 text-text-secondary font-medium">
+                                  Type
+                                </th>
+                                <th className="text-right px-3 py-2 text-text-secondary font-medium">
+                                  Size
+                                </th>
+                                <th className="text-left px-3 py-2 text-text-secondary font-medium">
+                                  Uploaded
+                                </th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
                               {orphanInfo.orphans.map((file) => (
                                 <tr key={file.id} className="hover:bg-muted/50">
-                                  <td className="px-3 py-2 text-text-primary font-mono text-xs truncate max-w-xs" title={file.storage_path}>
+                                  <td
+                                    className="px-3 py-2 text-text-primary font-mono text-xs truncate max-w-xs"
+                                    title={file.storage_path}
+                                  >
                                     {file.storage_path}
                                   </td>
                                   <td className="px-3 py-2 text-text-secondary capitalize">
                                     {file.file_type}
                                   </td>
                                   <td className="px-3 py-2 text-text-secondary text-right">
-                                    {file.file_size ? `${(file.file_size / 1024).toFixed(1)} KB` : '-'}
+                                    {file.file_size
+                                      ? `${(file.file_size / 1024).toFixed(1)} KB`
+                                      : '-'}
                                   </td>
                                   <td className="px-3 py-2 text-text-secondary">
                                     {new Date(file.created_at).toLocaleDateString()}
@@ -470,12 +487,21 @@ export default function SystemAdminSettingsPage() {
                 {/* Info box */}
                 <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                   <div className="flex gap-2">
-                    <Icon name="InformationCircleIcon" size={18} className="text-gray-600 flex-shrink-0 mt-0.5" />
+                    <Icon
+                      name="InformationCircleIcon"
+                      size={18}
+                      className="text-gray-600 flex-shrink-0 mt-0.5"
+                    />
                     <div className="text-xs text-gray-600">
                       <p className="font-medium mb-1">Tips</p>
                       <ul className="list-disc list-inside space-y-0.5">
-                        <li>Orphan files occur when uploads are interrupted before a slide is created</li>
-                        <li>Use a longer time threshold to avoid deleting files from in-progress uploads</li>
+                        <li>
+                          Orphan files occur when uploads are interrupted before a slide is created
+                        </li>
+                        <li>
+                          Use a longer time threshold to avoid deleting files from in-progress
+                          uploads
+                        </li>
                         <li>This only affects kiosk slide images, not other storage</li>
                       </ul>
                     </div>

@@ -1,6 +1,7 @@
 # Git Workflow Guide
 
 ## Repository Information
+
 - **Repository**: `gmlupatelli/scoreboard_manager`
 - **Main Branch**: `main` (production)
 - **Development Branch**: `dev` (testing)
@@ -12,10 +13,12 @@
 ## Branch Strategy
 
 ### **Main Branches**
+
 - `main` - Production branch (deploys to Netlify production)
 - `dev` - Development/testing branch (deploys to Netlify preview)
 
 ### **Feature Branches**
+
 - Create feature branches from `dev`
 - Naming convention: `feature/description-of-feature`
 - Examples: `feature/add-color-picker`, `feature/fix-login-bug`
@@ -151,6 +154,7 @@ body (optional)
 ```
 
 ### **Types:**
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `refactor:` - Code refactoring (no functional changes)
@@ -162,6 +166,7 @@ body (optional)
 - `ci:` - CI/CD pipeline changes
 
 ### **Examples:**
+
 ```powershell
 git commit -m "feat: add RGBA color picker with transparency support"
 git commit -m "fix: standardize password minimum to 6 characters"
@@ -181,6 +186,7 @@ git commit -m "chore: update dependencies"
 The project uses Playwright for comprehensive end-to-end testing.
 
 #### **Setup** (one-time)
+
 ```powershell
 # Install dependencies
 npm install
@@ -193,6 +199,7 @@ sudo npx playwright install-deps
 ```
 
 #### **Running Tests**
+
 ```powershell
 # Run all tests
 npm run test:e2e
@@ -213,11 +220,13 @@ npx playwright test --project="Mobile Minimum"
 ```
 
 #### **Test Coverage**
+
 - **Mobile Tests**: Touch targets, landscape orientation, 320px viewport
 - **Desktop Tests**: Auth flows, CRUD operations, keyboard navigation, real-time updates
 - **Accessibility Tests**: WCAG compliance, ARIA labels, screen readers, focus management
 
 #### **Before Pushing Code**
+
 ```powershell
 # 1. Run linting
 npm run lint
@@ -241,6 +250,7 @@ git push
 ### **Setup Supabase CLI**
 
 #### **Install Supabase CLI** (one-time)
+
 ```powershell
 # Recommended: Using Scoop (Windows)
 scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
@@ -258,11 +268,13 @@ choco install supabase
 ```
 
 #### **Configure Environment** (one-time)
+
 1. Copy `.env.example` to `.env.local`
 2. Fill in all Supabase credentials (see `.env.example` for instructions)
 3. Get your Personal Access Token from Supabase dashboard
 
 #### **Get Supabase Access Token**
+
 1. Go to https://app.supabase.com
 2. Click your profile (bottom left)
 3. Go to **Account Settings** → **Access Tokens**
@@ -272,12 +284,14 @@ choco install supabase
 7. Add to `.env.local` as `SUPABASE_ACCESS_TOKEN`
 
 #### **Get Database Password**
+
 1. Go to your Supabase project dashboard
 2. **Settings** → **Database**
 3. Under **Connection string**, reveal the password
 4. Add to `.env.local` as `SUPABASE_DB_PASSWORD`
 
 #### **Get Project References**
+
 1. Go to your Supabase project dashboard
 2. **Settings** → **General**
 3. Copy the **Reference ID** (example: `abcdefghijklmnop`)
@@ -285,6 +299,7 @@ choco install supabase
 5. Add to `.env.local` as `SUPABASE_PROJECT_REF_DEV` and `SUPABASE_PROJECT_REF_PROD`
 
 #### **Login to Supabase CLI**
+
 ```powershell
 # Using access token from .env.local
 supabase login
@@ -298,6 +313,7 @@ supabase login --token sbp_your_token_here
 ### **Working with Migrations**
 
 #### **Link to Project**
+
 ```powershell
 # Link to development project
 supabase link --project-ref $env:SUPABASE_PROJECT_REF_DEV
@@ -310,6 +326,7 @@ supabase status
 ```
 
 #### **Create a New Migration**
+
 ```powershell
 # Generate migration file with timestamp
 supabase migration new add_new_feature
@@ -318,7 +335,9 @@ supabase migration new add_new_feature
 ```
 
 #### **Write Your Migration**
+
 Edit the generated SQL file:
+
 ```sql
 -- supabase/migrations/20260110120000_add_new_feature.sql
 
@@ -344,6 +363,7 @@ USING (auth.uid() = user_id);
 ```
 
 #### **Check Migration Status**
+
 ```powershell
 # See which migrations are applied
 supabase migration list
@@ -354,6 +374,7 @@ supabase migration list
 ```
 
 #### **Apply Migration to Development**
+
 ```powershell
 # 1. Link to dev project
 supabase link --project-ref $env:SUPABASE_PROJECT_REF_DEV
@@ -368,6 +389,7 @@ supabase db push
 ```
 
 #### **Apply Migration to Production**
+
 ```powershell
 # 1. Link to prod project
 supabase link --project-ref $env:SUPABASE_PROJECT_REF_PROD
@@ -388,6 +410,7 @@ supabase db push
 Production database migrations are **automatically applied** during Netlify deployments:
 
 #### **How It Works:**
+
 1. Migration files in `supabase/migrations/` are committed to git
 2. Push to `main` branch triggers Netlify production build
 3. Netlify build process:
@@ -398,12 +421,15 @@ Production database migrations are **automatically applied** during Netlify depl
 4. If migration fails → build fails → production stays on previous version ✅
 
 #### **Required Netlify Environment Variables:**
+
 These must be set in Netlify (**Site settings** → **Environment variables** → **Production** scope):
+
 - `SUPABASE_ACCESS_TOKEN` - Your personal access token (starts with `sbp_`)
 - `SUPABASE_DB_PASSWORD` - Production database password
 - `SUPABASE_PROJECT_REF` - Production project ref: `bfbvcmfezdhdotmbgxsn`
 
 #### **Important Notes:**
+
 - ✅ **Always test migrations in dev first** before merging to main
 - ✅ **Migrations are atomic** - failed migrations prevent bad deployments
 - ✅ **Safe rollback** - redeploy previous version in Netlify dashboard
@@ -412,7 +438,9 @@ These must be set in Netlify (**Site settings** → **Environment variables** �
 - ⚠️ **Data migrations** - test thoroughly in dev, backup production first
 
 #### **Dev Branch Behavior:**
+
 The `dev` branch does **NOT** auto-run migrations on Netlify. You apply dev migrations manually:
+
 ```powershell
 supabase link --project-ref kvorvygjgeelhybnstje
 supabase db push
@@ -508,6 +536,7 @@ supabase db url
 ### **Troubleshooting Migrations**
 
 #### **Migration Already Applied Remotely**
+
 ```powershell
 # If migration exists remotely but not marked locally
 supabase migration repair --status applied 20260110120000
@@ -517,6 +546,7 @@ supabase migration repair --status reverted 20260110120000
 ```
 
 #### **Sync Issues Between Local and Remote**
+
 ```powershell
 # Pull remote migrations to local
 supabase db pull
@@ -526,6 +556,7 @@ supabase db push --force
 ```
 
 #### **View Database Directly**
+
 ```powershell
 # Get connection string
 supabase db url
@@ -541,6 +572,7 @@ psql "$(supabase db url)"
 When migrations accumulate (10+ files) or the schema is stable, squash them into a baseline:
 
 #### **When to Squash**
+
 - Schema is stable after multiple changes
 - 10+ migration files cluttering the folder
 - Starting fresh after manual database changes
@@ -573,12 +605,14 @@ git push origin main
 ```
 
 #### **File Locations**
-| Location | Purpose |
-|----------|---------|
-| `supabase/migrations/` | Active migrations (run by `db push`) |
-| `docs/migrations-archive/` | Historical reference only |
+
+| Location                   | Purpose                              |
+| -------------------------- | ------------------------------------ |
+| `supabase/migrations/`     | Active migrations (run by `db push`) |
+| `docs/migrations-archive/` | Historical reference only            |
 
 #### **Baseline Format**
+
 ```sql
 -- No-op for existing databases
 SELECT 1;
@@ -604,6 +638,7 @@ CREATE TABLE example (...);
 
 3. **Include rollback instructions**
    - Comment at top of migration with rollback SQL
+
    ```sql
    -- Rollback: DROP COLUMN IF EXISTS new_field;
    ALTER TABLE scoreboards ADD COLUMN new_field TEXT;
@@ -630,6 +665,7 @@ CREATE TABLE example (...);
 ## Useful Git Commands
 
 ### **Checking Status**
+
 ```powershell
 # See current branch and uncommitted changes
 git status
@@ -645,6 +681,7 @@ git diff
 ```
 
 ### **Undoing Changes**
+
 ```powershell
 # Discard changes in working directory
 git checkout -- <file>
@@ -663,6 +700,7 @@ git revert <commit-hash>
 ```
 
 ### **Cleaning Up**
+
 ```powershell
 # Delete local feature branch
 git branch -d feature/branch-name
@@ -678,6 +716,7 @@ git remote prune origin
 ```
 
 ### **Stashing Work**
+
 ```powershell
 # Save current work temporarily
 git stash
@@ -697,6 +736,7 @@ git stash apply stash@{0}
 ## GitHub Pull Requests
 
 ### **Creating a PR**
+
 1. Push your feature branch to GitHub
 2. Go to GitHub repository
 3. Click "Compare & pull request"
@@ -706,6 +746,7 @@ git stash apply stash@{0}
 7. Netlify will automatically create a deploy preview
 
 ### **PR Checklist**
+
 - [ ] Code builds without errors (`npm run build`)
 - [ ] No TypeScript errors (`npm run type-check`)
 - [ ] Tested locally
@@ -718,15 +759,19 @@ git stash apply stash@{0}
 ## Netlify Deploys
 
 ### **Automatic Deployments**
+
 - **Main branch** → https://myscoreboardmanager.netlify.app (Production)
 - **Dev branch** → https://dev--myscoreboardmanager.netlify.app (Staging)
 - **Pull requests** → https://deploy-preview-[PR#]--myscoreboardmanager.netlify.app
 
 ### **Deploy Previews**
+
 Every PR automatically gets a preview deploy:
+
 ```
 deploy-preview-42--myscoreboardmanager.netlify.app
 ```
+
 Check the Netlify bot comment on your PR for the URL.
 
 ---
@@ -734,6 +779,7 @@ Check the Netlify bot comment on your PR for the URL.
 ## Emergency Procedures
 
 ### **Rollback Production**
+
 ```powershell
 # Find last good commit
 git log --oneline
@@ -750,6 +796,7 @@ git push origin dev --force
 ```
 
 ### **Fix Broken Build**
+
 ```powershell
 # Check build locally first
 npm run build
@@ -767,13 +814,16 @@ npm run build
 ## Project-Specific Notes
 
 ### **Before Pushing**
+
 1. Test locally: `npm run dev`
 2. Check for errors: `npm run lint`
 3. Build check: `npm run build`
 4. Type check: `npm run type-check`
 
 ### **Required Environment Variables**
+
 Ensure these are set in Netlify for all environments:
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SECRET_KEY`
@@ -783,13 +833,16 @@ Ensure these are set in Netlify for all environments:
 ## Tips for GitHub Copilot
 
 ### **Context for Copilot**
+
 When working on features, mention:
+
 - "This is for the scoreboard manager app"
 - "We use Next.js 14 with App Router"
 - "We use Supabase for backend"
 - "Follow our commit message convention (feat:, fix:, etc.)"
 
 ### **Common Patterns**
+
 - Use `'use client'` for client components
 - Use `safeLocalStorage` utility for localStorage operations
 - Use `ErrorBoundary` component for error handling

@@ -17,7 +17,9 @@ Implement the "Powered by" badge for embed views. This phase is intentionally sm
 The following theming functionality is **already implemented** and should NOT be recreated:
 
 ### Style Presets (Already Exist)
+
 Located in `src/utils/stylePresets.ts`:
+
 - **Light** - Clean white background
 - **Dark** - Dark mode with light text
 - **Transparent** - No background (for overlays)
@@ -26,7 +28,9 @@ Located in `src/utils/stylePresets.ts`:
 - **Custom** - Full custom builder
 
 ### Custom Theme Builder (Already Exists)
+
 Located in `src/app/scoreboard-management/components/StyleCustomizationSection.tsx`:
+
 - 21+ customizable color properties
 - Live preview
 - RGBA support for transparent backgrounds
@@ -34,7 +38,9 @@ Located in `src/app/scoreboard-management/components/StyleCustomizationSection.t
 - Background, text, header, row, and accent colors
 
 ### Database Storage (Already Exists)
+
 The `scoreboards.custom_styles` JSONB column already stores:
+
 - Background colors (header, row, alternating rows)
 - Text colors (header, row, score, details)
 - Border and shadow settings
@@ -51,6 +57,7 @@ The `scoreboards.custom_styles` JSONB column already stores:
 
 **Description:**
 Add a badge to the embed view that:
+
 - Shows for free tier users only
 - Links to Scoreboard Manager website
 - Is positioned unobtrusively (bottom corner)
@@ -58,6 +65,7 @@ Add a badge to the embed view that:
 - Hidden for Supporters (badge-free embeds)
 
 **Acceptance Criteria:**
+
 - [ ] `PoweredByBadge` component created
 - [ ] Shows on embed view for free users
 - [ ] Hidden for users with active subscription
@@ -67,6 +75,7 @@ Add a badge to the embed view that:
 - [ ] Uses CSS that's hard to override externally
 
 **Design:**
+
 ```
 ┌─────────────────────────────────────────┐
 │                                         │
@@ -81,6 +90,7 @@ Add a badge to the embed view that:
 ```
 
 **Technical Implementation:**
+
 ```typescript
 // src/components/common/PoweredByBadge.tsx
 interface PoweredByBadgeProps {
@@ -89,9 +99,9 @@ interface PoweredByBadgeProps {
 
 export default function PoweredByBadge({ show }: PoweredByBadgeProps) {
   if (!show) return null;
-  
+
   return (
-    <a 
+    <a
       href="https://scoreboardmanager.app/?utm_source=embed&utm_medium=badge"
       target="_blank"
       rel="noopener"
@@ -118,11 +128,13 @@ export default function PoweredByBadge({ show }: PoweredByBadgeProps) {
 
 **Description:**
 Update the embed view component to:
+
 1. Check scoreboard owner's subscription status
 2. Conditionally render the badge
 3. Position it correctly within the embed container
 
 **Acceptance Criteria:**
+
 - [ ] Embed view fetches owner subscription status
 - [ ] Badge rendered conditionally
 - [ ] Badge positioned at bottom of embed
@@ -131,6 +143,7 @@ Update the embed view component to:
 - [ ] Badge visible on light and dark backgrounds
 
 **Files to Update:**
+
 - `src/app/embed/[id]/page.tsx`
 - `src/app/embed/[id]/components/EmbedScoreboard.tsx`
 
@@ -142,10 +155,12 @@ Update the embed view component to:
 
 **Description:**
 When free users view their own embed preview, show a subtle message:
+
 - "Want to remove the badge? Become a Supporter!"
 - Link to pricing/subscription page
 
 **Acceptance Criteria:**
+
 - [ ] Message shown in embed preview mode (not actual embed)
 - [ ] Only shown to scoreboard owner
 - [ ] Links to subscription page

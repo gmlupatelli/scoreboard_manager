@@ -109,26 +109,29 @@ authTest.describe('Scoreboard CRUD Operations', () => {
   });
 
   // Data display logic - viewport-independent
-  authTest('@full @desktop-only scoreboard management page displays entries', async ({ johnAuth }) => {
-    await johnAuth.goto('/dashboard');
-    await johnAuth.waitForTimeout(2000);
+  authTest(
+    '@full @desktop-only scoreboard management page displays entries',
+    async ({ johnAuth }) => {
+      await johnAuth.goto('/dashboard');
+      await johnAuth.waitForTimeout(2000);
 
-    // Find and click manage button on john's scoreboard
-    const manageButton = johnAuth
-      .locator('button:has-text("Manage Scoreboard")')
-      .or(johnAuth.locator('button:has-text("Manage")'))
-      .first();
+      // Find and click manage button on john's scoreboard
+      const manageButton = johnAuth
+        .locator('button:has-text("Manage Scoreboard")')
+        .or(johnAuth.locator('button:has-text("Manage")'))
+        .first();
 
-    if (await manageButton.isVisible()) {
-      await manageButton.click();
-      await johnAuth.waitForTimeout(1000);
+      if (await manageButton.isVisible()) {
+        await manageButton.click();
+        await johnAuth.waitForTimeout(1000);
 
-      // Should see management interface
-      const addEntryButton = johnAuth.locator('text=Add Entry');
-      const exists = await addEntryButton.isVisible().catch(() => false);
-      expect(typeof exists).toBe('boolean');
+        // Should see management interface
+        const addEntryButton = johnAuth.locator('text=Add Entry');
+        const exists = await addEntryButton.isVisible().catch(() => false);
+        expect(typeof exists).toBe('boolean');
+      }
     }
-  });
+  );
 
   // Form logic - viewport-independent
   authTest('@full @desktop-only add entry form opens', async ({ johnAuth }) => {
@@ -148,47 +151,55 @@ authTest.describe('Scoreboard CRUD Operations', () => {
         await johnAuth.waitForTimeout(500);
 
         // Form should appear - use the modal input specifically
-        const nameInput = johnAuth.locator('#entry-name').or(johnAuth.locator('[role="dialog"] input[type="text"]').first());
+        const nameInput = johnAuth
+          .locator('#entry-name')
+          .or(johnAuth.locator('[role="dialog"] input[type="text"]').first());
         await expect(nameInput).toBeVisible();
       }
     }
   });
 
   // Ownership UI - viewport-independent
-  authTest('@full @desktop-only delete button is available for owned scoreboards', async ({ johnAuth }) => {
-    await johnAuth.goto('/dashboard');
-    await johnAuth.waitForTimeout(2000);
+  authTest(
+    '@full @desktop-only delete button is available for owned scoreboards',
+    async ({ johnAuth }) => {
+      await johnAuth.goto('/dashboard');
+      await johnAuth.waitForTimeout(2000);
 
-    // Look for delete button on john's scoreboard card
-    const deleteButton = johnAuth
-      .locator('button[title*="delete"]')
-      .or(johnAuth.locator('button:has-text("Delete")'))
-      .first();
+      // Look for delete button on john's scoreboard card
+      const deleteButton = johnAuth
+        .locator('button[title*="delete"]')
+        .or(johnAuth.locator('button:has-text("Delete")'))
+        .first();
 
-    const isVisible = await deleteButton.isVisible().catch(() => false);
-    expect(typeof isVisible).toBe('boolean');
-  });
+      const isVisible = await deleteButton.isVisible().catch(() => false);
+      expect(typeof isVisible).toBe('boolean');
+    }
+  );
 });
 
 authTest.describe('Scoreboard Ownership & Permissions', () => {
   // Authorization - viewport-independent
-  authTest('@fast @desktop-only sarah cannot access john private scoreboard', async ({ sarahAuth }) => {
-    await sarahAuth.goto('/dashboard');
-    await sarahAuth.waitForTimeout(2000);
+  authTest(
+    '@fast @desktop-only sarah cannot access john private scoreboard',
+    async ({ sarahAuth }) => {
+      await sarahAuth.goto('/dashboard');
+      await sarahAuth.waitForTimeout(2000);
 
-    const searchInput = sarahAuth
-      .locator('input[placeholder*="search"]')
-      .or(sarahAuth.locator('input[type="search"]'));
+      const searchInput = sarahAuth
+        .locator('input[placeholder*="search"]')
+        .or(sarahAuth.locator('input[type="search"]'));
 
-    if (await searchInput.isVisible()) {
-      await searchInput.fill("John's Private");
-      await sarahAuth.waitForTimeout(1000);
+      if (await searchInput.isVisible()) {
+        await searchInput.fill("John's Private");
+        await sarahAuth.waitForTimeout(1000);
 
-      // Private scoreboard should not appear in sarah's dashboard
-      const privateScoreboard = sarahAuth.locator("text=John's Private Scoreboard");
-      await expect(privateScoreboard).not.toBeVisible();
+        // Private scoreboard should not appear in sarah's dashboard
+        const privateScoreboard = sarahAuth.locator("text=John's Private Scoreboard");
+        await expect(privateScoreboard).not.toBeVisible();
+      }
     }
-  });
+  );
 
   // Authorization - viewport-independent
   authTest('@fast @desktop-only sarah can view john public scoreboard', async ({ sarahAuth }) => {
@@ -218,36 +229,42 @@ authTest.describe('Scoreboard Ownership & Permissions', () => {
   });
 
   // Authorization - viewport-independent
-  authTest('@full @desktop-only sarah cannot edit john scoreboard entries', async ({ sarahAuth }) => {
-    await sarahAuth.goto('/dashboard');
-    await sarahAuth.waitForTimeout(2000);
+  authTest(
+    '@full @desktop-only sarah cannot edit john scoreboard entries',
+    async ({ sarahAuth }) => {
+      await sarahAuth.goto('/dashboard');
+      await sarahAuth.waitForTimeout(2000);
 
-    const publicScoreboard = sarahAuth.locator("text=John's Public Leaderboard");
+      const publicScoreboard = sarahAuth.locator("text=John's Public Leaderboard");
 
-    if (await publicScoreboard.isVisible()) {
-      await publicScoreboard.click();
-      await sarahAuth.waitForTimeout(1000);
+      if (await publicScoreboard.isVisible()) {
+        await publicScoreboard.click();
+        await sarahAuth.waitForTimeout(1000);
 
-      // Manage/Edit button should not be visible to sarah
-      const manageButton = sarahAuth
-        .locator('button:has-text("Manage")')
-        .or(sarahAuth.locator('button:has-text("Edit Entries")'));
+        // Manage/Edit button should not be visible to sarah
+        const manageButton = sarahAuth
+          .locator('button:has-text("Manage")')
+          .or(sarahAuth.locator('button:has-text("Edit Entries")'));
 
-      await expect(manageButton).not.toBeVisible();
+        await expect(manageButton).not.toBeVisible();
+      }
     }
-  });
+  );
 
   // Authorization UI - viewport-independent
-  authTest('@full @desktop-only john should not see owner filter in dashboard', async ({ johnAuth }) => {
-    await johnAuth.goto('/dashboard');
+  authTest(
+    '@full @desktop-only john should not see owner filter in dashboard',
+    async ({ johnAuth }) => {
+      await johnAuth.goto('/dashboard');
 
-    // Owner filter is admin-only
-    const ownerFilter = johnAuth
-      .locator('text=Filter by Owner')
-      .or(johnAuth.locator('[placeholder*="Filter by owner"]'));
+      // Owner filter is admin-only
+      const ownerFilter = johnAuth
+        .locator('text=Filter by Owner')
+        .or(johnAuth.locator('[placeholder*="Filter by owner"]'));
 
-    await expect(ownerFilter).not.toBeVisible();
-  });
+      await expect(ownerFilter).not.toBeVisible();
+    }
+  );
 
   // Data display - viewport-independent
   authTest('@full @desktop-only sarah should see her own scoreboards', async ({ sarahAuth }) => {
@@ -335,7 +352,7 @@ authTest.describe('Real-time Updates', () => {
 
     // Get initial count
     const scoreboardCards = johnAuth.locator('.bg-card.rounded-lg');
-    const initialCount = await scoreboardCards.count();
+    const _initialCount = await scoreboardCards.count();
 
     // Verify page is responsive to updates
     await johnAuth.reload();

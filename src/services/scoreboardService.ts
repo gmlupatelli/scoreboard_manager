@@ -53,7 +53,7 @@ const rowToScoreboard = (row: ScoreboardRow, entryCount?: number): Scoreboard =>
     sortOrder: row.sort_order as 'asc' | 'desc',
     visibility: row.visibility,
     scoreType: (row.score_type as 'number' | 'time') ?? 'number',
-    timeFormat: row.time_format as Scoreboard['timeFormat'] ?? null,
+    timeFormat: (row.time_format as Scoreboard['timeFormat']) ?? null,
     customStyles: row.custom_styles as ScoreboardCustomStyles | null,
     styleScope: row.style_scope as 'main' | 'embed' | 'both' | undefined,
     createdAt: row.created_at,
@@ -92,9 +92,15 @@ export const scoreboardService = {
         },
         (payload) => {
           // Only process if it matches our scoreboard
-          if (payload.new && (payload.new as { scoreboard_id?: string }).scoreboard_id === scoreboardId) {
+          if (
+            payload.new &&
+            (payload.new as { scoreboard_id?: string }).scoreboard_id === scoreboardId
+          ) {
             callbacks.onEntriesChange?.();
-          } else if (payload.old && (payload.old as { scoreboard_id?: string }).scoreboard_id === scoreboardId) {
+          } else if (
+            payload.old &&
+            (payload.old as { scoreboard_id?: string }).scoreboard_id === scoreboardId
+          ) {
             callbacks.onEntriesChange?.();
           }
         }
@@ -442,7 +448,8 @@ export const scoreboardService = {
       visibility: scoreboard.visibility,
       score_type: scoreboard.scoreType ?? 'number',
       time_format: scoreboard.timeFormat ?? null,
-      custom_styles: (scoreboard.customStyles ?? STYLE_PRESETS.light) as unknown as ScoreboardInsert['custom_styles'],
+      custom_styles: (scoreboard.customStyles ??
+        STYLE_PRESETS.light) as unknown as ScoreboardInsert['custom_styles'],
       style_scope: scoreboard.styleScope ?? 'both',
     };
 
@@ -481,7 +488,8 @@ export const scoreboardService = {
     if (updates.scoreType !== undefined) updateData.score_type = updates.scoreType;
     if (updates.timeFormat !== undefined) updateData.time_format = updates.timeFormat;
     if (updates.customStyles !== undefined)
-      updateData.custom_styles = updates.customStyles as unknown as ScoreboardUpdate['custom_styles'];
+      updateData.custom_styles =
+        updates.customStyles as unknown as ScoreboardUpdate['custom_styles'];
     if (updates.styleScope !== undefined) updateData.style_scope = updates.styleScope;
 
     const { data, error } = await supabase

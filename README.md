@@ -1,9 +1,11 @@
 # Scoreboard Manager
 
 ## Overview
+
 A modern Next.js 14 scoreboard management application with TypeScript, Tailwind CSS, and Supabase authentication. This app provides a comprehensive platform for creating, managing, and viewing scoreboards with real-time updates optimized for TV displays.
 
 ## Project Status
+
 - **Current State**: Fully configured and running on Replit
 - **Last Updated**: January 10, 2026
 - **Framework**: Next.js 14.2.0 with React 18.2.0
@@ -13,6 +15,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 ## Recent Changes
 
 ### January 2026 - Kiosk/TV Mode
+
 - **Full-screen kiosk display mode** optimized for TV screens and public displays
   - Dedicated `/kiosk/[id]` route with immersive full-screen experience
   - Auto-rotating carousel with configurable slide duration (3-300 seconds)
@@ -33,6 +36,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - **E2E tests** for kiosk functionality in `e2e/kiosk.spec.ts`
 
 ### January 2026 - Race Condition Fixes & Custom Hooks
+
 - **Created three new reusable hooks** to eliminate race conditions:
   - `useAuthGuard`: Centralized auth guard with role-based access, prevents redirect loops
   - `useAbortableFetch`: AbortController wrapper that auto-cancels on unmount
@@ -47,6 +51,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - **Added hook unit tests** for `useAuthGuard`, `useAbortableFetch`, and `useTimeoutRef`
 
 ### January 11, 2026 - Mobile Optimization & E2E Testing
+
 - **Comprehensive mobile responsiveness** targeting minimum viewport of 320px (iPhone SE)
   - Optimized all modals for iPhone SE with responsive padding and stacked buttons
   - Fixed ScoreboardCard metadata wrapping and increased touch targets to 20px (44x44px minimum)
@@ -64,6 +69,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
   - Manual testing checklist for 320px viewport validation
 
 ### January 10, 2026 - JWT Migration & Build Safety Improvements
+
 - **Migrated to modern JWT signing keys** (ECC P-256) from legacy shared secrets
   - Enabled JWT signing keys in both Dev and Prod Supabase projects
   - Generated new publishable and secret API keys for enhanced security
@@ -85,6 +91,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
   - Context-specific values set in Netlify (Production vs Deploy Previews)
 
 ### January 10, 2026 - Git Workflow & Supabase CLI Integration
+
 - Created comprehensive Git workflow guide at `.github/GIT_WORKFLOW.md`
 - Created JWT migration checklist at `docs/JWT_MIGRATION_CHECKLIST.md`
 - Documented branch strategy (main → production, dev → staging, feature branches)
@@ -93,6 +100,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - See [Database Migrations](#database-migrations) section below for workflow
 
 ### January 10, 2026 - Advanced Styling & UX Improvements
+
 - Added **Alternate Row Text Color** custom property for better readability in alternating table rows
   - Property added to all 6 style presets (light, dark, transparent, high-contrast, minimal, custom)
   - Applied to desktop table view, mobile card view, embed view, and preview table
@@ -108,6 +116,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Improved login form to trigger Chrome password save prompt
 
 ### January 9, 2026 - Time-Based Scoreboards & Flexible Score Types
+
 - Added flexible score types: number (default) or time-based scoreboards
 - Configurable sort order: ascending (lowest/fastest first) or descending (highest/slowest first)
 - Multiple time formats supported: hh:mm, hh:mm:ss, mm:ss, mm:ss.s, mm:ss.ss, mm:ss.sss
@@ -118,6 +127,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Applied database migrations to both development and production Supabase projects
 
 ### November 30, 2025 - Settings API & Registration Form Fixes
+
 - Fixed settings API caching issues by adding Next.js cache busting (`fetchCache`, `revalidate`)
 - Fixed service role client configuration with `detectSessionInUrl: false` to prevent session conflicts
 - Fixed settings API GET endpoint to use service role client, bypassing RLS for accurate reads
@@ -126,6 +136,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Fixed account deletion redirect by navigating before signing out
 
 ### November 30, 2025 - Email Confirmation Redirect Improvements
+
 - Created dedicated `/email-confirmed` page with success messages and auto-redirect
 - Enhanced `/auth/callback` route to handle signup and email change confirmations
 - Updated Supabase email templates documentation with custom redirect URLs
@@ -136,6 +147,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Dashboard "Invite" button now opens InviteUserModal directly
 
 ### November 30, 2025 - Production API Routes & Dynamic Export Fix
+
 - Fixed 405 Method Not Allowed error in production by adding dynamic exports to all API routes
 - Added `export const dynamic = 'force-dynamic'` and `export const runtime = 'nodejs'` to prevent static optimization
 - Added Cache-Control headers to settings API to prevent caching issues
@@ -147,6 +159,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Profile updates now sync to both user_profiles table AND Supabase Auth metadata
 
 ### November 29, 2025 - System Admin Invitations Management Page
+
 - Created dedicated System Admin Invitations page at /system-admin/invitations
 - Added search by invitee email, filter by status, and filter by inviter
 - Implemented page-based pagination (20 items per page) for performance
@@ -155,6 +168,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Added navigation link to Invitations page from System Admin Dashboard
 
 ### November 29, 2025 - User Invitation System
+
 - Added system_settings and invitations database tables with RLS policies
 - Created API routes for invitation management (send, list, check, accept, cancel)
 - Built system admin settings page at /system-admin/settings for toggling public registration
@@ -164,25 +178,30 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - Uses Supabase's inviteUserByEmail() function for secure email delivery
 
 ### November 29, 2025 - Landing Page & Icon Fixes
+
 - Made marketing landing page the root page (no redirect needed)
 - Fixed visibility icon on scoreboard management screen to use standardized icons
 
 ### November 29, 2025 - Visibility Toggle & UI Standardization
+
 - Added ability to change scoreboard visibility (public/private) when editing
 - Standardized visibility icons (GlobeAltIcon for public, LockClosedIcon for private)
 - Added visibility indicator to scoreboard cards in dashboard
 
 ### November 29, 2025 - Code Cleanup & Search Fix
+
 - Fixed Dashboard search bug caused by double debouncing
 - Removed all console.log/console.error statements from services
 - Removed unused state variables from components
 
 ### November 29, 2025 - Server-Side Search & Infinite Scrolling
+
 - Added server-side search with 300ms debounce for all scoreboard lists
 - Implemented infinite scrolling with 30 items per page
 - Created reusable `useInfiniteScroll` hook with IntersectionObserver
 
 ### November 29, 2025 - Initial Replit Setup
+
 - Fixed middleware.ts circular dependency with proper Supabase SSR middleware
 - Configured Next.js to run on 0.0.0.0:5000 for Replit proxy compatibility
 - Added Cache-Control headers to prevent caching issues
@@ -190,6 +209,7 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 ## Project Architecture
 
 ### Frontend
+
 - **Framework**: Next.js 14 with App Router
 - **Styling**: Tailwind CSS with custom theme (coral #f77174, orange #eba977, navy #38385e/#20203e)
 - **Components**: React components with TypeScript
@@ -197,44 +217,48 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 - **Custom Hooks**: See below
 
 ### Custom Hooks
+
 Located in `src/hooks/` with barrel export from `@/hooks`:
 
-| Hook | Purpose |
-|------|---------|
-| `useAuthGuard` | Authentication guard with role-based access. Returns `{isAuthorized, isChecking, user, userProfile, getAuthHeaders}`. Prevents redirect loops. |
-| `useAbortableFetch` | AbortController wrapper for fetch. Auto-cancels on unmount. Returns `{execute, abort, abortAll}`. |
-| `useTimeoutRef` | Safe setTimeout with auto-cleanup. Returns `{set, clear, clearAll, isMounted}`. |
-| `useInfiniteScroll` | IntersectionObserver-based infinite scroll. |
-| `useUndoQueue` | Undo queue with toast notifications. |
+| Hook                | Purpose                                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useAuthGuard`      | Authentication guard with role-based access. Returns `{isAuthorized, isChecking, user, userProfile, getAuthHeaders}`. Prevents redirect loops. |
+| `useAbortableFetch` | AbortController wrapper for fetch. Auto-cancels on unmount. Returns `{execute, abort, abortAll}`.                                              |
+| `useTimeoutRef`     | Safe setTimeout with auto-cleanup. Returns `{set, clear, clearAll, isMounted}`.                                                                |
+| `useInfiniteScroll` | IntersectionObserver-based infinite scroll.                                                                                                    |
+| `useUndoQueue`      | Undo queue with toast notifications.                                                                                                           |
 
 ### Backend Integration
+
 - **Database**: Supabase PostgreSQL
 - **Authentication**: Supabase Auth with email/password
 - **Real-time**: Supabase Realtime for live scoreboard updates (optimized for TV displays)
 - **Session Management**: Server-side session handling with middleware
 
 ### Key Features
+
 1. Public scoreboard browsing with infinite scroll
 2. User authentication (login/register/forgot password)
 3. Scoreboard creation and management with public/private visibility
 4. **Kiosk/TV Mode**: Full-screen display with auto-rotating carousel for public displays
 5. System admin dashboard (oversight only, no scoreboard creation)
-5. Real-time score updates without screen flashing
-6. Server-side search across all scoreboards
-7. Owner filtering for admin users
-8. CSV import for scoreboard entries
-9. User invitation system with email notifications
-10. Invite-only registration mode (controllable by system admin)
-11. Flexible score types: number or time-based scoreboards
-12. Configurable sort order: ascending or descending
-13. Multiple time formats: hh:mm, hh:mm:ss, mm:ss, mm:ss.s, mm:ss.ss, mm:ss.sss
-14. Embeddable scoreboards via `/embed/[id]` with custom styling
-15. Advanced style customization with 21+ properties including alternate row text color
-16. RGBA/transparency support in all color pickers with alpha slider
+6. Real-time score updates without screen flashing
+7. Server-side search across all scoreboards
+8. Owner filtering for admin users
+9. CSV import for scoreboard entries
+10. User invitation system with email notifications
+11. Invite-only registration mode (controllable by system admin)
+12. Flexible score types: number or time-based scoreboards
+13. Configurable sort order: ascending or descending
+14. Multiple time formats: hh:mm, hh:mm:ss, mm:ss, mm:ss.s, mm:ss.ss, mm:ss.sss
+15. Embeddable scoreboards via `/embed/[id]` with custom styling
+16. Advanced style customization with 21+ properties including alternate row text color
+17. RGBA/transparency support in all color pickers with alpha slider
 
 ## Environment Configuration
 
 ### Required Environment Variables
+
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Supabase publishable key (modern) or anon key (legacy)
 - `SUPABASE_SECRET_KEY`: Secret key for admin operations (modern) or service_role key (legacy)
@@ -243,6 +267,7 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 - `SUPABASE_DB_PASSWORD`: Database password for Supabase CLI (production migrations only)
 
 ### Security Notes
+
 - **JWT Signing Keys**: Application uses modern ECC P-256 signing keys (enabled January 10, 2026)
 - **API Keys**: Publishable key is safe for client-side use; Secret key must never be exposed
 - **Build Safety**: Application can build without environment variables (uses empty string fallbacks)
@@ -251,12 +276,15 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 ## Development
 
 ### Running the Application
+
 The application runs automatically via the configured workflow:
+
 - **Command**: `npm run dev`
 - **Port**: 5000
 - **Host**: 0.0.0.0 (for Replit proxy)
 
 ### Available Scripts
+
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run build:prod` - Build with production database migrations (Netlify only)
@@ -275,15 +303,18 @@ The application runs automatically via the configured workflow:
 ## Testing
 
 ### E2E Testing with Playwright
+
 The application includes comprehensive end-to-end tests using Playwright.
 
 > **📖 Full Testing Documentation**: See [e2e/README.md](e2e/README.md) for comprehensive testing guide including:
+>
 > - Manual testing checklist (320px viewport)
 > - CI/CD integration details
 > - Debugging tips and troubleshooting
 > - Known limitations and contributing guidelines
 
 **Setup:**
+
 ```bash
 npm install
 npx playwright install
@@ -293,6 +324,7 @@ sudo npx playwright install-deps
 ```
 
 **Running Tests:**
+
 ```bash
 # All tests
 npm run test:e2e
@@ -315,16 +347,19 @@ npx playwright test --project="Mobile iPhone SE"
 ```
 
 **Test Coverage:**
+
 - **Mobile Tests** (`e2e/mobile.spec.ts`): Touch targets (44x44px), landscape orientation, 320px viewport
 - **Desktop Tests** (`e2e/desktop.spec.ts`): Auth flows, CRUD operations, keyboard navigation, real-time updates
 - **Accessibility Tests** (`e2e/accessibility.spec.ts`): WCAG compliance, ARIA labels, screen readers, focus management
 
 **Test Devices:**
+
 - Desktop: Chrome (1920x1080), Firefox (1920x1080), Safari (1920x1080)
 - Tablet: iPad Pro (1024x768)
 - Mobile: iPhone 12 (390x844), iPhone SE (375x667), Minimum (320x568), Landscape (844x390), Android Pixel 5 (393x851)
 
 **Documentation:**
+
 - Full testing guide: `e2e/README.md`
 - Manual testing checklist: `docs/mobile-testing-checklist.md`
 - Mobile optimization summary: `docs/mobile-optimization-summary.md`
@@ -332,7 +367,9 @@ npx playwright test --project="Mobile iPhone SE"
 ## Deployment
 
 ### Netlify Deployment (Production)
+
 The application is deployed to Netlify with automated database migrations:
+
 - **Site**: https://myscoreboardmanager.netlify.app
 - **Build Command**: Automated via `netlify.toml` (downloads Supabase CLI, runs migrations, builds app)
 - **Deploy Contexts**:
@@ -348,13 +385,16 @@ The application is deployed to Netlify with automated database migrations:
   - `SUPABASE_DB_PASSWORD` (production only, for migrations)
 
 ### Replit Deployment (Development)
+
 The application can also run on Replit:
+
 - **Target**: Autoscale
 - **Build Command**: `npm run build`
 - **Run Command**: `npm run serve`
 - **Port**: 5000 (configured for Replit proxy)
 
 ## File Structure
+
 ```
 ├── src/
 │   ├── app/                          # Next.js App Router pages
@@ -448,7 +488,9 @@ The application can also run on Replit:
 ```
 
 ## Database Schema
+
 The Supabase database includes:
+
 - `user_profiles` - User profile information with roles
 - `scoreboards` - Scoreboard metadata with owner references, visibility, score_type, sort_order, time_format
 - `scoreboard_entries` - Individual scoreboard entries (score stored as number/milliseconds)
@@ -457,6 +499,7 @@ The Supabase database includes:
 - Row Level Security (RLS) policies for secure data access
 
 ### Running Migrations
+
 ```bash
 # Link to target project
 supabase link --project-ref <project-ref>
@@ -472,9 +515,11 @@ supabase db push
 ```
 
 ### Creating New Migrations
+
 Place SQL migration files in `supabase/migrations/` with timestamp prefix (e.g., `20260109120000_add_feature.sql`).
 
 ## User Preferences & Design Notes
+
 - Brand colors: Coral (#f77174), Orange (#eba977), Navy (#38385e, #20203e)
 - System admin role is for oversight only - admins cannot create scoreboards
 - Real-time updates optimized for TV displays (no screen flashing)
@@ -485,6 +530,7 @@ Place SQL migration files in `supabase/migrations/` with timestamp prefix (e.g.,
 - Landscape orientation optimized for mobile devices (<500px height)
 
 ## Technical Notes
+
 - Uses state-based node tracking in useInfiniteScroll hook for proper observer re-attachment
 - Debounced search uses direct state control (not SearchInterface component) to avoid double-debouncing
 - All database functions have SET search_path = public, pg_temp for security

@@ -1,12 +1,12 @@
-name: "Security Scans"
+name: 'Security Scans'
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: ['main', 'dev']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
   schedule:
-    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
+    - cron: '0 6 * * 1' # Weekly on Monday at 6 AM UTC
 
 jobs:
   # Dependency vulnerability scanning
@@ -28,7 +28,7 @@ jobs:
 
       - name: Run npm audit
         run: npm audit --audit-level=high
-        continue-on-error: true  # Don't fail build, but report
+        continue-on-error: true # Don't fail build, but report
 
       - name: Run npm audit (JSON report)
         run: npm audit --json > npm-audit-report.json || true
@@ -48,7 +48,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for secret scanning
+          fetch-depth: 0 # Full history for secret scanning
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2

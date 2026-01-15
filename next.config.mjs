@@ -31,11 +31,11 @@ const nextConfig = {
   async headers() {
     // Skip CSP headers in development for VS Code Simple Browser compatibility
     const isDev = process.env.NODE_ENV === 'development';
-    
+
     // Content Security Policy - standard (restricts framing)
     // NOTE: In dev mode, we omit frame-ancestors entirely to allow VS Code Simple Browser
     // (Electron bug: frame-ancestors * doesn't work with vscode-webview:// scheme)
-    const cspHeader = isDev 
+    const cspHeader = isDev
       ? "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"
       : [
           "default-src 'self'",
@@ -142,10 +142,14 @@ const nextConfig = {
             value: 'nosniff',
           },
           // X-Frame-Options for older browsers (CSP frame-ancestors takes precedence in modern browsers)
-          ...(!isDev ? [{
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          }] : []),
+          ...(!isDev
+            ? [
+                {
+                  key: 'X-Frame-Options',
+                  value: 'SAMEORIGIN',
+                },
+              ]
+            : []),
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',

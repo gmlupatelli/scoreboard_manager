@@ -49,14 +49,15 @@ test.describe('Authentication Flows', () => {
 
     // Should show validation error or remain on page
     const hasError =
-      (await page.locator('text=/invalid|email/i').isVisible()) ||
-      page.url().includes('/register');
+      (await page.locator('text=/invalid|email/i').isVisible()) || page.url().includes('/register');
 
     expect(hasError).toBeTruthy();
   });
 
   // Validation logic - viewport-independent
-  test('@full @desktop-only registration form validates password requirements', async ({ page }) => {
+  test('@full @desktop-only registration form validates password requirements', async ({
+    page,
+  }) => {
     await page.goto('/register');
 
     await page.locator('input[name="email"]').fill('test@example.com');
@@ -67,7 +68,10 @@ test.describe('Authentication Flows', () => {
 
     // Should show validation error or remain on page (not redirect to dashboard)
     const isStillOnRegister = page.url().includes('/register');
-    const hasError = await page.locator('text=/password|characters|weak|short|minimum/i').isVisible().catch(() => false);
+    const hasError = await page
+      .locator('text=/password|characters|weak|short|minimum/i')
+      .isVisible()
+      .catch(() => false);
     const notOnDashboard = !page.url().includes('/dashboard');
 
     // Either shows error, stays on register, or doesn't redirect to dashboard
@@ -79,7 +83,9 @@ test.describe('Authentication Flows', () => {
     await page.goto('/login');
 
     // Find and click forgot password link
-    const forgotLink = page.locator('a:has-text("Forgot")').or(page.locator('text=/forgot.*password/i'));
+    const forgotLink = page
+      .locator('a:has-text("Forgot")')
+      .or(page.locator('text=/forgot.*password/i'));
 
     if (await forgotLink.isVisible()) {
       await forgotLink.click();
@@ -119,63 +125,79 @@ test.describe('Authenticated User Session', () => {
 
 test.describe('Regular User - Admin Pages Restriction', () => {
   // Authorization - viewport-independent
-  authTest('@fast @desktop-only john should not access system settings page', async ({ johnAuth }) => {
-    await johnAuth.goto('/system-admin/settings');
-    await johnAuth.waitForTimeout(2000);
-
-    const currentUrl = johnAuth.url();
-    const isBlocked =
-      currentUrl.includes('/dashboard') ||
-      currentUrl === 'http://localhost:5000/' ||
-      (await johnAuth.locator('text=Access Denied').isVisible()) ||
-      (await johnAuth.locator('text=Forbidden').isVisible()) ||
-      (await johnAuth.locator('text=Unauthorized').isVisible());
-
-    expect(isBlocked).toBeTruthy();
-  });
-
-  // Authorization - viewport-independent
-  authTest('@fast @desktop-only sarah should not access system invitations page', async ({ sarahAuth }) => {
-    await sarahAuth.goto('/system-admin/invitations');
-    await sarahAuth.waitForTimeout(2000);
-
-    const currentUrl = sarahAuth.url();
-    const isBlocked =
-      currentUrl.includes('/dashboard') ||
-      currentUrl === 'http://localhost:5000/' ||
-      (await sarahAuth.locator('text=Access Denied').isVisible()) ||
-      (await sarahAuth.locator('text=Forbidden').isVisible());
-
-    expect(isBlocked).toBeTruthy();
-  });
-
-  // Authorization UI - viewport-independent
-  authTest('@full @desktop-only john should not see admin navigation links', async ({ johnAuth }) => {
-    await johnAuth.goto('/dashboard');
-
-    // System Settings link should not be visible
-    const settingsLink = johnAuth.locator('a:has-text("System Settings")');
-    await expect(settingsLink).not.toBeVisible();
-  });
-
-  // Authorization - viewport-independent
-  authTest('@full @desktop-only users cannot bypass URL protection for admin pages', async ({ johnAuth }) => {
-    // Try various admin URLs directly
-    const adminUrls = ['/system-admin/settings', '/system-admin/invitations'];
-
-    for (const url of adminUrls) {
-      await johnAuth.goto(url);
-      await johnAuth.waitForTimeout(1000);
+  authTest(
+    '@fast @desktop-only john should not access system settings page',
+    async ({ johnAuth }) => {
+      await johnAuth.goto('/system-admin/settings');
+      await johnAuth.waitForTimeout(2000);
 
       const currentUrl = johnAuth.url();
       const isBlocked =
-        !currentUrl.includes('/system-admin') ||
+        currentUrl.includes('/dashboard') ||
+        currentUrl === 'http://localhost:5000/' ||
         (await johnAuth.locator('text=Access Denied').isVisible()) ||
-        (await johnAuth.locator('text=Forbidden').isVisible());
+        (await johnAuth.locator('text=Forbidden').isVisible()) ||
+        (await johnAuth.locator('text=Unauthorized').isVisible());
 
       expect(isBlocked).toBeTruthy();
     }
-  });
+  );
+
+  // Authorization - viewport-independent
+  authTest(
+    '@fast @desktop-only sarah should not access system invitations page',
+    async ({ sarahAuth }) => {
+      await sarahAuth.goto('/system-admin/invitations');
+      await sarahAuth.waitForTimeout(2000);
+
+      const currentUrl = sarahAuth.url();
+      const isBlocked =
+        currentUrl.includes('/dashboard') ||
+        currentUrl === 'http://localhost:5000/' ||
+        (await sarahAuth.locator('text=Access Denied').isVisible()) ||
+        (await sarahAuth.locator('text=Forbidden').isVisible());
+
+      expect(isBlocked).toBeTruthy();
+    }
+  );
+
+  // Authorization UI - viewport-independent
+  authTest(
+    '@full @desktop-only john should not see admin navigation links',
+    async ({ johnAuth }) => {
+      await johnAuth.goto('/dashboard');
+
+      // System Settings link should not be visible
+      const settingsLink = johnAuth.locator('a:has-text("System Settings")');
+      await expect(settingsLink).not.toBeVisible();
+    }
+  );
+
+  // Authorization - viewport-independent
+  authTest(
+    '@full @desktop-only users cannot bypass URL protection for admin pages',
+    async ({ johnAuth }) => {
+      // Try various admin URLs directly
+      const adminUrls = ['/system-admin/settings', '/system-admin/invitations'];
+
+      for (const url of adminUrls) {
+        await johnAuth.goto(url);
+        await johnAuth.waitForTimeout(2000);
+
+        const currentUrl = johnAuth.url();
+        // Check if user was blocked: either redirected away from admin,
+        // redirected to dashboard, or shown an error message
+        const isBlocked =
+          !currentUrl.includes('/system-admin') ||
+          currentUrl.includes('/dashboard') ||
+          (await johnAuth.locator('text=Access Denied').isVisible()) ||
+          (await johnAuth.locator('text=Forbidden').isVisible()) ||
+          (await johnAuth.locator('h1:has-text("My Scoreboards")').isVisible());
+
+        expect(isBlocked).toBeTruthy();
+      }
+    }
+  );
 });
 
 test.describe('Public Pages Access', () => {

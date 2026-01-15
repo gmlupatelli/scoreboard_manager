@@ -167,7 +167,8 @@ export default function PersonalInfoSection({
               <span className="text-text-primary">{profile?.full_name || 'Not set'}</span>
               <button
                 onClick={() => setIsEditingName(true)}
-                className="text-primary hover:opacity-80 font-medium transition-smooth"                title="Edit email address"                title="Edit display name"
+                className="text-primary hover:opacity-80 font-medium transition-smooth"
+                title="Edit display name"
               >
                 Edit
               </button>
