@@ -136,7 +136,9 @@ export default function KioskScoreboard({ scoreboard, entries }: KioskScoreboard
                   key={entry.id}
                   className="grid grid-cols-12 gap-4 px-6 py-4 transition-colors"
                   style={{
-                    backgroundColor: isAlternate ? 'rgba(255,255,255,0.03)' : 'transparent',
+                    backgroundColor: isAlternate
+                      ? appliedStyles.rowHoverColor
+                      : appliedStyles.backgroundColor,
                     color: isAlternate
                       ? appliedStyles.alternateRowTextColor || appliedStyles.textColor
                       : appliedStyles.textColor,
