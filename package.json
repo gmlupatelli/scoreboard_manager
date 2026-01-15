@@ -71,8 +71,7 @@
     "react": "18.2.0",
     "react-colorful": "^5.6.1",
     "react-dom": "18.2.0",
-    "recharts": "^2.15.2",
-    "sharp": "^0.34.5"
+    "recharts": "^3.6.0"
   },
   "overrides": {
     "glob": "^10.0.0",
@@ -81,14 +80,14 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@eslint/js": "^9.39.2",
-    "@netlify/plugin-nextjs": "^5.11.1",
+    "@netlify/plugin-nextjs": "^5.15.5",
     "@playwright/test": "^1.49.1",
-    "@types/node": "^20",
+    "@types/node": "^25",
     "@types/react": "18.2.45",
     "@types/react-dom": "18.2.0",
-    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
     "@typescript-eslint/parser": "^8.29.0",
-    "autoprefixer": "10.4.2",
+    "autoprefixer": "10.4.23",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "^15.2.4",
