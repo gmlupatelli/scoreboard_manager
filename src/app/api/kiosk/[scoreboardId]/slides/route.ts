@@ -249,7 +249,9 @@ export async function PUT(
     }
 
     // Fetch current positions from database before making any changes (for rollback)
-    const slideIds = slides.filter((s) => s.id && typeof s.position === 'number').map((s) => s.id);
+    const slideIds = slides
+      .filter((s) => s.id && typeof s.id === 'string' && typeof s.position === 'number')
+      .map((s) => s.id);
     const { data: currentSlides, error: fetchError } = await updateClient
       .from('kiosk_slides')
       .select('id, position')
@@ -280,7 +282,8 @@ export async function PUT(
 
       const originalPosition = originalPositions.get(slide.id);
       if (originalPosition === undefined) {
-        // Slide not found in database - skip it
+        // Slide not found in database - log for debugging and skip
+        console.warn(`Slide ${slide.id} not found in database during reorder, skipping`);
         continue;
       }
 
@@ -344,6 +347,8 @@ export async function PUT(
       }
 
       // Return error with details about both Phase 2 and rollback failures
+      // NOTE: Database is in an inconsistent state with slides at temporary positions (1000+)
+      // Manual intervention or a cleanup job may be required to restore proper positions
       if (rollbackErrors.length > 0) {
         return NextResponse.json(
           {
