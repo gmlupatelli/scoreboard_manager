@@ -26,6 +26,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.pixabay.com',
       },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
     ],
   },
   async headers() {
@@ -42,7 +46,7 @@ const nextConfig = {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com",
+          "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co",
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
           "frame-ancestors 'self'",
           "base-uri 'self'",
@@ -55,7 +59,7 @@ const nextConfig = {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com",
+      "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
       'frame-ancestors *',
       "base-uri 'self'",

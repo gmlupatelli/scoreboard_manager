@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { useAuthGuard } from '@/hooks';
 
+// Signed URLs expire after 1 hour, refetch after 30 minutes to ensure fresh URLs
+const _STALE_THRESHOLD_MS = 30 * 60 * 1000;
+
 interface KioskConfig {
   id: string;
   slide_duration_seconds: number;
@@ -25,7 +28,7 @@ interface KioskSlide {
 
 interface KioskSettingsSectionProps {
   scoreboardId: string;
-  _scoreboardTitle: string;
+  scoreboardTitle: string;
   isExpanded: boolean;
   onToggle: () => void;
   onShowToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -33,7 +36,7 @@ interface KioskSettingsSectionProps {
 
 export default function KioskSettingsSection({
   scoreboardId,
-  _scoreboardTitle,
+  scoreboardTitle: _scoreboardTitle,
   isExpanded,
   onToggle,
   onShowToast,
@@ -43,9 +46,10 @@ export default function KioskSettingsSection({
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [config, setConfig] = useState<KioskConfig | null>(null);
+  const [_config, setConfig] = useState<KioskConfig | null>(null);
   const [slides, setSlides] = useState<KioskSlide[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [_lastFetchTime, setLastFetchTime] = useState<number | null>(null);
 
   // Form state
   const [enabled, setEnabled] = useState(false);
@@ -56,6 +60,15 @@ export default function KioskSettingsSection({
 
   // Drag state
   const [draggedSlide, setDraggedSlide] = useState<string | null>(null);
+
+  // Track slides with failed images
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  // Ref to prevent double loading
+  const isLoadingRef = useRef(false);
+
+  // Ref to track if initial fetch has completed
+  const hasFetchedRef = useRef(false);
 
   // Add initial scoreboard slide (called when no slides exist)
   const addInitialScoreboardSlide = useCallback(
@@ -84,43 +97,64 @@ export default function KioskSettingsSection({
   );
 
   // Load kiosk data
-  const loadKioskData = useCallback(async () => {
-    if (!scoreboardId) return;
+  const loadKioskData = useCallback(
+    async (forceRefresh = false) => {
+      if (!scoreboardId) return;
 
-    setIsLoading(true);
-    try {
-      const headers = await getAuthHeaders();
-      const response = await fetch(`/api/kiosk/${scoreboardId}`, { headers });
-      const data = await response.json();
+      // Prevent concurrent loading
+      if (isLoadingRef.current && !forceRefresh) return;
+      isLoadingRef.current = true;
 
-      if (response.ok) {
-        if (data.config) {
-          setConfig(data.config);
-          setEnabled(data.config.enabled);
-          setSlideDuration(String(data.config.slide_duration_seconds));
-          setScoreboardPosition(data.config.scoreboard_position);
-          setPinCode(data.config.pin_code || '');
+      setIsLoading(true);
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`/api/kiosk/${scoreboardId}`, { headers });
+        const data = await response.json();
+
+        if (response.ok) {
+          if (data.config) {
+            setConfig(data.config);
+            setEnabled(data.config.enabled);
+            setSlideDuration(String(data.config.slide_duration_seconds));
+            setScoreboardPosition(data.config.scoreboard_position);
+            setPinCode(data.config.pin_code || '');
+          }
+          const loadedSlides = data.slides || [];
+          setSlides(loadedSlides);
+          setLastFetchTime(Date.now());
+          setFailedImages(new Set()); // Clear failed images on fresh data
+          hasFetchedRef.current = true;
+
+          // Auto-add scoreboard slide if no slides exist
+          if (loadedSlides.length === 0) {
+            addInitialScoreboardSlide(headers);
+          }
         }
-        const loadedSlides = data.slides || [];
-        setSlides(loadedSlides);
-
-        // Auto-add scoreboard slide if no slides exist
-        if (loadedSlides.length === 0) {
-          addInitialScoreboardSlide(headers);
-        }
+      } catch (_error) {
+        onShowToast('Failed to load kiosk settings', 'error');
+      } finally {
+        setIsLoading(false);
+        isLoadingRef.current = false;
       }
-    } catch (_error) {
-      onShowToast('Failed to load kiosk settings', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]);
+    },
+    [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]
+  );
 
   useEffect(() => {
-    if (isExpanded && !config) {
+    if (isExpanded && !hasFetchedRef.current && !isLoadingRef.current) {
+      // Fetch when expanded and not yet fetched
       loadKioskData();
     }
-  }, [isExpanded, config, loadKioskData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExpanded, scoreboardId]);
+
+  // Reset refs when scoreboardId changes (switching between scoreboards)
+  useEffect(() => {
+    hasFetchedRef.current = false;
+    isLoadingRef.current = false;
+    setSlides([]);
+    setConfig(null);
+  }, [scoreboardId]);
 
   // Save config
   const handleSaveConfig = async () => {
@@ -134,6 +168,8 @@ export default function KioskSettingsSection({
     setIsSaving(true);
     try {
       const headers = await getAuthHeaders();
+
+      // Save config settings
       const response = await fetch(`/api/kiosk/${scoreboardId}`, {
         method: 'PUT',
         headers: {
@@ -149,10 +185,10 @@ export default function KioskSettingsSection({
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setConfig(data.config);
         setHasChanges(false);
         onShowToast('Kiosk settings saved', 'success');
+        // Refresh data from server to get accurate state (forceRefresh=true to always update slides)
+        await loadKioskData(true);
       } else {
         const error = await response.json();
         throw new Error(error.error);
@@ -358,13 +394,14 @@ export default function KioskSettingsSection({
       position: index,
     }));
 
+    // Update UI immediately
     setSlides(reorderedSlides);
     setDraggedSlide(null);
 
-    // Save new order to server
+    // Save reordering to server immediately (consistent with add/delete)
     try {
       const headers = await getAuthHeaders();
-      await fetch(`/api/kiosk/${scoreboardId}/slides`, {
+      const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
         method: 'PUT',
         headers: {
           ...headers,
@@ -374,9 +411,16 @@ export default function KioskSettingsSection({
           slides: reorderedSlides.map((s) => ({ id: s.id, position: s.position })),
         }),
       });
-    } catch (_error) {
-      onShowToast('Failed to save slide order', 'error');
-      loadKioskData(); // Reload to restore original order
+
+      if (!orderResponse.ok) {
+        const error = await orderResponse.json();
+        throw new Error(error.error || 'Failed to save slide order');
+      }
+      onShowToast('Slide order updated', 'success');
+    } catch (error) {
+      onShowToast(error instanceof Error ? error.message : 'Failed to save order', 'error');
+      // Revert on error by reloading
+      loadKioskData(true);
     }
   };
 
@@ -596,12 +640,16 @@ export default function KioskSettingsSection({
                                 Scoreboard
                               </span>
                             </div>
-                          ) : slide.thumbnail_url || slide.image_url ? (
+                          ) : (slide.thumbnail_url || slide.image_url) &&
+                            !failedImages.has(slide.id) ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={slide.thumbnail_url ?? slide.image_url ?? undefined}
                               alt={slide.file_name || 'Slide'}
                               className="w-full h-full object-cover"
+                              onError={() => {
+                                setFailedImages((prev) => new Set(prev).add(slide.id));
+                              }}
                             />
                           ) : (
                             <div className="h-full flex items-center justify-center">

@@ -66,57 +66,26 @@ export default function KioskViewInteractive() {
   const slideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingRefreshRef = useRef(false);
 
-  // Build carousel slides array (images + scoreboard at configured position)
+  // Build carousel slides array from database order (already sorted by position)
   const carouselSlides = useCallback(() => {
     if (!kioskData) return [];
 
-    const slides: Array<{
-      id: string;
-      type: 'image' | 'scoreboard';
-      imageUrl?: string;
-      duration: number;
-    }> = [];
-    const imageSlides = kioskData.slides.filter((s) => s.slide_type === 'image');
-    const scoreboardPosition = kioskData.config.scoreboardPosition;
     const defaultDuration = kioskData.config.slideDurationSeconds;
 
-    // Insert image slides
-    let imageIndex = 0;
-    for (let i = 0; i <= imageSlides.length; i++) {
-      if (i === scoreboardPosition) {
-        // Insert scoreboard at this position
-        slides.push({
-          id: 'scoreboard',
-          type: 'scoreboard',
-          duration: defaultDuration,
-        });
-      }
-      if (imageIndex < imageSlides.length) {
-        const slide = imageSlides[imageIndex];
-        slides.push({
-          id: slide.id,
-          type: 'image',
-          imageUrl: slide.image_url ?? undefined,
-          duration: slide.duration_override_seconds ?? defaultDuration,
-        });
-        imageIndex++;
-      }
-    }
-
-    // If scoreboard position is beyond all slides, add it at the end
-    if (scoreboardPosition >= slides.length || !slides.some((s) => s.type === 'scoreboard')) {
-      slides.push({
-        id: 'scoreboard',
-        type: 'scoreboard',
-        duration: defaultDuration,
-      });
-    }
+    // Use slides in their database order (already sorted by position)
+    const slides = kioskData.slides.map((slide) => ({
+      id: slide.slide_type === 'scoreboard' ? 'scoreboard' : slide.id,
+      type: slide.slide_type,
+      imageUrl: slide.image_url ?? undefined,
+      duration: slide.duration_override_seconds ?? defaultDuration,
+    }));
 
     // If no slides at all, just show scoreboard
     if (slides.length === 0) {
       slides.push({
         id: 'scoreboard',
-        type: 'scoreboard',
+        type: 'scoreboard' as const,
+        imageUrl: undefined,
         duration: defaultDuration,
       });
     }
@@ -346,7 +315,7 @@ export default function KioskViewInteractive() {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4" />
+          <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4" />
           <p className="text-white text-xl">Loading kiosk...</p>
         </div>
       </div>

@@ -69,8 +69,11 @@ export async function GET(
       return NextResponse.json({ error: configError.message }, { status: 500 });
     }
 
-    // Get slides
-    const { data: slides, error: slidesError } = await supabase
+    // Get slides - use service role client if available for consistent reads after writes
+    const serviceClient = getServiceRoleClient();
+    const readClient = serviceClient || supabase;
+
+    const { data: slides, error: slidesError } = await readClient
       .from('kiosk_slides')
       .select('*')
       .eq('kiosk_config_id', config.id)
@@ -81,26 +84,49 @@ export async function GET(
     }
 
     // Generate signed URLs for image slides (thumbnails for management UI)
-    const serviceClient = getServiceRoleClient();
+    // serviceClient already declared above for reading slides
+
     const slidesWithSignedUrls = await Promise.all(
       (slides || []).map(async (slide) => {
-        if (slide.slide_type === 'image' && serviceClient) {
+        if (slide.slide_type === 'image') {
           const result = { ...slide };
+
+          // If no service client, we can't generate signed URLs - return null to show fallback
+          if (!serviceClient) {
+            console.warn('[kiosk-api] No service client available for signed URL generation');
+            result.thumbnail_url = null;
+            result.image_url = null;
+            return result;
+          }
 
           // Generate signed URL for thumbnail (used in management UI)
           if (slide.thumbnail_url) {
-            const { data: thumbSignedData } = await serviceClient.storage
+            const { data: thumbSignedData, error: thumbError } = await serviceClient.storage
               .from('kiosk-slides')
               .createSignedUrl(slide.thumbnail_url, SIGNED_URL_EXPIRY_SECONDS);
-            result.thumbnail_url = thumbSignedData?.signedUrl || slide.thumbnail_url;
+            if (thumbError) {
+              console.error('[kiosk-api] Thumbnail signed URL error:', {
+                path: slide.thumbnail_url,
+                error: thumbError.message,
+              });
+            }
+            // Only use signed URL if successful, otherwise null
+            result.thumbnail_url = thumbSignedData?.signedUrl || null;
           }
 
           // Generate signed URL for original image (fallback if no thumbnail)
           if (slide.image_url) {
-            const { data: signedUrlData } = await serviceClient.storage
+            const { data: signedUrlData, error: imgError } = await serviceClient.storage
               .from('kiosk-slides')
               .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
-            result.image_url = signedUrlData?.signedUrl || slide.image_url;
+            if (imgError) {
+              console.error('[kiosk-api] Image signed URL error:', {
+                path: slide.image_url,
+                error: imgError.message,
+              });
+            }
+            // Only use signed URL if successful, otherwise null
+            result.image_url = signedUrlData?.signedUrl || null;
           }
 
           return result;
