@@ -153,9 +153,8 @@ export async function POST(
           const { data: thumbSignedData } = await serviceClient.storage
             .from('kiosk-slides')
             .createSignedUrl(slide.thumbnail_url, SIGNED_URL_EXPIRY_SECONDS);
-          if (thumbSignedData?.signedUrl) {
-            result.thumbnail_url = thumbSignedData.signedUrl;
-          }
+          // Only use signed URL if successful, otherwise null
+          result.thumbnail_url = thumbSignedData?.signedUrl || null;
         }
 
         // Generate signed URL for original image (fallback)
@@ -163,12 +162,18 @@ export async function POST(
           const { data: signedUrlData } = await serviceClient.storage
             .from('kiosk-slides')
             .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
-          if (signedUrlData?.signedUrl) {
-            result.image_url = signedUrlData.signedUrl;
-          }
+          // Only use signed URL if successful, otherwise null
+          result.image_url = signedUrlData?.signedUrl || null;
         }
 
         slideWithSignedUrl = result;
+      } else {
+        // No service client - return null URLs to show fallback in UI
+        slideWithSignedUrl = {
+          ...slide,
+          image_url: null,
+          thumbnail_url: null,
+        };
       }
     }
 

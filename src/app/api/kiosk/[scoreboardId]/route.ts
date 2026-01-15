@@ -82,17 +82,26 @@ export async function GET(
 
     // Generate signed URLs for image slides (thumbnails for management UI)
     const serviceClient = getServiceRoleClient();
+    
     const slidesWithSignedUrls = await Promise.all(
       (slides || []).map(async (slide) => {
-        if (slide.slide_type === 'image' && serviceClient) {
+        if (slide.slide_type === 'image') {
           const result = { ...slide };
+
+          // If no service client, we can't generate signed URLs - return null to show fallback
+          if (!serviceClient) {
+            result.thumbnail_url = null;
+            result.image_url = null;
+            return result;
+          }
 
           // Generate signed URL for thumbnail (used in management UI)
           if (slide.thumbnail_url) {
             const { data: thumbSignedData } = await serviceClient.storage
               .from('kiosk-slides')
               .createSignedUrl(slide.thumbnail_url, SIGNED_URL_EXPIRY_SECONDS);
-            result.thumbnail_url = thumbSignedData?.signedUrl || slide.thumbnail_url;
+            // Only use signed URL if successful, otherwise null
+            result.thumbnail_url = thumbSignedData?.signedUrl || null;
           }
 
           // Generate signed URL for original image (fallback if no thumbnail)
@@ -100,7 +109,8 @@ export async function GET(
             const { data: signedUrlData } = await serviceClient.storage
               .from('kiosk-slides')
               .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
-            result.image_url = signedUrlData?.signedUrl || slide.image_url;
+            // Only use signed URL if successful, otherwise null
+            result.image_url = signedUrlData?.signedUrl || null;
           }
 
           return result;

@@ -65,7 +65,15 @@ export async function GET(
     // Generate signed URLs for image slides (requires service role for private bucket)
     const slidesWithSignedUrls = await Promise.all(
       (slides || []).map(async (slide) => {
-        if (slide.slide_type === 'image' && slide.image_url && serviceClient) {
+        if (slide.slide_type === 'image' && slide.image_url) {
+          // If no service client, we can't generate signed URLs - return null
+          if (!serviceClient) {
+            return {
+              ...slide,
+              image_url: null,
+            };
+          }
+
           // image_url stores the storage path, generate a signed URL
           const { data: signedUrlData } = await serviceClient.storage
             .from('kiosk-slides')

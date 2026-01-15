@@ -46,6 +46,10 @@ export default function KioskSettingsSection({
   const [config, setConfig] = useState<KioskConfig | null>(null);
   const [slides, setSlides] = useState<KioskSlide[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+
+  // Signed URLs expire after 1 hour, refetch after 30 minutes to ensure fresh URLs
+  const STALE_THRESHOLD_MS = 30 * 60 * 1000;
 
   // Form state
   const [enabled, setEnabled] = useState(false);
@@ -56,6 +60,9 @@ export default function KioskSettingsSection({
 
   // Drag state
   const [draggedSlide, setDraggedSlide] = useState<string | null>(null);
+
+  // Track slides with failed images
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // Add initial scoreboard slide (called when no slides exist)
   const addInitialScoreboardSlide = useCallback(
@@ -103,6 +110,8 @@ export default function KioskSettingsSection({
         }
         const loadedSlides = data.slides || [];
         setSlides(loadedSlides);
+        setLastFetchTime(Date.now());
+        setFailedImages(new Set()); // Clear failed images on fresh data
 
         // Auto-add scoreboard slide if no slides exist
         if (loadedSlides.length === 0) {
@@ -117,10 +126,14 @@ export default function KioskSettingsSection({
   }, [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]);
 
   useEffect(() => {
-    if (isExpanded && !config) {
-      loadKioskData();
+    if (isExpanded) {
+      // Fetch if no config, or if data is stale (signed URLs might expire soon)
+      const isStale = lastFetchTime && (Date.now() - lastFetchTime) > STALE_THRESHOLD_MS;
+      if (!config || isStale) {
+        loadKioskData();
+      }
     }
-  }, [isExpanded, config, loadKioskData]);
+  }, [isExpanded, config, loadKioskData, lastFetchTime, STALE_THRESHOLD_MS]);
 
   // Save config
   const handleSaveConfig = async () => {
@@ -596,12 +609,15 @@ export default function KioskSettingsSection({
                                 Scoreboard
                               </span>
                             </div>
-                          ) : slide.thumbnail_url || slide.image_url ? (
+                          ) : (slide.thumbnail_url || slide.image_url) && !failedImages.has(slide.id) ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={slide.thumbnail_url ?? slide.image_url ?? undefined}
                               alt={slide.file_name || 'Slide'}
                               className="w-full h-full object-cover"
+                              onError={() => {
+                                setFailedImages(prev => new Set(prev).add(slide.id));
+                              }}
                             />
                           ) : (
                             <div className="h-full flex items-center justify-center">
