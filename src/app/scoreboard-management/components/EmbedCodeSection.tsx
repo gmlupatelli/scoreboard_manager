@@ -122,14 +122,16 @@ export default function EmbedCodeSection({
               />
               <button
                 onClick={handleCopyUrl}
-                className="px-4 py-2 bg-secondary/10 text-secondary rounded-md font-medium text-sm hover:bg-secondary/20 flex items-center gap-2"
+                className="px-4 py-2 text-orange-900 rounded-md font-medium text-sm hover:bg-orange-900/10 transition-colors duration-150 flex items-center gap-2"
+                title="Copy embed URL to clipboard"
               >
                 <Icon name="ClipboardDocumentIcon" size={16} />
                 <span className="hidden sm:inline">Copy URL</span>
               </button>
               <button
                 onClick={handleOpenPreview}
-                className="px-4 py-2 bg-primary/10 text-primary rounded-md font-medium text-sm hover:bg-primary/20 flex items-center gap-2"
+                className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2"
+                title="Open embed preview in new tab"
               >
                 <Icon name="ArrowTopRightOnSquareIcon" size={16} />
                 <span className="hidden sm:inline">Preview</span>
@@ -181,6 +183,7 @@ export default function EmbedCodeSection({
                     ? 'bg-green-100 text-green-700'
                     : 'bg-primary text-primary-foreground hover:opacity-90'
                 }`}
+                title="Copy iframe code to clipboard"
               >
                 {copied ? (
                   <>

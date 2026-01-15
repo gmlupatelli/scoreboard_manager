@@ -214,13 +214,13 @@ export default function SystemAdminInvitationsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-warning/10 text-warning';
+        return 'bg-yellow-500/10 text-warning';
       case 'accepted':
-        return 'bg-success/10 text-success';
+        return 'bg-green-500/10 text-success';
       case 'expired':
         return 'bg-muted text-text-secondary';
       case 'cancelled':
-        return 'bg-destructive/10 text-destructive';
+        return 'bg-red-500/10 text-destructive';
       default:
         return 'bg-muted text-text-secondary';
     }
@@ -273,7 +273,8 @@ export default function SystemAdminInvitationsPage() {
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-3 py-2 rounded-md border border-border text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-smooth"
+          className="px-3 py-2 rounded-md border border-border text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent hover:bg-muted transition-smooth"
+          title="Previous page"
         >
           <Icon name="ChevronLeftIcon" size={16} />
         </button>
@@ -301,7 +302,8 @@ export default function SystemAdminInvitationsPage() {
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-3 py-2 rounded-md border border-border text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-smooth"
+          className="px-3 py-2 rounded-md border border-border text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent hover:bg-muted transition-smooth"
+          title="Next page"
         >
           <Icon name="ChevronRightIcon" size={16} />
         </button>
@@ -344,6 +346,7 @@ export default function SystemAdminInvitationsPage() {
               <button
                 onClick={() => setShowInviteModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150"
+                title="Send invitation to a new user"
               >
                 <Icon name="PlusIcon" size={18} />
                 <span>Invite User</span>
@@ -352,14 +355,14 @@ export default function SystemAdminInvitationsPage() {
           </div>
 
           {error && (
-            <div className="mb-6 bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center">
+            <div className="mb-6 bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center">
               <Icon name="ExclamationCircleIcon" size={20} className="mr-2" />
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-6 bg-success/10 border border-success text-success px-4 py-3 rounded-md flex items-center">
+            <div className="mb-6 bg-green-500/10 border border-success text-success px-4 py-3 rounded-md flex items-center">
               <Icon name="CheckCircleIcon" size={20} className="mr-2" />
               {success}
             </div>
@@ -383,6 +386,7 @@ export default function SystemAdminInvitationsPage() {
                     onClick={() => setSearchQuery('')}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-text-primary transition-smooth duration-150"
                     aria-label="Clear search"
+                    title="Clear search"
                   >
                     <Icon name="XMarkIcon" size={20} />
                   </button>
@@ -520,6 +524,7 @@ export default function SystemAdminInvitationsPage() {
                               <button
                                 onClick={() => handleCancelInvitation(invitation.id)}
                                 className="text-destructive hover:text-destructive/80 text-sm font-medium transition-smooth"
+                                title="Cancel this invitation"
                               >
                                 Cancel
                               </button>

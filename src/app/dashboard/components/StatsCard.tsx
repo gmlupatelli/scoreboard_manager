@@ -12,7 +12,7 @@ const StatsCard = ({ title, value, icon, description }: StatsCardProps) => {
     <div className="bg-card border border-border rounded-lg p-6 hover-lift">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-text-secondary">{title}</h3>
-        <div className="p-2 bg-primary/10 rounded-lg">
+        <div className="p-2 bg-red-600/10 rounded-lg">
           <Icon name={icon} size={24} className="text-primary" />
         </div>
       </div>

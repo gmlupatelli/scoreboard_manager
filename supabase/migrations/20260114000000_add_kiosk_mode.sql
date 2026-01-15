@@ -14,7 +14,7 @@ CREATE TYPE slide_type AS ENUM ('image', 'scoreboard');
 
 CREATE TABLE kiosk_configs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  scoreboard_id UUID NOT NULL REFERENCES scoreboards(id) ON DELETE CASCADE UNIQUE,
+  scoreboard_id TEXT NOT NULL REFERENCES scoreboards(id) ON DELETE CASCADE UNIQUE,
   slide_duration_seconds INTEGER NOT NULL DEFAULT 10,
   scoreboard_position INTEGER NOT NULL DEFAULT 0,
   enabled BOOLEAN NOT NULL DEFAULT false,

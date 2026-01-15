@@ -45,7 +45,7 @@ CREATE TABLE user_profiles (
 
 -- SCOREBOARDS
 CREATE TABLE scoreboards (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   owner_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
@@ -65,8 +65,8 @@ CREATE TABLE scoreboards (
 
 -- SCOREBOARD_ENTRIES
 CREATE TABLE scoreboard_entries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  scoreboard_id UUID NOT NULL REFERENCES scoreboards(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
+  scoreboard_id TEXT NOT NULL REFERENCES scoreboards(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   score NUMERIC NOT NULL,
   details TEXT,
@@ -128,14 +128,14 @@ CREATE OR REPLACE FUNCTION is_system_admin() RETURNS BOOLEAN AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION owns_scoreboard(scoreboard_uuid UUID) RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION owns_scoreboard(scoreboard_uuid TEXT) RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM scoreboards 
     WHERE id = scoreboard_uuid AND owner_id = auth.uid()
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION can_view_scoreboard(scoreboard_uuid UUID) RETURNS BOOLEAN AS $$
+CREATE OR REPLACE FUNCTION can_view_scoreboard(scoreboard_uuid TEXT) RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM scoreboards 
     WHERE id = scoreboard_uuid 

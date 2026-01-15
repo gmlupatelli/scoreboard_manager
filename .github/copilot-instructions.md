@@ -669,6 +669,199 @@ return () => {
 - ✅ **Use CSS variables** from `index.css` for theming
 - ✅ **Keep responsive design** with Tailwind breakpoints (sm:, md:, lg:)
 
+### "Tips" Info Boxes
+- ✅ **Use gray theme** for tips and helpful information
+- ✅ **Use bullet list format** with `<ul>` and `<li>` elements
+- ✅ **Include InformationCircleIcon** as the indicator
+- ✅ **Title must start with "Tips"** (e.g., "Tips for best results", "Tips for styling")
+
+```tsx
+<div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+  <div className="flex gap-3">
+    <Icon
+      name="InformationCircleIcon"
+      size={20}
+      className="text-gray-600 flex-shrink-0 mt-0.5"
+    />
+    <div className="text-sm text-gray-700">
+      <p className="font-medium mb-1">Tips for [context]</p>
+      <ul className="list-disc list-inside space-y-1 text-gray-600">
+        <li>First tip</li>
+        <li>Second tip</li>
+        <li>Third tip</li>
+      </ul>
+    </div>
+  </div>
+</div>
+```
+
+### "How To" Info Boxes
+- ✅ **Use amber theme** for step-by-step instructional content
+- ✅ **Use numbered list format** with `<ol>` and `<li>` elements
+- ✅ **Include LightBulbIcon** as the indicator
+- ✅ **Title must start with "How to"** (e.g., "How to embed your scoreboard")
+
+```tsx
+<div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+  <div className="flex gap-3">
+    <Icon
+      name="LightBulbIcon"
+      size={20}
+      className="text-amber-600 flex-shrink-0 mt-0.5"
+    />
+    <div className="text-sm text-amber-800">
+      <p className="font-medium mb-1">How to [do something]</p>
+      <ol className="list-decimal list-inside space-y-1">
+        <li>First step</li>
+        <li>Second step</li>
+        <li>Third step</li>
+      </ol>
+    </div>
+  </div>
+</div>
+```
+
+### CSS Variable Opacity Limitation
+
+**CRITICAL**: Tailwind opacity modifiers (`/10`, `/20`, `/90`) do **NOT** work with CSS variable colors.
+
+```tsx
+// ❌ BROKEN - CSS variables don't support opacity modifiers
+className="bg-primary/10"      // Renders nothing
+className="hover:bg-primary/20" // Hover won't work
+className="bg-warning/10"       // Renders nothing
+
+// ✅ WORKING - Use standard Tailwind colors with opacity
+className="bg-red-600/10"       // Works correctly
+className="hover:bg-red-600/20" // Hover works
+className="bg-yellow-500/10"    // Works correctly
+```
+
+#### Color Mapping Reference
+| CSS Variable | Standard Tailwind Equivalent |
+|--------------|------------------------------|
+| `primary` (#c43e41) | `red-600` or `red-700` |
+| `secondary` (#eba977) | `orange-600` or `orange-900` |
+| `warning` | `yellow-500` |
+| `success` | `green-500` |
+| `destructive` | `red-500` |
+| `accent` | `amber-600` |
+
+### Button Patterns
+- ✅ **Primary buttons** - For main actions (Submit, Save, Create)
+- ✅ **Secondary action buttons** - For copy/utility actions (Copy URL, Copy Code)
+- ✅ **Preview/navigation buttons** - For opening links/previews
+
+#### Primary Buttons (Solid)
+```tsx
+<button className="px-4 py-2 bg-primary text-white rounded-md font-medium text-sm hover:bg-red-700">
+  Save Changes
+</button>
+```
+
+#### Secondary Action Buttons (Copy URL, Copy Code)
+- ✅ **Use `text-orange-900`** for text color (no background)
+- ✅ **Use `hover:bg-orange-900/10`** for hover state only
+- ❌ **Never use `text-secondary`** (#eba977) - poor contrast on white
+
+```tsx
+<button className="px-4 py-2 text-orange-900 rounded-md font-medium text-sm hover:bg-orange-900/10 flex items-center gap-2">
+  <Icon name="ClipboardDocumentIcon" size={16} />
+  Copy URL
+</button>
+```
+
+#### Preview/Navigation Buttons
+```tsx
+<button className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2">
+  <Icon name="ArrowTopRightOnSquareIcon" size={16} />
+  Preview
+</button>
+```
+
+#### Button Color Reference
+| Button Type | Background | Text Color | Hover |
+|-------------|------------|------------|-------|
+| Primary (solid) | `bg-primary` | `text-white` | `hover:bg-red-700` |
+| Primary (ghost) | (none) | `text-primary` | `hover:bg-red-600/10` |
+| Secondary action | (none) | `text-orange-900` | `hover:bg-orange-900/10` |
+| Danger | `bg-red-600` | `text-white` | `hover:bg-red-700` |
+
+#### Button Requirements
+- ✅ **All buttons must have hover states** - Use appropriate hover classes
+- ✅ **All buttons must have tooltips** - Use `title` attribute for accessibility
+- ✅ **Include transition classes** - Use `transition-colors duration-150` for smooth hover effects
+
+```tsx
+// Example: Complete button with all requirements
+<button
+  onClick={handleAction}
+  className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2"
+  title="Descriptive tooltip for accessibility"
+>
+  <Icon name="IconName" size={16} />
+  <span>Button Text</span>
+</button>
+```
+
+#### Disabled Button States
+- ✅ **Always include `disabled:opacity-50 disabled:cursor-not-allowed`** for visual feedback
+- ✅ **Prevent hover color change** on disabled buttons with `disabled:hover:bg-*` classes
+- ✅ **Ghost buttons**: Use `disabled:hover:bg-transparent` to maintain transparent background
+- ✅ **Solid buttons**: Use `disabled:hover:bg-{same-as-default}` to maintain original background
+
+```tsx
+// Ghost button (transparent background)
+<button
+  disabled={isLoading}
+  className="px-4 py-2 text-primary hover:bg-red-600/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+>
+  Cancel
+</button>
+
+// Solid button (colored background)
+<button
+  disabled={isLoading}
+  className="px-4 py-2 bg-primary text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+>
+  Save
+</button>
+
+// Muted background button
+<button
+  disabled={isLoading}
+  className="px-4 py-2 bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-muted"
+>
+  Cancel
+</button>
+```
+
+| Button Type | Disabled Hover Class |
+|-------------|---------------------|
+| Ghost (no bg) | `disabled:hover:bg-transparent` |
+| Primary solid | `disabled:hover:bg-primary` |
+| Muted solid | `disabled:hover:bg-muted` |
+| Blue solid | `disabled:hover:bg-blue-600` |
+
+#### Status Badge Colors
+```tsx
+// Use standard Tailwind colors for status badges
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'pending':
+      return 'bg-yellow-500/10 text-warning';
+    case 'accepted':
+      return 'bg-green-500/10 text-success';
+    case 'expired':
+      return 'bg-muted text-text-secondary';
+    case 'cancelled':
+      return 'bg-red-500/10 text-destructive';
+    default:
+      return 'bg-muted text-text-secondary';
+  }
+};
+```
+
 ---
 
 ## Page Structure (Next.js App Router)
@@ -727,6 +920,50 @@ export default function ScoreboardInteractive() {
 - ColorPicker
 - Logo
 - Button (if created)
+
+### AppIcon Component - Adding New Icons
+
+The `AppIcon` component (`src/components/ui/AppIcon.tsx`) centralizes all Heroicons usage. When you need to use an icon that isn't already in the component, you must add it to **four locations**:
+
+1. **Outline import** - Add to the outline icons import block from `@heroicons/react/24/outline`
+2. **Solid import** - Add to the solid icons import block from `@heroicons/react/24/solid` (with `Solid` suffix alias)
+3. **outlineIcons map** - Add to the `outlineIcons` object mapping
+4. **solidIcons map** - Add to the `solidIcons` object mapping
+
+**Example - Adding `Cog6ToothIcon`:**
+```typescript
+// 1. Outline import
+import {
+  // ... existing icons
+  Cog6ToothIcon,
+} from '@heroicons/react/24/outline';
+
+// 2. Solid import
+import {
+  // ... existing icons
+  Cog6ToothIcon as Cog6ToothIconSolid,
+} from '@heroicons/react/24/solid';
+
+// 3. outlineIcons map
+const outlineIcons: IconMap = {
+  // ... existing icons
+  Cog6ToothIcon,
+};
+
+// 4. solidIcons map
+const solidIcons: IconMap = {
+  // ... existing icons
+  Cog6ToothIcon: Cog6ToothIconSolid,
+};
+```
+
+**Usage:**
+```tsx
+<Icon name="Cog6ToothIcon" size={20} />
+<Icon name="Cog6ToothIcon" size={20} variant="solid" />
+```
+
+⚠️ **If an icon shows as `QuestionMarkCircleIcon` (fallback), it means the icon name is not registered in the AppIcon component.**
 
 #### 3. Page-Specific Components - Colocated with Pages
 - `dashboard/components/`

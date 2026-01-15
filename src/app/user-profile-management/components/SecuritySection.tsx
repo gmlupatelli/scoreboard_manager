@@ -115,6 +115,7 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
               <button
                 onClick={() => setShowPasswordForm(true)}
                 className="text-primary hover:opacity-80 font-medium transition-smooth"
+                title="Change your password"
               >
                 Change Password
               </button>
@@ -203,13 +204,15 @@ export default function SecuritySection({ onChangePassword }: SecuritySectionPro
                   onClick={handleSavePassword}
                   disabled={saving || !newPassword || !confirmPassword}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-text-secondary disabled:cursor-not-allowed transition-smooth"
+                  title="Update your password"
                 >
                   {saving ? 'Saving...' : 'Update Password'}
                 </button>
                 <button
                   onClick={handleCancel}
                   disabled={saving}
-                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-muted transition-smooth"
+                  title="Cancel password change"
                 >
                   Cancel
                 </button>

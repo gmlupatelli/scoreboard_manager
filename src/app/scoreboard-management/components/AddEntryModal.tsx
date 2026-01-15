@@ -126,6 +126,7 @@ const AddEntryModal = ({ isOpen, onClose, onAdd, scoreType, timeFormat }: AddEnt
               onClick={onClose}
               className="p-1 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
               aria-label="Close modal"
+              title="Close modal"
             >
               <Icon name="XMarkIcon" size={20} />
             </button>
@@ -184,6 +185,7 @@ const AddEntryModal = ({ isOpen, onClose, onAdd, scoreType, timeFormat }: AddEnt
                 type="submit"
                 disabled={!!nameError || !!scoreError || !name || !score}
                 className="flex-1 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                title="Add new entry"
               >
                 Add Entry
               </button>
@@ -191,6 +193,7 @@ const AddEntryModal = ({ isOpen, onClose, onAdd, scoreType, timeFormat }: AddEnt
                 type="button"
                 onClick={onClose}
                 className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
+                title="Cancel"
               >
                 Cancel
               </button>

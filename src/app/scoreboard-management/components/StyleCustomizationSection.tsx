@@ -165,24 +165,21 @@ export default function StyleCustomizationSection({
 
       {isExpanded && (
         <div className="px-6 pb-6 border-t border-border pt-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
             <div className="flex gap-3">
               <Icon
-                name="InformationCircleIcon"
+                name="LightBulbIcon"
                 size={20}
-                className="text-blue-600 flex-shrink-0 mt-0.5"
+                className="text-amber-600 flex-shrink-0 mt-0.5"
               />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">How styling works</p>
-                <p className="mb-2">
-                  Choose a preset theme or customize individual colors. You can apply styles to just
-                  the embedded version, the main public view, or both. Changes are saved
-                  automatically when you click Save.
-                </p>
-                <p className="mb-2">
-                  Colors accept HEX (#ffffff), RGBA (rgba(255, 255, 255, 0.8)), or the keyword
-                  "transparent" for see-through backgrounds.
-                </p>
+              <div className="text-sm text-amber-800">
+                <p className="font-medium mb-1">How to customize styles</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Choose a preset theme or customize individual colors</li>
+                  <li>Apply styles to the embedded version, main public view, or both</li>
+                  <li>Colors accept HEX (#ffffff), RGBA, or &quot;transparent&quot;</li>
+                  <li>Click Save to apply your changes</li>
+                </ol>
               </div>
             </div>
           </div>
@@ -202,8 +199,8 @@ export default function StyleCustomizationSection({
                   onClick={() => handleScopeChange(option.value as 'main' | 'embed' | 'both')}
                   className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
                     scope === option.value
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border hover:border-primary/50 text-text-secondary'
+                      ? 'border-primary bg-red-600/10 text-primary'
+                      : 'border-border hover:border-red-600/50 text-text-secondary'
                   }`}
                 >
                   <div className="font-medium text-sm">{option.label}</div>
@@ -224,8 +221,8 @@ export default function StyleCustomizationSection({
                   onClick={() => handlePresetChange(preset)}
                   className={`p-3 rounded-lg border-2 text-left transition-all ${
                     selectedPreset === preset
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-primary bg-red-600/10'
+                      : 'border-border hover:border-red-600/50'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -466,6 +463,7 @@ export default function StyleCustomizationSection({
               onClick={handleReset}
               disabled={!hasChanges || isSaving}
               className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Reset style changes"
             >
               Reset Changes
             </button>
@@ -473,6 +471,7 @@ export default function StyleCustomizationSection({
               onClick={handleSave}
               disabled={!hasChanges || isSaving}
               className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              title="Save style customizations"
             >
               {isSaving ? (
                 <>

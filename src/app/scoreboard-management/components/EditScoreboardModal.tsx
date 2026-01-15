@@ -195,6 +195,7 @@ const EditScoreboardModal = ({
                 type="button"
                 onClick={handleCancelTypeChange}
                 className="px-4 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                title="Cancel type change"
               >
                 Cancel
               </button>
@@ -202,6 +203,7 @@ const EditScoreboardModal = ({
                 type="button"
                 onClick={handleConfirmTypeChange}
                 className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition-smooth duration-150"
+                title="Delete all entries and change type"
               >
                 Delete Entries & Change Type
               </button>
@@ -226,6 +228,7 @@ const EditScoreboardModal = ({
             <button
               onClick={handleClose}
               className="rounded-md p-1 hover:bg-muted transition-smooth duration-150"
+              title="Close modal"
             >
               <Icon name="XMarkIcon" size={20} className="text-text-secondary" />
             </button>
@@ -431,12 +434,14 @@ const EditScoreboardModal = ({
                 type="button"
                 onClick={handleClose}
                 className="px-4 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                title="Cancel changes"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-smooth duration-150"
+                title="Save changes"
               >
                 Save Changes
               </button>

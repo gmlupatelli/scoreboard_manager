@@ -15,6 +15,19 @@ interface SystemSettings {
   updated_at: string;
 }
 
+interface OrphanFilesInfo {
+  count: number;
+  totalSizeBytes: number;
+  totalSizeMB: string;
+  orphans: Array<{
+    id: string;
+    storage_path: string;
+    file_type: string;
+    file_size: number | null;
+    created_at: string;
+  }>;
+}
+
 export default function SystemAdminSettingsPage() {
   const { isAuthorized, isChecking, getAuthHeaders } = useAuthGuard({
     requiredRole: 'system_admin',
@@ -26,6 +39,12 @@ export default function SystemAdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Orphan files state
+  const [orphanInfo, setOrphanInfo] = useState<OrphanFilesInfo | null>(null);
+  const [loadingOrphans, setLoadingOrphans] = useState(false);
+  const [cleaningOrphans, setCleaningOrphans] = useState(false);
+  const [orphanMinutes, setOrphanMinutes] = useState(60);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -55,6 +74,86 @@ export default function SystemAdminSettingsPage() {
       }
     }
   }, [getAuthHeaders, execute, isMounted]);
+
+  const fetchOrphanFiles = useCallback(async () => {
+    setLoadingOrphans(true);
+    setError('');
+    try {
+      const authHeaders = await getAuthHeaders();
+      const response = await execute(
+        `/api/admin/orphan-files?older_than_minutes=${orphanMinutes}`,
+        {
+          credentials: 'include',
+          headers: authHeaders,
+        },
+        'orphan-files'
+      );
+      if (response && response.ok) {
+        const data = await response.json();
+        if (isMounted()) {
+          setOrphanInfo(data);
+        }
+      } else if (response) {
+        const data = await response.json();
+        if (isMounted()) {
+          setError(data.error || 'Failed to fetch orphan files');
+        }
+      }
+    } catch (_err) {
+      if (isMounted()) {
+        setError('Failed to fetch orphan files');
+      }
+    } finally {
+      if (isMounted()) {
+        setLoadingOrphans(false);
+      }
+    }
+  }, [getAuthHeaders, execute, isMounted, orphanMinutes]);
+
+  const cleanOrphanFiles = async () => {
+    if (!orphanInfo || orphanInfo.count === 0) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${orphanInfo.count} orphan file(s)? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setCleaningOrphans(true);
+    setError('');
+    try {
+      const authHeaders = await getAuthHeaders();
+      const response = await fetch(
+        `/api/admin/orphan-files?older_than_minutes=${orphanMinutes}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: authHeaders,
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (isMounted()) {
+          setSuccess(`Successfully deleted ${data.deleted} orphan file(s)`);
+          setOrphanInfo(null);
+          setTimeoutSafe(() => setSuccess(''), 5000, 'orphan-success-clear');
+        }
+      } else {
+        const data = await response.json();
+        if (isMounted()) {
+          setError(data.error || 'Failed to delete orphan files');
+        }
+      }
+    } catch (_err) {
+      if (isMounted()) {
+        setError('Failed to delete orphan files');
+      }
+    } finally {
+      if (isMounted()) {
+        setCleaningOrphans(false);
+      }
+    }
+  };
 
   useEffect(() => {
     if (isAuthorized) {
@@ -130,7 +229,7 @@ export default function SystemAdminSettingsPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-text-primary">System Settings</h1>
-              <p className="text-text-secondary mt-1">Manage application-wide configuration</p>
+              <p className="text-text-secondary mt-1">Manage application-wide configuration and maintenance</p>
             </div>
             <Link
               href="/dashboard"
@@ -142,14 +241,14 @@ export default function SystemAdminSettingsPage() {
           </div>
 
           {error && (
-            <div className="mb-6 bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center">
+            <div className="mb-6 bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center">
               <Icon name="ExclamationCircleIcon" size={20} className="mr-2" />
               {error}
             </div>
           )}
 
           {success && (
-            <div className="mb-6 bg-success/10 border border-success text-success px-4 py-3 rounded-md flex items-center">
+            <div className="mb-6 bg-green-500/10 border border-success text-success px-4 py-3 rounded-md flex items-center">
               <Icon name="CheckCircleIcon" size={20} className="mr-2" />
               {success}
             </div>
@@ -208,7 +307,7 @@ export default function SystemAdminSettingsPage() {
             </div>
 
             {!settings?.allow_public_registration && (
-              <div className="mt-6 p-4 bg-warning/10 border border-warning/30 rounded-lg">
+              <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                 <div className="flex items-start">
                   <Icon
                     name="InformationCircleIcon"
@@ -225,6 +324,165 @@ export default function SystemAdminSettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Storage Maintenance Section */}
+          <div className="bg-card border border-border rounded-lg p-6 mb-6 elevation-1">
+            <h2 className="text-xl font-semibold text-text-primary mb-6 flex items-center">
+              <Icon name="ServerStackIcon" size={24} className="mr-2 text-primary" />
+              Storage Maintenance
+            </h2>
+
+            <div className="space-y-6">
+              {/* Orphan Files Scanner */}
+              <div className="p-4 bg-surface rounded-lg border border-border">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="font-medium text-text-primary">Orphan Files Cleanup</h3>
+                    <p className="text-sm text-text-secondary mt-1">
+                      Find and remove kiosk slide files that are no longer linked to any slide.
+                      These can occur when uploads are interrupted or slides are deleted.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Time threshold selector */}
+                <div className="flex items-center gap-4 mb-4">
+                  <label className="text-sm text-text-secondary">
+                    Find files orphaned for at least:
+                  </label>
+                  <select
+                    value={orphanMinutes}
+                    onChange={(e) => setOrphanMinutes(Number(e.target.value))}
+                    className="px-3 py-1.5 text-sm border border-border rounded-md bg-background text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value={15}>15 minutes</option>
+                    <option value={30}>30 minutes</option>
+                    <option value={60}>1 hour</option>
+                    <option value={1440}>24 hours</option>
+                    <option value={10080}>7 days</option>
+                  </select>
+                </div>
+
+                {/* Scan button */}
+                <div className="flex items-center gap-3 mb-4">
+                  <button
+                    onClick={fetchOrphanFiles}
+                    disabled={loadingOrphans}
+                    className="px-4 py-2 bg-primary text-white rounded-md font-medium text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary transition-colors duration-150 flex items-center gap-2"
+                    title="Scan for orphan files"
+                  >
+                    {loadingOrphans ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Scanning...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="MagnifyingGlassIcon" size={16} />
+                        <span>Scan for Orphans</span>
+                      </>
+                    )}
+                  </button>
+
+                  {orphanInfo && orphanInfo.count > 0 && (
+                    <button
+                      onClick={cleanOrphanFiles}
+                      disabled={cleaningOrphans}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md font-medium text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600 transition-colors duration-150 flex items-center gap-2"
+                      title="Delete all orphan files"
+                    >
+                      {cleaningOrphans ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Deleting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Icon name="TrashIcon" size={16} />
+                          <span>Delete All Orphans</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Results display */}
+                {orphanInfo && (
+                  <div className="mt-4">
+                    {orphanInfo.count === 0 ? (
+                      <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center">
+                        <Icon name="CheckCircleIcon" size={20} className="text-success mr-2" />
+                        <span className="text-sm text-success font-medium">
+                          No orphan files found. Storage is clean!
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                          <div className="flex items-center mb-2">
+                            <Icon name="ExclamationTriangleIcon" size={20} className="text-warning mr-2" />
+                            <span className="text-sm text-warning font-medium">
+                              Found {orphanInfo.count} orphan file(s)
+                            </span>
+                          </div>
+                          <p className="text-sm text-text-secondary">
+                            Total size: {orphanInfo.totalSizeMB} MB ({orphanInfo.totalSizeBytes.toLocaleString()} bytes)
+                          </p>
+                        </div>
+
+                        {/* File list */}
+                        <div className="max-h-48 overflow-y-auto border border-border rounded-md">
+                          <table className="w-full text-sm">
+                            <thead className="bg-muted sticky top-0">
+                              <tr>
+                                <th className="text-left px-3 py-2 text-text-secondary font-medium">File Path</th>
+                                <th className="text-left px-3 py-2 text-text-secondary font-medium">Type</th>
+                                <th className="text-right px-3 py-2 text-text-secondary font-medium">Size</th>
+                                <th className="text-left px-3 py-2 text-text-secondary font-medium">Uploaded</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {orphanInfo.orphans.map((file) => (
+                                <tr key={file.id} className="hover:bg-muted/50">
+                                  <td className="px-3 py-2 text-text-primary font-mono text-xs truncate max-w-xs" title={file.storage_path}>
+                                    {file.storage_path}
+                                  </td>
+                                  <td className="px-3 py-2 text-text-secondary capitalize">
+                                    {file.file_type}
+                                  </td>
+                                  <td className="px-3 py-2 text-text-secondary text-right">
+                                    {file.file_size ? `${(file.file_size / 1024).toFixed(1)} KB` : '-'}
+                                  </td>
+                                  <td className="px-3 py-2 text-text-secondary">
+                                    {new Date(file.created_at).toLocaleDateString()}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Info box */}
+                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex gap-2">
+                    <Icon name="InformationCircleIcon" size={18} className="text-gray-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-xs text-gray-600">
+                      <p className="font-medium mb-1">Tips</p>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        <li>Orphan files occur when uploads are interrupted before a slide is created</li>
+                        <li>Use a longer time threshold to avoid deleting files from in-progress uploads</li>
+                        <li>This only affects kiosk slide images, not other storage</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

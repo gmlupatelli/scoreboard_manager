@@ -75,13 +75,13 @@ export default function InvitationsSection() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-warning/10 text-warning';
+        return 'bg-yellow-500/10 text-warning';
       case 'accepted':
-        return 'bg-success/10 text-success';
+        return 'bg-green-500/10 text-success';
       case 'expired':
         return 'bg-muted text-text-secondary';
       case 'cancelled':
-        return 'bg-destructive/10 text-destructive';
+        return 'bg-red-500/10 text-destructive';
       default:
         return 'bg-muted text-text-secondary';
     }
@@ -106,6 +106,7 @@ export default function InvitationsSection() {
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
+            title="Invite a new user"
           >
             <Icon name="PlusIcon" size={18} />
             <span>Invite User</span>
@@ -139,7 +140,7 @@ export default function InvitationsSection() {
                 className="flex items-center justify-between p-4 bg-surface rounded-lg border border-border"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-red-600/10 flex items-center justify-center">
                     <Icon name="UserIcon" size={20} className="text-primary" />
                   </div>
                   <div>
@@ -158,7 +159,7 @@ export default function InvitationsSection() {
                   {invitation.status === 'pending' && (
                     <button
                       onClick={() => handleCancelInvitation(invitation.id)}
-                      className="p-1.5 rounded-md text-text-secondary hover:text-destructive hover:bg-destructive/10 transition-smooth duration-150"
+                      className="p-1.5 rounded-md text-text-secondary hover:text-destructive hover:bg-red-500/10 transition-smooth duration-150"
                       title="Cancel invitation"
                     >
                       <Icon name="XMarkIcon" size={16} />

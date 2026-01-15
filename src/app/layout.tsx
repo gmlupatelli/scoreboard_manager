@@ -54,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${nunitoSans.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${nunitoSans.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         {/* DNS prefetch for external services */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
@@ -63,7 +63,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={nunitoSans.className}>
+      <body className={nunitoSans.className} suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAnonClient } from '@/lib/supabase/apiClient';
+import { getAnonClient, getServiceRoleClient } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+// Signed URL expiry time: 1 hour (kiosk can refresh periodically)
+const SIGNED_URL_EXPIRY_SECONDS = 3600;
 
 /**
  * GET /api/kiosk/public/[scoreboardId]
@@ -57,6 +60,25 @@ export async function GET(
       return NextResponse.json({ error: slidesError.message }, { status: 500 });
     }
 
+    // Generate signed URLs for image slides (requires service role for private bucket)
+    const serviceClient = getServiceRoleClient();
+    const slidesWithSignedUrls = await Promise.all(
+      (slides || []).map(async (slide) => {
+        if (slide.slide_type === 'image' && slide.image_url && serviceClient) {
+          // image_url stores the storage path, generate a signed URL
+          const { data: signedUrlData } = await serviceClient.storage
+            .from('kiosk-slides')
+            .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
+
+          return {
+            ...slide,
+            image_url: signedUrlData?.signedUrl || null,
+          };
+        }
+        return slide;
+      })
+    );
+
     // Get scoreboard entries
     const { data: entries, error: entriesError } = await supabase
       .from('scoreboard_entries')
@@ -75,8 +97,9 @@ export async function GET(
         slideDurationSeconds: config.slide_duration_seconds,
         scoreboardPosition: config.scoreboard_position,
         hasPinProtection: !!config.pin_code,
+        signedUrlExpirySeconds: SIGNED_URL_EXPIRY_SECONDS,
       },
-      slides: slides || [],
+      slides: slidesWithSignedUrls,
       entries: entries || [],
     });
   } catch (_error) {

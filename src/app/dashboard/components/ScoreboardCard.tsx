@@ -66,6 +66,7 @@ const ScoreboardCard = ({
               onClick={() => setShowMenu(!showMenu)}
               className="p-1 hover:bg-muted rounded-md transition-smooth"
               aria-label="More options"
+              title="More options"
             >
               <Icon name="EllipsisVerticalIcon" size={20} className="text-text-secondary" />
             </button>
@@ -80,6 +81,7 @@ const ScoreboardCard = ({
                       setShowMenu(false);
                     }}
                     className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth"
+                    title="Rename scoreboard"
                   >
                     <Icon name="PencilIcon" size={18} className="mr-3" />
                     Rename
@@ -89,7 +91,8 @@ const ScoreboardCard = ({
                       onDelete();
                       setShowMenu(false);
                     }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-smooth"
+                    className="flex items-center w-full px-4 py-2 text-sm text-destructive hover:bg-red-500/10 transition-smooth"
+                    title="Delete scoreboard"
                   >
                     <Icon name="TrashIcon" size={18} className="mr-3" />
                     Delete
@@ -138,6 +141,7 @@ const ScoreboardCard = ({
         <button
           onClick={() => onNavigate(id)}
           className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth"
+          title="Manage this scoreboard"
         >
           <span>Manage Scoreboard</span>
           <Icon name="ArrowRightIcon" size={18} />

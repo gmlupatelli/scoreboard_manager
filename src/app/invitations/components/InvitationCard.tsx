@@ -15,11 +15,11 @@ interface InvitationCardProps {
 const getStatusColor = (status: string): string => {
   switch (status) {
     case 'pending':
-      return 'bg-warning/10 text-warning border-warning/20';
+      return 'bg-yellow-500/10 text-warning border-yellow-500/20';
     case 'accepted':
-      return 'bg-success/10 text-success border-success/20';
+      return 'bg-green-500/10 text-success border-green-500/20';
     case 'expired':
-      return 'bg-destructive/10 text-destructive border-destructive/20';
+      return 'bg-red-500/10 text-destructive border-red-500/20';
     case 'cancelled':
       return 'bg-muted text-text-secondary border-border';
     default:
@@ -45,7 +45,7 @@ export default function InvitationCard({
       <div className="relative bg-surface p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-red-600/10 flex items-center justify-center flex-shrink-0">
               <Icon name="UserIcon" size={24} className="text-primary" />
             </div>
             <div className="flex-1 min-w-0">
@@ -77,7 +77,7 @@ export default function InvitationCard({
             {status === 'pending' && onCancel && (
               <button
                 onClick={onCancel}
-                className="p-2 rounded-md text-text-secondary hover:text-destructive hover:bg-destructive/10 transition-smooth duration-150"
+                className="p-2 rounded-md text-text-secondary hover:text-destructive hover:bg-red-500/10 transition-smooth duration-150"
                 title="Cancel invitation"
                 aria-label="Cancel invitation"
               >

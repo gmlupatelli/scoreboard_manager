@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+// Signed URL expiry for preview (1 hour)
+const SIGNED_URL_EXPIRY_SECONDS = 3600;
 
 /**
  * POST /api/kiosk/[scoreboardId]/slides
@@ -127,7 +130,49 @@ export async function POST(
       return NextResponse.json({ error: slideError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ slide }, { status: 201 });
+    // Link file registry entries to this slide (for orphan tracking)
+    if (slide.slide_type === 'image') {
+      const pathsToLink = [slide.image_url, slide.thumbnail_url].filter(Boolean);
+      if (pathsToLink.length > 0) {
+        await supabase
+          .from('kiosk_file_registry')
+          .update({ slide_id: slide.id })
+          .in('storage_path', pathsToLink);
+      }
+    }
+
+    // Generate signed URLs for image slides (thumbnail for management UI)
+    let slideWithSignedUrl = slide;
+    if (slide.slide_type === 'image') {
+      const serviceClient = getServiceRoleClient();
+      if (serviceClient) {
+        const result = { ...slide };
+
+        // Generate signed URL for thumbnail
+        if (slide.thumbnail_url) {
+          const { data: thumbSignedData } = await serviceClient.storage
+            .from('kiosk-slides')
+            .createSignedUrl(slide.thumbnail_url, SIGNED_URL_EXPIRY_SECONDS);
+          if (thumbSignedData?.signedUrl) {
+            result.thumbnail_url = thumbSignedData.signedUrl;
+          }
+        }
+
+        // Generate signed URL for original image (fallback)
+        if (slide.image_url) {
+          const { data: signedUrlData } = await serviceClient.storage
+            .from('kiosk-slides')
+            .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
+          if (signedUrlData?.signedUrl) {
+            result.image_url = signedUrlData.signedUrl;
+          }
+        }
+
+        slideWithSignedUrl = result;
+      }
+    }
+
+    return NextResponse.json({ slide: slideWithSignedUrl }, { status: 201 });
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

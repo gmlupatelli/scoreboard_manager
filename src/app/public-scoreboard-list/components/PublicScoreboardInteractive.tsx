@@ -179,7 +179,7 @@ const PublicScoreboardInteractive = () => {
               </p>
             </div>
           ) : error ? (
-            <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center space-x-2">
+            <div className="bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md flex items-center space-x-2">
               <Icon name="ExclamationTriangleIcon" size={20} />
               <span>{error}</span>
             </div>

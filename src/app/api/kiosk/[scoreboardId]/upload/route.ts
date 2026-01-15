@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -7,6 +8,11 @@ export const runtime = 'nodejs';
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+
+// Thumbnail settings
+const THUMBNAIL_WIDTH = 320;
+const THUMBNAIL_HEIGHT = 180;
+const THUMBNAIL_QUALITY = 80;
 
 /**
  * POST /api/kiosk/[scoreboardId]/upload
@@ -74,14 +80,32 @@ export async function POST(
 
     // Generate unique filename
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'png';
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const baseName = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const fileName = `${baseName}.${fileExt}`;
+    const thumbnailName = `${baseName}_thumb.webp`;
     const filePath = `${user.id}/${scoreboardId}/${fileName}`;
+    const thumbnailPath = `${user.id}/${scoreboardId}/${thumbnailName}`;
 
     // Convert File to ArrayBuffer for upload
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Upload to Supabase Storage
+    // Generate thumbnail using sharp
+    let thumbnailBuffer: Buffer;
+    try {
+      thumbnailBuffer = await sharp(buffer)
+        .resize(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, {
+          fit: 'cover',
+          position: 'center',
+        })
+        .webp({ quality: THUMBNAIL_QUALITY })
+        .toBuffer();
+    } catch (thumbError) {
+      console.error('Thumbnail generation error:', thumbError);
+      return NextResponse.json({ error: 'Failed to process image' }, { status: 500 });
+    }
+
+    // Upload original to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('kiosk-slides')
       .upload(filePath, buffer, {
@@ -95,12 +119,47 @@ export async function POST(
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    // Get the public URL
-    const { data: urlData } = supabase.storage.from('kiosk-slides').getPublicUrl(filePath);
+    // Upload thumbnail to Supabase Storage
+    const { error: thumbUploadError } = await supabase.storage
+      .from('kiosk-slides')
+      .upload(thumbnailPath, thumbnailBuffer, {
+        contentType: 'image/webp',
+        cacheControl: '3600',
+        upsert: false,
+      });
 
+    if (thumbUploadError) {
+      console.error('Thumbnail upload error:', thumbUploadError);
+      // Clean up the original file if thumbnail upload fails
+      await supabase.storage.from('kiosk-slides').remove([filePath]);
+      return NextResponse.json({ error: 'Failed to upload thumbnail' }, { status: 500 });
+    }
+
+    // Register files in the file registry for orphan tracking
+    // Note: slide_id will be set when the slide is created
+    await supabase.from('kiosk_file_registry').insert([
+      {
+        storage_path: filePath,
+        file_type: 'original',
+        user_id: user.id,
+        scoreboard_id: scoreboardId,
+        file_size: file.size,
+      },
+      {
+        storage_path: thumbnailPath,
+        file_type: 'thumbnail',
+        user_id: user.id,
+        scoreboard_id: scoreboardId,
+        file_size: thumbnailBuffer.length,
+      },
+    ]);
+
+    // Return both paths
     return NextResponse.json({
       path: filePath,
-      url: urlData.publicUrl,
+      url: filePath, // Store the path for the original
+      thumbnailPath: thumbnailPath,
+      thumbnailUrl: thumbnailPath, // Store the thumbnail path
       fileName: file.name,
       fileSize: file.size,
     });

@@ -471,7 +471,7 @@ const ScoreboardManagementInteractive = () => {
     return (
       <div className="min-h-screen bg-background pt-16 landscape-mobile:pt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
-          <div className="bg-destructive/10 border border-destructive rounded-lg p-6 text-center">
+          <div className="bg-red-500/10 border border-destructive rounded-lg p-6 text-center">
             <Icon
               name="ExclamationTriangleIcon"
               size={48}
@@ -484,6 +484,7 @@ const ScoreboardManagementInteractive = () => {
             <button
               onClick={() => router.push('/dashboard')}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90"
+              title="Return to dashboard"
             >
               Return to Dashboard
             </button>
@@ -526,6 +527,7 @@ const ScoreboardManagementInteractive = () => {
             <button
               onClick={() => router.push('/dashboard')}
               className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+              title="Back to dashboard"
             >
               <Icon name="ArrowLeftIcon" size={18} />
               <span className="hidden sm:inline">Back to Dashboard</span>
@@ -547,7 +549,7 @@ const ScoreboardManagementInteractive = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleOpenInNewTab}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-smooth duration-150"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-primary hover:bg-red-600/10 transition-colors duration-150"
                   title="Open public view in new tab"
                 >
                   <Icon name="ArrowTopRightOnSquareIcon" size={16} />
@@ -555,7 +557,7 @@ const ScoreboardManagementInteractive = () => {
                 </button>
                 <button
                   onClick={handleCopyUrl}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-secondary/10 text-secondary hover:bg-secondary/20 transition-smooth duration-150"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-orange-900 hover:bg-orange-900/10 transition-colors duration-150"
                   title="Copy public URL to clipboard"
                 >
                   <Icon name="ClipboardDocumentIcon" size={16} />
@@ -605,6 +607,7 @@ const ScoreboardManagementInteractive = () => {
                 <button
                   onClick={() => setIsAddModalOpen(true)}
                   className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
+                  title="Add new entry"
                 >
                   <Icon name="PlusIcon" size={20} />
                   <span className="hidden sm:inline">Add Entry</span>
@@ -613,6 +616,7 @@ const ScoreboardManagementInteractive = () => {
                 <button
                   onClick={() => setIsImportModalOpen(true)}
                   className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
+                  title="Import entries from CSV file"
                 >
                   <Icon name="ArrowUpTrayIcon" size={20} />
                   <span className="hidden sm:inline">Import CSV</span>
@@ -622,6 +626,7 @@ const ScoreboardManagementInteractive = () => {
                   onClick={handleClearAll}
                   disabled={entries.length === 0}
                   className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Delete all entries"
                 >
                   <Icon name="TrashIcon" size={20} />
                   <span className="hidden sm:inline">Clear All</span>
@@ -639,6 +644,7 @@ const ScoreboardManagementInteractive = () => {
                     <button
                       onClick={() => handleSort('rank')}
                       className="flex items-center space-x-1 text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text-primary transition-smooth duration-150"
+                      title="Sort by rank"
                     >
                       <span>Rank</span>
                       {sortBy === 'rank' && (
@@ -653,6 +659,7 @@ const ScoreboardManagementInteractive = () => {
                     <button
                       onClick={() => handleSort('name')}
                       className="flex items-center space-x-1 text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text-primary transition-smooth duration-150"
+                      title="Sort by name"
                     >
                       <span>Name</span>
                       {sortBy === 'name' && (
@@ -667,6 +674,7 @@ const ScoreboardManagementInteractive = () => {
                     <button
                       onClick={() => handleSort('score')}
                       className="flex items-center space-x-1 text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text-primary transition-smooth duration-150"
+                      title="Sort by score"
                     >
                       <span>{scoreboard?.scoreType === 'time' ? 'Time' : 'Score'}</span>
                       {sortBy === 'score' && (
@@ -748,7 +756,8 @@ const ScoreboardManagementInteractive = () => {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    title="Go to previous page"
                   >
                     Previous
                   </button>
@@ -758,7 +767,8 @@ const ScoreboardManagementInteractive = () => {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 rounded-md border border-input text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    title="Go to next page"
                   >
                     Next
                   </button>

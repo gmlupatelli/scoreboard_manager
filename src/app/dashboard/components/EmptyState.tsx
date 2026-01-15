@@ -19,6 +19,7 @@ const EmptyState = ({ onCreateNew }: EmptyStateProps) => {
       <button
         onClick={onCreateNew}
         className="inline-flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
+        title="Create your first scoreboard"
       >
         <Icon name="PlusIcon" size={20} />
         <span>Create First Scoreboard</span>

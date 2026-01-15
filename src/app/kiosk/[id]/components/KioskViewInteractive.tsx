@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase/client';
 import Icon from '@/components/ui/AppIcon';
 import KioskScoreboard from './KioskScoreboard';
 import KioskImageSlide from './KioskImageSlide';
@@ -39,6 +40,7 @@ interface KioskData {
     slideDurationSeconds: number;
     scoreboardPosition: number;
     hasPinProtection: boolean;
+    signedUrlExpirySeconds?: number;
   };
   slides: SlideData[];
   entries: EntryData[];
@@ -62,6 +64,7 @@ export default function KioskViewInteractive() {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const slideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingRefreshRef = useRef(false);
 
   // Build carousel slides array (images + scoreboard at configured position)
   const carouselSlides = useCallback(() => {
@@ -153,6 +156,20 @@ export default function KioskViewInteractive() {
     fetchKioskData();
   }, [fetchKioskData]);
 
+  // Refresh signed URLs before they expire (refresh at 80% of expiry time)
+  useEffect(() => {
+    if (!kioskData?.config.signedUrlExpirySeconds) return;
+
+    const expirySeconds = kioskData.config.signedUrlExpirySeconds;
+    const refreshInterval = expirySeconds * 0.8 * 1000; // Refresh at 80% of expiry
+
+    const intervalId = setInterval(() => {
+      fetchKioskData();
+    }, refreshInterval);
+
+    return () => clearInterval(intervalId);
+  }, [kioskData?.config.signedUrlExpirySeconds, fetchKioskData]);
+
   // Auto-advance slides
   useEffect(() => {
     if (!kioskData || isPaused || (kioskData.config.hasPinProtection && !isPinVerified)) {
@@ -192,6 +209,46 @@ export default function KioskViewInteractive() {
 
     return () => clearInterval(interval);
   }, [kioskData, isPinVerified, fetchKioskData]);
+
+  // Subscribe to realtime scoreboard entry changes
+  useEffect(() => {
+    if (!scoreboardId) return;
+
+    const channel = supabase
+      .channel(`kiosk-entries-${scoreboardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'scoreboard_entries',
+          filter: `scoreboard_id=eq.${scoreboardId}`,
+        },
+        () => {
+          // Mark that we need to refresh before showing scoreboard
+          pendingRefreshRef.current = true;
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [scoreboardId]);
+
+  // Check for pending refresh when transitioning to scoreboard slide
+  useEffect(() => {
+    if (!kioskData) return;
+
+    const slides = carouselSlides();
+    const currentSlide = slides[currentSlideIndex];
+
+    // If we're about to show the scoreboard and there's a pending refresh, fetch new data
+    if (currentSlide?.type === 'scoreboard' && pendingRefreshRef.current) {
+      pendingRefreshRef.current = false;
+      fetchKioskData();
+    }
+  }, [currentSlideIndex, kioskData, carouselSlides, fetchKioskData]);
 
   // Auto-hide cursor and controls
   useEffect(() => {
@@ -307,6 +364,7 @@ export default function KioskViewInteractive() {
           <button
             onClick={() => window.location.reload()}
             className="mt-6 px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            title="Retry loading kiosk"
           >
             Retry
           </button>
@@ -379,6 +437,7 @@ export default function KioskViewInteractive() {
               }
               className="p-2 text-white/70 hover:text-white transition-colors"
               aria-label="Previous slide"
+              title="Previous slide"
             >
               <Icon name="ChevronLeftIcon" size={24} />
             </button>
@@ -387,6 +446,7 @@ export default function KioskViewInteractive() {
               onClick={() => setIsPaused((prev) => !prev)}
               className="p-3 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors"
               aria-label={isPaused ? 'Play' : 'Pause'}
+              title={isPaused ? 'Resume slideshow' : 'Pause slideshow'}
             >
               <Icon name={isPaused ? 'PlayIcon' : 'PauseIcon'} size={24} />
             </button>
@@ -395,6 +455,7 @@ export default function KioskViewInteractive() {
               onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % slides.length)}
               className="p-2 text-white/70 hover:text-white transition-colors"
               aria-label="Next slide"
+              title="Next slide"
             >
               <Icon name="ChevronRightIcon" size={24} />
             </button>
@@ -405,6 +466,7 @@ export default function KioskViewInteractive() {
               onClick={toggleFullscreen}
               className="p-2 text-white/70 hover:text-white transition-colors"
               aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
             >
               <Icon
                 name={isFullscreen ? 'ArrowsPointingInIcon' : 'ArrowsPointingOutIcon'}

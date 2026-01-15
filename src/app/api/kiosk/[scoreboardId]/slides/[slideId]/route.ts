@@ -115,10 +115,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Get the slide to find the image path
+    // Get the slide to find the image and thumbnail paths
     const { data: slide } = await supabase
       .from('kiosk_slides')
-      .select('image_url')
+      .select('image_url, thumbnail_url')
       .eq('id', slideId)
       .single();
 
@@ -129,14 +129,20 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
 
-    // If there was an image, try to delete it from storage
-    if (slide?.image_url) {
-      // Extract the path from the URL
-      const urlParts = slide.image_url.split('/kiosk-slides/');
-      if (urlParts.length > 1) {
-        const filePath = urlParts[1];
-        await supabase.storage.from('kiosk-slides').remove([filePath]);
-      }
+    // Delete files from storage
+    // Both image_url and thumbnail_url store raw storage paths
+    const filesToDelete: string[] = [];
+
+    if (slide?.image_url && !slide.image_url.startsWith('http')) {
+      filesToDelete.push(slide.image_url);
+    }
+
+    if (slide?.thumbnail_url && !slide.thumbnail_url.startsWith('http')) {
+      filesToDelete.push(slide.thumbnail_url);
+    }
+
+    if (filesToDelete.length > 0) {
+      await supabase.storage.from('kiosk-slides').remove(filesToDelete);
     }
 
     return NextResponse.json({ success: true });

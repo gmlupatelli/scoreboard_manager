@@ -82,13 +82,15 @@ export default function PinEntryModal({ scoreboardId, onVerified, onCancel }: Pi
               onClick={onCancel}
               className="flex-1 px-6 py-3 bg-gray-800 text-gray-300 rounded-xl font-medium hover:bg-gray-700 transition-colors"
               disabled={isVerifying}
+              title="Cancel and go back"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
               disabled={isVerifying || pin.length === 0}
+              title="Verify PIN"
             >
               {isVerifying ? 'Verifying...' : 'Enter'}
             </button>

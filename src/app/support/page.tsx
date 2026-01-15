@@ -55,7 +55,7 @@ export default function SupportPage() {
               className="bg-card border border-border rounded-lg p-6 hover:border-primary transition-colors group"
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                <div className="w-12 h-12 bg-red-600/10 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-red-600/20 transition-colors">
                   <Icon name="ChatBubbleLeftRightIcon" size={24} className="text-primary" />
                 </div>
                 <div>
@@ -68,7 +68,7 @@ export default function SupportPage() {
             </Link>
             <div className="bg-card border border-border rounded-lg p-6">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-orange-600/10 rounded-full flex items-center justify-center flex-shrink-0">
                   <Icon name="EnvelopeIcon" size={24} className="text-secondary" />
                 </div>
                 <div>
@@ -100,7 +100,7 @@ export default function SupportPage() {
             </div>
           </div>
 
-          <div className="mt-8 bg-primary/5 border border-primary/20 rounded-lg p-6 text-center">
+          <div className="mt-8 bg-red-600/5 border border-red-600/20 rounded-lg p-6 text-center">
             <h3 className="font-semibold text-text-primary mb-2">Still need help?</h3>
             <p className="text-text-secondary text-sm mb-4">
               Can't find what you're looking for? Our support team is here to help.

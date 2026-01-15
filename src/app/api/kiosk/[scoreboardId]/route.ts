@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+// Signed URL expiry for management preview (1 hour)
+const SIGNED_URL_EXPIRY_SECONDS = 3600;
 
 /**
  * GET /api/kiosk/[scoreboardId]
@@ -77,9 +80,38 @@ export async function GET(
       return NextResponse.json({ error: slidesError.message }, { status: 500 });
     }
 
+    // Generate signed URLs for image slides (thumbnails for management UI)
+    const serviceClient = getServiceRoleClient();
+    const slidesWithSignedUrls = await Promise.all(
+      (slides || []).map(async (slide) => {
+        if (slide.slide_type === 'image' && serviceClient) {
+          const result = { ...slide };
+
+          // Generate signed URL for thumbnail (used in management UI)
+          if (slide.thumbnail_url) {
+            const { data: thumbSignedData } = await serviceClient.storage
+              .from('kiosk-slides')
+              .createSignedUrl(slide.thumbnail_url, SIGNED_URL_EXPIRY_SECONDS);
+            result.thumbnail_url = thumbSignedData?.signedUrl || slide.thumbnail_url;
+          }
+
+          // Generate signed URL for original image (fallback if no thumbnail)
+          if (slide.image_url) {
+            const { data: signedUrlData } = await serviceClient.storage
+              .from('kiosk-slides')
+              .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
+            result.image_url = signedUrlData?.signedUrl || slide.image_url;
+          }
+
+          return result;
+        }
+        return slide;
+      })
+    );
+
     return NextResponse.json({
       config,
-      slides: slides || [],
+      slides: slidesWithSignedUrls,
     });
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

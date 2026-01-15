@@ -481,13 +481,11 @@ export const kioskService = {
         return { data: null, error: uploadError.message };
       }
 
-      // Get public URL
-      const { data: urlData } = supabase.storage.from('kiosk-slides').getPublicUrl(filePath);
-
+      // Return the storage path (signed URLs are generated server-side when needed)
       return {
         data: {
           path: filePath,
-          url: urlData.publicUrl,
+          url: filePath, // Store path, not public URL (bucket is private)
         },
         error: null,
       };
@@ -498,11 +496,17 @@ export const kioskService = {
 
   /**
    * Delete a slide image from Supabase Storage
+   * @param filePath - The storage path (e.g., userId/scoreboardId/filename.jpg)
    */
   async deleteSlideImage(filePath: string): Promise<{
     error: string | null;
   }> {
     try {
+      // filePath should be the raw storage path, not a URL
+      if (filePath.startsWith('http')) {
+        return { error: 'Invalid file path - expected storage path, not URL' };
+      }
+
       const { error } = await supabase.storage.from('kiosk-slides').remove([filePath]);
 
       if (error) {

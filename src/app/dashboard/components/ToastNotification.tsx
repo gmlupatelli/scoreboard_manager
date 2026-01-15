@@ -46,7 +46,11 @@ const ToastNotification = ({ message, type, isVisible, onClose }: ToastNotificat
       >
         <Icon name={iconName} size={24} />
         <p className="flex-1 text-sm font-medium">{message}</p>
-        <button onClick={onClose} className="hover:opacity-70 transition-smooth">
+        <button
+          onClick={onClose}
+          className="hover:opacity-70 transition-smooth"
+          title="Dismiss notification"
+        >
           <Icon name="XMarkIcon" size={20} />
         </button>
       </div>

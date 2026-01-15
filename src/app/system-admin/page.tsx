@@ -57,7 +57,7 @@ export default function SystemAdminLoginPage() {
       <div className="w-full max-w-md">
         <div className="bg-card border border-border rounded-lg shadow-lg p-8">
           <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
                 className="w-8 h-8 text-primary"
                 fill="none"
@@ -77,7 +77,7 @@ export default function SystemAdminLoginPage() {
           </div>
 
           {error && (
-            <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
+            <div className="bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
               {error}
             </div>
           )}
@@ -119,6 +119,7 @@ export default function SystemAdminLoginPage() {
               type="submit"
               disabled={loading}
               className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              title="Sign in as system admin"
             >
               {loading ? 'Authenticating...' : 'Access System Admin'}
             </button>

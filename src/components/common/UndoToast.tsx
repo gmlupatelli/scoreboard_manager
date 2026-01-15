@@ -77,6 +77,7 @@ export default function UndoToast({ toast, onUndo, onDismiss, index }: UndoToast
               onClick={handleUndo}
               className="px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth"
               aria-label="Undo action"
+              title="Undo action"
             >
               Undo
             </button>
@@ -84,6 +85,7 @@ export default function UndoToast({ toast, onUndo, onDismiss, index }: UndoToast
               onClick={handleDismiss}
               className="p-1.5 hover:bg-muted rounded-md transition-smooth"
               aria-label="Dismiss toast"
+              title="Dismiss"
             >
               <Icon name="XMarkIcon" size={16} className="text-text-secondary" />
             </button>

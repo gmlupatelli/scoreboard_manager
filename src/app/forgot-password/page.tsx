@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               {error && (
-                <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
+                <div className="bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
                   {error}
                 </div>
               )}
@@ -84,6 +84,7 @@ export default function ForgotPasswordPage() {
                   type="submit"
                   disabled={loading}
                   className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                  title="Send password reset link"
                 >
                   {loading ? 'Sending...' : 'Send Reset Link'}
                 </button>

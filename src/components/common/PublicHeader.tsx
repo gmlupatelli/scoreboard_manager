@@ -102,6 +102,7 @@ export default function PublicHeader() {
               className="p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150 min-w-[44px] min-h-[44px]"
               aria-label="Toggle menu"
               aria-expanded={isMobileMenuOpen}
+              title="Toggle mobile menu"
             >
               <Icon name={isMobileMenuOpen ? 'XMarkIcon' : 'Bars3Icon'} size={24} />
             </button>

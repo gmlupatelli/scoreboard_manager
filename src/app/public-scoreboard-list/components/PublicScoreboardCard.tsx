@@ -49,6 +49,7 @@ const PublicScoreboardCard = ({ scoreboard }: PublicScoreboardCardProps) => {
       <button
         onClick={handleView}
         className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
+        title="View this scoreboard"
       >
         <Icon name="EyeIcon" size={18} />
         <span>View Scoreboard</span>
