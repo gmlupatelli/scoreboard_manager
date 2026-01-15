@@ -28,7 +28,7 @@ interface KioskSlide {
 
 interface KioskSettingsSectionProps {
   scoreboardId: string;
-  _scoreboardTitle: string;
+  scoreboardTitle: string;
   isExpanded: boolean;
   onToggle: () => void;
   onShowToast: (message: string, type: 'success' | 'error' | 'info') => void;
@@ -36,7 +36,7 @@ interface KioskSettingsSectionProps {
 
 export default function KioskSettingsSection({
   scoreboardId,
-  _scoreboardTitle,
+  scoreboardTitle: _scoreboardTitle,
   isExpanded,
   onToggle,
   onShowToast,
@@ -142,11 +142,11 @@ export default function KioskSettingsSection({
 
   useEffect(() => {
     if (isExpanded && !hasFetchedRef.current && !isLoadingRef.current) {
-      // Only fetch once when first expanded
+      // Fetch when expanded and not yet fetched
       loadKioskData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isExpanded]);
+  }, [isExpanded, scoreboardId]);
 
   // Reset refs when scoreboardId changes (switching between scoreboards)
   useEffect(() => {
