@@ -72,7 +72,7 @@ export async function GET(
     // Get slides - use service role client if available for consistent reads after writes
     const serviceClient = getServiceRoleClient();
     const readClient = serviceClient || supabase;
-    
+
     const { data: slides, error: slidesError } = await readClient
       .from('kiosk_slides')
       .select('*')
@@ -85,7 +85,7 @@ export async function GET(
 
     // Generate signed URLs for image slides (thumbnails for management UI)
     // serviceClient already declared above for reading slides
-    
+
     const slidesWithSignedUrls = await Promise.all(
       (slides || []).map(async (slide) => {
         if (slide.slide_type === 'image') {

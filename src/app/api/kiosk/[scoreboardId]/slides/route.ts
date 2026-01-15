@@ -243,7 +243,7 @@ export async function PUT(
       .select('id')
       .eq('scoreboard_id', scoreboardId)
       .single();
-    
+
     if (!kioskConfig) {
       return NextResponse.json({ error: 'Kiosk config not found' }, { status: 404 });
     }
