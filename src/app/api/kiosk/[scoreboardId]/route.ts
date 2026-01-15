@@ -93,6 +93,7 @@ export async function GET(
 
           // If no service client, we can't generate signed URLs - return null to show fallback
           if (!serviceClient) {
+            console.warn('[kiosk-api] No service client available for signed URL generation');
             result.thumbnail_url = null;
             result.image_url = null;
             return result;
@@ -100,18 +101,30 @@ export async function GET(
 
           // Generate signed URL for thumbnail (used in management UI)
           if (slide.thumbnail_url) {
-            const { data: thumbSignedData } = await serviceClient.storage
+            const { data: thumbSignedData, error: thumbError } = await serviceClient.storage
               .from('kiosk-slides')
               .createSignedUrl(slide.thumbnail_url, SIGNED_URL_EXPIRY_SECONDS);
+            if (thumbError) {
+              console.error('[kiosk-api] Thumbnail signed URL error:', {
+                path: slide.thumbnail_url,
+                error: thumbError.message,
+              });
+            }
             // Only use signed URL if successful, otherwise null
             result.thumbnail_url = thumbSignedData?.signedUrl || null;
           }
 
           // Generate signed URL for original image (fallback if no thumbnail)
           if (slide.image_url) {
-            const { data: signedUrlData } = await serviceClient.storage
+            const { data: signedUrlData, error: imgError } = await serviceClient.storage
               .from('kiosk-slides')
               .createSignedUrl(slide.image_url, SIGNED_URL_EXPIRY_SECONDS);
+            if (imgError) {
+              console.error('[kiosk-api] Image signed URL error:', {
+                path: slide.image_url,
+                error: imgError.message,
+              });
+            }
             // Only use signed URL if successful, otherwise null
             result.image_url = signedUrlData?.signedUrl || null;
           }
