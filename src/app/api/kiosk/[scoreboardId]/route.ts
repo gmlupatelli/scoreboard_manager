@@ -69,8 +69,11 @@ export async function GET(
       return NextResponse.json({ error: configError.message }, { status: 500 });
     }
 
-    // Get slides
-    const { data: slides, error: slidesError } = await supabase
+    // Get slides - use service role client if available for consistent reads after writes
+    const serviceClient = getServiceRoleClient();
+    const readClient = serviceClient || supabase;
+    
+    const { data: slides, error: slidesError } = await readClient
       .from('kiosk_slides')
       .select('*')
       .eq('kiosk_config_id', config.id)
@@ -81,7 +84,7 @@ export async function GET(
     }
 
     // Generate signed URLs for image slides (thumbnails for management UI)
-    const serviceClient = getServiceRoleClient();
+    // serviceClient already declared above for reading slides
     
     const slidesWithSignedUrls = await Promise.all(
       (slides || []).map(async (slide) => {

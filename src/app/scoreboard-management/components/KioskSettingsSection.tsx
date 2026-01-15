@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { useAuthGuard } from '@/hooks';
 
+// Signed URLs expire after 1 hour, refetch after 30 minutes to ensure fresh URLs
+const STALE_THRESHOLD_MS = 30 * 60 * 1000;
+
 interface KioskConfig {
   id: string;
   slide_duration_seconds: number;
@@ -48,9 +51,6 @@ export default function KioskSettingsSection({
   const [hasChanges, setHasChanges] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
 
-  // Signed URLs expire after 1 hour, refetch after 30 minutes to ensure fresh URLs
-  const STALE_THRESHOLD_MS = 30 * 60 * 1000;
-
   // Form state
   const [enabled, setEnabled] = useState(false);
   const [slideDuration, setSlideDuration] = useState<string>('10');
@@ -60,6 +60,9 @@ export default function KioskSettingsSection({
 
   // Drag state
   const [draggedSlide, setDraggedSlide] = useState<string | null>(null);
+
+  // Track if slide order has been changed (pending save)
+  const [hasSlideOrderChanges, setHasSlideOrderChanges] = useState(false);
 
   // Track slides with failed images
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
@@ -91,7 +94,7 @@ export default function KioskSettingsSection({
   );
 
   // Load kiosk data
-  const loadKioskData = useCallback(async () => {
+  const loadKioskData = useCallback(async (forceRefresh = false) => {
     if (!scoreboardId) return;
 
     setIsLoading(true);
@@ -109,7 +112,11 @@ export default function KioskSettingsSection({
           setPinCode(data.config.pin_code || '');
         }
         const loadedSlides = data.slides || [];
-        setSlides(loadedSlides);
+        // Always update slides if forceRefresh, otherwise only if no pending changes
+        if (forceRefresh || !hasSlideOrderChanges) {
+          setSlides(loadedSlides);
+          setHasSlideOrderChanges(false);
+        }
         setLastFetchTime(Date.now());
         setFailedImages(new Set()); // Clear failed images on fresh data
 
@@ -123,17 +130,14 @@ export default function KioskSettingsSection({
     } finally {
       setIsLoading(false);
     }
-  }, [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]);
+  }, [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide, hasSlideOrderChanges]);
 
   useEffect(() => {
-    if (isExpanded) {
-      // Fetch if no config, or if data is stale (signed URLs might expire soon)
-      const isStale = lastFetchTime && (Date.now() - lastFetchTime) > STALE_THRESHOLD_MS;
-      if (!config || isStale) {
-        loadKioskData();
-      }
+    if (isExpanded && !config && !isLoading) {
+      // Only fetch if we have no config and aren't already loading
+      loadKioskData();
     }
-  }, [isExpanded, config, loadKioskData, lastFetchTime, STALE_THRESHOLD_MS]);
+  }, [isExpanded, config, isLoading, loadKioskData]);
 
   // Save config
   const handleSaveConfig = async () => {
@@ -147,6 +151,33 @@ export default function KioskSettingsSection({
     setIsSaving(true);
     try {
       const headers = await getAuthHeaders();
+
+      console.log('[KioskSettings] handleSaveConfig called');
+      console.log('[KioskSettings] hasSlideOrderChanges:', hasSlideOrderChanges);
+      console.log('[KioskSettings] Current slides order:', slides.map((s, i) => ({ idx: i, id: s.id.slice(0, 8), pos: s.position })));
+
+      // Save slide order if changed
+      if (hasSlideOrderChanges) {
+        console.log('[KioskSettings] Sending slide order to API...');
+        const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
+          method: 'PUT',
+          headers: {
+            ...headers,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            slides: slides.map((s) => ({ id: s.id, position: s.position })),
+          }),
+        });
+
+        if (!orderResponse.ok) {
+          const error = await orderResponse.json();
+          throw new Error(error.error || 'Failed to save slide order');
+        }
+        setHasSlideOrderChanges(false);
+      }
+
+      // Save config settings
       const response = await fetch(`/api/kiosk/${scoreboardId}`, {
         method: 'PUT',
         headers: {
@@ -162,10 +193,10 @@ export default function KioskSettingsSection({
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setConfig(data.config);
         setHasChanges(false);
         onShowToast('Kiosk settings saved', 'success');
+        // Refresh data from server to get accurate state (forceRefresh=true to always update slides)
+        await loadKioskData(true);
       } else {
         const error = await response.json();
         throw new Error(error.error);
@@ -346,7 +377,7 @@ export default function KioskSettingsSection({
     e.preventDefault();
   };
 
-  const handleDrop = async (targetSlideId: string) => {
+  const handleDrop = (targetSlideId: string) => {
     if (!draggedSlide || draggedSlide === targetSlideId) {
       setDraggedSlide(null);
       return;
@@ -373,24 +404,9 @@ export default function KioskSettingsSection({
 
     setSlides(reorderedSlides);
     setDraggedSlide(null);
-
-    // Save new order to server
-    try {
-      const headers = await getAuthHeaders();
-      await fetch(`/api/kiosk/${scoreboardId}/slides`, {
-        method: 'PUT',
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          slides: reorderedSlides.map((s) => ({ id: s.id, position: s.position })),
-        }),
-      });
-    } catch (_error) {
-      onShowToast('Failed to save slide order', 'error');
-      loadKioskData(); // Reload to restore original order
-    }
+    setHasSlideOrderChanges(true);
+    setHasChanges(true);
+    console.log('[KioskSettings] Slide order changed, hasSlideOrderChanges set to true');
   };
 
   // Copy kiosk URL

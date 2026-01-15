@@ -233,13 +233,48 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid slides array' }, { status: 400 });
     }
 
-    // Update each slide's position
+    // Use service role client to bypass RLS for bulk updates
+    const serviceClient = getServiceRoleClient();
+    const updateClient = serviceClient || supabase;
+
+    // First, get the kiosk config for this scoreboard
+    const { data: kioskConfig } = await updateClient
+      .from('kiosk_configs')
+      .select('id')
+      .eq('scoreboard_id', scoreboardId)
+      .single();
+    
+    if (!kioskConfig) {
+      return NextResponse.json({ error: 'Kiosk config not found' }, { status: 404 });
+    }
+
+    // Two-phase update to avoid unique constraint violation on (kiosk_config_id, position)
+    // Phase 1: Set all positions to high temporary values (position >= 0 required by check constraint)
+    for (let i = 0; i < slides.length; i++) {
+      const slide = slides[i];
+      if (!slide.id || typeof slide.position !== 'number') {
+        continue;
+      }
+
+      const tempPosition = 1000 + i; // Use high positive numbers to avoid conflicts
+      await updateClient
+        .from('kiosk_slides')
+        .update({ position: tempPosition })
+        .eq('id', slide.id)
+        .eq('kiosk_config_id', kioskConfig.id);
+    }
+
+    // Phase 2: Set all positions to their final values
     for (const slide of slides) {
       if (!slide.id || typeof slide.position !== 'number') {
         continue;
       }
 
-      await supabase.from('kiosk_slides').update({ position: slide.position }).eq('id', slide.id);
+      await updateClient
+        .from('kiosk_slides')
+        .update({ position: slide.position })
+        .eq('id', slide.id)
+        .eq('kiosk_config_id', kioskConfig.id);
     }
 
     return NextResponse.json({ success: true });
