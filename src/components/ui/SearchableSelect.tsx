@@ -87,7 +87,7 @@ export default function SearchableSelect({
               <ComboboxOption
                 key={option.value}
                 value={option}
-                className="group relative cursor-pointer select-none px-4 py-2 text-sm text-text-primary data-[focus]:bg-primary/10 data-[focus]:text-primary data-[selected]:font-medium"
+                className="group relative cursor-pointer select-none px-4 py-2 text-sm text-text-primary data-[focus]:bg-red-600/10 data-[focus]:text-primary data-[selected]:font-medium"
               >
                 <div className="flex items-center justify-between">
                   <span>{option.label}</span>

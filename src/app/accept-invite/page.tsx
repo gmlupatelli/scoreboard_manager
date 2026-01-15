@@ -163,7 +163,7 @@ function AcceptInviteContent() {
             <p className="text-text-secondary">This invitation link is invalid or has expired.</p>
           </div>
 
-          <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 mb-6">
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
             <div className="flex items-start">
               <Icon name="ExclamationTriangleIcon" size={20} className="text-warning mr-2 mt-0.5" />
               <div className="text-sm text-text-secondary">
@@ -190,7 +190,7 @@ function AcceptInviteContent() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-card border border-border rounded-lg shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Icon name="CheckCircleIcon" size={40} className="text-success" />
           </div>
           <h1 className="text-2xl font-bold text-text-primary mb-2">Account Created!</h1>
@@ -217,7 +217,7 @@ function AcceptInviteContent() {
         </div>
 
         {error && (
-          <div className="mb-6 bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
+          <div className="mb-6 bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
             {error}
           </div>
         )}
@@ -277,6 +277,7 @@ function AcceptInviteContent() {
             type="submit"
             disabled={loading}
             className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-primary text-primary-foreground rounded-md font-medium hover:opacity-90 transition-smooth disabled:opacity-50"
+            title="Complete account setup"
           >
             {loading ? (
               <>

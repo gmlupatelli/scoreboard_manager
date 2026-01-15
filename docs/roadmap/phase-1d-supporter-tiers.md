@@ -7,6 +7,7 @@
 ## Overview
 
 Implement the appreciation tier system and supporter recognition features:
+
 - Tier badges based on payment amount (stored in database for performance)
 - "Created by" attribution on scoreboards
 - Public supporters page
@@ -25,18 +26,19 @@ Implement the appreciation tier system and supporter recognition features:
 **Description:**
 Create logic to determine user's appreciation tier based on their subscription amount. Tier is stored in the `subscriptions` table for performance and auto-calculated via database trigger.
 
-| Monthly Amount | Tier | Badge |
-|----------------|------|-------|
-| $5 - $9 | Supporter | 🙌 |
-| $10 - $24 | Champion | 🏆 |
-| $25 - $49 | Legend | 🌟 |
-| $50+ | Hall of Famer | 👑 |
+| Monthly Amount | Tier          | Badge |
+| -------------- | ------------- | ----- |
+| $5 - $9        | Supporter     | 🙌    |
+| $10 - $24      | Champion      | 🏆    |
+| $25 - $49      | Legend        | 🌟    |
+| $50+           | Hall of Famer | 👑    |
 
 For yearly subscriptions, divide by 12 to get monthly equivalent.
 
 > **Note:** All paying tiers have the same feature access. Tiers are for recognition only.
 
 **Acceptance Criteria:**
+
 - [ ] `getTier(amountCents, interval)` utility function created
 - [ ] Database trigger auto-updates tier on subscription insert/update
 - [ ] Correctly handles monthly amounts
@@ -65,7 +67,7 @@ const TIERS: Tier[] = [
 
 function getTier(amountCents: number, interval: 'monthly' | 'yearly'): Tier {
   const monthlyAmount = interval === 'yearly' ? amountCents / 12 : amountCents;
-  return TIERS.find(tier => monthlyAmount >= tier.minMonthlyAmount) || TIERS[TIERS.length - 1];
+  return TIERS.find((tier) => monthlyAmount >= tier.minMonthlyAmount) || TIERS[TIERS.length - 1];
 }
 ```
 
@@ -77,12 +79,14 @@ function getTier(amountCents: number, interval: 'monthly' | 'yearly'): Tier {
 
 **Description:**
 Create a badge component that displays the user's appreciation tier:
+
 - Shows emoji badge
 - Shows tier name on hover
 - Different sizes for different contexts
 - Animated/highlighted variant for emphasis
 
 **Acceptance Criteria:**
+
 - [ ] `TierBadge` component created
 - [ ] Props: `tier`, `size`, `showLabel`
 - [ ] Tooltip with tier name
@@ -90,6 +94,7 @@ Create a badge component that displays the user's appreciation tier:
 - [ ] Accessible (aria-label)
 
 **Usage Examples:**
+
 ```tsx
 <TierBadge tier="champion" />
 <TierBadge tier="legend" size="lg" showLabel />
@@ -103,11 +108,13 @@ Create a badge component that displays the user's appreciation tier:
 
 **Description:**
 Show creator attribution on public and embed scoreboard views:
+
 - "Created by [Name]" text
 - Tier badge shown for Supporters
 - Toggleable in subscription settings
 
 **Acceptance Criteria:**
+
 - [ ] Attribution shown on public scoreboard view
 - [ ] Attribution shown on embed view
 - [ ] Format: "Created by [Name] 🏆" (with tier badge)
@@ -117,6 +124,7 @@ Show creator attribution on public and embed scoreboard views:
 - [ ] Free users can still show name (without badge)
 
 **Display Logic:**
+
 ```
 If subscription.show_created_by === true AND subscription.status === 'active':
   Show "Created by {displayName} {tierBadge}"
@@ -134,6 +142,7 @@ Else:
 
 **Description:**
 Add settings to the subscription management page for controlling supporter visibility:
+
 1. Toggle "Show Created by" on scoreboards
 2. Toggle "Show on Supporters page"
 3. Custom display name for supporters page
@@ -142,6 +151,7 @@ Add settings to the subscription management page for controlling supporter visib
 > **Note:** These settings are stored on the `subscriptions` table, not `user_profiles`, so they're tied to the subscription lifecycle.
 
 **Acceptance Criteria:**
+
 - [ ] Settings section in `/account/subscription` page
 - [ ] Toggle: "Show my name on scoreboards I create"
 - [ ] Toggle: "Show me on the Supporters page"
@@ -152,6 +162,7 @@ Add settings to the subscription management page for controlling supporter visib
 
 **Database Schema:**
 (Already included in Phase 1b subscriptions table)
+
 ```sql
 -- On subscriptions table:
 show_created_by BOOLEAN NOT NULL DEFAULT true,
@@ -167,6 +178,7 @@ supporter_display_name TEXT
 
 **Description:**
 Create a public page showcasing supporters grouped by tier:
+
 - Hall of Famers section (largest, most prominent)
 - Legends section
 - Champions section
@@ -175,6 +187,7 @@ Create a public page showcasing supporters grouped by tier:
 - Call-to-action to join
 
 **Acceptance Criteria:**
+
 - [ ] Route `/supporters` created
 - [ ] Grouped by tier (highest first)
 - [ ] Shows display name and badge
@@ -184,6 +197,7 @@ Create a public page showcasing supporters grouped by tier:
 - [ ] CTA to become a supporter
 
 **Design:**
+
 ```
 ┌────────────────────────────────────────────────┐
 │                  Our Supporters                │
@@ -219,12 +233,14 @@ Create a public page showcasing supporters grouped by tier:
 
 **Description:**
 Show the user's current tier badge on their profile page:
+
 - Badge displayed prominently
 - Current tier name
 - Amount they're paying
 - Option to upgrade tier
 
 **Acceptance Criteria:**
+
 - [ ] Tier badge shown on profile page
 - [ ] Current tier name displayed
 - [ ] "Upgrade your tier" link to change amount

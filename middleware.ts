@@ -36,6 +36,20 @@ export async function middleware(request: NextRequest) {
   // Refreshing the auth token
   await supabase.auth.getUser();
 
+  // Set headers to allow iframe embedding in VS Code Simple Browser (dev mode)
+  // In production, these are set via next.config.mjs headers()
+  if (process.env.NODE_ENV === 'development') {
+    // Permissive CSP for local development only
+    // NOTE: Omit frame-ancestors entirely to allow VS Code Simple Browser
+    // (Electron bug: frame-ancestors * doesn't work with vscode-webview:// scheme)
+    supabaseResponse.headers.set(
+      'Content-Security-Policy',
+      "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"
+    );
+    // Remove X-Frame-Options to allow framing
+    supabaseResponse.headers.delete('X-Frame-Options');
+  }
+
   return supabaseResponse;
 }
 

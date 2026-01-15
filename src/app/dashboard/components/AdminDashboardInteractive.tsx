@@ -379,6 +379,7 @@ const AdminDashboardInteractive = () => {
                   <button
                     onClick={() => router.push('/system-admin/settings')}
                     className="flex items-center space-x-2 px-4 py-2 border border-border text-text-secondary rounded-md hover:bg-muted transition-smooth"
+                    title="System settings"
                   >
                     <Icon name="Cog6ToothIcon" size={20} />
                     <span>Settings</span>
@@ -406,6 +407,7 @@ const AdminDashboardInteractive = () => {
                   setIsCreateModalOpen(true);
                 }}
                 className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift"
+                title="Create a new scoreboard"
               >
                 <Icon name="PlusIcon" size={20} />
                 <span>Create New Scoreboard</span>
@@ -463,6 +465,7 @@ const AdminDashboardInteractive = () => {
                         onClick={() => setSearchQuery('')}
                         className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-text-primary transition-smooth duration-150"
                         aria-label="Clear search"
+                        title="Clear search"
                       >
                         <Icon name="XMarkIcon" size={20} />
                       </button>
@@ -517,6 +520,7 @@ const AdminDashboardInteractive = () => {
                       onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                       className="p-2 border border-input rounded-md hover:bg-muted transition-smooth"
                       aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
+                      title={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
                     >
                       <Icon
                         name={sortOrder === 'asc' ? 'ArrowUpIcon' : 'ArrowDownIcon'}

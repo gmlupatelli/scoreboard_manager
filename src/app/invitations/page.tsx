@@ -138,13 +138,13 @@ export default function InvitationsPage() {
   const _getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-warning/10 text-warning';
+        return 'bg-yellow-500/10 text-warning';
       case 'accepted':
-        return 'bg-success/10 text-success';
+        return 'bg-green-500/10 text-success';
       case 'expired':
         return 'bg-muted text-text-secondary';
       case 'cancelled':
-        return 'bg-destructive/10 text-destructive';
+        return 'bg-red-500/10 text-destructive';
       default:
         return 'bg-muted text-text-secondary';
     }
@@ -188,6 +188,7 @@ export default function InvitationsPage() {
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift font-medium"
+                title="Send invitation to a new user"
               >
                 <Icon name="UserPlusIcon" size={20} />
                 <span>Invite User</span>
@@ -202,7 +203,7 @@ export default function InvitationsPage() {
                   <p className="text-sm text-text-secondary">Total Sent</p>
                   <p className="text-2xl font-bold text-text-primary">{invitations.length}</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-red-600/10 flex items-center justify-center">
                   <Icon name="EnvelopeIcon" size={20} className="text-primary" />
                 </div>
               </div>
@@ -213,7 +214,7 @@ export default function InvitationsPage() {
                   <p className="text-sm text-text-secondary">Pending</p>
                   <p className="text-2xl font-bold text-warning">{pendingCount}</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-yellow-600/10 flex items-center justify-center">
                   <Icon name="ClockIcon" size={20} className="text-warning" />
                 </div>
               </div>
@@ -224,7 +225,7 @@ export default function InvitationsPage() {
                   <p className="text-sm text-text-secondary">Accepted</p>
                   <p className="text-2xl font-bold text-success">{acceptedCount}</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
                   <Icon name="CheckCircleIcon" size={20} className="text-success" />
                 </div>
               </div>
@@ -253,6 +254,7 @@ export default function InvitationsPage() {
                   <button
                     onClick={() => setIsModalOpen(true)}
                     className="inline-flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth font-medium"
+                    title="Send invitation to a new user"
                   >
                     <Icon name="UserPlusIcon" size={18} />
                     <span>Send Your First Invitation</span>

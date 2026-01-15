@@ -131,21 +131,32 @@ export default function PersonalInfoSection({
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && fullName.trim() && !savingName) {
+                    e.preventDefault();
+                    handleSaveName();
+                  } else if (e.key === 'Escape') {
+                    handleCancelName();
+                  }
+                }}
                 className="w-full px-4 py-2 border border-border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter your display name"
+                autoFocus
               />
               <div className="flex gap-3">
                 <button
                   onClick={handleSaveName}
                   disabled={savingName || !fullName.trim()}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-text-secondary disabled:cursor-not-allowed transition-smooth"
+                  title="Save display name"
                 >
                   {savingName ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   onClick={handleCancelName}
                   disabled={savingName}
-                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-muted transition-smooth"
+                  title="Cancel editing"
                 >
                   Cancel
                 </button>
@@ -157,6 +168,7 @@ export default function PersonalInfoSection({
               <button
                 onClick={() => setIsEditingName(true)}
                 className="text-primary hover:opacity-80 font-medium transition-smooth"
+                title="Edit display name"
               >
                 Edit
               </button>
@@ -178,10 +190,19 @@ export default function PersonalInfoSection({
                   setEmail(e.target.value);
                   setEmailError('');
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && email.trim() && !savingEmail) {
+                    e.preventDefault();
+                    handleSaveEmail();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEmail();
+                  }
+                }}
                 className={`w-full px-4 py-2 border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent ${
                   emailError ? 'border-destructive' : 'border-border'
                 }`}
                 placeholder="Enter your email address"
+                autoFocus
               />
               {emailError && <p className="text-sm text-destructive">{emailError}</p>}
               <p className="text-sm text-text-secondary">
@@ -192,13 +213,15 @@ export default function PersonalInfoSection({
                   onClick={handleSaveEmail}
                   disabled={savingEmail || !email.trim()}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 disabled:bg-muted disabled:text-text-secondary disabled:cursor-not-allowed transition-smooth"
+                  title="Save email address"
                 >
                   {savingEmail ? 'Saving...' : 'Save'}
                 </button>
                 <button
                   onClick={handleCancelEmail}
                   disabled={savingEmail}
-                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+                  className="px-4 py-2 bg-muted text-text-secondary rounded-lg hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-muted transition-smooth"
+                  title="Cancel editing"
                 >
                   Cancel
                 </button>
@@ -246,6 +269,7 @@ export default function PersonalInfoSection({
                               onClick={handleResendVerification}
                               disabled={resending}
                               className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline underline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-smooth"
+                              title="Resend verification email"
                             >
                               {resending ? 'Sending...' : 'Resend verification email'}
                             </button>

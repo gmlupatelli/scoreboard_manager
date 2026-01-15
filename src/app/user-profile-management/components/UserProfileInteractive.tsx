@@ -19,7 +19,7 @@ interface Profile {
 }
 
 export default function UserProfileInteractive() {
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -61,7 +61,9 @@ export default function UserProfileInteractive() {
     if (user?.id) {
       loadProfile();
     }
-  }, [user]);
+    // Only re-run when user.id changes, not when other user properties change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ show: true, message, type });
@@ -81,6 +83,8 @@ export default function UserProfileInteractive() {
 
     if (data) {
       setProfile(data);
+      // Update the auth context directly with the new name to update the Header display
+      updateUserProfile({ fullName: data.full_name ?? undefined });
       showToast('Profile updated successfully', 'success');
       return true;
     }

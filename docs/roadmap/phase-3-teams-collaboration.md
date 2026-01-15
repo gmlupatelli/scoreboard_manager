@@ -7,6 +7,7 @@
 ## Overview
 
 Implement team functionality allowing Supporters to:
+
 - Create teams
 - Invite team members
 - Share scoreboards with teams (dual ownership)
@@ -22,11 +23,13 @@ Implement team functionality allowing Supporters to:
 
 **Description:**
 Design and implement the database schema for teams:
+
 - Teams table
 - Team memberships with roles
 - Dual ownership for scoreboards
 
 **Acceptance Criteria:**
+
 - [ ] Migration file created
 - [ ] Schema supports all team features
 - [ ] RLS policies configured
@@ -46,7 +49,7 @@ CREATE TABLE teams (
   created_by UUID NOT NULL REFERENCES user_profiles(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   CONSTRAINT chk_teams_name_length CHECK (length(name) BETWEEN 1 AND 100)
 );
 
@@ -57,7 +60,7 @@ CREATE TABLE team_members (
   user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
   role team_role NOT NULL DEFAULT 'member',
   joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   CONSTRAINT uq_team_members UNIQUE (team_id, user_id)
 );
 
@@ -105,12 +108,14 @@ CREATE POLICY "Team admins can update team"
 
 **Description:**
 Create an audit log system to track:
+
 - Who made changes
 - What was changed
 - When it was changed
 - Previous and new values
 
 **Acceptance Criteria:**
+
 - [ ] Audit log table created
 - [ ] Audit service for logging changes
 - [ ] Logs scoreboard edits
@@ -155,6 +160,7 @@ CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
 **Description:**
 Create UI for managing teams:
+
 - Create team
 - View team details
 - Manage members (admin only)
@@ -162,6 +168,7 @@ Create UI for managing teams:
 - Team settings
 
 **Acceptance Criteria:**
+
 - [ ] `/teams` - list user's teams
 - [ ] `/teams/new` - create team form
 - [ ] `/teams/:id` - team dashboard
@@ -177,11 +184,13 @@ Create UI for managing teams:
 
 **Description:**
 Allow team admins to invite users to teams:
+
 - Generate team invite code/ID
 - User enters code to join
 - Admin approves or auto-join
 
 **Acceptance Criteria:**
+
 - [ ] Team has shareable ID/code
 - [ ] "Join Team" page with code input
 - [ ] User must have Pro subscription to join
@@ -197,11 +206,13 @@ Allow team admins to invite users to teams:
 
 **Description:**
 Allow users to:
+
 - Add a team as secondary owner of their scoreboard
 - Remove team ownership
 - Transfer requires knowing team ID
 
 **Acceptance Criteria:**
+
 - [ ] "Add to Team" option in scoreboard settings
 - [ ] Input for team ID
 - [ ] Validation that user is member of that team
@@ -210,6 +221,7 @@ Allow users to:
 - [ ] All team members can edit
 
 **UI Flow:**
+
 1. User goes to scoreboard settings
 2. Clicks "Add to Team"
 3. Enters Team ID or selects from their teams
@@ -224,12 +236,14 @@ Allow users to:
 
 **Description:**
 Update scoreboard access rules:
+
 - Owner can always access
 - Team members can access if scoreboard has team_id
 - Team members can edit team scoreboards
 - Only owner can delete or remove from team
 
 **Acceptance Criteria:**
+
 - [ ] RLS policies updated
 - [ ] Team members can view team scoreboards
 - [ ] Team members can edit team scoreboards
@@ -245,12 +259,14 @@ Update scoreboard access rules:
 
 **Description:**
 Create a UI for team admins to view the audit log:
+
 - Filter by scoreboard
 - Filter by user
 - Filter by date range
 - Show change details
 
 **Acceptance Criteria:**
+
 - [ ] Audit log page at `/teams/:id/audit-log`
 - [ ] Table with recent changes
 - [ ] Filters for scoreboard, user, date

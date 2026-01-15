@@ -148,7 +148,7 @@ export default function RegisterPage() {
         <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-20">
           <div className="w-full max-w-md">
             <div className="bg-card border border-border rounded-lg shadow-lg p-8 text-center">
-              <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-success" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -178,7 +178,7 @@ export default function RegisterPage() {
             </p>
 
             {!isPublicRegistrationAllowed && !hasValidInvitation && (
-              <div className="mb-6 bg-warning/10 border border-warning/30 rounded-lg p-4">
+              <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
                 <div className="flex items-start">
                   <Icon
                     name="InformationCircleIcon"
@@ -197,13 +197,13 @@ export default function RegisterPage() {
             )}
 
             {error && (
-              <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
+              <div className="bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
                 {error}
               </div>
             )}
 
             {!isPublicRegistrationAllowed && hasValidInvitation && (
-              <div className="mb-6 bg-success/10 border border-success/30 rounded-lg p-4">
+              <div className="mb-6 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
                 <div className="flex items-start">
                   <Icon name="CheckCircleIcon" size={20} className="text-success mr-2 mt-0.5" />
                   <div>
@@ -313,6 +313,7 @@ export default function RegisterPage() {
                     type="submit"
                     disabled={loading || (!isPublicRegistrationAllowed && !hasValidInvitation)}
                     className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                    title="Create your account"
                   >
                     {loading ? 'Creating Account...' : 'Create Account'}
                   </button>

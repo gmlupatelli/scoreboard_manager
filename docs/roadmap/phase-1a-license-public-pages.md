@@ -11,6 +11,7 @@ Add AGPL v3 license and update all public-facing pages to reflect the transition
 ## Existing Components to Update
 
 The following components already exist and need modification:
+
 - `src/app/page.tsx` - Landing page (needs open source messaging)
 - `src/app/about/page.tsx` - About page (needs open source philosophy)
 - `src/components/common/Header.tsx` - Header navigation (needs pricing link)
@@ -26,18 +27,21 @@ The following components already exist and need modification:
 
 **Description:**
 Add the GNU Affero General Public License v3 to the repository. This license:
+
 - Allows free use, modification, and distribution
 - Requires derivative works to use the same license
 - Requires network use (SaaS) to provide source code access
 - Protects the project from competitors hosting the code without contributing back
 
 **Acceptance Criteria:**
+
 - [ ] `LICENSE` file added to repository root
 - [ ] License is valid AGPL v3 text
 - [ ] README updated with license badge and section
 - [ ] All source files have appropriate license header (optional, discuss)
 
 **Technical Notes:**
+
 - Use official AGPL v3 text from https://www.gnu.org/licenses/agpl-3.0.txt
 - Add license badge to README: `[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)`
 
@@ -49,17 +53,20 @@ Add the GNU Affero General Public License v3 to the repository. This license:
 
 **Description:**
 Update the existing landing page (`src/app/page.tsx`) to communicate:
+
 1. This is an open-source project (AGPL v3)
 2. Users can self-host for free with full functionality
 3. A hosted SaaS option is available with free and Supporter tiers
 4. "Pay What You Want" pricing model
 
 **Current State:**
+
 - Landing page exists with feature cards, benefits, and testimonials
 - Already mentions "Team Collaboration" as a feature (keep as aspirational)
 - No open source messaging or GitHub links
 
 **Acceptance Criteria:**
+
 - [ ] Add "Open Source" badge/banner prominently displayed
 - [ ] Link to GitHub repository with star count badge
 - [ ] "Fork on GitHub" or "View Source" button
@@ -69,6 +76,7 @@ Update the existing landing page (`src/app/page.tsx`) to communicate:
 - [ ] Call-to-action for both self-host and SaaS signup
 
 **Technical Notes:**
+
 - Update `src/app/page.tsx`
 - Add GitHub stars badge using shields.io
 - Consider adding a "Why Open Source?" section
@@ -81,6 +89,7 @@ Update the existing landing page (`src/app/page.tsx`) to communicate:
 
 **Description:**
 Create a dedicated pricing page that clearly shows:
+
 1. Free tier features and limitations
 2. Supporter tier features and benefits
 3. "Pay What You Want" model explanation
@@ -88,6 +97,7 @@ Create a dedicated pricing page that clearly shows:
 5. Self-hosting as an alternative
 
 **Acceptance Criteria:**
+
 - [ ] Route `/pricing` created
 - [ ] Free vs Supporter comparison table
 - [ ] Clear display of minimums ($5/month, $50/year)
@@ -126,6 +136,7 @@ Appreciation Tiers (all receive same features):
 ```
 
 **Technical Notes:**
+
 - Create `src/app/pricing/page.tsx`
 - Reuse existing UI components (Button, Icon, Header, Footer)
 - Make comparison table responsive
@@ -141,10 +152,12 @@ Appreciation Tiers (all receive same features):
 Update the existing about page (`src/app/about/page.tsx`) to include open source information.
 
 **Current State:**
+
 - About page exists with mission, features, and story sections
 - No mention of open source or GitHub
 
 **Acceptance Criteria:**
+
 - [ ] Add "Open Source" section explaining the philosophy
 - [ ] Link to GitHub repository
 - [ ] Link to CONTRIBUTING.md
@@ -152,6 +165,7 @@ Update the existing about page (`src/app/about/page.tsx`) to include open source
 - [ ] Link to supporters page
 
 **Technical Notes:**
+
 - Update `src/app/about/page.tsx`
 - Add new section between existing sections
 
@@ -163,6 +177,7 @@ Update the existing about page (`src/app/about/page.tsx`) to include open source
 
 **Description:**
 Create a CONTRIBUTING.md file to guide potential contributors on:
+
 1. How to set up the development environment
 2. Code style and conventions
 3. How to submit issues
@@ -170,6 +185,7 @@ Create a CONTRIBUTING.md file to guide potential contributors on:
 5. Code review process
 
 **Acceptance Criteria:**
+
 - [ ] `CONTRIBUTING.md` file added to repository root
 - [ ] Development setup instructions
 - [ ] Coding standards documented
@@ -186,12 +202,14 @@ Create a CONTRIBUTING.md file to guide potential contributors on:
 Update the existing footer (`src/components/common/Footer.tsx`) and header (`src/components/common/Header.tsx`) to include open source links.
 
 **Current State:**
+
 - Footer has Product, Company, and Legal sections
 - No GitHub link or license information
 - Header has basic navigation (Dashboard, Manage Scoreboards when authenticated)
 - No pricing link in navigation
 
 **Acceptance Criteria:**
+
 - [ ] GitHub link in footer with icon
 - [ ] Pricing link in footer under "Product" section
 - [ ] Supporters link in footer (when implemented)
@@ -199,6 +217,7 @@ Update the existing footer (`src/components/common/Footer.tsx`) and header (`src
 - [ ] Add pricing link to header navigation for unauthenticated users
 
 **Technical Notes:**
+
 - Update `src/components/common/Footer.tsx`
 - Update `src/components/common/Header.tsx`
 - Use existing Icon component for GitHub icon

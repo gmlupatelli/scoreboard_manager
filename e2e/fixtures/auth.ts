@@ -24,17 +24,17 @@ interface AuthUser {
  */
 const ADMIN: AuthUser = {
   email: process.env.AUTOMATED_TEST_ADMIN_1_EMAIL || 'admin@example.com',
-  password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'admin123',
+  password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'test123',
 };
 
 const JOHN: AuthUser = {
   email: process.env.AUTOMATED_TEST_USER_1_EMAIL || 'john@example.com',
-  password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'user123',
+  password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'test123',
 };
 
 const SARAH: AuthUser = {
   email: process.env.AUTOMATED_TEST_USER_2_EMAIL || 'sarah@example.com',
-  password: process.env.AUTOMATED_TEST_USER_2_PASSWORD || 'sarah456',
+  password: process.env.AUTOMATED_TEST_USER_2_PASSWORD || 'test123',
 };
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';

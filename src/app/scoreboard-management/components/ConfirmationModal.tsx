@@ -70,12 +70,14 @@ const ConfirmationModal = ({
               <button
                 onClick={onConfirm}
                 className={`flex-1 px-4 py-2 rounded-md transition-smooth duration-150 font-medium ${buttonClass}`}
+                title={confirmText}
               >
                 {confirmText}
               </button>
               <button
                 onClick={onClose}
                 className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
+                title={cancelText}
               >
                 {cancelText}
               </button>

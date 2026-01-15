@@ -96,6 +96,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
               onClick={handleClose}
               className="p-2 rounded-md hover:bg-muted transition-smooth duration-150 min-w-[44px] min-h-[44px]"
               aria-label="Close modal"
+              title="Close modal"
             >
               <Icon name="XMarkIcon" size={20} className="text-text-secondary" />
             </button>
@@ -103,7 +104,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
 
           <form onSubmit={handleSubmit} className="p-4 sm:p-6 landscape-mobile:p-3">
             {error && (
-              <div className="mb-4 bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
+              <div className="mb-4 bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
@@ -134,6 +135,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
                 type="button"
                 onClick={handleClose}
                 className="px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted transition-smooth duration-150 min-w-[44px] min-h-[44px]"
+                title="Cancel and close"
               >
                 Cancel
               </button>
@@ -141,6 +143,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
                 type="submit"
                 disabled={loading || !email}
                 className="flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 min-w-[44px] min-h-[44px]"
+                title="Send invitation email"
               >
                 {loading ? (
                   <>

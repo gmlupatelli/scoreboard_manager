@@ -47,7 +47,7 @@ export default function AccountDeletedPage() {
               Manager and would love to have you back anytime.
             </p>
 
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-8">
+            <div className="bg-red-600/5 border border-red-600/20 rounded-lg p-4 mb-8">
               <p className="text-sm text-text-secondary">
                 If you ever change your mind, you're always welcome to create a new account and
                 start fresh. We'll be here!

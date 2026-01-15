@@ -5,84 +5,84 @@
 version: 2
 updates:
   # npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "06:00"
-      timezone: "America/New_York"
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'America/New_York'
     open-pull-requests-limit: 10
     # Group minor and patch updates together
     groups:
       production-dependencies:
         patterns:
-          - "*"
+          - '*'
         exclude-patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-          - "@playwright/*"
-          - "typescript"
+          - '@types/*'
+          - 'eslint*'
+          - 'prettier*'
+          - '@playwright/*'
+          - 'typescript'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
       dev-dependencies:
         patterns:
-          - "@types/*"
-          - "eslint*"
-          - "prettier*"
-          - "@playwright/*"
-          - "typescript"
+          - '@types/*'
+          - 'eslint*'
+          - 'prettier*'
+          - '@playwright/*'
+          - 'typescript'
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
     # Ignore major version updates - handle these manually when current version is EOL.
     # See docs/dependency-upgrade-policy.md for the rationale, process, and review cadence.
     # GitHub Security Advisories will still alert on vulnerabilities
     ignore:
       # React ecosystem - major versions require coordinated migration
-      - dependency-name: "react"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-dom"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@types/react"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@types/react-dom"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-major']
       # Next.js - major versions have breaking changes
-      - dependency-name: "next"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "eslint-config-next"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'next'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'eslint-config-next'
+        update-types: ['version-update:semver-major']
       # TypeScript - major versions may require code changes
-      - dependency-name: "typescript"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
       # Tailwind CSS - major versions have breaking changes
-      - dependency-name: "tailwindcss"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'tailwindcss'
+        update-types: ['version-update:semver-major']
       # Supabase - major versions may have API changes
-      - dependency-name: "@supabase/supabase-js"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@supabase/ssr"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: '@supabase/supabase-js'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@supabase/ssr'
+        update-types: ['version-update:semver-major']
     # Reviewers for security updates
     reviewers:
-      - "gmlupatelli"
+      - 'gmlupatelli'
     labels:
-      - "dependencies"
-      - "security"
+      - 'dependencies'
+      - 'security'
     commit-message:
-      prefix: "chore(deps)"
+      prefix: 'chore(deps)'
 
   # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: 'weekly'
+      day: 'monday'
     labels:
-      - "dependencies"
-      - "github-actions"
+      - 'dependencies'
+      - 'github-actions'
     commit-message:
-      prefix: "ci(deps)"
+      prefix: 'ci(deps)'

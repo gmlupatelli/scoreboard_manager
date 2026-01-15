@@ -61,3 +61,75 @@ export interface ScoreboardEntry {
   updatedAt: string;
   rank?: number; // Calculated on frontend based on score
 }
+
+// ============================================================================
+// KIOSK MODE TYPES
+// ============================================================================
+
+export type SlideType = 'image' | 'scoreboard';
+
+export interface KioskConfig {
+  id: string;
+  scoreboardId: string;
+  slideDurationSeconds: number;
+  scoreboardPosition: number;
+  enabled: boolean;
+  pinCode?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  // Optional populated fields
+  slides?: KioskSlide[];
+}
+
+export interface KioskSlide {
+  id: string;
+  kioskConfigId: string;
+  position: number;
+  slideType: SlideType;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  durationOverrideSeconds?: number | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  createdAt: string;
+}
+
+export interface KioskConfigInsert {
+  scoreboardId: string;
+  slideDurationSeconds?: number;
+  scoreboardPosition?: number;
+  enabled?: boolean;
+  pinCode?: string | null;
+}
+
+export interface KioskConfigUpdate {
+  slideDurationSeconds?: number;
+  scoreboardPosition?: number;
+  enabled?: boolean;
+  pinCode?: string | null;
+}
+
+export interface KioskSlideInsert {
+  kioskConfigId: string;
+  position: number;
+  slideType: SlideType;
+  imageUrl?: string | null;
+  thumbnailUrl?: string | null;
+  durationOverrideSeconds?: number | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+}
+
+export interface KioskSlideUpdate {
+  position?: number;
+  durationOverrideSeconds?: number | null;
+}
+
+// Carousel slide for display (unified type for rendering)
+export interface CarouselSlide {
+  id: string;
+  type: SlideType;
+  imageUrl?: string;
+  duration: number; // Effective duration in seconds
+  position: number;
+}

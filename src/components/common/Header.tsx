@@ -153,6 +153,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   style={customStyles ? textStyle : undefined}
                   aria-label="User menu"
                   aria-expanded={isUserMenuOpen}
+                  title="Open user menu"
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center bg-primary"
@@ -228,6 +229,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                           onClick={handleLogout}
                           className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
                           style={customStyles ? textStyle : undefined}
+                          title="Sign out of your account"
                         >
                           <Icon name="ArrowRightOnRectangleIcon" size={18} className="mr-3" />
                           Logout
@@ -285,6 +287,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               style={customStyles ? textStyle : undefined}
               aria-label="Toggle menu"
               aria-expanded={isMobileMenuOpen}
+              title="Toggle mobile menu"
             >
               <Icon name={isMobileMenuOpen ? 'XMarkIcon' : 'Bars3Icon'} size={24} />
             </button>
@@ -410,6 +413,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     onClick={handleLogout}
                     className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
                     style={customStyles ? textStyle : undefined}
+                    title="Sign out of your account"
                   >
                     <Icon name="ArrowRightOnRectangleIcon" size={20} className="mr-3" />
                     Logout

@@ -1,12 +1,12 @@
-name: "CodeQL"
+name: 'CodeQL'
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: ['main', 'dev']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
   schedule:
-    - cron: '0 6 * * 1'  # Run weekly on Monday at 6 AM UTC
+    - cron: '0 6 * * 1' # Run weekly on Monday at 6 AM UTC
 
 jobs:
   analyze:
@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript-typescript' ]
+        language: ['javascript-typescript']
 
     steps:
     - name: Checkout repository

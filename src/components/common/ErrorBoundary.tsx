@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <div className="max-w-md w-full bg-card border border-border rounded-lg p-6 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
                 <Icon name="ExclamationTriangleIcon" size={24} className="text-destructive" />
               </div>
               <div>

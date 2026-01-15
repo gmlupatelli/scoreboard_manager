@@ -18,12 +18,14 @@ Integrate LemonSqueezy as the payment provider with "Pay What You Want" pricing 
 
 **Description:**
 Create and configure LemonSqueezy account with:
+
 1. Store setup
 2. Products for Monthly and Yearly subscriptions
 3. "Pay What You Want" pricing enabled
 4. Webhook endpoints configured
 
 **Acceptance Criteria:**
+
 - [ ] LemonSqueezy store created
 - [ ] Monthly subscription product created ($5 minimum, PWYW)
 - [ ] Yearly subscription product created ($50 minimum, PWYW)
@@ -32,6 +34,7 @@ Create and configure LemonSqueezy account with:
 - [ ] API keys obtained and documented
 
 **Technical Notes:**
+
 - Store in development/test mode initially
 - Document required environment variables:
   - `LEMONSQUEEZY_API_KEY`
@@ -48,6 +51,7 @@ Create and configure LemonSqueezy account with:
 
 **Description:**
 Design and implement database schema to track:
+
 1. User subscription status
 2. Payment history
 3. Subscription tier/amount (stored for performance)
@@ -55,6 +59,7 @@ Design and implement database schema to track:
 5. Supporter preferences (display settings)
 
 **Acceptance Criteria:**
+
 - [ ] Migration file created following baseline pattern
 - [ ] Schema supports subscription tracking
 - [ ] Tier name stored directly for faster queries
@@ -81,7 +86,7 @@ CREATE TYPE billing_interval AS ENUM ('monthly', 'yearly');
 -- Appreciation tier enum (stored for performance)
 CREATE TYPE appreciation_tier AS ENUM (
   'supporter',
-  'champion', 
+  'champion',
   'legend',
   'hall_of_famer'
 );
@@ -90,33 +95,33 @@ CREATE TYPE appreciation_tier AS ENUM (
 CREATE TABLE subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
-  
+
   -- LemonSqueezy identifiers
   lemonsqueezy_subscription_id TEXT UNIQUE,
   lemonsqueezy_customer_id TEXT,
   lemonsqueezy_order_id TEXT,
   lemonsqueezy_product_id TEXT,
   lemonsqueezy_variant_id TEXT,
-  
+
   -- Subscription details
   status subscription_status NOT NULL DEFAULT 'active',
   billing_interval billing_interval NOT NULL,
   amount_cents INTEGER NOT NULL, -- Amount paid in cents
   currency TEXT NOT NULL DEFAULT 'USD',
   tier appreciation_tier NOT NULL, -- Stored for faster queries
-  
+
   -- Supporter preferences (tied to subscription)
   show_created_by BOOLEAN NOT NULL DEFAULT true,
   show_on_supporters_page BOOLEAN NOT NULL DEFAULT true,
   supporter_display_name TEXT,
-  
+
   -- Dates
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
   cancelled_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
+
   CONSTRAINT chk_amount_minimum CHECK (
     (billing_interval = 'monthly' AND amount_cents >= 500) OR
     (billing_interval = 'yearly' AND amount_cents >= 5000)
@@ -166,11 +171,11 @@ DECLARE
   monthly_amount INTEGER;
 BEGIN
   -- Convert yearly to monthly equivalent
-  monthly_amount := CASE 
-    WHEN interval = 'yearly' THEN amount_cents / 12 
-    ELSE amount_cents 
+  monthly_amount := CASE
+    WHEN interval = 'yearly' THEN amount_cents / 12
+    ELSE amount_cents
   END;
-  
+
   RETURN CASE
     WHEN monthly_amount >= 5000 THEN 'hall_of_famer'
     WHEN monthly_amount >= 2500 THEN 'legend'
@@ -197,6 +202,7 @@ CREATE TRIGGER trg_update_subscription_tier
 ```
 
 **Technical Notes:**
+
 - Tier is stored but auto-calculated via trigger for consistency
 - Supporter preferences are on subscriptions table (tied to subscription lifecycle)
 - System admins can view and modify subscriptions for user management
@@ -210,6 +216,7 @@ CREATE TRIGGER trg_update_subscription_tier
 
 **Description:**
 Create API endpoint to receive and process LemonSqueezy webhooks for:
+
 1. Subscription created
 2. Subscription updated
 3. Subscription cancelled
@@ -217,6 +224,7 @@ Create API endpoint to receive and process LemonSqueezy webhooks for:
 5. Payment failed
 
 **Acceptance Criteria:**
+
 - [ ] Webhook endpoint created at `/api/webhooks/lemonsqueezy`
 - [ ] Webhook signature verification implemented
 - [ ] All relevant events handled
@@ -239,6 +247,7 @@ Create API endpoint to receive and process LemonSqueezy webhooks for:
 ```
 
 **Webhook Payload Example:**
+
 ```json
 {
   "meta": {
@@ -267,12 +276,14 @@ Create API endpoint to receive and process LemonSqueezy webhooks for:
 
 **Description:**
 Create the checkout flow that:
+
 1. Shows "Pay What You Want" price selector
 2. Redirects to LemonSqueezy checkout
 3. Handles successful return
 4. Updates user subscription status
 
 **Acceptance Criteria:**
+
 - [ ] Price selector UI (slider or input with minimum)
 - [ ] Monthly/Yearly toggle
 - [ ] Shows calculated savings for yearly
@@ -281,6 +292,7 @@ Create the checkout flow that:
 - [ ] Success/cancel redirect pages
 
 **Technical Notes:**
+
 - Use LemonSqueezy Checkout Overlay or redirect
 - Pass `checkout[custom][user_id]` for webhook matching
 - Show appreciation tier they'll receive based on amount
@@ -293,6 +305,7 @@ Create the checkout flow that:
 
 **Description:**
 Create a page where users can:
+
 1. View current subscription status
 2. See billing history
 3. Update payment method (via LemonSqueezy portal)
@@ -300,6 +313,7 @@ Create a page where users can:
 5. Change subscription amount
 
 **Acceptance Criteria:**
+
 - [ ] Route `/account/subscription` or similar
 - [ ] Current plan display
 - [ ] Current amount and tier badge
@@ -309,6 +323,7 @@ Create a page where users can:
 - [ ] Change amount option (upgrade appreciation tier)
 
 **Technical Notes:**
+
 - Use LemonSqueezy Customer Portal for payment method updates
 - Changing amount may require canceling and resubscribing
 - Show clear messaging about what happens on cancellation
@@ -321,12 +336,14 @@ Create a page where users can:
 
 **Description:**
 Create reusable functions for subscription-related operations:
+
 1. Check if user has active subscription
 2. Get user's subscription tier (from stored value)
 3. Get subscription details
 4. Check feature access
 
 **Acceptance Criteria:**
+
 - [ ] `subscriptionService` created in `src/services/subscriptionService.ts`
 - [ ] `hasActiveSubscription(userId)` function
 - [ ] `getSubscriptionTier(userId)` function (reads stored tier)
@@ -335,6 +352,7 @@ Create reusable functions for subscription-related operations:
 - [ ] `isSupporter(userId)` helper for quick checks
 
 **Example Usage:**
+
 ```typescript
 // Check if user is a Supporter (any paying tier)
 const isSupporter = await subscriptionService.isSupporter(userId);
@@ -351,6 +369,7 @@ const subscription = await subscriptionService.getSubscription(userId);
 ```
 
 **Technical Notes:**
+
 - Tier is stored in database, no need to compute on read
 - All Supporter tiers have same feature access
 - Feature gating is binary: Free vs Supporter (any tier)

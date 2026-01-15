@@ -65,6 +65,7 @@ const SearchInterface = ({
             onClick={handleClear}
             className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-text-primary transition-smooth duration-150"
             aria-label="Clear search"
+            title="Clear search"
           >
             <Icon name="XMarkIcon" size={20} />
           </button>

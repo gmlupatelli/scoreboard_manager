@@ -88,6 +88,7 @@ export default function PaginationControls({
               : 'bg-surface text-text-primary border border-border hover:bg-muted hover-lift'
           }`}
           aria-label="Previous page"
+          title="Go to previous page"
         >
           <Icon name="ChevronLeftIcon" size={16} />
           <span className="hidden sm:inline">Previous</span>
@@ -131,6 +132,7 @@ export default function PaginationControls({
               : 'bg-surface text-text-primary border border-border hover:bg-muted hover-lift'
           }`}
           aria-label="Next page"
+          title="Go to next page"
         >
           <span className="hidden sm:inline">Next</span>
           <Icon name="ChevronRightIcon" size={16} />

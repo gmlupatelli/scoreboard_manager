@@ -17,6 +17,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
+  refreshProfile: () => Promise<void>;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
   isSystemAdmin: () => boolean;
 }
 
@@ -125,6 +127,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await loadUserProfile(user.id);
+    }
+  };
+
+  const updateUserProfile = (updates: Partial<UserProfile>) => {
+    setUserProfile((prev) => {
+      if (!prev) return prev;
+      return { ...prev, ...updates };
+    });
+  };
+
   const isSystemAdmin = () => {
     return userProfile?.role === 'system_admin';
   };
@@ -139,6 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        refreshProfile,
+        updateUserProfile,
         isSystemAdmin,
       }}
     >

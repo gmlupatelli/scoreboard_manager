@@ -134,6 +134,11 @@ const EntryRow = ({
                 setEditName(e.target.value);
                 validateName(e.target.value);
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !nameError && !scoreError) {
+                  handleSave();
+                }
+              }}
               className={`w-full px-3 py-2 border rounded-md bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-ring transition-smooth duration-150 ${
                 nameError ? 'border-destructive' : 'border-input'
               }`}
@@ -150,6 +155,11 @@ const EntryRow = ({
               onChange={(e) => {
                 setEditScore(e.target.value);
                 validateScore(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !nameError && !scoreError) {
+                  handleSave();
+                }
               }}
               className={`w-full px-3 py-2 border rounded-md bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-ring transition-smooth duration-150 ${
                 scoreError ? 'border-destructive' : 'border-input'
@@ -170,6 +180,7 @@ const EntryRow = ({
               disabled={!!nameError || !!scoreError}
               className="p-2 rounded-md bg-success text-success-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Save changes"
+              title="Save changes"
             >
               <Icon name="CheckIcon" size={20} />
             </button>
@@ -177,6 +188,7 @@ const EntryRow = ({
               onClick={handleCancel}
               className="p-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150"
               aria-label="Cancel editing"
+              title="Cancel editing"
             >
               <Icon name="XMarkIcon" size={20} />
             </button>
@@ -197,13 +209,15 @@ const EntryRow = ({
             onClick={handleStartEdit}
             className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
             aria-label="Edit entry"
+            title="Edit entry"
           >
             <Icon name="PencilIcon" size={20} />
           </button>
           <button
             onClick={() => onDelete(entry.id)}
-            className="p-2 rounded-md text-destructive hover:bg-destructive/10 transition-smooth duration-150"
+            className="p-2 rounded-md text-destructive hover:bg-red-500/10 transition-smooth duration-150"
             aria-label="Delete entry"
+            title="Delete entry"
           >
             <Icon name="TrashIcon" size={20} />
           </button>

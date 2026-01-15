@@ -17,21 +17,21 @@ const StatsOverview = ({
       value: totalScoreboards,
       icon: 'RectangleStackIcon',
       color: 'text-primary',
-      bgColor: 'bg-primary/10',
+      bgColor: 'bg-red-600/10',
     },
     {
       label: 'Total Entries',
       value: totalEntries.toLocaleString(),
       icon: 'UserGroupIcon',
       color: 'text-accent',
-      bgColor: 'bg-accent/10',
+      bgColor: 'bg-amber-600/10',
     },
     {
       label: 'Active Competitions',
       value: activeCompetitions,
       icon: 'TrophyIcon',
       color: 'text-warning',
-      bgColor: 'bg-warning/10',
+      bgColor: 'bg-yellow-600/10',
     },
   ];
 

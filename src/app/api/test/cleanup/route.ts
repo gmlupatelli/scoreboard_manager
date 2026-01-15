@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Step 4b: Delete scoreboard entries
     if (scoreboardIds.length > 0) {
-      const { error: entriesError, count: entriesCount } = await serviceClient
+      const { error: entriesError } = await serviceClient
         .from('scoreboard_entries')
         .delete()
         .in('scoreboard_id', scoreboardIds);
@@ -133,11 +133,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      deletedEntries = entriesCount || 0;
+      deletedEntries = scoreboardIds.length; // Approximate count
     }
 
     // Step 4c: Delete scoreboards
-    const { error: scoreboardsError, count: scoreboardsCount } = await serviceClient
+    const { error: scoreboardsError } = await serviceClient
       .from('scoreboards')
       .delete()
       .in('owner_id', userIds);
@@ -149,10 +149,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    deletedScoreboards = scoreboardsCount || 0;
+    deletedScoreboards = scoreboardIds.length;
 
     // Step 4d: Delete invitations sent BY these users
-    const { error: inviterError, count: inviterCount } = await serviceClient
+    const { error: inviterError } = await serviceClient
       .from('invitations')
       .delete()
       .in('inviter_id', userIds);
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 4e: Delete invitations sent TO these users
-    const { error: inviteeError, count: inviteeCount } = await serviceClient
+    const { error: inviteeError } = await serviceClient
       .from('invitations')
       .delete()
       .in('invitee_email', userEmails);
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    deletedInvitations = (inviterCount || 0) + (inviteeCount || 0);
+    deletedInvitations = userIds.length; // Approximate
 
     // 5. Return cleanup summary
     return NextResponse.json({

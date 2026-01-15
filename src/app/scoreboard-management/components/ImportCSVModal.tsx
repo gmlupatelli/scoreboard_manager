@@ -167,6 +167,7 @@ const ImportCSVModal = ({
               onClick={onClose}
               className="p-1 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
               aria-label="Close modal"
+              title="Close modal"
             >
               <Icon name="XMarkIcon" size={20} />
             </button>
@@ -211,6 +212,7 @@ const ImportCSVModal = ({
                   onClick={handlePreview}
                   disabled={!csvContent.trim()}
                   className="w-full px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  title="Preview CSV import"
                 >
                   Preview Import
                 </button>
@@ -231,6 +233,7 @@ const ImportCSVModal = ({
                   <button
                     onClick={() => setShowPreview(false)}
                     className="text-sm text-primary hover:underline"
+                    title="Go back and edit CSV"
                   >
                     Edit CSV
                   </button>
@@ -256,7 +259,7 @@ const ImportCSVModal = ({
                       </thead>
                       <tbody className="bg-surface divide-y divide-border">
                         {previewEntries.map((entry, index) => (
-                          <tr key={index} className={entry.isValid ? '' : 'bg-destructive/5'}>
+                          <tr key={index} className={entry.isValid ? '' : 'bg-red-500/5'}>
                             <td className="px-4 py-3">
                               {entry.isValid ? (
                                 <Icon name="CheckCircleIcon" size={18} className="text-success" />
@@ -284,12 +287,14 @@ const ImportCSVModal = ({
                     onClick={handleImport}
                     disabled={validCount === 0}
                     className="flex-1 px-4 py-2 rounded-md bg-success text-success-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    title="Import valid entries"
                   >
                     Import {validCount} Valid {validCount === 1 ? 'Entry' : 'Entries'}
                   </button>
                   <button
                     onClick={onClose}
                     className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
+                    title="Cancel import"
                   >
                     Cancel
                   </button>

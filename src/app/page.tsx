@@ -23,7 +23,7 @@ interface TestimonialCardProps {
 
 const FeatureCard = ({ icon, title, description }: FeatureCardProps) => (
   <div className="bg-card border border-border rounded-lg p-6 hover-lift transition-smooth duration-150 elevation-1">
-    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+    <div className="w-12 h-12 rounded-lg bg-red-600/10 flex items-center justify-center mb-4">
       <Icon name={icon} size={24} className="text-primary" />
     </div>
     <h3 className="text-xl font-bold text-text-primary mb-2">{title}</h3>
@@ -84,10 +84,10 @@ export default function Home() {
         'One-click embed codes for any website. Display your scoreboard seamlessly on your site with responsive iframe integration.',
     },
     {
-      icon: 'UserGroupIcon',
-      title: 'Team Collaboration',
+      icon: 'TvIcon',
+      title: 'Kiosk Mode',
       description:
-        'Invite collaborators with specific permissions. Manage access levels for editors and viewers to streamline team workflows.',
+        'Display scoreboards on TVs and large screens with a beautiful carousel. Add custom images, set durations, and enable PIN protection.',
     },
     {
       icon: 'DevicePhoneMobileIcon',
@@ -152,11 +152,11 @@ export default function Home() {
       <main>
         {/* Hero Section */}
         <section className="relative pt-20 sm:pt-24 md:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5" />
+          <div className="absolute inset-0 bg-gradient-to-br from-red-600/5 via-orange-600/5 to-amber-600/5" />
           <div className="relative max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-primary/15 rounded-full text-accent font-semibold text-sm mb-6">
+                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600/15 rounded-full text-accent font-semibold text-sm mb-6">
                   <Icon name="SparklesIcon" size={16} />
                   <span>Trusted by 10,000+ Event Organizers</span>
                 </div>

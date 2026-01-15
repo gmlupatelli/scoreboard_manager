@@ -48,21 +48,21 @@ export default function ContactPage() {
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="bg-card border border-border rounded-lg p-6 text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Icon name="EnvelopeIcon" size={24} className="text-primary" />
               </div>
               <h3 className="font-semibold text-text-primary mb-2">Email</h3>
               <p className="text-text-secondary text-sm">support@scoreboardmanager.com</p>
             </div>
             <div className="bg-card border border-border rounded-lg p-6 text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Icon name="ClockIcon" size={24} className="text-primary" />
               </div>
               <h3 className="font-semibold text-text-primary mb-2">Response Time</h3>
               <p className="text-text-secondary text-sm">Within 24-48 hours</p>
             </div>
             <div className="bg-card border border-border rounded-lg p-6 text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Icon name="GlobeAltIcon" size={24} className="text-primary" />
               </div>
               <h3 className="font-semibold text-text-primary mb-2">Availability</h3>
@@ -71,8 +71,8 @@ export default function ContactPage() {
           </div>
 
           {submitted ? (
-            <div className="bg-success/10 border border-success rounded-lg p-8 text-center">
-              <div className="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-green-500/10 border border-success rounded-lg p-8 text-center">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Icon name="CheckIcon" size={32} className="text-success" />
               </div>
               <h2 className="text-2xl font-semibold text-text-primary mb-2">Message Sent!</h2>
@@ -167,6 +167,7 @@ export default function ContactPage() {
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full py-3 px-6 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  title="Send your message"
                 >
                   {isSubmitting ? (
                     <>

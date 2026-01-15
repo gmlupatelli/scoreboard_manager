@@ -123,6 +123,7 @@ export default function CreateScoreboardModal({
                 onClick={handleClose}
                 className="p-1 hover:bg-muted rounded-md transition-smooth"
                 aria-label="Close modal"
+                title="Close modal"
               >
                 <Icon name="XMarkIcon" size={24} className="text-text-secondary" />
               </button>
@@ -319,7 +320,7 @@ export default function CreateScoreboardModal({
                 </div>
 
                 {error && (
-                  <div className="flex items-center space-x-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <div className="flex items-center space-x-2 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
                     <Icon name="ExclamationTriangleIcon" size={20} className="text-destructive" />
                     <p className="text-sm text-destructive">{error}</p>
                   </div>
@@ -332,6 +333,7 @@ export default function CreateScoreboardModal({
                   onClick={handleClose}
                   className="px-4 py-2 border border-input rounded-md text-sm font-medium text-text-secondary hover:bg-muted transition-smooth"
                   disabled={isSubmitting}
+                  title="Cancel and close"
                 >
                   Cancel
                 </button>
@@ -339,6 +341,7 @@ export default function CreateScoreboardModal({
                   type="submit"
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90 transition-smooth disabled:opacity-50"
                   disabled={isSubmitting}
+                  title="Create new scoreboard"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Scoreboard'}
                 </button>
