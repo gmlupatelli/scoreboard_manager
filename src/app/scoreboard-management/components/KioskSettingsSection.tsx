@@ -61,14 +61,6 @@ export default function KioskSettingsSection({
   // Drag state
   const [draggedSlide, setDraggedSlide] = useState<string | null>(null);
 
-  // Track if slide order has been changed (pending save)
-  const [hasSlideOrderChanges, setHasSlideOrderChanges] = useState(false);
-
-  // Keep ref in sync with state
-  useEffect(() => {
-    hasSlideOrderChangesRef.current = hasSlideOrderChanges;
-  }, [hasSlideOrderChanges]);
-
   // Track slides with failed images
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
@@ -77,9 +69,6 @@ export default function KioskSettingsSection({
 
   // Ref to track if initial fetch has completed
   const hasFetchedRef = useRef(false);
-
-  // Ref to track hasSlideOrderChanges without triggering callback recreation
-  const hasSlideOrderChangesRef = useRef(false);
 
   // Add initial scoreboard slide (called when no slides exist)
   const addInitialScoreboardSlide = useCallback(
@@ -131,11 +120,7 @@ export default function KioskSettingsSection({
             setPinCode(data.config.pin_code || '');
           }
           const loadedSlides = data.slides || [];
-          // Always update slides if forceRefresh, otherwise only if no pending changes
-          if (forceRefresh || !hasSlideOrderChangesRef.current) {
-            setSlides(loadedSlides);
-            setHasSlideOrderChanges(false);
-          }
+          setSlides(loadedSlides);
           setLastFetchTime(Date.now());
           setFailedImages(new Set()); // Clear failed images on fresh data
           hasFetchedRef.current = true;
@@ -163,6 +148,14 @@ export default function KioskSettingsSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isExpanded]);
 
+  // Reset refs when scoreboardId changes (switching between scoreboards)
+  useEffect(() => {
+    hasFetchedRef.current = false;
+    isLoadingRef.current = false;
+    setSlides([]);
+    setConfig(null);
+  }, [scoreboardId]);
+
   // Save config
   const handleSaveConfig = async () => {
     // Validate slide duration
@@ -175,26 +168,6 @@ export default function KioskSettingsSection({
     setIsSaving(true);
     try {
       const headers = await getAuthHeaders();
-
-      // Save slide order if changed
-      if (hasSlideOrderChanges) {
-        const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
-          method: 'PUT',
-          headers: {
-            ...headers,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            slides: slides.map((s) => ({ id: s.id, position: s.position })),
-          }),
-        });
-
-        if (!orderResponse.ok) {
-          const error = await orderResponse.json();
-          throw new Error(error.error || 'Failed to save slide order');
-        }
-        setHasSlideOrderChanges(false);
-      }
 
       // Save config settings
       const response = await fetch(`/api/kiosk/${scoreboardId}`, {
@@ -396,7 +369,7 @@ export default function KioskSettingsSection({
     e.preventDefault();
   };
 
-  const handleDrop = (targetSlideId: string) => {
+  const handleDrop = async (targetSlideId: string) => {
     if (!draggedSlide || draggedSlide === targetSlideId) {
       setDraggedSlide(null);
       return;
@@ -421,10 +394,34 @@ export default function KioskSettingsSection({
       position: index,
     }));
 
+    // Update UI immediately
     setSlides(reorderedSlides);
     setDraggedSlide(null);
-    setHasSlideOrderChanges(true);
-    setHasChanges(true);
+
+    // Save reordering to server immediately (consistent with add/delete)
+    try {
+      const headers = await getAuthHeaders();
+      const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
+        method: 'PUT',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          slides: reorderedSlides.map((s) => ({ id: s.id, position: s.position })),
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        const error = await orderResponse.json();
+        throw new Error(error.error || 'Failed to save slide order');
+      }
+      onShowToast('Slide order updated', 'success');
+    } catch (error) {
+      onShowToast(error instanceof Error ? error.message : 'Failed to save order', 'error');
+      // Revert on error by reloading
+      loadKioskData(true);
+    }
   };
 
   // Copy kiosk URL
