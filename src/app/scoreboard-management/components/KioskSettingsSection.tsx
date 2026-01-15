@@ -4,9 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { useAuthGuard } from '@/hooks';
 
-// Signed URLs expire after 1 hour, refetch after 30 minutes to ensure fresh URLs
-const _STALE_THRESHOLD_MS = 30 * 60 * 1000;
-
 interface KioskConfig {
   id: string;
   slide_duration_seconds: number;
