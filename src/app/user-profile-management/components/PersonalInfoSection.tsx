@@ -131,8 +131,17 @@ export default function PersonalInfoSection({
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && fullName.trim() && !savingName) {
+                    e.preventDefault();
+                    handleSaveName();
+                  } else if (e.key === 'Escape') {
+                    handleCancelName();
+                  }
+                }}
                 className="w-full px-4 py-2 border border-border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="Enter your display name"
+                autoFocus
               />
               <div className="flex gap-3">
                 <button
@@ -180,10 +189,19 @@ export default function PersonalInfoSection({
                   setEmail(e.target.value);
                   setEmailError('');
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && email.trim() && !savingEmail) {
+                    e.preventDefault();
+                    handleSaveEmail();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEmail();
+                  }
+                }}
                 className={`w-full px-4 py-2 border rounded-lg bg-surface text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent ${
                   emailError ? 'border-destructive' : 'border-border'
                 }`}
                 placeholder="Enter your email address"
+                autoFocus
               />
               {emailError && <p className="text-sm text-destructive">{emailError}</p>}
               <p className="text-sm text-text-secondary">

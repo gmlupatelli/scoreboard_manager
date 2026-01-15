@@ -438,7 +438,7 @@ export default function KioskSettingsSection({
               <div className="pt-4">
                 <label className="flex items-center justify-between cursor-pointer">
                   <div>
-                    <span className="font-medium text-text-primary">Enable Kiosk / TV Mode</span>
+                    <span className="font-medium text-text-primary">Enable Kiosk / Presentation Mode</span>
                   </div>
                   <div className="relative">
                     <input

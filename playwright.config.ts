@@ -8,6 +8,15 @@ dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 /**
  * Playwright configuration for E2E testing
  * Tests mobile (375x667, 320x568), tablet (1024x768), and desktop (1920x1080)
+ * 
+ * Viewport Strategy:
+ * - Desktop Chrome: Runs ALL tests (@fast + @full)
+ * - Mobile iPhone 12: Skips @desktop-only tests (UI/responsive tests only)
+ * - Mobile Minimum: Skips @desktop-only and @no-mobile tests (responsive only)
+ * 
+ * Test Tags:
+ * - @desktop-only: Authorization, validation, keyboard navigation, static pages
+ * - @no-mobile: Features designed for large screens (kiosk mode)
  */
 export default defineConfig({
   testDir: './e2e',
@@ -32,6 +41,7 @@ export default defineConfig({
 
   projects: [
     // Desktop - Chrome (primary browser for development)
+    // Runs ALL tests - no filtering
     {
       name: 'Desktop Chrome',
       use: {
@@ -41,8 +51,10 @@ export default defineConfig({
     },
 
     // Mobile - iPhone 12 (standard mobile)
+    // Skips @desktop-only tests (authorization, validation, keyboard, static pages)
     {
       name: 'Mobile iPhone 12',
+      grepInvert: /@desktop-only/,
       use: {
         ...devices['iPhone 12'],
         viewport: { width: 390, height: 844 },
@@ -50,8 +62,10 @@ export default defineConfig({
     },
 
     // Mobile - Minimum (320px - smallest supported)
+    // Skips @desktop-only AND @no-mobile tests (kiosk mode, large-screen features)
     {
       name: 'Mobile Minimum',
+      grepInvert: /@desktop-only|@no-mobile/,
       timeout: 60000, // Increased timeout for tiny viewport
       retries: 1, // Retry once on failure due to intermittent timing issues
       use: {

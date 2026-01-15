@@ -388,7 +388,7 @@ export default function KioskViewInteractive() {
   const currentSlide = slides[currentSlideIndex];
 
   return (
-    <div ref={containerRef} className="fixed inset-0 bg-black overflow-hidden">
+    <div ref={containerRef} className="fixed inset-0 bg-black overflow-hidden" data-testid="kiosk-container">
       {/* Current slide */}
       <div
         className={`absolute inset-0 transition-opacity duration-500 ${

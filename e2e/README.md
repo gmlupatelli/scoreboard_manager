@@ -102,6 +102,7 @@ Optimized for rapid development feedback:
 - ✅ No retries
 - ✅ Minimal traces/videos
 - ✅ List reporter for quick output
+- ✅ Defaults to @fast-tagged tests (no extra grep needed)
 
 ### UI Mode (Interactive)
 ```bash
@@ -125,7 +126,22 @@ npx playwright test --project="Desktop Chrome"
 
 ### Fast Mode with Specific File
 ```bash
-npm run test:e2e:fast -- e2e/desktop.spec.ts
+npm run test:e2e:fast -- e2e/auth.spec.ts
+```
+
+### Run Tests by Tag
+Tests are tagged with `@fast` or `@full` for flexible test execution:
+- `npm run test:e2e:fast` already runs `@fast` on Desktop Chrome by default.
+
+```bash
+# Run only @fast smoke tests (quick validation)
+npm run test:e2e -- --grep "@fast"
+
+# Run only @full comprehensive tests
+npm run test:e2e -- --grep "@full"
+
+# Run @fast tests on Desktop Chrome only
+npm run test:e2e -- --grep "@fast" --project="Desktop Chrome"
 ```
 
 ## Test Projects
@@ -152,27 +168,132 @@ Additional projects can be enabled in `playwright.config.ts`:
 | Config | Command | Use Case |
 |--------|---------|----------|
 | `playwright.config.ts` | `npm run test:e2e` | Full test suite with all enabled projects |
-| `playwright.config.fast.ts` | `npm run test:e2e:fast` | Fast iteration, Desktop Chrome only |
+| `playwright.config.fast.ts` | `npm run test:e2e:fast` | Fast iteration, Desktop Chrome, `@fast` tags only |
 
 ## Test Coverage
 
-### Mobile Tests (`e2e/mobile.spec.ts`)
-- ✅ Touch target sizes (minimum 44x44px)
-- ✅ Mobile header display
-- ✅ Metadata wrapping on narrow screens
-- ✅ Landscape orientation adjustments
-- ✅ Minimum viewport (320px) compatibility
-- ✅ Button stacking in modals
-- ✅ Accessibility on mobile
+Tests are organized by feature with `@fast` and `@full` tags:
+- **@fast** - Quick smoke tests for essential functionality (~48 tests)
+- **@full** - Comprehensive tests for complete coverage (~74 tests)
 
-### Desktop Tests (`e2e/desktop.spec.ts`)
-- ✅ Authentication flows (login, registration)
-- ✅ Dashboard CRUD operations
-- ✅ Scoreboard management (add, edit, delete)
+### Viewport-Specific Tags
+
+To optimize test execution and reduce redundant test runs, certain tests are tagged to run only on specific viewports:
+
+| Tag | Description | Runs On | Skipped On |
+|-----|-------------|---------|------------|
+| **@desktop-only** | Authorization, validation, and keyboard tests that don't vary by viewport | Desktop Chrome | Mobile iPhone 12, Mobile Minimum |
+| **@no-mobile** | Features designed for large screens (e.g., kiosk/TV mode) | Desktop Chrome | Mobile iPhone 12, Mobile Minimum |
+
+#### How It Works
+The `playwright.config.ts` uses `grepInvert` to skip tagged tests on mobile projects:
+- **Mobile iPhone 12**: Skips `@desktop-only` tests
+- **Mobile Minimum**: Skips `@desktop-only` and `@no-mobile` tests
+
+#### When to Use Each Tag
+
+**Use `@desktop-only` for:**
+- Authorization/permission tests (server-side, viewport doesn't matter)
+- Form validation logic tests (same validation on all viewports)
+- Keyboard navigation tests (not applicable on mobile)
+- Navigation/redirect tests (URL behavior same across viewports)
+- API/service-level functionality tests
+
+**Use `@no-mobile` for:**
+- Features only available on larger screens (kiosk mode, TV displays)
+- UI components hidden on mobile breakpoints
+- Features that require hover interactions
+
+#### Adding New Viewport-Specific Tests
+```typescript
+// Authorization test - runs only on Desktop Chrome
+authTest('@fast @desktop-only user cannot access admin pages', async ({ johnAuth }) => {
+  // ...
+});
+
+// Kiosk feature - not for mobile devices
+test('@full @no-mobile should display kiosk carousel', async ({ johnAuth }) => {
+  // ...
+});
+```
+
+#### Test Count Optimization
+Before optimization: ~240 total test runs (80 tests × 3 viewports)
+After optimization: ~118 total test runs (~51% reduction)
+
+This eliminates redundant viewport-specific runs while maintaining coverage where it matters.
+
+### Authentication Tests (`e2e/auth.spec.ts`)
+- ✅ Login/registration page rendering
+- ✅ Form validation (email, password)
+- ✅ Protected route redirects
+- ✅ Admin page restrictions for regular users
+- ✅ Public page accessibility
+
+### Scoreboard Tests (`e2e/scoreboard.spec.ts`)
+- ✅ Dashboard display and empty states
+- ✅ Create scoreboard modal
+- ✅ Search and filter functionality
+- ✅ CRUD operations (add, edit, delete entries)
+- ✅ Ownership and permission checks
 - ✅ Keyboard navigation
-- ✅ Real-time updates
-- ✅ Responsive breakpoints
-- ✅ Filter and search functionality
+
+### Admin Tests (`e2e/admin.spec.ts`)
+- ✅ Dashboard oversight (owner filter, multi-owner view)
+- ✅ System settings management
+- ✅ Invitations oversight
+- ✅ Cross-user scoreboard access
+- ✅ Admin navigation
+
+### Invitations Tests (`e2e/invitations.spec.ts`)
+- ✅ User invitation access and display
+- ✅ Invitation form validation
+- ✅ Invite-only mode toggle
+- ✅ Registration enforcement
+- ✅ Settings persistence
+
+### Kiosk Tests (`e2e/kiosk.spec.ts`)
+
+**Fast Tests `@fast` (7 tests) - ~2-3 minutes:**
+- ✅ Expand/collapse kiosk settings section
+- ✅ Toggle kiosk mode enabled/disabled
+- ✅ Change slide duration setting
+- ✅ Toggle PIN protection visibility
+- ✅ Open kiosk preview in new tab
+- ✅ Load kiosk view for public scoreboard
+- ✅ Respond to keyboard controls
+
+**Full Tests `@full` - Image Upload & Management:**
+- ✅ Upload valid image and display in slide list
+- ✅ Reject invalid file types
+- ✅ Display thumbnail after upload
+- ✅ Delete slide from list
+- ✅ Support drag-and-drop reordering
+
+**Full Tests `@full` - Carousel Functionality:**
+- ✅ Auto-advance slides in carousel
+- ✅ Pause and resume carousel
+- ✅ Toggle fullscreen mode
+- ✅ Configure scoreboard position
+- ✅ Display images in kiosk view
+- ✅ Auto-hide control bar after inactivity
+
+**Full Tests `@full` - PIN Protection:**
+- ✅ Show PIN modal when protection enabled
+- ✅ Validate correct and incorrect PIN
+
+**Full Tests `@full` - Accessibility (3 tests):**
+- ✅ Proper ARIA labels on controls
+- ✅ Keyboard-only navigation support
+- ✅ Live regions for screen reader announcements
+
+### Responsive Tests (`e2e/responsive.spec.ts`)
+- ✅ Mobile touch interactions (44x44px targets)
+- ✅ Landscape orientation
+- ✅ Minimum viewport (320px)
+- ✅ Tablet layout
+- ✅ Desktop breakpoints (768px, 1024px, 1920px)
+- ✅ Mobile accessibility
 
 ### Accessibility Tests (`e2e/accessibility.spec.ts`)
 - ✅ WCAG compliance
@@ -218,6 +339,21 @@ Tests are configured to run in CI environments with:
    ```bash
    npx playwright show-trace trace.zip
    ```
+
+### Kiosk Test Troubleshooting
+
+**"should expand and collapse kiosk settings section"**
+- Verifies the kiosk section expands and shows "Slide Duration" label
+- May skip if no scoreboard found for the test user
+
+**"should upload a valid image"**
+- Uses `e2e/fixtures/test-image.png` (10x10 PNG, 72 bytes)
+- Requires valid JWT token in Authorization header
+- May fail if storage bucket not configured
+
+**"should show PIN modal"**
+- Opens kiosk in unauthenticated context to verify PIN modal appears
+- PIN must be enabled and kiosk mode must be enabled
 
 ## Known Limitations
 

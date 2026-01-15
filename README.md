@@ -268,6 +268,7 @@ The application runs automatically via the configured workflow:
 - `npm run format` - Format code with Prettier
 - `npm run type-check` - TypeScript type checking
 - `npm run test:e2e` - Run Playwright E2E tests
+- `npm run test:e2e:fast` - Run Playwright E2E @fast suite on Desktop Chrome (fast config)
 - `npm run test:e2e:ui` - Run Playwright tests in UI mode
 - `npm run test:e2e:debug` - Run Playwright tests in debug mode
 
@@ -295,6 +296,9 @@ sudo npx playwright install-deps
 ```bash
 # All tests
 npm run test:e2e
+
+# Fast @fast suite (Desktop Chrome via fast config)
+npm run test:e2e:fast
 
 # Interactive UI mode
 npm run test:e2e:ui

@@ -9,7 +9,8 @@ const SIGNED_URL_EXPIRY_SECONDS = 3600;
 
 /**
  * GET /api/kiosk/public/[scoreboardId]
- * Get public kiosk data for viewing (no authentication required)
+ * Get kiosk data for viewing (no authentication required)
+ * Kiosk view works for both public and private scoreboards when kiosk mode is enabled
  */
 export async function GET(
   _request: NextRequest,
@@ -17,9 +18,12 @@ export async function GET(
 ) {
   try {
     const { scoreboardId } = await params;
-    const supabase = getAnonClient();
+    
+    // Use service role client to bypass RLS - kiosk access is controlled by kiosk config, not visibility
+    const serviceClient = getServiceRoleClient();
+    const supabase = serviceClient || getAnonClient();
 
-    // Get scoreboard to verify it's public
+    // Get scoreboard (service role bypasses RLS for private scoreboards)
     const { data: scoreboard, error: scoreboardError } = await supabase
       .from('scoreboards')
       .select('id, title, description, visibility, score_type, sort_order, time_format, custom_styles')
@@ -30,9 +34,7 @@ export async function GET(
       return NextResponse.json({ error: 'Scoreboard not found' }, { status: 404 });
     }
 
-    if (scoreboard.visibility !== 'public') {
-      return NextResponse.json({ error: 'Scoreboard is not public' }, { status: 403 });
-    }
+    // Kiosk view works for both public and private scoreboards - access is controlled by kiosk config
 
     // Get kiosk config
     const { data: config, error: configError } = await supabase
@@ -61,7 +63,6 @@ export async function GET(
     }
 
     // Generate signed URLs for image slides (requires service role for private bucket)
-    const serviceClient = getServiceRoleClient();
     const slidesWithSignedUrls = await Promise.all(
       (slides || []).map(async (slide) => {
         if (slide.slide_type === 'image' && slide.image_url && serviceClient) {
@@ -109,7 +110,7 @@ export async function GET(
 
 /**
  * POST /api/kiosk/public/[scoreboardId]
- * Verify PIN for protected kiosks
+ * Verify PIN for protected kiosks (works for both public and private scoreboards)
  */
 export async function POST(
   request: NextRequest,
@@ -117,13 +118,16 @@ export async function POST(
 ) {
   try {
     const { scoreboardId } = await params;
-    const supabase = getAnonClient();
     const body = await request.json();
     const { pin } = body;
 
     if (!pin) {
       return NextResponse.json({ error: 'PIN required' }, { status: 400 });
     }
+
+    // Use service role client to bypass RLS for private scoreboards
+    const serviceClient = getServiceRoleClient();
+    const supabase = serviceClient || getAnonClient();
 
     // Get kiosk config with PIN
     const { data: config, error: configError } = await supabase

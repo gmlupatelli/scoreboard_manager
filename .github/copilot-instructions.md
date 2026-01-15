@@ -1244,6 +1244,18 @@ const secretKey = process.env.SUPABASE_SECRET_KEY!;
 
 ---
 
+
+## Test Command Restrictions
+
+**Never use `| tail` with test commands.**
+
+- ❌ Do not run test commands piped to `tail` (e.g., `npm run test:e2e 2>&1 | tail -100`).
+- ❌ Do not use shell piping to truncate test output for automated or Copilot-initiated test runs.
+- ✅ Use the built-in test tools or direct test commands (e.g., `npm run test:e2e`) for running tests.
+- ✅ If you need to limit output, do so after the test completes, not during execution.
+- **Reason:** Using `| tail` can cause test processes to be killed early (exit code 130) and may result in incomplete or inaccurate test results.
+
+---
 ## Testing & Quality
 
 ### Before Committing

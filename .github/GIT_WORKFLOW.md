@@ -87,17 +87,23 @@ git push origin dev
 # 1. Ensure dev is working correctly
 # Test at: https://dev--myscoreboardmanager.netlify.app
 
-# 2. Switch to main
+# 2. Ensure dev branch is up to date
+git checkout dev
+git pull origin dev
+
+# 3. Open a Pull Request on GitHub
+# - Go to: https://github.com/gmlupatelli/scoreboard_manager/compare/main...dev
+# - Click "Create pull request"
+# - Title: "Release: [description]" or "Promote dev to production"
+# - Review the changes and ensure all checks pass
+# - Merge the PR (using "Merge pull request" or "Squash and merge")
+
+# 4. After PR is merged, production deploys automatically
+# Production URL: https://myscoreboardmanager.netlify.app
+
+# 5. (Optional) Sync your local main branch
 git checkout main
 git pull origin main
-
-# 3. Merge dev into main
-git merge dev
-
-# 4. Push to production (triggers Netlify production deploy)
-git push origin main
-
-# Production deploys to: https://myscoreboardmanager.netlify.app
 ```
 
 ### **Quick Fixes to Production**
@@ -105,21 +111,31 @@ git push origin main
 ```powershell
 # For urgent hotfixes only
 git checkout main
+git pull origin main
 git checkout -b hotfix/description
 
 # Make changes
 git add .
 git commit -m "fix: urgent fix description"
 
-# Merge directly to main
-git checkout main
-git merge hotfix/description
-git push origin main
+# Push hotfix branch
+git push origin hotfix/description
 
-# Don't forget to merge back to dev!
+# Open a Pull Request on GitHub
+# - Go to: https://github.com/gmlupatelli/scoreboard_manager/compare/main...hotfix/description
+# - Click "Create pull request"
+# - Title: "Hotfix: [description]"
+# - Review and merge the PR
+
+# After merge, sync dev with main
 git checkout dev
-git merge main
+git pull origin dev
+git merge origin/main
 git push origin dev
+
+# Cleanup
+git branch -d hotfix/description
+git push origin --delete hotfix/description
 ```
 
 ---
@@ -794,8 +810,9 @@ git push origin feature/my-feature
 
 # Test and promote
 git checkout dev && git merge feature/my-feature && git push origin dev
-# Test at dev URL, then:
-git checkout main && git merge dev && git push origin main
+# Test at dev URL, then open a PR:
+# https://github.com/gmlupatelli/scoreboard_manager/compare/main...dev
+# Merge the PR on GitHub to deploy to production
 
 # Cleanup
 git branch -d feature/my-feature

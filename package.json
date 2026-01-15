@@ -51,7 +51,7 @@
     "serve": "next start -H 0.0.0.0 -p 5000",
     "type-check": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:e2e:fast": "playwright test --config=playwright.config.fast.ts",
+    "test:e2e:fast": "playwright test --config=playwright.config.fast.ts --grep=\"@fast\"",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:cleanup": "node -e \"require('dotenv').config({path:'.env.test'});fetch('http://localhost:5000/api/test/cleanup',{method:'POST',headers:{'x-cleanup-api-key':process.env.TEST_CLEANUP_API_KEY}}).then(r=>r.json()).then(console.log)\"",
