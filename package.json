@@ -64,15 +64,12 @@
     "@heroicons/react": "^2.2.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.86.0",
-    "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/typography": "^0.5.16",
     "focus-trap-react": "^11.0.6",
     "next": "^14.2.35",
     "pdfjs-dist": "^4.10.38",
     "react": "18.3.1",
     "react-colorful": "^5.6.1",
     "react-dom": "18.3.1",
-    "recharts": "^3.6.0",
     "sharp": "^0.34.5"
   },
   "overrides": {
@@ -95,11 +92,11 @@
     "eslint-config-next": "^15.2.4",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.5.5",
+    "knip": "^5.81.0",
     "postcss": "^8.4.49",
     "prettier": "^3.8.0",
     "supabase": "2.72.7",
     "tailwindcss": "3.4.19",
-    "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   }

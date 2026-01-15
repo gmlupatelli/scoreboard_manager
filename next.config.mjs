@@ -10,7 +10,7 @@ const nextConfig = {
   },
   // Optimize package imports for better tree-shaking
   experimental: {
-    optimizePackageImports: ['@heroicons/react', '@supabase/supabase-js', 'recharts'],
+    optimizePackageImports: ['@heroicons/react', '@supabase/supabase-js'],
   },
   images: {
     remotePatterns: [
