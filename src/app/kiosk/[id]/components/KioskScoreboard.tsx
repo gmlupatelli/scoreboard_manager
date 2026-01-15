@@ -68,7 +68,7 @@ export default function KioskScoreboard({ scoreboard, entries }: KioskScoreboard
   };
 
   // Determine how many entries to show based on screen size
-  const maxEntries = 15;
+  const maxEntries = 10;
   const displayEntries = rankedEntries.slice(0, maxEntries);
 
   return (
@@ -98,9 +98,9 @@ export default function KioskScoreboard({ scoreboard, entries }: KioskScoreboard
       </div>
 
       {/* Entries table */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-shrink-0">
         <div
-          className="h-full rounded-xl overflow-hidden"
+          className="rounded-xl overflow-hidden"
           style={{
             backgroundColor: appliedStyles.headerColor || 'rgba(255,255,255,0.05)',
             borderColor: appliedStyles.borderColor || 'rgba(255,255,255,0.1)',
@@ -134,7 +134,7 @@ export default function KioskScoreboard({ scoreboard, entries }: KioskScoreboard
               return (
                 <div
                   key={entry.id}
-                  className="grid grid-cols-12 gap-4 px-6 py-4 transition-colors"
+                  className="grid grid-cols-12 gap-4 px-6 py-5 transition-colors"
                   style={{
                     backgroundColor: isAlternate
                       ? appliedStyles.rowHoverColor
