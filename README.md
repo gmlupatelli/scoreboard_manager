@@ -14,6 +14,22 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 
 ## Recent Changes
 
+### January 15, 2026 - PDF Upload Support for Kiosk Slides
+
+- **PDF to image conversion** for kiosk slide uploads
+  - Upload PDF files (up to 50MB, max 50 pages) which are automatically converted to slide images
+  - Client-side processing using `pdfjs-dist` library - no server-side dependencies required
+  - Each PDF page is rendered at 2x scale for crisp display on TV screens
+  - Uses CDN-hosted pdf.js worker for optimal performance
+- **Unified upload progress UI** for both PDF and image uploads
+  - Real-time progress feedback during file processing
+  - Blue progress bar during upload, green checkmark on success, red indicator on error
+  - Progress displays current page/total pages for PDFs or upload status for images
+- **Bug fix**: Enabled badge now visible immediately when kiosk section is collapsed
+  - Previously required expanding the section to see the enabled status
+- **New utility**: `src/utils/pdfToImages.ts` with `convertPdfToImages()` and `isPdfFile()` functions
+- **Dependency added**: `pdfjs-dist@4.10.38`
+
 ### January 15, 2026 - Migration Baseline Update
 
 - **Consolidated all migrations** into single executable baseline (`20260115000000_baseline.sql`)
@@ -42,7 +58,8 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
   - Enable/disable kiosk mode per scoreboard
   - Configure slide duration and scoreboard position in carousel
   - Add/remove/reorder slides with drag-and-drop
-  - Upload custom images (PNG, JPG, WebP, GIF) up to 5MB
+  - Upload custom images (PNG, JPG, WebP) up to 10MB each
+  - Upload PDF files (up to 50MB, max 50 pages) - auto-converted to slide images
   - Optional PIN protection for private scoreboards
 - **Keyboard controls for kiosk view**:
   - `Space` - Play/pause carousel
