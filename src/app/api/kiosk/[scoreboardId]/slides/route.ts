@@ -110,6 +110,24 @@ export async function POST(
       return NextResponse.json({ error: 'Maximum of 20 slides allowed' }, { status: 400 });
     }
 
+    // Prevent duplicate scoreboard slides
+    if (slideType === 'scoreboard') {
+      const { data: existingScoreboardSlide } = await supabase
+        .from('kiosk_slides')
+        .select('id')
+        .eq('kiosk_config_id', configId)
+        .eq('slide_type', 'scoreboard')
+        .limit(1)
+        .single();
+
+      if (existingScoreboardSlide) {
+        return NextResponse.json(
+          { error: 'Scoreboard slide already exists', existingSlideId: existingScoreboardSlide.id },
+          { status: 409 }
+        );
+      }
+    }
+
     // Insert slide
     const { data: slide, error: slideError } = await supabase
       .from('kiosk_slides')

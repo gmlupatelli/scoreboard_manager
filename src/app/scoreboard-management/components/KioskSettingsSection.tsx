@@ -67,6 +67,9 @@ export default function KioskSettingsSection({
   // Track slides with failed images
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
+  // Ref to prevent double loading
+  const isLoadingRef = useRef(false);
+
   // Add initial scoreboard slide (called when no slides exist)
   const addInitialScoreboardSlide = useCallback(
     async (headers: Record<string, string>) => {
@@ -97,6 +100,10 @@ export default function KioskSettingsSection({
   const loadKioskData = useCallback(
     async (forceRefresh = false) => {
       if (!scoreboardId) return;
+
+      // Prevent concurrent loading
+      if (isLoadingRef.current && !forceRefresh) return;
+      isLoadingRef.current = true;
 
       setIsLoading(true);
       try {
@@ -130,6 +137,7 @@ export default function KioskSettingsSection({
         onShowToast('Failed to load kiosk settings', 'error');
       } finally {
         setIsLoading(false);
+        isLoadingRef.current = false;
       }
     },
     [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide, hasSlideOrderChanges]
