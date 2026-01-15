@@ -248,6 +248,26 @@ export async function PUT(
       return NextResponse.json({ error: 'Kiosk config not found' }, { status: 404 });
     }
 
+    // Fetch current positions from database before making any changes (for rollback)
+    const slideIds = slides.filter((s) => s.id && typeof s.position === 'number').map((s) => s.id);
+    const { data: currentSlides, error: fetchError } = await updateClient
+      .from('kiosk_slides')
+      .select('id, position')
+      .in('id', slideIds)
+      .eq('kiosk_config_id', kioskConfig.id);
+
+    if (fetchError || !currentSlides) {
+      return NextResponse.json(
+        {
+          error: `Failed to fetch current slide positions: ${fetchError?.message || 'Unknown error'}`,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Create a map of current positions for rollback
+    const originalPositions = new Map(currentSlides.map((s) => [s.id, s.position]));
+
     // Two-phase update to avoid unique constraint violation on (kiosk_config_id, position)
     // Phase 1: Set all positions to high temporary values (position >= 0 required by check constraint)
     const phase1Updates: Array<{ id: string; originalPosition: number; tempPosition: number }> = [];
@@ -255,6 +275,12 @@ export async function PUT(
     for (let i = 0; i < slides.length; i++) {
       const slide = slides[i];
       if (!slide.id || typeof slide.position !== 'number') {
+        continue;
+      }
+
+      const originalPosition = originalPositions.get(slide.id);
+      if (originalPosition === undefined) {
+        // Slide not found in database - skip it
         continue;
       }
 
@@ -276,7 +302,7 @@ export async function PUT(
       // Track successful Phase 1 updates for potential rollback
       phase1Updates.push({
         id: slide.id,
-        originalPosition: slide.position,
+        originalPosition,
         tempPosition,
       });
     }
@@ -303,12 +329,31 @@ export async function PUT(
     // If any Phase 2 updates failed, attempt rollback to original positions
     if (phase2Errors.length > 0) {
       // Attempt to restore original positions for all slides that were in Phase 1
+      const rollbackErrors: Array<{ slideId: string; error: string }> = [];
+
       for (const update of phase1Updates) {
-        await updateClient
+        const { error: rollbackError } = await updateClient
           .from('kiosk_slides')
           .update({ position: update.originalPosition })
           .eq('id', update.id)
           .eq('kiosk_config_id', kioskConfig.id);
+
+        if (rollbackError) {
+          rollbackErrors.push({ slideId: update.id, error: rollbackError.message });
+        }
+      }
+
+      // Return error with details about both Phase 2 and rollback failures
+      if (rollbackErrors.length > 0) {
+        return NextResponse.json(
+          {
+            error:
+              'Failed to reorder slides. Rollback also failed - database may be in inconsistent state.',
+            phase2Errors,
+            rollbackErrors,
+          },
+          { status: 500 }
+        );
       }
 
       return NextResponse.json(
