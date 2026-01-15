@@ -71,7 +71,8 @@
     "react": "18.2.0",
     "react-colorful": "^5.6.1",
     "react-dom": "18.2.0",
-    "recharts": "^3.6.0"
+    "recharts": "^3.6.0",
+    "sharp": "^0.34.5"
   },
   "overrides": {
     "glob": "^10.0.0",
