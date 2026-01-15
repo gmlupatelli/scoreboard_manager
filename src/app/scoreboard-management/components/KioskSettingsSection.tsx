@@ -152,13 +152,8 @@ export default function KioskSettingsSection({
     }
 
     setIsSaving(true);
-    try {
-      const headers = await getAuthHeaders();
-
       // Save slide order if changed
       if (hasSlideOrderChanges) {
-        const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
-          method: 'PUT',
           headers: {
             ...headers,
             'Content-Type': 'application/json',
