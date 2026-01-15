@@ -350,9 +350,8 @@ authTest.describe('Real-time Updates', () => {
     await johnAuth.goto('/dashboard');
     await johnAuth.waitForTimeout(2000);
 
-    // Get initial count
+    // Get scoreboard cards locator
     const scoreboardCards = johnAuth.locator('.bg-card.rounded-lg');
-    const _initialCount = await scoreboardCards.count();
 
     // Verify page is responsive to updates
     await johnAuth.reload();
