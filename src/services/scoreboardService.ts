@@ -503,11 +503,50 @@ export const scoreboardService = {
     return { data: data ? rowToScoreboard(data) : null, error: null };
   },
 
-  // Delete scoreboard
+  // Delete scoreboard and clean up associated kiosk images from storage
   async deleteScoreboard(id: string): Promise<{ error: Error | null }> {
-    const { error } = await supabase.from('scoreboards').delete().eq('id', id);
+    try {
+      // First, get the kiosk config to find the slides
+      const { data: kioskConfig } = await supabase
+        .from('kiosk_configs')
+        .select('id')
+        .eq('scoreboard_id', id)
+        .single();
 
-    return { error };
+      if (kioskConfig) {
+        // Get all slides with their image paths
+        const { data: slides } = await supabase
+          .from('kiosk_slides')
+          .select('image_url, thumbnail_url')
+          .eq('kiosk_config_id', kioskConfig.id);
+
+        if (slides && slides.length > 0) {
+          // Collect all storage paths to delete
+          const filesToDelete: string[] = [];
+
+          for (const slide of slides) {
+            if (slide.image_url && !slide.image_url.startsWith('http')) {
+              filesToDelete.push(slide.image_url);
+            }
+            if (slide.thumbnail_url && !slide.thumbnail_url.startsWith('http')) {
+              filesToDelete.push(slide.thumbnail_url);
+            }
+          }
+
+          // Delete files from storage (ignore errors - files might not exist)
+          if (filesToDelete.length > 0) {
+            await supabase.storage.from('kiosk-slides').remove(filesToDelete);
+          }
+        }
+      }
+
+      // Now delete the scoreboard (cascades to kiosk_configs, kiosk_slides, etc.)
+      const { error } = await supabase.from('scoreboards').delete().eq('id', id);
+
+      return { error };
+    } catch (error) {
+      return { error: error instanceof Error ? error : new Error('Failed to delete scoreboard') };
+    }
   },
 
   // Get entries for a scoreboard
