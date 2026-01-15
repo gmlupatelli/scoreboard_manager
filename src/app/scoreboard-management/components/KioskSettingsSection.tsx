@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { useAuthGuard } from '@/hooks';
+import { convertPdfToImages, isPdfFile, PdfProcessingProgress } from '@/utils/pdfToImages';
 
 // Signed URLs expire after 1 hour, refetch after 30 minutes to ensure fresh URLs
 const _STALE_THRESHOLD_MS = 30 * 60 * 1000;
@@ -63,6 +64,10 @@ export default function KioskSettingsSection({
 
   // Track slides with failed images
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  // Upload processing state (for both images and PDFs)
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<PdfProcessingProgress | null>(null);
 
   // Ref to prevent double loading
   const isLoadingRef = useRef(false);
@@ -139,6 +144,26 @@ export default function KioskSettingsSection({
     },
     [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]
   );
+
+  // Fetch just the enabled status on mount (lightweight check for badge display)
+  useEffect(() => {
+    const fetchEnabledStatus = async () => {
+      if (!scoreboardId) return;
+      try {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`/api/kiosk/${scoreboardId}`, { headers });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.config) {
+            setEnabled(data.config.enabled);
+          }
+        }
+      } catch (_error) {
+        // Silent fail - badge just won't show
+      }
+    };
+    fetchEnabledStatus();
+  }, [scoreboardId, getAuthHeaders]);
 
   useEffect(() => {
     if (isExpanded && !hasFetchedRef.current && !isLoadingRef.current) {
@@ -236,25 +261,9 @@ export default function KioskSettingsSection({
     }
   };
 
-  // Handle file upload
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-
-    if (!allowedTypes.includes(file.type)) {
-      onShowToast('Invalid file type. Allowed: PNG, JPG, WebP', 'error');
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      onShowToast('File size must be less than 10MB', 'error');
-      return;
-    }
-
+  // Upload a single image file and create a slide
+  const uploadImageFile = async (file: File, headers: Record<string, string>): Promise<boolean> => {
     try {
-      const headers = await getAuthHeaders();
       const formData = new FormData();
       formData.append('file', file);
 
@@ -294,9 +303,172 @@ export default function KioskSettingsSection({
 
       const slideData = await slideResponse.json();
       setSlides((prev) => [...prev, slideData.slide]);
-      onShowToast('Slide uploaded successfully', 'success');
+      return true;
     } catch (error) {
+      console.error('Upload error:', error);
+      return false;
+    }
+  };
+
+  // Handle PDF file upload
+  const handlePdfUpload = async (file: File) => {
+    // Check slide limit
+    const remainingSlots = 20 - slides.length;
+    if (remainingSlots <= 0) {
+      onShowToast('Maximum 20 slides reached', 'error');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress({ current: 0, total: 0, status: 'loading', message: 'Loading PDF...' });
+
+    try {
+      const headers = await getAuthHeaders();
+
+      // Convert PDF pages to images
+      const { images, error } = await convertPdfToImages(file, (progress) => {
+        setUploadProgress(progress);
+      });
+
+      if (error) {
+        onShowToast(error, 'error');
+        return;
+      }
+
+      if (images.length === 0) {
+        onShowToast('No pages found in PDF', 'error');
+        return;
+      }
+
+      // Check if we have enough slots
+      const pagesToUpload = Math.min(images.length, remainingSlots);
+      if (pagesToUpload < images.length) {
+        onShowToast(
+          `Only uploading ${pagesToUpload} of ${images.length} pages (slide limit)`,
+          'info'
+        );
+      }
+
+      // Upload each page image
+      setUploadProgress({
+        current: 0,
+        total: pagesToUpload,
+        status: 'processing',
+        message: 'Uploading slides...',
+      });
+
+      let successCount = 0;
+      for (let i = 0; i < pagesToUpload; i++) {
+        const image = images[i];
+        const imageFile = new File([image.blob], image.fileName, { type: 'image/png' });
+
+        const success = await uploadImageFile(imageFile, headers);
+        if (success) {
+          successCount++;
+        }
+
+        setUploadProgress({
+          current: i + 1,
+          total: pagesToUpload,
+          status: 'processing',
+          message: `Uploaded ${i + 1} of ${pagesToUpload} slides`,
+        });
+      }
+
+      setUploadProgress({
+        current: pagesToUpload,
+        total: pagesToUpload,
+        status: 'complete',
+        message: 'Complete!',
+      });
+
+      if (successCount > 0) {
+        onShowToast(`Successfully uploaded ${successCount} slides from PDF`, 'success');
+      } else {
+        onShowToast('Failed to upload slides from PDF', 'error');
+      }
+    } catch (error) {
+      onShowToast(error instanceof Error ? error.message : 'Failed to process PDF', 'error');
+    } finally {
+      setIsUploading(false);
+      // Keep progress visible briefly before clearing
+      setTimeout(() => setUploadProgress(null), 2000);
+    }
+  };
+
+  // Handle file upload (images or PDF)
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+
+    // Check if it's a PDF
+    if (isPdfFile(file)) {
+      // Validate PDF size (50MB max for PDFs)
+      if (file.size > 50 * 1024 * 1024) {
+        onShowToast('PDF file size must be less than 50MB', 'error');
+        return;
+      }
+      await handlePdfUpload(file);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    // Handle regular image upload
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+
+    if (!allowedTypes.includes(file.type)) {
+      onShowToast('Invalid file type. Allowed: PNG, JPG, WebP, PDF', 'error');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      onShowToast('Image file size must be less than 10MB', 'error');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress({
+      current: 0,
+      total: 1,
+      status: 'processing',
+      message: `Uploading ${file.name}...`,
+    });
+
+    try {
+      const headers = await getAuthHeaders();
+      const success = await uploadImageFile(file, headers);
+
+      if (success) {
+        setUploadProgress({
+          current: 1,
+          total: 1,
+          status: 'complete',
+          message: 'Upload complete!',
+        });
+        onShowToast('Slide uploaded successfully', 'success');
+      } else {
+        setUploadProgress({
+          current: 0,
+          total: 1,
+          status: 'error',
+          message: 'Upload failed',
+        });
+        onShowToast('Failed to upload slide', 'error');
+      }
+    } catch (error) {
+      setUploadProgress({
+        current: 0,
+        total: 1,
+        status: 'error',
+        message: 'Upload failed',
+      });
       onShowToast(error instanceof Error ? error.message : 'Failed to upload slide', 'error');
+    } finally {
+      setIsUploading(false);
+      setTimeout(() => setUploadProgress(null), 2000);
     }
 
     // Reset file input
@@ -596,26 +768,102 @@ export default function KioskSettingsSection({
                   <div className="flex gap-2">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="px-3 py-1.5 rounded-md font-medium text-sm flex items-center gap-2 transition-colors bg-primary text-primary-foreground hover:opacity-90"
-                      title="Add image slide"
+                      disabled={isUploading || slides.length >= 20}
+                      className="px-3 py-1.5 rounded-md font-medium text-sm flex items-center gap-2 transition-colors bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Add image or PDF slide"
                     >
                       <Icon name="PlusIcon" size={16} />
-                      Slide
+                      Add Slide
                     </button>
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf,.pdf"
                       onChange={(e) => handleFileUpload(e.target.files)}
                       className="hidden"
                     />
                   </div>
                 </div>
 
+                {/* Upload Progress */}
+                {uploadProgress && (
+                  <div
+                    className={`rounded-lg p-4 mb-3 ${
+                      uploadProgress.status === 'error'
+                        ? 'bg-red-50 border border-red-200'
+                        : uploadProgress.status === 'complete'
+                          ? 'bg-green-50 border border-green-200'
+                          : 'bg-blue-50 border border-blue-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {uploadProgress.status === 'complete' ? (
+                        <Icon name="CheckCircleIcon" size={20} className="text-green-600" />
+                      ) : uploadProgress.status === 'error' ? (
+                        <Icon name="ExclamationCircleIcon" size={20} className="text-red-600" />
+                      ) : (
+                        <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full" />
+                      )}
+                      <div className="flex-1">
+                        <p
+                          className={`font-medium ${
+                            uploadProgress.status === 'error'
+                              ? 'text-red-800'
+                              : uploadProgress.status === 'complete'
+                                ? 'text-green-800'
+                                : 'text-blue-800'
+                          }`}
+                        >
+                          {uploadProgress.status === 'loading' && 'Loading...'}
+                          {uploadProgress.status === 'processing' && 'Uploading...'}
+                          {uploadProgress.status === 'complete' && 'Complete!'}
+                          {uploadProgress.status === 'error' && 'Error'}
+                        </p>
+                        <p
+                          className={`text-sm ${
+                            uploadProgress.status === 'error'
+                              ? 'text-red-600'
+                              : uploadProgress.status === 'complete'
+                                ? 'text-green-600'
+                                : 'text-blue-600'
+                          }`}
+                        >
+                          {uploadProgress.message}
+                        </p>
+                      </div>
+                    </div>
+                    {uploadProgress.total > 0 &&
+                      uploadProgress.status !== 'complete' &&
+                      uploadProgress.status !== 'error' && (
+                        <div className="mt-3">
+                          <div className="flex justify-between text-xs text-blue-600 mb-1">
+                            <span>
+                              {uploadProgress.current} of {uploadProgress.total}
+                            </span>
+                            <span>
+                              {Math.round((uploadProgress.current / uploadProgress.total) * 100)}%
+                            </span>
+                          </div>
+                          <div className="bg-blue-200 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                              style={{
+                                width: `${(uploadProgress.current / uploadProgress.total) * 100}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                )}
+
                 {slides.length === 0 ? (
                   <div className="text-center py-8 bg-muted/50 border-2 border-dashed border-border rounded-lg text-text-secondary">
                     <Icon name="PhotoIcon" size={32} className="mx-auto mb-2 opacity-50" />
-                    <p>No slides yet. Add images or the scoreboard slide.</p>
+                    <p>No slides yet. Add images, PDFs, or use the scoreboard slide.</p>
+                    <p className="text-xs mt-1 opacity-70">
+                      Supports PNG, JPG, WebP, and PDF files
+                    </p>
                   </div>
                 ) : (
                   <div className="p-3 bg-muted/30 border border-border rounded-lg">
@@ -686,7 +934,8 @@ export default function KioskSettingsSection({
                   </div>
                 )}
                 <p className="mt-2 text-xs text-text-secondary">
-                  Drag slides to reorder. Maximum 20 slides.
+                  Drag slides to reorder. Maximum 20 slides. Upload PDFs to automatically convert
+                  each page to a slide.
                 </p>
               </div>
 

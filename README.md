@@ -7,12 +7,45 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
 ## Project Status
 
 - **Current State**: Fully configured and running on Replit
-- **Last Updated**: January 10, 2026
+- **Last Updated**: January 15, 2026
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
 
 ## Recent Changes
+
+### January 15, 2026 - PDF Upload Support for Kiosk Slides
+
+- **PDF to image conversion** for kiosk slide uploads
+  - Upload PDF files (up to 50MB, max 50 pages) which are automatically converted to slide images
+  - Client-side processing using `pdfjs-dist` library - no server-side dependencies required
+  - Each PDF page is rendered at 2x scale for crisp display on TV screens
+  - Uses CDN-hosted pdf.js worker for optimal performance
+- **Unified upload progress UI** for both PDF and image uploads
+  - Real-time progress feedback during file processing
+  - Blue progress bar during upload, green checkmark on success, red indicator on error
+  - Progress displays current page/total pages for PDFs or upload status for images
+- **Bug fix**: Enabled badge now visible immediately when kiosk section is collapsed
+  - Previously required expanding the section to see the enabled status
+- **New utility**: `src/utils/pdfToImages.ts` with `convertPdfToImages()` and `isPdfFile()` functions
+- **Dependency added**: `pdfjs-dist@4.10.38`
+
+### January 15, 2026 - Migration Baseline Update
+
+- **Consolidated all migrations** into single executable baseline (`20260115000000_baseline.sql`)
+- Archived 12 previous migrations to `docs/migrations-archive/`
+- Baseline now includes everything needed to replicate database from scratch:
+  - All extensions, ENUM types, tables, constraints, and indexes
+  - RLS helper functions with fixed search_path (security best practice)
+  - All RLS policies for all tables
+  - Storage bucket and policies for kiosk slides
+  - Realtime publication configuration
+  - Table and column documentation (COMMENT statements)
+- Created **Manual Setup Guide** (`docs/supabase-manual-setup.md`) for items that can't be in migrations:
+  - Auth trigger for syncing users to profiles
+  - Initial system settings row
+  - First admin user promotion
+  - Email template configuration
 
 ### January 2026 - Kiosk/TV Mode
 
@@ -25,7 +58,8 @@ A modern Next.js 14 scoreboard management application with TypeScript, Tailwind 
   - Enable/disable kiosk mode per scoreboard
   - Configure slide duration and scoreboard position in carousel
   - Add/remove/reorder slides with drag-and-drop
-  - Upload custom images (PNG, JPG, WebP, GIF) up to 5MB
+  - Upload custom images (PNG, JPG, WebP) up to 10MB each
+  - Upload PDF files (up to 50MB, max 50 pages) - auto-converted to slide images
   - Optional PIN protection for private scoreboards
 - **Keyboard controls for kiosk view**:
   - `Space` - Play/pause carousel
@@ -473,10 +507,14 @@ The application can also run on Replit:
 │   ├── mobile.spec.ts                # Mobile tests
 │   └── README.md                     # Testing guide
 ├── docs/                             # Documentation
+│   ├── supabase-manual-setup.md      # Post-migration setup guide
+│   ├── supabase-email-templates.md   # Email template customization
+│   ├── realtime-setup.md             # Realtime configuration
+│   ├── dependency-upgrade-policy.md  # Dependency management
 │   ├── mobile-optimization-summary.md
 │   ├── mobile-testing-checklist.md
 │   ├── JWT_MIGRATION_CHECKLIST.md
-│   └── supabase-email-templates.md
+│   └── migrations-archive/           # Archived database migrations
 ├── public/                           # Static assets
 ├── supabase/                         # Database migrations
 ├── middleware.ts                     # Next.js auth middleware
@@ -491,12 +529,29 @@ The application can also run on Replit:
 
 The Supabase database includes:
 
-- `user_profiles` - User profile information with roles
+- `user_profiles` - User profile information with roles (synced from auth.users via trigger)
 - `scoreboards` - Scoreboard metadata with owner references, visibility, score_type, sort_order, time_format
 - `scoreboard_entries` - Individual scoreboard entries (score stored as number/milliseconds)
+- `kiosk_configs` - Kiosk mode settings per scoreboard (duration, position, PIN protection)
+- `kiosk_slides` - Custom slides for kiosk carousel (images, scoreboard positions)
+- `kiosk_file_registry` - Tracks uploaded files for orphan detection and cleanup
 - `system_settings` - App-wide configuration (public registration toggle, email verification)
 - `invitations` - User invitation tracking with status (pending/accepted/expired/cancelled)
 - Row Level Security (RLS) policies for secure data access
+- Real-time subscriptions for scoreboards and entries
+
+### Database Setup
+
+**For new Supabase projects:**
+
+1. Run the baseline migration: `supabase db push`
+2. Complete manual setup steps in [docs/supabase-manual-setup.md](docs/supabase-manual-setup.md)
+
+**Manual setup includes:**
+- Auth trigger for syncing users to profiles
+- Initial system settings row
+- First admin user promotion
+- Email template configuration (optional)
 
 ### Running Migrations
 
