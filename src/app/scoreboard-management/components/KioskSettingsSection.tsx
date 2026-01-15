@@ -46,7 +46,6 @@ export default function KioskSettingsSection({
   const [config, setConfig] = useState<KioskConfig | null>(null);
   const [slides, setSlides] = useState<KioskSlide[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
-  const [_lastFetchTime, setLastFetchTime] = useState<number | null>(null);
 
   // Form state
   const [enabled, setEnabled] = useState(false);
@@ -115,7 +114,6 @@ export default function KioskSettingsSection({
             setSlides(loadedSlides);
             setHasSlideOrderChanges(false);
           }
-          setLastFetchTime(Date.now());
           setFailedImages(new Set()); // Clear failed images on fresh data
 
           // Auto-add scoreboard slide if no slides exist
@@ -149,8 +147,13 @@ export default function KioskSettingsSection({
     }
 
     setIsSaving(true);
+    try {
+      const headers = await getAuthHeaders();
+
       // Save slide order if changed
       if (hasSlideOrderChanges) {
+        const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
+          method: 'PUT',
           headers: {
             ...headers,
             'Content-Type': 'application/json',
