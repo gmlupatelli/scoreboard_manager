@@ -5,7 +5,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 // Configure pdf.js worker (local bundled worker)
 if (typeof window !== 'undefined') {
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
+    'pdfjs-dist/build/pdf.worker.min.js',
     import.meta.url
   ).toString();
 }
