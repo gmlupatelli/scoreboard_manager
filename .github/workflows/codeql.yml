@@ -33,6 +33,8 @@ jobs:
         languages: ${{ matrix.language }}
         # Use default queries plus security-extended
         queries: security-extended
+        # Use custom config to exclude vendored files
+        config-file: ./.github/codeql/codeql-config.yml
 
     - name: Autobuild
       uses: github/codeql-action/autobuild@v4
