@@ -112,13 +112,15 @@ export default function KioskSettingsSection({
 
   // Add initial scoreboard slide (called when no slides exist)
   const addInitialScoreboardSlide = useCallback(
-    async (headers: Record<string, string>) => {
+    async (authHeaders: Record<string, string>) => {
       try {
         const response = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
           method: 'POST',
           headers: {
-            ...headers,
+            ...authHeaders,
             'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store',
+            Pragma: 'no-cache',
           },
           body: JSON.stringify({
             slideType: 'scoreboard',
@@ -159,9 +161,13 @@ export default function KioskSettingsSection({
         setIsLoading(true);
       }
       try {
-        const headers = await getAuthHeaders();
+        const authHeaders = await getAuthHeaders();
         const response = await fetch(`/api/kiosk/${scoreboardId}?ts=${Date.now()}`, {
-          headers,
+          headers: {
+            ...authHeaders,
+            'Cache-Control': 'no-cache, no-store',
+            Pragma: 'no-cache',
+          },
           cache: 'no-store',
           signal: controller.signal,
         });
@@ -219,7 +225,7 @@ export default function KioskSettingsSection({
 
           // Auto-add scoreboard slide if no slides exist
           if (loadedSlides.length === 0) {
-            addInitialScoreboardSlide(headers);
+            addInitialScoreboardSlide(authHeaders);
           }
         }
       } catch (_error) {
@@ -243,9 +249,13 @@ export default function KioskSettingsSection({
     const fetchEnabledStatus = async () => {
       if (!scoreboardId) return;
       try {
-        const headers = await getAuthHeaders();
+        const authHeaders = await getAuthHeaders();
         const response = await fetch(`/api/kiosk/${scoreboardId}?ts=${Date.now()}`, {
-          headers,
+          headers: {
+            ...authHeaders,
+            'Cache-Control': 'no-cache, no-store',
+            Pragma: 'no-cache',
+          },
           cache: 'no-store',
         });
         if (response.ok) {
@@ -295,14 +305,16 @@ export default function KioskSettingsSection({
 
     setIsSaving(true);
     try {
-      const headers = await getAuthHeaders();
+      const authHeaders = await getAuthHeaders();
 
       // Save config settings
       const response = await fetch(`/api/kiosk/${scoreboardId}`, {
         method: 'PUT',
         headers: {
-          ...headers,
+          ...authHeaders,
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
         },
         body: JSON.stringify({
           enabled,
@@ -333,12 +345,14 @@ export default function KioskSettingsSection({
     setEnabled(newEnabled);
 
     try {
-      const headers = await getAuthHeaders();
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(`/api/kiosk/${scoreboardId}`, {
         method: 'PUT',
         headers: {
-          ...headers,
+          ...authHeaders,
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
         },
         body: JSON.stringify({
           enabled: newEnabled,
@@ -365,14 +379,18 @@ export default function KioskSettingsSection({
   };
 
   // Upload a single image file and create a slide
-  const uploadImageFile = async (file: File, headers: Record<string, string>): Promise<boolean> => {
+  const uploadImageFile = async (file: File, authHeaders: Record<string, string>): Promise<boolean> => {
     try {
       const formData = new FormData();
       formData.append('file', file);
 
       const uploadResponse = await fetch(`/api/kiosk/${scoreboardId}/upload`, {
         method: 'POST',
-        headers,
+        headers: {
+          ...authHeaders,
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
+        },
         body: formData,
       });
 
@@ -387,8 +405,10 @@ export default function KioskSettingsSection({
       const slideResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
         method: 'POST',
         headers: {
-          ...headers,
+          ...authHeaders,
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
         },
         body: JSON.stringify({
           slideType: 'image',
@@ -593,12 +613,14 @@ export default function KioskSettingsSection({
     }
 
     try {
-      const headers = await getAuthHeaders();
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
         method: 'POST',
         headers: {
-          ...headers,
+          ...authHeaders,
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
         },
         body: JSON.stringify({
           slideType: 'scoreboard',
@@ -622,10 +644,14 @@ export default function KioskSettingsSection({
   const handleDeleteSlide = async (slideId: string) => {
     try {
       registerPendingSync({ deletedId: slideId });
-      const headers = await getAuthHeaders();
+      const authHeaders = await getAuthHeaders();
       const response = await fetch(`/api/kiosk/${scoreboardId}/slides/${slideId}`, {
         method: 'DELETE',
-        headers,
+        headers: {
+          ...authHeaders,
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
+        },
       });
 
       if (!response.ok) {
@@ -690,12 +716,14 @@ export default function KioskSettingsSection({
 
     // Save reordering to server immediately (consistent with add/delete)
     try {
-      const headers = await getAuthHeaders();
+      const authHeaders = await getAuthHeaders();
       const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
         method: 'PUT',
         headers: {
-          ...headers,
+          ...authHeaders,
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store',
+          Pragma: 'no-cache',
         },
         body: JSON.stringify({
           slides: reorderedSlides.map((s) => ({ id: s.id, position: s.position })),

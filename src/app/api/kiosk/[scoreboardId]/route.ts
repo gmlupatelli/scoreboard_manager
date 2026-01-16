@@ -150,6 +150,8 @@ export async function GET(
       {
         headers: {
           'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          Pragma: 'no-cache',
+          Expires: '0',
         },
       }
     );
@@ -247,7 +249,16 @@ export async function PUT(
       return NextResponse.json({ error: result.error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ config: result.data });
+    return NextResponse.json(
+      { config: result.data },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
