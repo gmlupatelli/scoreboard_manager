@@ -246,6 +246,7 @@ export default function KioskSettingsSection({
 
             // Sort by position after applying pending positions
             mergedSlides.sort((a, b) => a.position - b.position);
+            console.log('[KioskSettings] FINAL order after sort:', mergedSlides.map((s) => ({ id: s.id.slice(0, 8), pos: s.position })));
 
             if (pendingSync.addedIds.size === 0 && pendingSync.deletedIds.size === 0 && pendingSync.pendingPositions.size === 0) {
               pendingSyncRef.current = null;
@@ -255,6 +256,7 @@ export default function KioskSettingsSection({
             pendingSyncRef.current = null;
           }
 
+          console.log('[KioskSettings] Setting slides state:', mergedSlides.map((s) => ({ id: s.id.slice(0, 8), pos: s.position })));
           setSlides(mergedSlides);
           setLastFetchTime(Date.now());
           setFailedImages(new Set()); // Clear failed images on fresh data
