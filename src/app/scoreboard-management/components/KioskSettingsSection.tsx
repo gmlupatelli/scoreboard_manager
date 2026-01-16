@@ -116,6 +116,7 @@ export default function KioskSettingsSection({
       for (const pos of update.positions) {
         pendingSyncRef.current.pendingPositions.set(pos.id, pos.position);
       }
+      console.log('[KioskSettings] Registered pending positions:', update.positions.length, 'slides, expires in', Math.round((pendingSyncRef.current.expiresAt - Date.now()) / 1000), 'seconds');
     }
   };
 
@@ -194,7 +195,8 @@ export default function KioskSettingsSection({
 
           const pendingSync = pendingSyncRef.current;
           let mergedSlides = loadedSlides as KioskSlide[];
-          if (pendingSync && pendingSync.expiresAt > Date.now()) {
+          console.log('[KioskSettings] loadKioskData called, pendingSyncRef.current =', pendingSyncRef.current ? 'exists' : 'null');
+        if (pendingSync && pendingSync.expiresAt > Date.now()) {
             const serverIds = new Set(loadedSlides.map((slide: KioskSlide) => slide.id));
 
             pendingSync.addedIds.forEach((id) => {
@@ -210,6 +212,7 @@ export default function KioskSettingsSection({
               }
             });
 
+            console.log('[KioskSettings] loadKioskData: pendingPositions.size =', pendingSync.pendingPositions.size, 'expiresIn =', Math.round((pendingSync.expiresAt - Date.now()) / 1000), 'seconds');
             // Apply pending positions (from reorder) before other merges
             if (pendingSync.pendingPositions.size > 0) {
               console.log('[KioskSettings] Applying pending positions:', Object.fromEntries(pendingSync.pendingPositions));
@@ -248,6 +251,7 @@ export default function KioskSettingsSection({
               pendingSyncRef.current = null;
             }
           } else if (pendingSync && pendingSync.expiresAt <= Date.now()) {
+            console.log('[KioskSettings] Pending sync EXPIRED, clearing');
             pendingSyncRef.current = null;
           }
 
