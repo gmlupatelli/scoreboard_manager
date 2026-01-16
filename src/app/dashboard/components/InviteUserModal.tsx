@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import Icon from '@/components/ui/AppIcon';
 
@@ -67,11 +67,27 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setEmail('');
     setError('');
     onClose();
-  };
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, handleClose]);
 
   return (
     <>
