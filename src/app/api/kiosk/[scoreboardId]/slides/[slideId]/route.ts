@@ -66,16 +66,7 @@ export async function PUT(
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    return NextResponse.json(
-      { slide },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-          Pragma: 'no-cache',
-          Expires: '0',
-        },
-      }
-    );
+    return NextResponse.json({ slide });
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -176,16 +167,7 @@ export async function DELETE(
       await writeClient.storage.from('kiosk-slides').remove(filesToDelete);
     }
 
-    return NextResponse.json(
-      { success: true, deletedCount },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-          Pragma: 'no-cache',
-          Expires: '0',
-        },
-      }
-    );
+    return NextResponse.json({ success: true, deletedCount });
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

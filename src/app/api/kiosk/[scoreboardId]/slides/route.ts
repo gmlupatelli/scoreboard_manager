@@ -198,17 +198,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json(
-      { slide: slideWithSignedUrl },
-      {
-        status: 201,
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-          Pragma: 'no-cache',
-          Expires: '0',
-        },
-      }
-    );
+    return NextResponse.json({ slide: slideWithSignedUrl }, { status: 201 });
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -308,16 +298,7 @@ export async function PUT(
         .eq('kiosk_config_id', kioskConfig.id);
     }
 
-    return NextResponse.json(
-      { success: true },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-          Pragma: 'no-cache',
-          Expires: '0',
-        },
-      }
-    );
+    return NextResponse.json({ success: true });
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
