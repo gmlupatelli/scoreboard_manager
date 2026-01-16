@@ -90,8 +90,8 @@ export default function KioskSettingsSection({
 
   const registerPendingSync = (update: { addedSlide?: KioskSlide; deletedId?: string; positions?: Array<{ id: string; position: number }> }) => {
     const now = Date.now();
-    // 30 second expiry to handle Supabase read replica lag
-    const PENDING_SYNC_EXPIRY_MS = 30000;
+    // 5 minute expiry to handle Supabase read replica lag (can be very slow)
+    const PENDING_SYNC_EXPIRY_MS = 5 * 60 * 1000;
     if (!pendingSyncRef.current || pendingSyncRef.current.expiresAt < now) {
       pendingSyncRef.current = {
         addedIds: new Set<string>(),
@@ -212,6 +212,8 @@ export default function KioskSettingsSection({
 
             // Apply pending positions (from reorder) before other merges
             if (pendingSync.pendingPositions.size > 0) {
+              console.log('[KioskSettings] Applying pending positions:', Object.fromEntries(pendingSync.pendingPositions));
+              console.log('[KioskSettings] Server positions:', loadedSlides.map((s: KioskSlide) => ({ id: s.id.slice(0, 8), pos: s.position })));
               mergedSlides = mergedSlides.map((slide) => {
                 const pendingPos = pendingSync.pendingPositions.get(slide.id);
                 if (pendingPos !== undefined) {
@@ -219,6 +221,7 @@ export default function KioskSettingsSection({
                 }
                 return slide;
               });
+              console.log('[KioskSettings] Merged positions:', mergedSlides.map((s) => ({ id: s.id.slice(0, 8), pos: s.position })));
               // Clear positions that now match server
               pendingSync.pendingPositions.forEach((pos, id) => {
                 const serverSlide = loadedSlides.find((s: KioskSlide) => s.id === id);
