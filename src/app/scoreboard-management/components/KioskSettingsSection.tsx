@@ -357,8 +357,7 @@ export default function KioskSettingsSection({
       if (response.ok) {
         setHasChanges(false);
         onShowToast('Kiosk settings saved', 'success');
-        // Refresh data from server to get accurate state (forceRefresh=true to always update slides)
-        await loadKioskData(true);
+        // Don't refresh - Supabase read replicas can return stale slide data
       } else {
         const error = await response.json();
         throw new Error(error.error);
@@ -457,9 +456,7 @@ export default function KioskSettingsSection({
       const slideData = await slideResponse.json();
       setSlides((prev) => [...prev, slideData.slide]);
       registerPendingSync({ addedSlide: slideData.slide });
-      setTimeout(() => {
-        loadKioskData(true, { showLoader: false });
-      }, 800);
+      // Don't auto-refresh - Supabase read replicas can return stale data
       return true;
     } catch (error) {
       console.error('Upload error:', error);
