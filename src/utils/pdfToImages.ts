@@ -2,10 +2,9 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure pdf.js worker
-// Use the bundled worker from pdfjs-dist
+// Configure pdf.js worker (local static asset)
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 }
 
 export interface PdfProcessingProgress {

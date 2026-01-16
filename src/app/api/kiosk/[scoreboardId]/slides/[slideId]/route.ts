@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -115,19 +115,41 @@ export async function DELETE(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    const serviceClient = getServiceRoleClient();
+    const writeClient = serviceClient || supabase;
+
+    // Resolve kiosk config for this scoreboard
+    const { data: kioskConfig } = await writeClient
+      .from('kiosk_configs')
+      .select('id')
+      .eq('scoreboard_id', scoreboardId)
+      .single();
+
+    if (!kioskConfig) {
+      return NextResponse.json({ error: 'Kiosk config not found' }, { status: 404 });
+    }
+
     // Get the slide to find the image and thumbnail paths
-    const { data: slide } = await supabase
+    const { data: slide } = await writeClient
       .from('kiosk_slides')
       .select('image_url, thumbnail_url')
       .eq('id', slideId)
-      .single();
+      .eq('kiosk_config_id', kioskConfig.id)
+      .maybeSingle();
 
     // Delete the slide
-    const { error: deleteError } = await supabase.from('kiosk_slides').delete().eq('id', slideId);
+    const { data: deletedSlides, error: deleteError } = await writeClient
+      .from('kiosk_slides')
+      .delete()
+      .eq('id', slideId)
+      .eq('kiosk_config_id', kioskConfig.id)
+      .select('id');
 
     if (deleteError) {
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
+
+    const deletedCount = deletedSlides?.length ?? 0;
 
     // Delete files from storage
     // Both image_url and thumbnail_url store raw storage paths
@@ -142,10 +164,10 @@ export async function DELETE(
     }
 
     if (filesToDelete.length > 0) {
-      await supabase.storage.from('kiosk-slides').remove(filesToDelete);
+      await writeClient.storage.from('kiosk-slides').remove(filesToDelete);
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, deletedCount });
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

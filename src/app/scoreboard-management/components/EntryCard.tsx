@@ -180,6 +180,7 @@ const EntryCard = ({
           </div>
           <div className="flex items-center space-x-2 pt-2">
             <button
+              type="button"
               onClick={handleSave}
               disabled={!!nameError || !!scoreError}
               className="flex-1 px-4 py-2 rounded-md bg-success text-success-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
@@ -188,6 +189,7 @@ const EntryCard = ({
               Save
             </button>
             <button
+              type="button"
               onClick={handleCancel}
               className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
               title="Cancel editing"
@@ -211,6 +213,7 @@ const EntryCard = ({
           <span className="text-sm font-medium text-text-secondary">Rank #{entry.rank}</span>
           <div className="flex items-center space-x-2">
             <button
+              type="button"
               onClick={handleStartEdit}
               className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
               aria-label="Edit entry"
@@ -219,6 +222,7 @@ const EntryCard = ({
               <Icon name="PencilIcon" size={18} />
             </button>
             <button
+              type="button"
               onClick={() => onDelete(entry.id)}
               className="p-2 rounded-md text-destructive hover:bg-red-500/10 transition-smooth duration-150"
               aria-label="Delete entry"

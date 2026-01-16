@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import FocusTrap from 'focus-trap-react';
 import Icon from '@/components/ui/AppIcon';
@@ -45,10 +45,6 @@ export default function CreateScoreboardModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -85,7 +81,7 @@ export default function CreateScoreboardModal({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setTitle('');
     setDescription('');
     setVisibility('public');
@@ -94,7 +90,27 @@ export default function CreateScoreboardModal({
     setTimeFormat('mm:ss');
     setError('');
     onClose();
-  };
+  }, [onClose]);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, handleClose]);
 
   if (!isHydrated) {
     return null;

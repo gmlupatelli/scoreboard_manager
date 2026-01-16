@@ -128,6 +128,13 @@ const ScoreboardManagementInteractive = () => {
     [scoreboard?.sortOrder]
   );
 
+  const updateEntriesState = useCallback(
+    (updater: (prevEntries: ScoreboardEntry[]) => ScoreboardEntry[]) => {
+      setEntries((prevEntries) => recalculateRanks(updater(prevEntries)));
+    },
+    [recalculateRanks]
+  );
+
   const loadScoreboardData = useCallback(async () => {
     if (!scoreboardId) return;
 
@@ -299,9 +306,9 @@ const ScoreboardManagementInteractive = () => {
         details: null,
       });
 
-      if (result.error) throw result.error;
+      if (result.error || !result.data) throw result.error;
 
-      await loadScoreboardData();
+      updateEntriesState((prevEntries) => [...prevEntries, result.data]);
       showToast('Entry added successfully', 'success');
     } catch (_err) {
       showToast('Failed to add entry', 'error');
@@ -312,10 +319,12 @@ const ScoreboardManagementInteractive = () => {
     if (!scoreboard) return;
 
     try {
-      const { error } = await scoreboardService.updateEntry(id, { name, score });
-      if (error) throw error;
+      const { data, error } = await scoreboardService.updateEntry(id, { name, score });
+      if (error || !data) throw error;
 
-      await loadScoreboardData();
+      updateEntriesState((prevEntries) =>
+        prevEntries.map((entry) => (entry.id === id ? { ...entry, ...data } : entry))
+      );
       showToast('Entry updated successfully', 'success');
     } catch (_err) {
       showToast('Failed to update entry', 'error');
@@ -372,6 +381,7 @@ const ScoreboardManagementInteractive = () => {
   const handleImportCSV = async (importedEntries: { name: string; score: number }[]) => {
     if (!scoreboard) return;
 
+    const createdEntries: ScoreboardEntry[] = [];
     try {
       // FIXED: Use createEntry instead of addEntry for each entry
       for (const entry of importedEntries) {
@@ -381,12 +391,16 @@ const ScoreboardManagementInteractive = () => {
           score: entry.score,
           details: null,
         });
-        if (result.error) throw result.error;
+        if (result.error || !result.data) throw result.error;
+        createdEntries.push(result.data);
       }
 
-      await loadScoreboardData();
+      updateEntriesState((prevEntries) => [...prevEntries, ...createdEntries]);
       showToast(`${importedEntries.length} entries imported successfully`, 'success');
     } catch (_err) {
+      if (createdEntries.length > 0) {
+        updateEntriesState((prevEntries) => [...prevEntries, ...createdEntries]);
+      }
       showToast('Failed to import some entries', 'error');
     }
   };
@@ -405,7 +419,7 @@ const ScoreboardManagementInteractive = () => {
             if (error) throw error;
           }
 
-          await loadScoreboardData();
+          setEntries([]);
           showToast('All entries cleared successfully', 'success');
         } catch (_err) {
           showToast('Failed to clear all entries', 'error');

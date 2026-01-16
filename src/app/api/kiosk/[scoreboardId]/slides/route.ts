@@ -50,16 +50,19 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    const serviceClient = getServiceRoleClient();
+    const writeClient = serviceClient || supabase;
+
     // Get or create kiosk config
     let configId: string;
-    const { data: existingConfig } = await supabase
+    const { data: existingConfig } = await writeClient
       .from('kiosk_configs')
       .select('id')
       .eq('scoreboard_id', scoreboardId)
       .single();
 
     if (!existingConfig) {
-      const { data: newConfig, error: createError } = await supabase
+      const { data: newConfig, error: createError } = await writeClient
         .from('kiosk_configs')
         .insert({
           scoreboard_id: scoreboardId,
@@ -90,7 +93,7 @@ export async function POST(
     }
 
     // Get next position
-    const { data: existingSlides } = await supabase
+    const { data: existingSlides } = await writeClient
       .from('kiosk_slides')
       .select('position')
       .eq('kiosk_config_id', configId)
@@ -101,7 +104,7 @@ export async function POST(
       existingSlides && existingSlides.length > 0 ? existingSlides[0].position + 1 : 0;
 
     // Check slide limit (max 20)
-    const { count } = await supabase
+    const { count } = await writeClient
       .from('kiosk_slides')
       .select('*', { count: 'exact', head: true })
       .eq('kiosk_config_id', configId);
@@ -112,7 +115,7 @@ export async function POST(
 
     // Prevent duplicate scoreboard slides
     if (slideType === 'scoreboard') {
-      const { data: existingScoreboardSlide } = await supabase
+      const { data: existingScoreboardSlide } = await writeClient
         .from('kiosk_slides')
         .select('id')
         .eq('kiosk_config_id', configId)
@@ -129,7 +132,7 @@ export async function POST(
     }
 
     // Insert slide
-    const { data: slide, error: slideError } = await supabase
+    const { data: slide, error: slideError } = await writeClient
       .from('kiosk_slides')
       .insert({
         kiosk_config_id: configId,
@@ -152,7 +155,7 @@ export async function POST(
     if (slide.slide_type === 'image') {
       const pathsToLink = [slide.image_url, slide.thumbnail_url].filter(Boolean);
       if (pathsToLink.length > 0) {
-        await supabase
+        await writeClient
           .from('kiosk_file_registry')
           .update({ slide_id: slide.id })
           .in('storage_path', pathsToLink);

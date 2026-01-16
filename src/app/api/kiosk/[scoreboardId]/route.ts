@@ -59,10 +59,17 @@ export async function GET(
 
     // If no config exists, return default values
     if (configError && configError.code === 'PGRST116') {
-      return NextResponse.json({
-        config: null,
-        slides: [],
-      });
+      return NextResponse.json(
+        {
+          config: null,
+          slides: [],
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+        }
+      );
     }
 
     if (configError) {
@@ -135,10 +142,17 @@ export async function GET(
       })
     );
 
-    return NextResponse.json({
-      config,
-      slides: slidesWithSignedUrls,
-    });
+    return NextResponse.json(
+      {
+        config,
+        slides: slidesWithSignedUrls,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        },
+      }
+    );
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
