@@ -176,6 +176,7 @@ const EntryRow = ({
         <td className="px-4 py-3">
           <div className="flex items-center space-x-2">
             <button
+              type="button"
               onClick={handleSave}
               disabled={!!nameError || !!scoreError}
               className="p-2 rounded-md bg-success text-success-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -185,6 +186,7 @@ const EntryRow = ({
               <Icon name="CheckIcon" size={20} />
             </button>
             <button
+              type="button"
               onClick={handleCancel}
               className="p-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150"
               aria-label="Cancel editing"
@@ -206,6 +208,7 @@ const EntryRow = ({
       <td className="px-4 py-3">
         <div className="flex items-center space-x-2">
           <button
+            type="button"
             onClick={handleStartEdit}
             className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
             aria-label="Edit entry"
@@ -214,6 +217,7 @@ const EntryRow = ({
             <Icon name="PencilIcon" size={20} />
           </button>
           <button
+            type="button"
             onClick={() => onDelete(entry.id)}
             className="p-2 rounded-md text-destructive hover:bg-red-500/10 transition-smooth duration-150"
             aria-label="Delete entry"

@@ -20,9 +20,6 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
     setIsHydrated(true);
   }, []);
 
-  if (!isHydrated) return null;
-  if (!isOpen) return null;
-
   const getAuthHeaders = async (): Promise<Record<string, string>> => {
     const {
       data: { session },
@@ -74,7 +71,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
   }, [onClose]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !isHydrated) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -87,7 +84,9 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: InviteUs
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, handleClose]);
+  }, [isOpen, isHydrated, handleClose]);
+
+  if (!isHydrated || !isOpen) return null;
 
   return (
     <>

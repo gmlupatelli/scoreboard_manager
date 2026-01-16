@@ -29,7 +29,7 @@ const run = async () => {
 
   await mkdir(targetDir, { recursive: true });
   await copyFile(sourcePath, targetPath);
-  console.log('Copied pdf.worker.min.mjs to public/');
+  console.info('Copied pdf.worker.min.mjs to public/');
 };
 
 await run();
