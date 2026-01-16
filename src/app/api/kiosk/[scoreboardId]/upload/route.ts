@@ -155,14 +155,23 @@ export async function POST(
     ]);
 
     // Return both paths
-    return NextResponse.json({
-      path: filePath,
-      url: filePath, // Store the path for the original
-      thumbnailPath: thumbnailPath,
-      thumbnailUrl: thumbnailPath, // Store the thumbnail path
-      fileName: file.name,
-      fileSize: file.size,
-    });
+    return NextResponse.json(
+      {
+        path: filePath,
+        url: filePath, // Store the path for the original
+        thumbnailPath: thumbnailPath,
+        thumbnailUrl: thumbnailPath, // Store the thumbnail path
+        fileName: file.name,
+        fileSize: file.size,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

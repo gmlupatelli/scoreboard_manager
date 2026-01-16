@@ -1,0 +1,9 @@
+name: "CodeQL Config"
+
+# Exclude third-party and vendored files from analysis
+paths-ignore:
+  # pdf.js worker file - vendored from pdfjs-dist package
+  - 'public/pdf.worker.min.mjs'
+  # Node modules (usually auto-excluded but explicit for safety)
+  - 'node_modules/**'
+  - '**/node_modules/**'

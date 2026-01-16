@@ -3,6 +3,15 @@ import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/s
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
+// Cache-control headers for all responses
+const noCacheHeaders = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  Pragma: 'no-cache',
+  Expires: '0',
+};
 
 // Signed URL expiry for management preview (1 hour)
 const SIGNED_URL_EXPIRY_SECONDS = 3600;
@@ -50,8 +59,12 @@ export async function GET(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Get kiosk config
-    const { data: config, error: configError } = await supabase
+    // Get service role client for consistent reads (bypasses RLS)
+    const serviceClient = getServiceRoleClient();
+    const readClient = serviceClient || supabase;
+
+    // Get kiosk config - use service role client for consistent reads after writes
+    const { data: config, error: configError } = await readClient
       .from('kiosk_configs')
       .select('*')
       .eq('scoreboard_id', scoreboardId)
@@ -64,11 +77,7 @@ export async function GET(
           config: null,
           slides: [],
         },
-        {
-          headers: {
-            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-          },
-        }
+        { headers: noCacheHeaders }
       );
     }
 
@@ -76,10 +85,7 @@ export async function GET(
       return NextResponse.json({ error: configError.message }, { status: 500 });
     }
 
-    // Get slides - use service role client if available for consistent reads after writes
-    const serviceClient = getServiceRoleClient();
-    const readClient = serviceClient || supabase;
-
+    // Get slides using the same service role client for consistent reads
     const { data: slides, error: slidesError } = await readClient
       .from('kiosk_slides')
       .select('*')
@@ -91,8 +97,6 @@ export async function GET(
     }
 
     // Generate signed URLs for image slides (thumbnails for management UI)
-    // serviceClient already declared above for reading slides
-
     const slidesWithSignedUrls = await Promise.all(
       (slides || []).map(async (slide) => {
         if (slide.slide_type === 'image') {
@@ -147,11 +151,7 @@ export async function GET(
         config,
         slides: slidesWithSignedUrls,
       },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-        },
-      }
+      { headers: noCacheHeaders }
     );
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
