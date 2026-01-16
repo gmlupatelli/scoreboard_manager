@@ -80,19 +80,11 @@ export async function GET(
     const serviceClient = getServiceRoleClient();
     const readClient = serviceClient || supabase;
 
-    console.log('[kiosk-api] GET slides - using service client:', !!serviceClient);
-
     const { data: slides, error: slidesError } = await readClient
       .from('kiosk_slides')
       .select('*')
       .eq('kiosk_config_id', config.id)
       .order('position', { ascending: true });
-
-    console.log('[kiosk-api] GET slides result:', {
-      count: slides?.length,
-      ids: slides?.map((s) => s.id),
-      error: slidesError?.message,
-    });
 
     if (slidesError) {
       return NextResponse.json({ error: slidesError.message }, { status: 500 });
