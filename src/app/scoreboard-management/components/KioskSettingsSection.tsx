@@ -89,12 +89,14 @@ export default function KioskSettingsSection({
 
   const registerPendingSync = (update: { addedSlide?: KioskSlide; deletedId?: string }) => {
     const now = Date.now();
+    // 30 second expiry to handle Supabase read replica lag
+    const PENDING_SYNC_EXPIRY_MS = 30000;
     if (!pendingSyncRef.current || pendingSyncRef.current.expiresAt < now) {
       pendingSyncRef.current = {
         addedIds: new Set<string>(),
         addedSlides: new Map<string, KioskSlide>(),
         deletedIds: new Set<string>(),
-        expiresAt: now + 8000,
+        expiresAt: now + PENDING_SYNC_EXPIRY_MS,
       };
     }
 
@@ -667,9 +669,8 @@ export default function KioskSettingsSection({
       }
 
       setSlides((prev) => prev.filter((s) => s.id !== slideId));
-      setTimeout(() => {
-        loadKioskData(true, { showLoader: false });
-      }, 800);
+      // Don't auto-refresh - Supabase read replicas can have lag
+      // User can click Sync if needed
       onShowToast('Slide deleted', 'success');
     } catch (error) {
       onShowToast(error instanceof Error ? error.message : 'Failed to delete slide', 'error');
