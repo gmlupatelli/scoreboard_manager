@@ -75,6 +75,41 @@ export default function KioskSettingsSection({
   // Ref to track if initial fetch has completed
   const hasFetchedRef = useRef(false);
 
+  // Track latest kiosk fetch to avoid stale updates
+  const requestIdRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Pending sync guard to avoid stale GETs overwriting optimistic updates
+  const pendingSyncRef = useRef<{
+    addedIds: Set<string>;
+    addedSlides: Map<string, KioskSlide>;
+    deletedIds: Set<string>;
+    expiresAt: number;
+  } | null>(null);
+
+  const registerPendingSync = (update: { addedSlide?: KioskSlide; deletedId?: string }) => {
+    const now = Date.now();
+    if (!pendingSyncRef.current || pendingSyncRef.current.expiresAt < now) {
+      pendingSyncRef.current = {
+        addedIds: new Set<string>(),
+        addedSlides: new Map<string, KioskSlide>(),
+        deletedIds: new Set<string>(),
+        expiresAt: now + 8000,
+      };
+    }
+
+    if (update.addedSlide) {
+      pendingSyncRef.current.deletedIds.delete(update.addedSlide.id);
+      pendingSyncRef.current.addedIds.add(update.addedSlide.id);
+      pendingSyncRef.current.addedSlides.set(update.addedSlide.id, update.addedSlide);
+    }
+    if (update.deletedId) {
+      pendingSyncRef.current.addedIds.delete(update.deletedId);
+      pendingSyncRef.current.addedSlides.delete(update.deletedId);
+      pendingSyncRef.current.deletedIds.add(update.deletedId);
+    }
+  };
+
   // Add initial scoreboard slide (called when no slides exist)
   const addInitialScoreboardSlide = useCallback(
     async (headers: Record<string, string>) => {
@@ -103,20 +138,36 @@ export default function KioskSettingsSection({
 
   // Load kiosk data
   const loadKioskData = useCallback(
-    async (forceRefresh = false) => {
+    async (forceRefresh = false, options: { showLoader?: boolean } = {}) => {
       if (!scoreboardId) return;
 
       // Prevent concurrent loading
       if (isLoadingRef.current && !forceRefresh) return;
       isLoadingRef.current = true;
 
-      setIsLoading(true);
+      requestIdRef.current += 1;
+      const requestId = requestIdRef.current;
+
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      if (options.showLoader !== false) {
+        setIsLoading(true);
+      }
       try {
         const headers = await getAuthHeaders();
-        const response = await fetch(`/api/kiosk/${scoreboardId}`, { headers });
+        const response = await fetch(`/api/kiosk/${scoreboardId}?ts=${Date.now()}`, {
+          headers,
+          cache: 'no-store',
+          signal: controller.signal,
+        });
         const data = await response.json();
 
-        if (response.ok) {
+        if (response.ok && requestIdRef.current === requestId) {
           if (data.config) {
             setConfig(data.config);
             setEnabled(data.config.enabled);
@@ -125,7 +176,43 @@ export default function KioskSettingsSection({
             setPinCode(data.config.pin_code || '');
           }
           const loadedSlides = data.slides || [];
-          setSlides(loadedSlides);
+
+          const pendingSync = pendingSyncRef.current;
+          let mergedSlides = loadedSlides as KioskSlide[];
+          if (pendingSync && pendingSync.expiresAt > Date.now()) {
+            const serverIds = new Set(loadedSlides.map((slide: KioskSlide) => slide.id));
+
+            pendingSync.addedIds.forEach((id) => {
+              if (serverIds.has(id)) {
+                pendingSync.addedIds.delete(id);
+                pendingSync.addedSlides.delete(id);
+              }
+            });
+
+            pendingSync.deletedIds.forEach((id) => {
+              if (!serverIds.has(id)) {
+                pendingSync.deletedIds.delete(id);
+              }
+            });
+
+            mergedSlides = mergedSlides.filter((slide) => !pendingSync.deletedIds.has(slide.id));
+            pendingSync.addedIds.forEach((id) => {
+              if (!serverIds.has(id)) {
+                const pendingSlide = pendingSync.addedSlides.get(id);
+                if (pendingSlide) {
+                  mergedSlides = [...mergedSlides, pendingSlide];
+                }
+              }
+            });
+
+            if (pendingSync.addedIds.size === 0 && pendingSync.deletedIds.size === 0) {
+              pendingSyncRef.current = null;
+            }
+          } else if (pendingSync && pendingSync.expiresAt <= Date.now()) {
+            pendingSyncRef.current = null;
+          }
+
+          setSlides(mergedSlides);
           setLastFetchTime(Date.now());
           setFailedImages(new Set()); // Clear failed images on fresh data
           hasFetchedRef.current = true;
@@ -136,10 +223,16 @@ export default function KioskSettingsSection({
           }
         }
       } catch (_error) {
-        onShowToast('Failed to load kiosk settings', 'error');
+        if (!controller.signal.aborted) {
+          onShowToast('Failed to load kiosk settings', 'error');
+        }
       } finally {
-        setIsLoading(false);
-        isLoadingRef.current = false;
+        if (options.showLoader !== false && requestIdRef.current === requestId) {
+          setIsLoading(false);
+        }
+        if (requestIdRef.current === requestId) {
+          isLoadingRef.current = false;
+        }
       }
     },
     [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]
@@ -151,7 +244,10 @@ export default function KioskSettingsSection({
       if (!scoreboardId) return;
       try {
         const headers = await getAuthHeaders();
-        const response = await fetch(`/api/kiosk/${scoreboardId}`, { headers });
+        const response = await fetch(`/api/kiosk/${scoreboardId}?ts=${Date.now()}`, {
+          headers,
+          cache: 'no-store',
+        });
         if (response.ok) {
           const data = await response.json();
           if (data.config) {
@@ -166,12 +262,19 @@ export default function KioskSettingsSection({
   }, [scoreboardId, getAuthHeaders]);
 
   useEffect(() => {
-    if (isExpanded && !hasFetchedRef.current && !isLoadingRef.current) {
-      // Fetch when expanded and not yet fetched
+    if (!isExpanded || isLoadingRef.current) {
+      return;
+    }
+
+    const shouldRefresh =
+      !hasFetchedRef.current ||
+      _lastFetchTime === null ||
+      Date.now() - _lastFetchTime > _STALE_THRESHOLD_MS;
+
+    if (shouldRefresh) {
       loadKioskData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isExpanded, scoreboardId]);
+  }, [isExpanded, scoreboardId, _lastFetchTime, loadKioskData]);
 
   // Reset refs when scoreboardId changes (switching between scoreboards)
   useEffect(() => {
@@ -303,6 +406,10 @@ export default function KioskSettingsSection({
 
       const slideData = await slideResponse.json();
       setSlides((prev) => [...prev, slideData.slide]);
+      registerPendingSync({ addedSlide: slideData.slide });
+      setTimeout(() => {
+        loadKioskData(true, { showLoader: false });
+      }, 800);
       return true;
     } catch (error) {
       console.error('Upload error:', error);
@@ -514,6 +621,7 @@ export default function KioskSettingsSection({
   // Delete slide
   const handleDeleteSlide = async (slideId: string) => {
     try {
+      registerPendingSync({ deletedId: slideId });
       const headers = await getAuthHeaders();
       const response = await fetch(`/api/kiosk/${scoreboardId}/slides/${slideId}`, {
         method: 'DELETE',
@@ -525,7 +633,17 @@ export default function KioskSettingsSection({
         throw new Error(error.error);
       }
 
+      const result = await response.json();
+      if (result.deletedCount === 0) {
+        onShowToast('Slide could not be deleted on server. Please refresh.', 'error');
+        await loadKioskData(true, { showLoader: false });
+        return;
+      }
+
       setSlides((prev) => prev.filter((s) => s.id !== slideId));
+      setTimeout(() => {
+        loadKioskData(true, { showLoader: false });
+      }, 800);
       onShowToast('Slide deleted', 'success');
     } catch (error) {
       onShowToast(error instanceof Error ? error.message : 'Failed to delete slide', 'error');
@@ -766,6 +884,15 @@ export default function KioskSettingsSection({
                     Slides ({slides.length}/20)
                   </label>
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => loadKioskData(true, { showLoader: false })}
+                      disabled={isLoading}
+                      className="px-3 py-1.5 text-orange-900 rounded-md font-medium text-sm flex items-center gap-2 hover:bg-orange-900/10 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      title="Sync slides with server"
+                    >
+                      <Icon name="ArrowPathIcon" size={16} />
+                      Sync
+                    </button>
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading || slides.length >= 20}
