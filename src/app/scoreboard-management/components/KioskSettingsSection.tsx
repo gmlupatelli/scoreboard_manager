@@ -498,10 +498,11 @@ export default function KioskSettingsSection({
   };
 
   // Upload a single image file and create a slide
+  // Returns the created slide with signed URLs, or null on failure
   const uploadImageFile = async (
     file: File,
     authHeaders: Record<string, string>
-  ): Promise<boolean> => {
+  ): Promise<KioskSlide | null> => {
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -540,11 +541,12 @@ export default function KioskSettingsSection({
         throw new Error(error.error);
       }
 
-      // Realtime subscription will update the UI
-      return true;
+      const slideData = await slideResponse.json();
+      // Return the slide with signed URLs from the API response
+      return slideData.slide as KioskSlide;
     } catch (error) {
       console.error('Upload error:', error);
-      return false;
+      return null;
     }
   };
 
@@ -596,13 +598,15 @@ export default function KioskSettingsSection({
       });
 
       let successCount = 0;
+      const uploadedSlides: KioskSlide[] = [];
       for (let i = 0; i < pagesToUpload; i++) {
         const image = images[i];
         const imageFile = new File([image.blob], image.fileName, { type: 'image/png' });
 
-        const success = await uploadImageFile(imageFile, headers);
-        if (success) {
+        const slide = await uploadImageFile(imageFile, headers);
+        if (slide) {
           successCount++;
+          uploadedSlides.push(slide);
         }
 
         setUploadProgress({
@@ -611,6 +615,19 @@ export default function KioskSettingsSection({
           status: 'processing',
           message: `Uploaded ${i + 1} of ${pagesToUpload} slides`,
         });
+      }
+
+      // Add all uploaded slides to state (with signed URLs)
+      if (uploadedSlides.length > 0) {
+        setSlides((prev) => {
+          // Filter out any that might have been added by realtime
+          const newSlideIds = new Set(uploadedSlides.map((s) => s.id));
+          const filtered = prev.filter((s) => !newSlideIds.has(s.id));
+          const updated = [...filtered, ...uploadedSlides];
+          updated.sort((a, b) => a.position - b.position);
+          return updated;
+        });
+        setLastFetchTime(Date.now());
       }
 
       setUploadProgress({
@@ -677,9 +694,19 @@ export default function KioskSettingsSection({
 
     try {
       const headers = await getAuthHeaders();
-      const success = await uploadImageFile(file, headers);
+      const slide = await uploadImageFile(file, headers);
 
-      if (success) {
+      if (slide) {
+        // Add slide to state with signed URLs from API response
+        setSlides((prev) => {
+          // Filter out if already added by realtime
+          const filtered = prev.filter((s) => s.id !== slide.id);
+          const updated = [...filtered, slide];
+          updated.sort((a, b) => a.position - b.position);
+          return updated;
+        });
+        setLastFetchTime(Date.now());
+
         setUploadProgress({
           current: 1,
           total: 1,
@@ -1004,6 +1031,18 @@ export default function KioskSettingsSection({
                 </div>
               </div>
 
+              {/* Actions */}
+              <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  onClick={handleSaveConfig}
+                  disabled={!hasChanges || isSaving}
+                  className="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-red-700 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
+                  title="Save kiosk settings"
+                >
+                  {isSaving ? 'Saving...' : 'Save Settings'}
+                </button>
+              </div>
+
               {/* Slides */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -1182,18 +1221,6 @@ export default function KioskSettingsSection({
                   Drag slides to reorder. Maximum 20 slides. Upload PDFs to automatically convert
                   each page to a slide.
                 </p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
-                <button
-                  onClick={handleSaveConfig}
-                  disabled={!hasChanges || isSaving}
-                  className="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-red-700 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
-                  title="Save kiosk settings"
-                >
-                  {isSaving ? 'Saving...' : 'Save Settings'}
-                </button>
               </div>
 
               {/* Info box */}
