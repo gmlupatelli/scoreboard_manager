@@ -46,6 +46,63 @@ export default function KioskSettingsSection({
   const { getAuthHeaders } = useAuthGuard();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // LocalStorage key for caching slide order (handles read replica lag)
+  const slideOrderCacheKey = `kiosk-slide-order-${scoreboardId}`;
+
+  // Get cached slide order from localStorage
+  const getCachedSlideOrder = useCallback((): {
+    positions: Record<string, number>;
+    timestamp: number;
+  } | null => {
+    try {
+      const cached = localStorage.getItem(slideOrderCacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        // Cache valid for 5 minutes
+        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+          return parsed;
+        }
+        localStorage.removeItem(slideOrderCacheKey);
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+    return null;
+  }, [slideOrderCacheKey]);
+
+  // Save slide order to localStorage
+  const cacheSlideOrder = (slides: KioskSlide[]) => {
+    try {
+      const positions: Record<string, number> = {};
+      slides.forEach((s) => {
+        positions[s.id] = s.position;
+      });
+      localStorage.setItem(
+        slideOrderCacheKey,
+        JSON.stringify({ positions, timestamp: Date.now() })
+      );
+    } catch {
+      // Ignore localStorage errors
+    }
+  };
+
+  // Apply cached order to slides (if cache is newer than server data)
+  const applyCachedOrder = useCallback(
+    (slidesToOrder: KioskSlide[]): KioskSlide[] => {
+      const cached = getCachedSlideOrder();
+      if (!cached) return slidesToOrder;
+
+      // Apply cached positions
+      const reordered = slidesToOrder.map((s) => ({
+        ...s,
+        position: cached.positions[s.id] ?? s.position,
+      }));
+      reordered.sort((a, b) => a.position - b.position);
+      return reordered;
+    },
+    [getCachedSlideOrder]
+  );
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [config, setConfig] = useState<KioskConfig | null>(null);
@@ -75,6 +132,11 @@ export default function KioskSettingsSection({
 
   // Ref to track if initial fetch has completed
   const hasFetchedRef = useRef(false);
+
+  // Ref to store stable loadKioskData function
+  const loadKioskDataRef = useRef<((options?: { showLoader?: boolean }) => Promise<void>) | null>(
+    null
+  );
 
   // Track latest kiosk fetch to avoid stale updates
   const requestIdRef = useRef(0);
@@ -146,10 +208,11 @@ export default function KioskSettingsSection({
           }
           const loadedSlides = (data.slides || []) as KioskSlide[];
 
-          // Sort by position
+          // Sort by position, then apply cached order if available (handles read replica lag)
           loadedSlides.sort((a, b) => a.position - b.position);
+          const orderedSlides = applyCachedOrder(loadedSlides);
 
-          setSlides(loadedSlides);
+          setSlides(orderedSlides);
           setLastFetchTime(Date.now());
           setFailedImages(new Set()); // Clear failed images on fresh data
           hasFetchedRef.current = true;
@@ -172,10 +235,20 @@ export default function KioskSettingsSection({
         }
       }
     },
-    [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide]
+    [scoreboardId, getAuthHeaders, onShowToast, addInitialScoreboardSlide, applyCachedOrder]
   );
 
+  // Keep the ref updated with latest loadKioskData
+  useEffect(() => {
+    loadKioskDataRef.current = loadKioskData;
+  }, [loadKioskData]);
+
+  // Ref to batch realtime UPDATE events and sort once
+  const pendingUpdatesRef = useRef<Map<string, number>>(new Map());
+  const updateDebounceRef = useRef<NodeJS.Timeout | null>(null);
+
   // Subscribe to realtime changes for kiosk_slides
+  // Apply changes directly from the realtime payload instead of re-fetching
   useEffect(() => {
     if (!scoreboardId || !config?.id) return;
 
@@ -184,47 +257,143 @@ export default function KioskSettingsSection({
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'kiosk_slides',
           filter: `kiosk_config_id=eq.${config.id}`,
         },
-        () => {
-          // Reload data when slides change
-          loadKioskData({ showLoader: false });
+        (payload) => {
+          const newSlide = payload.new as KioskSlide;
+          setSlides((prev) => {
+            // Check if slide already exists (avoid duplicates from optimistic UI)
+            if (prev.some((s) => s.id === newSlide.id)) {
+              return prev;
+            }
+            const updated = [...prev, newSlide];
+            updated.sort((a, b) => a.position - b.position);
+            return updated;
+          });
+          // Update lastFetchTime to prevent stale-check from triggering a GET
+          setLastFetchTime(Date.now());
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'kiosk_slides',
+          filter: `kiosk_config_id=eq.${config.id}`,
+        },
+        (payload) => {
+          const updatedSlide = payload.new as KioskSlide;
+
+          // Batch UPDATE events to prevent "dancing" during reorder
+          // Multiple UPDATE events arrive rapidly during reorder operations
+          // We batch them and sort once at the end
+          pendingUpdatesRef.current.set(updatedSlide.id, updatedSlide.position);
+
+          // Clear any pending debounce timer
+          if (updateDebounceRef.current) {
+            clearTimeout(updateDebounceRef.current);
+          }
+
+          // After 150ms of no new UPDATE events, apply all batched updates
+          updateDebounceRef.current = setTimeout(() => {
+            const pendingUpdates = pendingUpdatesRef.current;
+            if (pendingUpdates.size === 0) return;
+
+            // Capture the updates BEFORE calling setSlides to avoid closure issues
+            const updatesSnapshot = new Map(pendingUpdates);
+            const updatesArray = Array.from(updatesSnapshot.entries());
+
+            // Check if any positions are temporary (1000+) - if so, wait for final positions
+            const hasTempPositions = updatesArray.some(([, pos]) => pos >= 1000);
+            if (hasTempPositions) {
+              // Don't clear - keep accumulating until we get final positions
+              return;
+            }
+
+            // Clear immediately so new updates go to a fresh map
+            pendingUpdatesRef.current.clear();
+
+            setSlides((prev) => {
+              // Check if any positions actually differ from our current state
+              let hasChanges = false;
+              for (const [id, newPosition] of updatesArray) {
+                const existingSlide = prev.find((s) => s.id === id);
+                if (existingSlide && existingSlide.position !== newPosition) {
+                  hasChanges = true;
+                  break;
+                }
+              }
+
+              if (!hasChanges) {
+                // All positions match - our optimistic update was correct
+                return prev;
+              }
+
+              // Apply all position updates
+              const updated = prev.map((s) => {
+                const newPosition = updatesSnapshot.get(s.id);
+                if (newPosition !== undefined) {
+                  return {
+                    ...s,
+                    position: newPosition,
+                  };
+                }
+                return s;
+              });
+
+              // Sort once after all updates are applied
+              updated.sort((a, b) => a.position - b.position);
+              return updated;
+            });
+
+            // Update lastFetchTime to prevent stale-check from triggering a GET
+            setLastFetchTime(Date.now());
+          }, 150);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'kiosk_slides',
+          filter: `kiosk_config_id=eq.${config.id}`,
+        },
+        (payload) => {
+          const deletedSlide = payload.old as KioskSlide;
+          setSlides((prev) => prev.filter((s) => s.id !== deletedSlide.id));
+          // Update lastFetchTime to prevent stale-check from triggering a GET
+          setLastFetchTime(Date.now());
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
-    };
-  }, [scoreboardId, config?.id, loadKioskData]);
-
-  // Fetch just the enabled status on mount (lightweight check for badge display)
-  useEffect(() => {
-    const fetchEnabledStatus = async () => {
-      if (!scoreboardId) return;
-      try {
-        const authHeaders = await getAuthHeaders();
-        const response = await fetch(`/api/kiosk/${scoreboardId}`, {
-          headers: authHeaders,
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.config) {
-            setEnabled(data.config.enabled);
-            setConfig(data.config);
-          }
-        }
-      } catch (_error) {
-        // Silent fail - badge just won't show
+      // Clear any pending debounce timer
+      if (updateDebounceRef.current) {
+        clearTimeout(updateDebounceRef.current);
       }
     };
-    fetchEnabledStatus();
-  }, [scoreboardId, getAuthHeaders]);
+  }, [scoreboardId, config?.id]);
 
-  // Load data when expanded
+  // Keep getAuthHeaders ref updated for stable reference
+  const getAuthHeadersRef = useRef(getAuthHeaders);
+  useEffect(() => {
+    getAuthHeadersRef.current = getAuthHeaders;
+  }, [getAuthHeaders]);
+
+  // Load data when expanded - only on initial expand or after stale threshold
+  // Use ref for lastFetchTime to avoid triggering effect on realtime updates
+  const lastFetchTimeRef = useRef<number | null>(null);
+  useEffect(() => {
+    lastFetchTimeRef.current = lastFetchTime;
+  }, [lastFetchTime]);
+
   useEffect(() => {
     if (!isExpanded || isLoadingRef.current) {
       return;
@@ -232,13 +401,15 @@ export default function KioskSettingsSection({
 
     const shouldRefresh =
       !hasFetchedRef.current ||
-      lastFetchTime === null ||
-      Date.now() - lastFetchTime > STALE_THRESHOLD_MS;
+      lastFetchTimeRef.current === null ||
+      Date.now() - lastFetchTimeRef.current > STALE_THRESHOLD_MS;
 
-    if (shouldRefresh) {
-      loadKioskData();
+    if (shouldRefresh && loadKioskDataRef.current) {
+      loadKioskDataRef.current();
+      // Revalidation to overcome read replica lag is now handled in the
+      // realtime subscription callback after SUBSCRIBED status is confirmed
     }
-  }, [isExpanded, scoreboardId, lastFetchTime, loadKioskData]);
+  }, [isExpanded, scoreboardId]);
 
   // Reset refs when scoreboardId changes (switching between scoreboards)
   useEffect(() => {
@@ -659,6 +830,8 @@ export default function KioskSettingsSection({
         const error = await orderResponse.json();
         throw new Error(error.error || 'Failed to save slide order');
       }
+      // Cache the order to handle read replica lag on reload
+      cacheSlideOrder(reorderedSlides);
       // Realtime subscription will confirm the update
       onShowToast('Slide order updated', 'success');
     } catch (error) {

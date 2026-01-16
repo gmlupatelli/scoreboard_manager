@@ -3,6 +3,15 @@ import { getAnonClient, getServiceRoleClient } from '@/lib/supabase/apiClient';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
+// Cache-control headers for all responses
+const noCacheHeaders = {
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
 
 // Signed URL expiry time: 1 hour (kiosk can refresh periodically)
 const SIGNED_URL_EXPIRY_SECONDS = 3600;
@@ -99,18 +108,21 @@ export async function GET(
       return NextResponse.json({ error: entriesError.message }, { status: 500 });
     }
 
-    return NextResponse.json({
-      scoreboard,
-      config: {
-        id: config.id,
-        slideDurationSeconds: config.slide_duration_seconds,
-        scoreboardPosition: config.scoreboard_position,
-        hasPinProtection: !!config.pin_code,
-        signedUrlExpirySeconds: SIGNED_URL_EXPIRY_SECONDS,
+    return NextResponse.json(
+      {
+        scoreboard,
+        config: {
+          id: config.id,
+          slideDurationSeconds: config.slide_duration_seconds,
+          scoreboardPosition: config.scoreboard_position,
+          hasPinProtection: !!config.pin_code,
+          signedUrlExpirySeconds: SIGNED_URL_EXPIRY_SECONDS,
+        },
+        slides: slidesWithSignedUrls,
+        entries: entries || [],
       },
-      slides: slidesWithSignedUrls,
-      entries: entries || [],
-    });
+      { headers: noCacheHeaders }
+    );
   } catch (_error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

@@ -3,6 +3,8 @@ import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/s
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 // Signed URL expiry for preview (1 hour)
 const SIGNED_URL_EXPIRY_SECONDS = 3600;
