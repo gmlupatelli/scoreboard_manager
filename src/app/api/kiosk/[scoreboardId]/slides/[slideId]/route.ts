@@ -146,6 +146,8 @@ export async function DELETE(
       .eq('kiosk_config_id', kioskConfig.id)
       .maybeSingle();
 
+    console.log('[kiosk-api] DELETE - using service client:', !!serviceClient, 'slideId:', slideId);
+
     // Delete the slide
     const { data: deletedSlides, error: deleteError } = await writeClient
       .from('kiosk_slides')
@@ -153,6 +155,12 @@ export async function DELETE(
       .eq('id', slideId)
       .eq('kiosk_config_id', kioskConfig.id)
       .select('id');
+
+    console.log('[kiosk-api] DELETE result:', {
+      deletedCount: deletedSlides?.length,
+      deletedIds: deletedSlides?.map((s) => s.id),
+      error: deleteError?.message,
+    });
 
     if (deleteError) {
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
