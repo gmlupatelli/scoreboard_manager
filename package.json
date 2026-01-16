@@ -39,7 +39,10 @@
     "warning": "🚨 CRITICAL: DO NOT REMOVE OR MODIFY ABOVE DEPENDENCIES - Required for Next.js 15 TypeScript app functionality"
   },
   "scripts": {
+    "postinstall": "node scripts/copyPdfWorker.mjs",
+    "predev": "node scripts/copyPdfWorker.mjs",
     "dev": "next dev -H 0.0.0.0 -p 5000",
+    "prebuild": "node scripts/copyPdfWorker.mjs",
     "build": "next build",
     "build:prod": "npm run migrate:prod && npm run build",
     "migrate:prod": "supabase link --project-ref \"$SUPABASE_PROJECT_REF\" && supabase db push",

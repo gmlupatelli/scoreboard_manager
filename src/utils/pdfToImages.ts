@@ -2,12 +2,9 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Configure pdf.js worker (local bundled worker)
+// Configure pdf.js worker (local static asset)
 if (typeof window !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.js',
-    import.meta.url
-  ).toString();
+  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 }
 
 export interface PdfProcessingProgress {
