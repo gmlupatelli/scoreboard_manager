@@ -377,6 +377,131 @@ Confirm your new email address - Scoreboard Manager
 
 ---
 
+## 3b. Email Changed Notification
+
+**NOTE:** This is a notification email sent AFTER the email address has been successfully changed. It informs the user that their email was updated and provides security guidance if they didn't make the change.
+
+**Subject Line:**
+
+```
+Your Scoreboard Manager email has been changed
+```
+
+**Email Body (HTML):**
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Address Changed</title>
+  </head>
+  <body
+    style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #FAFAFA;"
+  >
+    <table
+      role="presentation"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      width="100%"
+      style="background-color: #FAFAFA;"
+    >
+      <tr>
+        <td style="padding: 40px 20px;">
+          <table
+            role="presentation"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            width="100%"
+            style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+          >
+            <!-- Header -->
+            <tr>
+              <td
+                style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
+              >
+                <img
+                  src="{{ .SiteURL }}/scoreboard-logo.png"
+                  alt="Scoreboard Manager Logo"
+                  style="width: 80px; height: 80px; margin-bottom: 20px;"
+                />
+              </td>
+            </tr>
+            <!-- Content -->
+            <tr>
+              <td style="padding: 40px;">
+                <h1
+                  style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #20203e; text-align: center;"
+                >
+                  Your Email Address Has Been Changed
+                </h1>
+                <p
+                  style="margin: 0 0 25px; font-size: 16px; line-height: 24px; color: #38385e; text-align: center;"
+                >
+                  The email address for your Scoreboard Manager account has been successfully updated.
+                </p>
+                <div
+                  style="margin: 0 0 25px; padding: 20px; background-color: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;"
+                >
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                    <tr>
+                      <td style="padding: 8px 0;">
+                        <p style="margin: 0; font-size: 14px; color: #38385e;">
+                          <strong>Previous email:</strong>
+                        </p>
+                        <p style="margin: 4px 0 0; font-size: 16px; color: #20203e;">
+                          {{ .OldEmail }}
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; border-top: 1px solid #E2E8F0;">
+                        <p style="margin: 0; font-size: 14px; color: #38385e;">
+                          <strong>New email:</strong>
+                        </p>
+                        <p style="margin: 4px 0 0; font-size: 16px; color: #20203e;">
+                          {{ .Email }}
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                <div
+                  style="margin: 0; padding: 16px; background-color: #FEF2F2; border-radius: 8px; border-left: 4px solid #f77174;"
+                >
+                  <p style="margin: 0; font-size: 14px; line-height: 22px; color: #20203e;">
+                    <strong>Didn't make this change?</strong><br />
+                    If you did not request this email change, your account may be compromised. Please contact our support team immediately and reset your password.
+                  </p>
+                </div>
+              </td>
+            </tr>
+            <!-- Footer -->
+            <tr>
+              <td
+                style="padding: 30px 40px; background-color: #FAFAFA; border-top: 1px solid #E2E8F0; border-radius: 0 0 16px 16px;"
+              >
+                <p
+                  style="margin: 0; font-size: 12px; line-height: 20px; color: #38385e; text-align: center;"
+                >
+                  This email was sent by Scoreboard Manager.<br />
+                  If you have questions, please contact our support team.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+```
+
+---
+
 ## 4. Magic Link Email
 
 **Subject Line:**
