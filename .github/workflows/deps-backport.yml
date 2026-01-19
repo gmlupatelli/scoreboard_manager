@@ -1,0 +1,160 @@
+name: Dependabot Deps Backport
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  backport-deps:
+    if: ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if PR should be backported
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request || {};
+            const author = pr.user?.login || '';
+            const labels = (pr.labels || []).map(l => l.name || '');
+            const should_backport = labels.includes('dependencies') || /dependabot/i.test(author);
+            return {
+              should_backport,
+              pr_number: pr.number,
+              merge_commit_sha: pr.merge_commit_sha || null,
+              head_sha: pr.head?.sha || null,
+              pr_title: pr.title || ''
+            };
+
+      - name: Skip if not dependency update
+        if: ${{ fromJson(steps.check.outputs.result).should_backport == false }}
+        run: echo "Not a dependency update; skipping backport."
+
+      - name: Configure git
+        if: ${{ fromJson(steps.check.outputs.result).should_backport == true }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Checkout `dev` branch
+        if: ${{ fromJson(steps.check.outputs.result).should_backport == true }}
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Compute backport branch name
+        if: ${{ fromJson(steps.check.outputs.result).should_backport == true }}
+        run: |
+          MERGE_SHA='${{ fromJson(steps.check.outputs.result).merge_commit_sha }}'
+          if [ -z "$MERGE_SHA" ] || [ "$MERGE_SHA" = "null" ]; then
+            MERGE_SHA='${{ fromJson(steps.check.outputs.result).head_sha }}'
+          fi
+          SHORT_SHA=${MERGE_SHA:0:7}
+          PR_NUM=${{ fromJson(steps.check.outputs.result).pr_number }}
+          BRANCH="backport/deps/${PR_NUM}-${SHORT_SHA}"
+          echo "BRANCH_NAME=$BRANCH" >> $GITHUB_ENV
+          echo "Using merge SHA: $MERGE_SHA (short: $SHORT_SHA)"
+
+      - name: Create backport branch
+        if: ${{ fromJson(steps.check.outputs.result).should_backport == true }}
+        run: |
+          echo "Creating branch $BRANCH_NAME"
+          git checkout -b "$BRANCH_NAME"
+
+      - name: Cherry-pick merged commit onto backport branch
+        id: cherry-pick
+        if: ${{ fromJson(steps.check.outputs.result).should_backport == true }}
+        continue-on-error: true
+        run: |
+          set -e
+          SHA='${{ fromJson(steps.check.outputs.result).merge_commit_sha }}'
+          if [ -z "$SHA" ] || [ "$SHA" = "null" ]; then
+            SHA='${{ fromJson(steps.check.outputs.result).head_sha }}'
+          fi
+
+          echo "Attempting to cherry-pick $SHA"
+          # detect if it's a merge commit (has more than one parent)
+          PARENTS_LINE=$(git rev-list --parents -n 1 $SHA || true)
+          if [ -z "$PARENTS_LINE" ]; then
+            echo "Commit $SHA not found locally; fetching..."
+            git fetch origin $SHA || true
+            PARENTS_LINE=$(git rev-list --parents -n 1 $SHA || true)
+          fi
+          PARENTS=$(echo "$PARENTS_LINE" | sed -E 's/[^ ]+ ?//')
+          PARENT_COUNT=$(echo "$PARENTS" | wc -w)
+
+          if [ "$PARENT_COUNT" -gt 1 ]; then
+            echo "Detected merge commit with parents: $PARENTS. Cherry-picking with -m 1"
+            git cherry-pick -x -m 1 $SHA
+          else
+            git cherry-pick -x $SHA
+          fi
+
+      - name: Push branch and open backport PR to `dev`
+        if: ${{ steps.cherry-pick.outcome == 'success' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const info = fromJson(`${{ steps.check.outputs.result }}`);
+            const prNumber = info.pr_number;
+            const branch = process.env.BRANCH_NAME;
+
+            // Push branch
+            const exec = require('child_process').execSync;
+            exec(`git push origin ${branch}`, { stdio: 'inherit' });
+
+            // Create PR to dev
+            const { data: newPr } = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `chore(deps): backport #${prNumber} to dev`,
+              head: branch,
+              base: 'dev',
+              body: `Automated backport of #${prNumber} (${info.pr_title}) into \`dev\`. This PR was created by the backport workflow.`,
+              maintainer_can_modify: true
+            });
+
+            // Add labels
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newPr.number,
+              labels: ['dependencies', 'backport']
+            });
+
+            // Comment on original PR
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `Created backport PR #${newPr.number} to \`dev\`: ${newPr.html_url}`
+            });
+
+      - name: Handle conflict: mark original PR and comment
+        if: ${{ steps.cherry-pick.outcome != 'success' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const info = fromJson(`${{ steps.check.outputs.result }}`);
+            const prNumber = info.pr_number;
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: ['backport/conflicts']
+            });
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: 'Automated backport failed due to merge conflicts. Please resolve manually by creating a branch from `dev` and cherry-picking the changes, or contact the maintainers for assistance.'
+            });

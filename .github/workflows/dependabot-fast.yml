@@ -1,0 +1,110 @@
+name: Dependabot Fast CI
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: dependabot-fast-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  fast-ci:
+    name: Dependabot Fast CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Determine if PR should run fast CI and whether it's a patch update"
+        id: pr-check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request || {};
+            const author = pr.user?.login || '';
+            const labels = (pr.labels || []).map(l => l.name || '');
+
+            const isDependabot = ['dependabot[bot]', 'dependabot-preview[bot]'].includes(author) || /dependabot/i.test(author);
+            const isDependenciesLabel = labels.includes('dependencies');
+            const title = pr.title || '';
+
+            // Try to parse a semver "from x.y.z to a.b.c" pattern
+            const m = title.match(/from\s+([0-9]+(?:\.[0-9]+){0,2})\s+to\s+([0-9]+(?:\.[0-9]+){0,2})/i);
+
+            function isPatch(a, b) {
+              if (!a || !b) return false;
+              const pa = a.split('.').map(x => parseInt(x) || 0);
+              const pb = b.split('.').map(x => parseInt(x) || 0);
+              while (pa.length < 3) pa.push(0);
+              while (pb.length < 3) pb.push(0);
+              return pa[0] === pb[0] && pa[1] === pb[1] && pb[2] > pa[2];
+            }
+
+            const is_patch = m ? isPatch(m[1], m[2]) : false;
+
+            return { should_run: isDependabot || isDependenciesLabel, is_patch };
+
+      - name: Checkout PR head
+        if: ${{ fromJson(steps.pr-check.outputs.result).should_run == true }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Setup Node.js 20 and cache
+        if: ${{ fromJson(steps.pr-check.outputs.result).should_run == true }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        if: ${{ fromJson(steps.pr-check.outputs.result).should_run == true }}
+        run: npm ci
+
+      - name: Lint
+        if: ${{ fromJson(steps.pr-check.outputs.result).should_run == true }}
+        run: npm run lint --silent
+
+      - name: Type check
+        if: ${{ fromJson(steps.pr-check.outputs.result).should_run == true }}
+        run: npm run type-check --silent
+
+      - name: Unit tests (fast)
+        if: ${{ fromJson(steps.pr-check.outputs.result).should_run == true }}
+        run: npm run test:unit --silent
+
+      - name: Add labels on successful fast CI
+        if: ${{ success() && fromJson(steps.pr-check.outputs.result).should_run == true }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const title = pr.title || '';
+            // re-check patch status in case title changed
+            const m = title.match(/from\s+([0-9]+(?:\.[0-9]+){0,2})\s+to\s+([0-9]+(?:\.[0-9]+){0,2})/i);
+            function isPatch(a, b) {
+              if (!a || !b) return false;
+              const pa = a.split('.').map(x => parseInt(x) || 0);
+              const pb = b.split('.').map(x => parseInt(x) || 0);
+              while (pa.length < 3) pa.push(0);
+              while (pb.length < 3) pb.push(0);
+              return pa[0] === pb[0] && pa[1] === pb[1] && pb[2] > pa[2];
+            }
+
+            const is_patch = m ? isPatch(m[1], m[2]) : false;
+            const labels = ['fast-ci:pass'];
+            if (is_patch) labels.push('automerge-eligible');
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels,
+            });
+
+            console.log('Added labels:', labels);

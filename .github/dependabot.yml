@@ -12,7 +12,8 @@ updates:
       day: 'monday'
       time: '06:00'
       timezone: 'America/New_York'
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    target-branch: 'main'
     # Group minor and patch updates together
     groups:
       production-dependencies:
@@ -81,6 +82,7 @@ updates:
     schedule:
       interval: 'weekly'
       day: 'monday'
+    target-branch: 'main'
     labels:
       - 'dependencies'
       - 'github-actions'
