@@ -1,0 +1,72 @@
+name: Dependabot Auto-merge
+
+on:
+  workflow_run:
+    workflows:
+      - 'Dependabot Fast CI'
+    types:
+      - completed
+
+permissions:
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Find PRs associated with workflow commit and enable auto-merge for eligible Dependabot PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commit_sha = context.payload.workflow_run.head_sha;
+            console.log('Workflow head SHA:', commit_sha);
+
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha,
+            });
+
+            for (const pr of prs.data) {
+              const author = pr.user?.login || '';
+              const isDependabot = /dependabot/i.test(author);
+              const labels = (pr.labels || []).map(l => (typeof l === 'string' ? l : l.name));
+              const hasAutoLabel = labels.includes('automerge-eligible');
+
+              if (!isDependabot || !hasAutoLabel) {
+                console.log(`Skipping PR #${pr.number} (author: ${author}, autolabel: ${hasAutoLabel})`);
+                continue;
+              }
+
+              try {
+                console.log(`Enabling auto-merge for PR #${pr.number}`);
+                const mutation = `
+                  mutation($pullRequestId: ID!) {
+                    enablePullRequestAutoMerge(input: { pullRequestId: $pullRequestId, mergeMethod: SQUASH }) {
+                      pullRequest { number }
+                    }
+                  }
+                `;
+
+                await github.graphql(mutation, { pullRequestId: pr.node_id });
+
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: 'Dependabot Fast CI passed; enabled auto-merge (squash) for this patch update.'
+                });
+
+                console.log(`Auto-merge enabled for PR #${pr.number}`);
+              } catch (err) {
+                console.error('Failed to enable auto-merge for PR', pr.number, err);
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: `Failed to enable auto-merge for this PR: ${err.message}`,
+                });
+              }
+            }

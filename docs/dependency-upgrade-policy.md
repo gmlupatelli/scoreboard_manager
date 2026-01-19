@@ -55,6 +55,11 @@ Major versions are **ignored by Dependabot** and handled manually. This applies 
 - **Action**: Auto-merged after CI passes
 - **Examples**: Bug fixes, security patches
 
+#### Automation
+- **Dependabot Fast CI**: A lightweight workflow runs lint, type-check, and unit tests for Dependabot PRs and PRs labeled `dependencies`. On success it adds `fast-ci:pass`; for patch updates it also adds `automerge-eligible`.
+- **Auto-merge**: When the Fast CI completes successfully, a workflow enables GitHub auto-merge (squash) for Dependabot patch updates labeled `automerge-eligible`.
+- **Backport**: When a dependency PR is merged into `main`, an automated backport workflow attempts to cherry-pick the merge commit onto `dev`, publish a `backport/deps/{pr}-{sha}` branch and open a PR to `dev` labeled `dependencies` and `backport`. If cherry-picking fails due to conflicts, the original PR is labeled `backport/conflicts` and the workflow comments with instructions for manual resolution.
+
 ### Minor Updates (x.MINOR.x)
 
 - **Risk**: Low
