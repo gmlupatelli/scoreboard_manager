@@ -1,4 +1,5 @@
 import * as authService from '../authService';
+import type { Mock } from 'vitest';
 
 vi.mock('@/lib/supabase/client', () => {
   return {
@@ -19,12 +20,12 @@ describe('authService', () => {
   });
 
   it('calls supabase.auth.signInWithOAuth with provider and options', async () => {
-    const opts = {
+    const opts: { redirectTo: string; queryParams: Record<string, string> } = {
       redirectTo: 'https://example.com/auth/callback',
       queryParams: { access_type: 'offline' },
     };
-    await authService.startOAuth('google', opts as any);
-    expect(supabase.auth.signInWithOAuth as any).toHaveBeenCalledWith({
+    await authService.startOAuth('google', opts);
+    expect(supabase.auth.signInWithOAuth as Mock).toHaveBeenCalledWith({
       provider: 'google',
       options: { redirectTo: opts.redirectTo, queryParams: opts.queryParams },
     });
@@ -34,7 +35,7 @@ describe('authService', () => {
     const token = 'fake-token';
     const nonce = 'nonce';
     await authService.signInWithIdToken(token, nonce);
-    expect(supabase.auth.signInWithIdToken as any).toHaveBeenCalledWith({
+    expect(supabase.auth.signInWithIdToken as Mock).toHaveBeenCalledWith({
       provider: 'google',
       token,
       nonce,
