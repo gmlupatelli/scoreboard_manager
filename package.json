@@ -53,6 +53,8 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,md,json}\" \"e2e/**/*.ts\"",
     "serve": "next start -H 0.0.0.0 -p 5000",
     "type-check": "tsc --noEmit",
+    "test:unit": "vitest run src/utils/auth/__tests__ src/services/__tests__",
+    "test:unit:watch": "vitest --run --watch",
     "test:e2e": "playwright test",
     "test:e2e:fast": "playwright test --config=playwright.config.fast.ts --grep=\"@fast\"",
     "test:e2e:ui": "playwright test --ui",
@@ -84,7 +86,7 @@
     "@eslint/js": "^9.39.2",
     "@netlify/plugin-nextjs": "^5.15.5",
     "@playwright/test": "^1.49.1",
-    "@types/node": "^25",
+    "@types/node": "^25.0.9",
     "@types/react": "18.2.45",
     "@types/react-dom": "18.2.0",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
@@ -95,12 +97,14 @@
     "eslint-config-next": "^15.2.4",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.5.5",
+    "jsdom": "^27.4.0",
     "knip": "^5.81.0",
     "postcss": "^8.4.49",
     "prettier": "^3.8.0",
-    "supabase": "2.72.7",
+    "supabase": "^2.72.8",
     "tailwindcss": "3.4.19",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.17"
   }
 }
