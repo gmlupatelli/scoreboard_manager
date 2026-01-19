@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
 
   // Determine redirect URL first
-  let redirectUrl = `${origin}/login?error=auth_callback_error`;
+  // Default to a client-side handler that can process fragment tokens from providers.
+  let redirectUrl = `${origin}/auth/callback/continue?error=auth_callback_error&next=${encodeURIComponent(next)}`;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || '';
