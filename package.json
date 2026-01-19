@@ -95,10 +95,10 @@
     "eslint-config-next": "^15.2.4",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.5.5",
-    "knip": "^5.81.0",
+    "knip": "^5.82.1",
     "postcss": "^8.4.49",
     "prettier": "^3.8.0",
-    "supabase": "2.72.7",
+    "supabase": "2.72.8",
     "tailwindcss": "3.4.19",
     "ts-node": "^10.9.2",
     "typescript": "^5"
