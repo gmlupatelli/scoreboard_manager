@@ -63,6 +63,16 @@ In Netlify (or your hosting provider) add the same variables (do NOT expose the 
 
 - **One‑Tap is only shown on the Login page** by default. It is intentionally **hidden on the Register page** to make the sign-up flow explicit and less surprising to users. The Register page shows an explicit **Create account with Google** button below the manual sign-up form.
 
+### Content Security Policy (CSP) requirements
+
+- If your deployment sets a Content Security Policy, ensure external Google scripts are allowed. Add `https://accounts.google.com` to your `script-src` directive (and `script-src-elem` if you use it explicitly). Example:
+
+  ```
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; ...
+  ```
+
+- On Next.js, we set this in `next.config.mjs` headers; on other platforms, configure your platform-specific headers or reverse proxy to allow the Google script. After updating CSP, redeploy so the script can load and One‑Tap/GSI popup will work on your site.
+
 
 ## Troubleshooting
 
