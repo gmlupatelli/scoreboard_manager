@@ -175,7 +175,8 @@ export default function RegisterPage() {
           <div className="bg-card border border-border rounded-lg shadow-lg p-8">
             <h1 className="text-3xl font-bold text-center mb-2 text-foreground">Create Account</h1>
             <p className="text-center text-muted-foreground mb-8">
-              Start managing your scoreboards today. Create your account bellow.
+              Start managing your scoreboards today.
+              <span className="block mt-1">Create your account below.</span>
             </p>
 
             {/* Manual registration form */}
