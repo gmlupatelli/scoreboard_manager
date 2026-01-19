@@ -123,7 +123,7 @@ export default function LoginPage() {
           <div className="mt-4">
             <div className="flex items-center gap-3">
               <hr className="flex-1 border-border" />
-              <div className="text-sm text-muted-foreground">or, create an account with Google</div>
+              <div className="text-sm text-muted-foreground">or</div>
               <hr className="flex-1 border-border" />
             </div>
             <div className="mt-4">
