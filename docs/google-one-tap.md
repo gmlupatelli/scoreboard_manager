@@ -59,6 +59,11 @@ In Netlify (or your hosting provider) add the same variables (do NOT expose the 
 - When `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured and the Google Identity Services script loads successfully, the **Sign in with Google** button will use the GSI ID‑token flow (popup/prompt) and call `supabase.auth.signInWithIdToken` under the hood. This will show your site's origin on the Google consent screen and does **not** return a refresh token (short‑lived ID token only).
 - If the GSI script isn't available or initialization fails, the button falls back to the app-hosted OAuth redirect (PKCE) using Supabase. If you want refresh tokens, configure the Google client secret in Supabase and use the PKCE/code exchange (Supabase handles refresh tokens when available).
 
+### Where One‑Tap shows
+
+- **One‑Tap is only shown on the Login page** by default. It is intentionally **hidden on the Register page** to make the sign-up flow explicit and less surprising to users. The Register page shows an explicit **Create account with Google** button below the manual sign-up form.
+
+
 ## Troubleshooting
 
 - If the One‑Tap prompt does not show, check the browser console for errors. One common issue is missing or mismatched Client ID.

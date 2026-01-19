@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
-import GoogleOneTap from '@/components/auth/GoogleOneTap';
 import Icon from '@/components/ui/AppIcon';
 
 interface SystemSettings {
@@ -181,19 +180,15 @@ export default function RegisterPage() {
               Start managing your scoreboards today
             </p>
 
+            {/* Show the manual registration form first (the "or" separator indicates the other option below) */}
             {(isPublicRegistrationAllowed || hasValidInvitation) && (
-              <>
-                <div className="mb-4">
-                  <div className="flex items-center gap-3">
-                    <hr className="flex-1 border-border" />
-                    <div className="text-sm text-muted-foreground">or</div>
-                    <hr className="flex-1 border-border" />
-                  </div>
-                  <div className="mt-4">
-                    <GoogleSignInButton />
-                  </div>
+              <div className="mb-4">
+                <div className="flex items-center gap-3">
+                  <hr className="flex-1 border-border" />
+                  <div className="text-sm text-muted-foreground">or</div>
+                  <hr className="flex-1 border-border" />
                 </div>
-              </>
+              </div>
             )}
 
             {!isPublicRegistrationAllowed && !hasValidInvitation && (
@@ -339,6 +334,14 @@ export default function RegisterPage() {
                 </>
               )}
             </form>
+
+            {/* Google sign-up option goes below the manual form */}
+            {(isPublicRegistrationAllowed || hasValidInvitation) && (
+              <div className="mt-6 text-center">
+                <p className="text-sm text-muted-foreground mb-3">Or, create your account with Google</p>
+                <GoogleSignInButton variant="signup" />
+              </div>
+            )}
 
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
