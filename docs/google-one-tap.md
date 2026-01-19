@@ -73,6 +73,33 @@ In Netlify (or your hosting provider) add the same variables (do NOT expose the 
 
 - On Next.js, we set this in `next.config.mjs` headers; on other platforms, configure your platform-specific headers or reverse proxy to allow the Google script. After updating CSP, redeploy so the script can load and One‑Tap/GSI popup will work on your site.
 
+### Netlify CSP Headers (Repo-Level Configuration)
+
+This repository includes a **repo-level Netlify headers configuration** in `netlify.toml` to ensure Google Identity Services (GSI) work correctly on deploy previews and production. The CSP header includes `https://accounts.google.com` in the following directives:
+
+- **script-src**: Allows GSI JavaScript to load
+- **style-src**: Allows GSI inline styles and stylesheets
+- **connect-src**: Allows GSI fedcm/status API calls
+
+**Current CSP configuration in netlify.toml:**
+
+```toml
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+```
+
+**After updating CSP headers:**
+
+If you modify the CSP configuration in `netlify.toml`, you must **"Clear cache & deploy"** in Netlify for the changes to take effect:
+
+1. Go to your Netlify dashboard → Site → Deploys
+2. Click "Trigger deploy" → "Clear cache and deploy site"
+3. Wait for the deploy to complete
+4. Verify the headers by running: `curl -I https://your-site.netlify.app/login`
+5. Check that the `Content-Security-Policy` header includes `https://accounts.google.com` in script-src, style-src, and connect-src
+
 
 ## Troubleshooting
 

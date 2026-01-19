@@ -51,3 +51,9 @@
 # Branch deploy settings (no migrations)
 [context.branch-deploy]
   command = "npm run build"
+
+# Content Security Policy headers to allow Google Identity Services
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
