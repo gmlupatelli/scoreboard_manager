@@ -57,6 +57,9 @@ In Netlify (or your hosting provider) add the same variables (do NOT expose the 
 - If the One‑Tap prompt does not show, check the browser console for errors. One common issue is missing or mismatched Client ID.
 - If you see `redirect_uri_mismatch`, verify the exact redirect URIs in the Google Cloud Console.
 - If One‑Tap fails silently, try the fallback `Sign in with Google` button to ensure the OAuth flow works.
+- If you complete Google consent and are redirected back to the site but nothing happens (for example, the URL looks like `/login?error=auth_callback_error#access_token=...`), this usually means the provider returned tokens in the URL fragment (implicit flow) instead of a server-side `code`.
+  - Confirm the Google provider is fully configured in the **Supabase** dashboard (Client ID and **Client secret**) so Supabase can perform a server-side code exchange (PKCE). If the secret is missing, some flows may return tokens in the fragment instead of using the code exchange.
+  - The app now includes a client-side fallback that will process fragment tokens and set the session. If you still see issues after configuring Supabase and redeploying, collect the full redirect URL and browser console/network logs and file an issue or share them here for debugging.
 
 ## Security notes
 
