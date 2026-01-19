@@ -31,7 +31,7 @@ Dependencies are grouped to reduce PR noise:
 
 ### Major Version Policy
 
-Major versions are **ignored by Dependabot** and handled manually. This applies to:
+Major versions are **ignored by Dependabot** and handled manually. Dependabot is configured to ignore semver-major updates globally (for npm and GitHub Actions) to reduce noisy major PRs; security advisories may still create PRs for critical vulnerabilities. This applies to:
 
 | Package                                  | Reason                                       |
 | ---------------------------------------- | -------------------------------------------- |

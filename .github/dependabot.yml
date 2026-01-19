@@ -86,6 +86,10 @@ updates:
       interval: 'weekly'
       day: 'monday'
     target-branch: 'main'
+    # Global: ignore all semver-major updates for actions
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     labels:
       - 'dependencies'
       - 'github-actions'
