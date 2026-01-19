@@ -41,6 +41,9 @@ updates:
     # See docs/dependency-upgrade-policy.md for the rationale, process, and review cadence.
     # GitHub Security Advisories will still alert on vulnerabilities
     ignore:
+      # Global: ignore all semver-major updates to avoid noisy major PRs.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
       # React ecosystem - major versions require coordinated migration
       - dependency-name: 'react'
         update-types: ['version-update:semver-major']
