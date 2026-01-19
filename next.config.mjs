@@ -43,7 +43,8 @@ const nextConfig = {
       ? "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:"
       : [
           "default-src 'self'",
-          "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+          // Allow Google Identity Services script for One‑Tap / GSI popup
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
           "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co",
@@ -56,7 +57,8 @@ const nextConfig = {
     // Content Security Policy - embeddable (allows external framing)
     const cspHeaderEmbeddable = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      // Allow Google Identity Services script for One‑Tap / GSI popup
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co",

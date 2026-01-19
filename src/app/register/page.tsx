@@ -170,8 +170,6 @@ export default function RegisterPage() {
   return (
     <>
       <Header isAuthenticated={false} />
-      {process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ONE_TAP === 'true' &&
-        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && <GoogleOneTap />}
       <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">
           <div className="bg-card border border-border rounded-lg shadow-lg p-8">
@@ -338,7 +336,9 @@ export default function RegisterPage() {
             {/* Google sign-up option goes below the manual form */}
             {(isPublicRegistrationAllowed || hasValidInvitation) && (
               <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground mb-3">Or, create your account with Google</p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Or, create your account with Google
+                </p>
                 <GoogleSignInButton variant="signup" />
               </div>
             )}

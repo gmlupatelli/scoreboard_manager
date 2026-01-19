@@ -5,7 +5,10 @@ import RegisterPage from '../page';
 // Mock fetch for settings
 beforeAll(() => {
   // @ts-ignore
-  global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ allow_public_registration: true }) });
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ allow_public_registration: true }),
+  });
 });
 
 afterAll(() => {
@@ -39,7 +42,9 @@ describe('Register Page layout', () => {
     expect(googleBtn).toBeInTheDocument();
 
     // Ensure the Create Account button is before the Google button in the document
-    expect(createBtn.compareDocumentPosition(googleBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      createBtn.compareDocumentPosition(googleBtn) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
 
     // Ensure One-Tap is not rendered on register page (script should not be auto-initialized)
     expect(screen.queryByText('Sign in with Google')).not.toBeInTheDocument();
