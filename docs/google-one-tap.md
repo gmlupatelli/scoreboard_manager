@@ -49,8 +49,15 @@ In Netlify (or your hosting provider) add the same variables (do NOT expose the 
 
 1. Ensure `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is in your `.env.local`.
 2. Run the app: `npm run dev` (the dev server runs on port **5000**).
-3. Visit `http://localhost:5000/login` and wait for the One‑Tap prompt or click the "Sign in with Google" button.
+3. Visit `http://localhost:5000/login` and either:
+   - Wait for the One‑Tap prompt, or
+   - Click the **Sign in with Google** button (the app now uses Google Identity Services to show the consent prompt tied to your origin when possible).
 4. Complete consent; you should be redirected to `/auth/callback` and then to the Dashboard if successful.
+
+### GSI popup button behavior
+
+- When `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is configured and the Google Identity Services script loads successfully, the **Sign in with Google** button will use the GSI ID‑token flow (popup/prompt) and call `supabase.auth.signInWithIdToken` under the hood. This will show your site's origin on the Google consent screen and does **not** return a refresh token (short‑lived ID token only).
+- If the GSI script isn't available or initialization fails, the button falls back to the app-hosted OAuth redirect (PKCE) using Supabase. If you want refresh tokens, configure the Google client secret in Supabase and use the PKCE/code exchange (Supabase handles refresh tokens when available).
 
 ## Troubleshooting
 
