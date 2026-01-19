@@ -23,6 +23,7 @@ declare global {
             nonce?: string;
             auto_select?: boolean;
             itp_support?: boolean;
+            use_fedcm_for_prompt?: boolean;
             [key: string]: unknown;
           }) => void;
           prompt: () => void;

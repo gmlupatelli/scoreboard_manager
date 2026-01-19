@@ -175,19 +175,10 @@ export default function RegisterPage() {
           <div className="bg-card border border-border rounded-lg shadow-lg p-8">
             <h1 className="text-3xl font-bold text-center mb-2 text-foreground">Create Account</h1>
             <p className="text-center text-muted-foreground mb-8">
-              Start managing your scoreboards today
+              Start managing your scoreboards today. Create your account bellow.
             </p>
 
-            {/* Show the manual registration form first (the "or" separator indicates the other option below) */}
-            {(isPublicRegistrationAllowed || hasValidInvitation) && (
-              <div className="mb-4">
-                <div className="flex items-center gap-3">
-                  <hr className="flex-1 border-border" />
-                  <div className="text-sm text-muted-foreground">or</div>
-                  <hr className="flex-1 border-border" />
-                </div>
-              </div>
-            )}
+            {/* Manual registration form */}
 
             {!isPublicRegistrationAllowed && !hasValidInvitation && (
               <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
@@ -335,11 +326,15 @@ export default function RegisterPage() {
 
             {/* Google sign-up option goes below the manual form */}
             {(isPublicRegistrationAllowed || hasValidInvitation) && (
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Or, create your account with Google
-                </p>
-                <GoogleSignInButton variant="signup" />
+              <div className="mt-6">
+                <div className="flex items-center gap-3">
+                  <hr className="flex-1 border-border" />
+                  <div className="text-sm text-muted-foreground">or</div>
+                  <hr className="flex-1 border-border" />
+                </div>
+                <div className="mt-4 text-center">
+                  <GoogleSignInButton />
+                </div>
               </div>
             )}
 
