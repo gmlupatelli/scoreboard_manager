@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import GoogleOneTap from '@/components/auth/GoogleOneTap';
 import Icon from '@/components/ui/AppIcon';
 
 interface SystemSettings {
@@ -169,6 +171,8 @@ export default function RegisterPage() {
   return (
     <>
       <Header isAuthenticated={false} />
+      {process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ONE_TAP === 'true' &&
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && <GoogleOneTap />}
       <div className="min-h-screen bg-background flex items-center justify-center p-4 pt-20">
         <div className="w-full max-w-md">
           <div className="bg-card border border-border rounded-lg shadow-lg p-8">
@@ -176,6 +180,21 @@ export default function RegisterPage() {
             <p className="text-center text-muted-foreground mb-8">
               Start managing your scoreboards today
             </p>
+
+            {(isPublicRegistrationAllowed || hasValidInvitation) && (
+              <>
+                <div className="mb-4">
+                  <div className="flex items-center gap-3">
+                    <hr className="flex-1 border-border" />
+                    <div className="text-sm text-muted-foreground">or</div>
+                    <hr className="flex-1 border-border" />
+                  </div>
+                  <div className="mt-4">
+                    <GoogleSignInButton />
+                  </div>
+                </div>
+              </>
+            )}
 
             {!isPublicRegistrationAllowed && !hasValidInvitation && (
               <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">

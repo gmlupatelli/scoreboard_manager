@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
+import GoogleOneTap from '@/components/auth/GoogleOneTap';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,6 +58,9 @@ export default function LoginPage() {
   return (
     <>
       <Header isAuthenticated={false} />
+      {process.env.NEXT_PUBLIC_ENABLE_GOOGLE_ONE_TAP === 'true' &&
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && <GoogleOneTap />}
+
       <div className="min-h-screen flex items-center justify-center bg-background p-4 pt-20">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
@@ -114,6 +119,17 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+
+          <div className="mt-4">
+            <div className="flex items-center gap-3">
+              <hr className="flex-1 border-border" />
+              <div className="text-sm text-muted-foreground">or</div>
+              <hr className="flex-1 border-border" />
+            </div>
+            <div className="mt-4">
+              <GoogleSignInButton />
+            </div>
+          </div>
 
           <div className="mt-6 text-center text-sm space-y-3">
             <p className="text-muted-foreground">

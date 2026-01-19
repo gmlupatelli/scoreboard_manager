@@ -16,6 +16,11 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signInWithOAuth: (
+    provider: 'google',
+    options?: { redirectTo?: string; queryParams?: Record<string, string> }
+  ) => Promise<{ error: Error | null }>;
+  signInWithIdToken: (token: string, nonce?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
@@ -118,6 +123,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithOAuth = async (
+    provider: 'google',
+    options?: { redirectTo?: string; queryParams?: Record<string, string> }
+  ) => {
+    try {
+      // Default to app-hosted callback
+      const redirectTo = options?.redirectTo ?? `${window.location.origin}/auth/callback`;
+
+      const { error } = await import('@/services/authService').then((m) =>
+        m.startOAuth(provider, { redirectTo, queryParams: options?.queryParams })
+      );
+
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const signInWithIdToken = async (token: string, nonce?: string) => {
+    try {
+      const { error } = await import('@/services/authService').then((m) =>
+        m.signInWithIdToken(token, nonce)
+      );
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -153,6 +187,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loading,
         signIn,
         signUp,
+        signInWithOAuth,
+        signInWithIdToken,
         signOut,
         refreshProfile,
         updateUserProfile,

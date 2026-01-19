@@ -308,7 +308,8 @@ const ScoreboardManagementInteractive = () => {
 
       if (result.error || !result.data) throw result.error;
 
-      updateEntriesState((prevEntries) => [...prevEntries, result.data]);
+      const newEntry = result.data;
+      updateEntriesState((prevEntries) => [...prevEntries, newEntry]);
       showToast('Entry added successfully', 'success');
     } catch (_err) {
       showToast('Failed to add entry', 'error');
@@ -392,7 +393,8 @@ const ScoreboardManagementInteractive = () => {
           details: null,
         });
         if (result.error || !result.data) throw result.error;
-        createdEntries.push(result.data);
+        const created = result.data;
+        createdEntries.push(created);
       }
 
       updateEntriesState((prevEntries) => [...prevEntries, ...createdEntries]);

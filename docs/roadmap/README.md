@@ -62,6 +62,7 @@ This document outlines the planned features and implementation phases for transi
 | 3     | [Teams & Collaboration](./phase-3-teams-collaboration.md)          | 🟡 Medium | Not Started |
 | 4     | [Kiosk/TV Mode](./phase-4-kiosk-mode.md)                           | 🟡 Medium | Not Started |
 | 5     | [Time Machine](./phase-5-time-machine.md)                          | 🟢 Lower  | Not Started |
+| 6     | [Telemetry & Observability](./phase-6-telemetry.md)              | 🔴 High   | Not Started |
 
 ## Existing Features (Already Implemented)
 
