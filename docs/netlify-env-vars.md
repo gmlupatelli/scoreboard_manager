@@ -60,6 +60,13 @@ Set variables as: **Build, Functions, Runtime** when those variables are needed 
 - Rotate `SUPABASE_SECRET_KEY` and Google client secret if accidentally exposed. Use Google Cloud Secret Manager for production.
 - Avoid using production secrets in branch previews unless necessary for proper testing. Use test-specific credentials if possible.
 - Keep `NEXT_PUBLIC_*` variables strictly public and free of sensitive values.
+- Netlify's secrets scanner may detect public client IDs (for example, `NEXT_PUBLIC_GOOGLE_CLIENT_ID`) in your build output and fail the build. To avoid this, add public key names to the `SECRETS_SCAN_OMIT_KEYS` environment variable in your Netlify Site settings (Build & deploy → Environment → `SECRETS_SCAN_OMIT_KEYS`) or set it in `netlify.toml` under `[build.environment]`. Example:
+
+  ```
+  SECRETS_SCAN_OMIT_KEYS="NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_GOOGLE_CLIENT_ID"
+  ```
+
+  Add only non-sensitive public keys to this list; do NOT omit real secrets.
 
 ---
 
@@ -68,6 +75,7 @@ Set variables as: **Build, Functions, Runtime** when those variables are needed 
 - [ ] Add `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to Build/Runtime contexts for the site.
 - [ ] Add `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET` to the secret store (Build/Functions/Runtime) for the site.
 - [ ] (Optional) Add `NEXT_PUBLIC_ENABLE_GOOGLE_ONE_TAP=true` to enable One‑Tap for the site if you choose to enable it.
+- [ ] If your deploy fails with a Netlify secrets-scan error mentioning `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, add it to `SECRETS_SCAN_OMIT_KEYS` in Site settings (Build & deploy → Environment).
 - [ ] Trigger a site redeploy after adding the vars.
 
 ## Post-deploy testing checklist for Google OAuth / One‑Tap
