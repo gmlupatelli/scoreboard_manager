@@ -220,7 +220,7 @@ export default function CreateScoreboardModal({
                   <p className="mt-1 text-xs text-text-secondary">
                     {visibility === 'public'
                       ? 'Anyone can view this scoreboard'
-                      : 'Only you can view this scoreboard'}
+                      : 'Only you or someone with the scoreboard link can view this scoreboard'}
                   </p>
                 </div>
 
