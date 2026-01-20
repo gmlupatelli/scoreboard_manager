@@ -22,6 +22,9 @@
 DROP POLICY IF EXISTS "anon_select_public" ON scoreboards;
 
 -- Create new policy allowing anonymous users to view all scoreboards
+-- Note: This allows read-only access to any scoreboard by anonymous users.
+-- This is intentional to enable "share by link" functionality for private scoreboards.
+-- Write operations (INSERT, UPDATE, DELETE) remain restricted to authenticated owners.
 CREATE POLICY "anon_select_all" ON scoreboards
   FOR SELECT
   TO anon
@@ -35,6 +38,9 @@ CREATE POLICY "anon_select_all" ON scoreboards
 DROP POLICY IF EXISTS "anon_select_public_entries" ON scoreboard_entries;
 
 -- Create new policy allowing anonymous users to view all scoreboard entries
+-- Note: This allows read-only access to entries for any scoreboard by anonymous users.
+-- This is necessary for the "share by link" functionality to work for private scoreboards.
+-- Write operations (INSERT, UPDATE, DELETE) remain restricted to authenticated owners.
 CREATE POLICY "anon_select_all_entries" ON scoreboard_entries
   FOR SELECT
   TO anon
@@ -45,6 +51,8 @@ CREATE POLICY "anon_select_all_entries" ON scoreboard_entries
 -- ============================================================================
 
 -- Update can_view_scoreboard to allow viewing any scoreboard (not just public or owned)
+-- This is a significant behavioral change: Previously checked visibility='public' OR owner
+-- Now only checks if scoreboard exists, enabling "share by link" for private scoreboards
 CREATE OR REPLACE FUNCTION public.can_view_scoreboard(scoreboard_uuid UUID) 
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -54,6 +62,8 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.scoreboards 
     WHERE id = scoreboard_uuid
+    -- Removed: AND (visibility = 'public' OR owner_id = auth.uid())
+    -- Now allows any scoreboard to be viewed if you have the direct link/ID
   );
 $$;
 

@@ -101,3 +101,18 @@ This change allows anyone with a direct link to view private scoreboards. This i
 - Only manageable by owners
 
 The "private" designation now means "not publicly listed" rather than "not accessible without login".
+
+### Rate Limiting
+
+This migration enables anonymous read access to all scoreboards and entries. Consider implementing rate limiting at the application or API gateway level to prevent:
+- Data scraping by unauthenticated users
+- Excessive queries that could impact database performance
+- Potential abuse of the public API
+
+**Recommended mitigations:**
+1. **Supabase Edge Functions**: Implement rate limiting in edge functions if you're using them
+2. **API Gateway**: Use Cloudflare, AWS API Gateway, or similar to rate limit by IP
+3. **Monitoring**: Set up alerts for unusual query patterns from anonymous users
+4. **Indexes**: Ensure proper database indexes exist (already configured in baseline migration)
+
+The existing trigram indexes on `scoreboards` should help with performance, but monitor your database metrics after applying this change.
