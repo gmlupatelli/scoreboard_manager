@@ -5,10 +5,14 @@ import Image from 'next/image';
 
 interface KioskImageSlideProps {
   imageUrl: string;
+  cacheKey?: number;
 }
 
-export default function KioskImageSlide({ imageUrl }: KioskImageSlideProps) {
+export default function KioskImageSlide({ imageUrl, cacheKey }: KioskImageSlideProps) {
   const [hasError, setHasError] = useState(false);
+
+  // Create a cached URL with cache key to prevent unnecessary reloads
+  const cachedImageUrl = cacheKey ? `${imageUrl}#cache=${cacheKey}` : imageUrl;
 
   if (hasError) {
     return (
@@ -23,7 +27,7 @@ export default function KioskImageSlide({ imageUrl }: KioskImageSlideProps) {
   return (
     <div className="h-full w-full relative bg-black">
       <Image
-        src={imageUrl}
+        src={cachedImageUrl}
         alt="Kiosk slide"
         fill
         className="object-contain"

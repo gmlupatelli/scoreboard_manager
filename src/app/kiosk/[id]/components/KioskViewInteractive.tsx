@@ -65,6 +65,7 @@ export default function KioskViewInteractive() {
   const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const slideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pendingRefreshRef = useRef(false);
+  const [slidesCacheKey, setSlidesCacheKey] = useState(Date.now());
 
   // Build carousel slides array from database order (already sorted by position)
   const carouselSlides = useCallback(() => {
@@ -179,7 +180,7 @@ export default function KioskViewInteractive() {
     return () => clearInterval(interval);
   }, [kioskData, isPinVerified, fetchKioskData]);
 
-  // Subscribe to realtime scoreboard entry changes
+  // Subscribe to realtime scoreboard entry changes and kiosk slide changes
   useEffect(() => {
     if (!scoreboardId) return;
 
@@ -198,12 +199,26 @@ export default function KioskViewInteractive() {
           pendingRefreshRef.current = true;
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kiosk_slides',
+        },
+        () => {
+          // When slides change, update cache key to force reload of images
+          setSlidesCacheKey(Date.now());
+          // Also fetch new data
+          fetchKioskData();
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [scoreboardId]);
+  }, [scoreboardId, fetchKioskData]);
 
   // Check for pending refresh when transitioning to scoreboard slide
   useEffect(() => {
@@ -371,7 +386,7 @@ export default function KioskViewInteractive() {
         {currentSlide?.type === 'scoreboard' ? (
           <KioskScoreboard scoreboard={kioskData.scoreboard} entries={kioskData.entries} />
         ) : currentSlide?.type === 'image' && currentSlide.imageUrl ? (
-          <KioskImageSlide imageUrl={currentSlide.imageUrl} />
+          <KioskImageSlide imageUrl={currentSlide.imageUrl} cacheKey={slidesCacheKey} />
         ) : null}
       </div>
 
