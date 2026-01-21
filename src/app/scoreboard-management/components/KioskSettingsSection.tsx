@@ -628,6 +628,11 @@ export default function KioskSettingsSection({
           return updated;
         });
         setLastFetchTime(Date.now());
+
+        // If config doesn't exist yet, reload to get it (enables realtime subscription)
+        if (!config) {
+          loadKioskData({ showLoader: false });
+        }
       }
 
       setUploadProgress({
@@ -706,6 +711,11 @@ export default function KioskSettingsSection({
           return updated;
         });
         setLastFetchTime(Date.now());
+
+        // If config doesn't exist yet, reload to get it (enables realtime subscription)
+        if (!config) {
+          loadKioskData({ showLoader: false });
+        }
 
         setUploadProgress({
           current: 1,
