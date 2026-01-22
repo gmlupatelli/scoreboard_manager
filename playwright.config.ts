@@ -1,9 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { loadTestEnv } from './e2e/loadTestEnv.js';
 
-// Load test environment variables
-dotenv.config({ path: path.resolve(__dirname, '.env.test') });
+// Load .env.local first, then .env.test overrides for Playwright
+loadTestEnv();
 
 /**
  * Playwright configuration for E2E testing

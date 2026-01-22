@@ -12,23 +12,23 @@
  *
  * Usage: npm run refresh-test-data:full
  *
- * Credentials are loaded from .env.test using the numbered naming convention:
+ * Credentials load from .env.local (Supabase) with .env.test overrides using the numbered naming convention:
  *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
  *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
  *   MANUAL_TEST_ADMIN_<N>_EMAIL / MANUAL_TEST_ADMIN_<N>_PASSWORD
  *   MANUAL_TEST_USER_<N>_EMAIL / MANUAL_TEST_USER_<N>_PASSWORD
  *
  * Prerequisites:
- * - .env.test must be configured with SUPABASE credentials
+ * - .env.local must be configured with SUPABASE credentials
+ * - .env.test holds test user credentials and optional overrides
  * - TEST_CLEANUP_API_KEY must be set
  * - Application should be running on localhost:5000 (optional - only for cleanup)
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { config } from 'dotenv';
 import { randomUUID } from 'crypto';
+import { loadTestEnv } from '../loadTestEnv.js';
 import type { Database } from '../../src/types/database.types';
 
 // Type aliases for database operations
@@ -37,13 +37,8 @@ type ScoreboardRow = Database['public']['Tables']['scoreboards']['Row'];
 type ScoreboardEntryRow = Database['public']['Tables']['scoreboard_entries']['Row'];
 type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
 
-// ES module compatibility
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load test environment variables from .env.test
-const envPath = path.resolve(__dirname, '../../.env.test');
-config({ path: envPath });
+// Load .env.local first, then .env.test overrides for scripts
+loadTestEnv();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;

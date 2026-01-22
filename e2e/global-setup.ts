@@ -4,17 +4,16 @@
  * Runs once before all test files.
  * Seeds test data for automated test users.
  *
- * Credentials are loaded from .env.test using the numbered naming convention:
+ * Credentials load from .env.local (Supabase) with .env.test overrides for test users:
  *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
  *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
  */
 
 import { chromium, type FullConfig, type Page } from '@playwright/test';
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { loadTestEnv } from './loadTestEnv.js';
 
-// Load test environment variables
-dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
+// Load .env.local first, then .env.test overrides for Playwright
+loadTestEnv();
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
 
