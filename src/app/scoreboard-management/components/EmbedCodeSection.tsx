@@ -17,6 +17,7 @@ export default function EmbedCodeSection({
   onToggleExpanded,
 }: EmbedCodeSectionProps) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [embedWidth, setEmbedWidth] = useState('100%');
   const [embedHeight, setEmbedHeight] = useState('600');
 
@@ -52,16 +53,26 @@ export default function EmbedCodeSection({
     try {
       await navigator.clipboard.writeText(getIframeCode());
       setCopied(true);
+      setCopyError(false);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch (_err) {
+      // Clipboard API blocked (e.g., VS Code Simple Browser)
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 3000);
+    }
   };
 
   const handleCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(getEmbedUrl());
       setCopied(true);
+      setCopyError(false);
       setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch (_err) {
+      // Clipboard API blocked (e.g., VS Code Simple Browser)
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 3000);
+    }
   };
 
   const handleOpenPreview = () => {

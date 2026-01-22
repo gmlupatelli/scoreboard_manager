@@ -84,6 +84,10 @@ const nextConfig = {
             value: 'nosniff',
           },
           {
+            key: 'Permissions-Policy',
+            value: 'clipboard-write=(self), clipboard-read=(self)',
+          },
+          {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
@@ -144,6 +148,10 @@ const nextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'clipboard-write=(self), clipboard-read=(self)',
           },
           // X-Frame-Options for older browsers (CSP frame-ancestors takes precedence in modern browsers)
           ...(!isDev

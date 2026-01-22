@@ -918,8 +918,8 @@ export default function KioskSettingsSection({
       await navigator.clipboard.writeText(url);
       onShowToast('Kiosk URL copied to clipboard', 'success');
     } catch (_err) {
-      // Clipboard API blocked (e.g., VS Code Simple Browser) - show URL for manual copy
-      onShowToast(`Copy failed. URL: ${url}`, 'error');
+      // Clipboard API blocked (e.g., VS Code Simple Browser)
+      onShowToast('Copy failed - try a different browser', 'error');
     }
   };
 
