@@ -27,6 +27,15 @@ export interface PaginationOptions {
 
 const DEFAULT_PAGE_SIZE = 30;
 
+// UUID validation regex (RFC 4122 compliant)
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// Helper to validate UUID format for security
+const isValidUUID = (id: string): boolean => {
+  return UUID_REGEX.test(id);
+};
+
 // Types for Supabase query results with joined tables
 interface ScoreboardWithEntryCount extends ScoreboardRow {
   scoreboard_entries?: { count: number }[];
@@ -81,6 +90,12 @@ export const scoreboardService = {
       onEntriesChange?: () => void;
     }
   ) {
+    // Validate UUID format to prevent injection attacks
+    if (!isValidUUID(scoreboardId)) {
+      console.error('Invalid scoreboard ID format:', scoreboardId);
+      return () => {}; // Return no-op unsubscribe function
+    }
+
     const channel = supabase
       .channel(`scoreboard-${scoreboardId}`)
       .on(
