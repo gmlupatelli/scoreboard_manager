@@ -243,6 +243,12 @@ export default function KioskSettingsSection({
     loadKioskDataRef.current = loadKioskData;
   }, [loadKioskData]);
 
+  // Keep getAuthHeaders ref updated for stable reference in realtime callbacks
+  const getAuthHeadersRef = useRef(getAuthHeaders);
+  useEffect(() => {
+    getAuthHeadersRef.current = getAuthHeaders;
+  }, [getAuthHeaders]);
+
   // Ref to batch realtime UPDATE events and sort once
   const pendingUpdatesRef = useRef<Map<string, number>>(new Map());
   const updateDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -262,19 +268,62 @@ export default function KioskSettingsSection({
           table: 'kiosk_slides',
           filter: `kiosk_config_id=eq.${config.id}`,
         },
-        (payload) => {
+        async (payload) => {
           const newSlide = payload.new as KioskSlide;
+
+          // If image slide, sign URLs before adding to state
+          let slideToAdd = newSlide;
+          if (newSlide.slide_type === 'image' && (newSlide.image_url || newSlide.thumbnail_url)) {
+            try {
+              const headers = await getAuthHeadersRef.current();
+              const pathsToSign: string[] = [];
+
+              if (newSlide.image_url) pathsToSign.push(newSlide.image_url);
+              if (newSlide.thumbnail_url) pathsToSign.push(newSlide.thumbnail_url);
+
+              const response = await fetch(`/api/kiosk/${scoreboardId}/sign-urls`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ paths: pathsToSign }),
+              });
+
+              if (response.ok) {
+                const { signedUrls } = await response.json();
+                slideToAdd = {
+                  ...newSlide,
+                  image_url:
+                    (newSlide.image_url && signedUrls[newSlide.image_url]) || newSlide.image_url,
+                  thumbnail_url:
+                    (newSlide.thumbnail_url && signedUrls[newSlide.thumbnail_url]) ||
+                    newSlide.thumbnail_url,
+                };
+              }
+            } catch (error) {
+              // Log but continue with unsigned URLs
+              console.error('Failed to sign slide URLs:', error);
+              // Keep original slide with unsigned paths; periodic refresh will update them
+            }
+          }
+
           setSlides((prev) => {
             // Check if slide already exists (avoid duplicates from optimistic UI)
-            if (prev.some((s) => s.id === newSlide.id)) {
+            if (prev.some((s) => s.id === slideToAdd.id)) {
               return prev;
             }
-            const updated = [...prev, newSlide];
+            const updated = [...prev, slideToAdd];
             updated.sort((a, b) => a.position - b.position);
             return updated;
           });
           // Update lastFetchTime to prevent stale-check from triggering a GET
           setLastFetchTime(Date.now());
+          // Clear failed images to allow retry if signed URLs were obtained
+          setFailedImages((prev) => {
+            const updated = new Set(prev);
+            if (slideToAdd.thumbnail_url && slideToAdd.thumbnail_url.includes('token=')) {
+              updated.delete(slideToAdd.id);
+            }
+            return updated;
+          });
         }
       )
       .on(
@@ -380,12 +429,6 @@ export default function KioskSettingsSection({
       }
     };
   }, [scoreboardId, config?.id]);
-
-  // Keep getAuthHeaders ref updated for stable reference
-  const getAuthHeadersRef = useRef(getAuthHeaders);
-  useEffect(() => {
-    getAuthHeadersRef.current = getAuthHeaders;
-  }, [getAuthHeaders]);
 
   // Load data when expanded - only on initial expand or after stale threshold
   // Use ref for lastFetchTime to avoid triggering effect on realtime updates
@@ -869,10 +912,15 @@ export default function KioskSettingsSection({
   };
 
   // Copy kiosk URL
-  const handleCopyKioskUrl = () => {
+  const handleCopyKioskUrl = async () => {
     const url = `${window.location.origin}/kiosk/${scoreboardId}`;
-    navigator.clipboard.writeText(url);
-    onShowToast('Kiosk URL copied to clipboard', 'success');
+    try {
+      await navigator.clipboard.writeText(url);
+      onShowToast('Kiosk URL copied to clipboard', 'success');
+    } catch (_err) {
+      // Clipboard API blocked (e.g., VS Code Simple Browser)
+      onShowToast('Copy failed - try a different browser', 'error');
+    }
   };
 
   // Preview kiosk

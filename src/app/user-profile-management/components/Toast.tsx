@@ -27,7 +27,7 @@ export default function Toast({ message, type, onClose }: ToastProps) {
       setCanCopy(false);
       setTimeout(() => setCanCopy(true), 2000);
     } catch (_err) {
-      console.error('Failed to copy message');
+      // Clipboard API blocked (e.g., VS Code Simple Browser) - silent fail for toast copy
     }
   };
 

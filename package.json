@@ -57,7 +57,7 @@
     "test:e2e:fast": "playwright test --config=playwright.config.fast.ts --grep=\"@fast\"",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:cleanup": "node -e \"require('dotenv').config({path:'.env.test'});fetch('http://localhost:5000/api/test/cleanup',{method:'POST',headers:{'x-cleanup-api-key':process.env.TEST_CLEANUP_API_KEY}}).then(r=>r.json()).then(console.log)\"",
+    "test:cleanup": "node -e \"require('dotenv').config({path:'.env.local'});require('dotenv').config({path:'.env.test'});fetch('http://localhost:5000/api/test/cleanup',{method:'POST',headers:{'x-cleanup-api-key':process.env.TEST_CLEANUP_API_KEY}}).then(r=>r.json()).then(console.log)\"",
     "refresh-test-data": "ts-node e2e/scripts/refresh-test-data.ts",
     "refresh-test-data:full": "ts-node e2e/scripts/refresh-test-data-full.ts"
   },
@@ -77,7 +77,9 @@
   },
   "overrides": {
     "glob": "^10.0.0",
-    "rimraf": "^5.0.0"
+    "rimraf": "^5.0.0",
+    "diff": "^4.0.4",
+    "tar": "^7.5.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
@@ -98,7 +100,7 @@
     "knip": "^5.81.0",
     "postcss": "^8.4.49",
     "prettier": "^3.8.0",
-    "supabase": "2.72.7",
+    "supabase": "2.72.8",
     "tailwindcss": "3.4.19",
     "ts-node": "^10.9.2",
     "typescript": "^5"

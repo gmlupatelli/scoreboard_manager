@@ -300,6 +300,8 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 - `SUPABASE_ACCESS_TOKEN`: Personal access token for Supabase CLI (production migrations only)
 - `SUPABASE_DB_PASSWORD`: Database password for Supabase CLI (production migrations only)
 
+**Environment loading order (tests):** Playwright and E2E tooling load `.env.local` first, then apply `.env.test` overrides. Keep Supabase credentials in `.env.local`; use `.env.test` for test users, cleanup key, and test-only overrides.
+
 ### Security Notes
 
 - **JWT Signing Keys**: Application uses modern ECC P-256 signing keys (enabled January 10, 2026)

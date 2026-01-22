@@ -4,10 +4,9 @@
  * Calls cleanup API to delete john/sarah test data
  */
 
-import * as dotenv from 'dotenv';
-import * as path from 'path';
+import { loadTestEnv } from './loadTestEnv.js';
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
+loadTestEnv();
 
 async function globalTeardown() {
   console.log('\n🧹 Running global teardown - cleaning test data...\n');

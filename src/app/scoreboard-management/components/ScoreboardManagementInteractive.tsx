@@ -308,7 +308,7 @@ const ScoreboardManagementInteractive = () => {
 
       if (result.error || !result.data) throw result.error;
 
-      updateEntriesState((prevEntries) => [...prevEntries, result.data]);
+      updateEntriesState((prevEntries) => [...prevEntries, result.data as ScoreboardEntry]);
       showToast('Entry added successfully', 'success');
     } catch (_err) {
       showToast('Failed to add entry', 'error');
@@ -451,7 +451,8 @@ const ScoreboardManagementInteractive = () => {
       await navigator.clipboard.writeText(url);
       showToast('URL copied to clipboard', 'success');
     } catch (_err) {
-      showToast('Failed to copy URL', 'error');
+      // Clipboard API blocked (e.g., VS Code Simple Browser)
+      showToast('Copy failed - try a different browser', 'error');
     }
   };
 
