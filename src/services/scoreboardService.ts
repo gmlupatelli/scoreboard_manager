@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase/client';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '../types/models';
 import { Database } from '../types/database.types';
 import { STYLE_PRESETS } from '../utils/stylePresets';
-import { isValidUUID } from '../utils/validation';
+import { isValidUUID, escapeFilterValue } from '../utils/validation';
 
 type ScoreboardRow = Database['public']['Tables']['scoreboards']['Row'];
 type ScoreboardInsert = Database['public']['Tables']['scoreboards']['Insert'];
@@ -88,6 +88,9 @@ export const scoreboardService = {
       return () => {}; // Return no-op unsubscribe function
     }
 
+    // Additional escaping for defense in depth (though UUID validation should be sufficient)
+    const safeScoreboardId = escapeFilterValue(scoreboardId);
+
     const channel = supabase
       .channel(`scoreboard-${scoreboardId}`)
       .on(
@@ -96,7 +99,7 @@ export const scoreboardService = {
           event: '*',
           schema: 'public',
           table: 'scoreboard_entries',
-          filter: `scoreboard_id=eq.${scoreboardId}`,
+          filter: `scoreboard_id=eq.${safeScoreboardId}`,
         },
         () => {
           // Filter is applied at database level, so all changes here are relevant
@@ -109,7 +112,7 @@ export const scoreboardService = {
           event: '*',
           schema: 'public',
           table: 'scoreboards',
-          filter: `id=eq.${scoreboardId}`,
+          filter: `id=eq.${safeScoreboardId}`,
         },
         () => {
           // Filter is applied at database level, so all changes here are relevant

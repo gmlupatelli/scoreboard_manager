@@ -24,3 +24,14 @@ export const sanitizeUUID = (id: string | null | undefined): string | null => {
   if (!id) return null;
   return isValidUUID(id) ? id : null;
 };
+
+/**
+ * Escapes special characters for use in PostgREST filters
+ * Note: UUIDs validated by isValidUUID won't have special chars, but this provides defense in depth
+ * @param value - String to escape
+ * @returns Escaped string
+ */
+export const escapeFilterValue = (value: string): string => {
+  // Escape special PostgREST characters: . * ( ) , |
+  return value.replace(/[.*(),|]/g, '\\$&');
+};
