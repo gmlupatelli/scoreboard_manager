@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase/client';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '../types/models';
 import { Database } from '../types/database.types';
 import { STYLE_PRESETS } from '../utils/stylePresets';
+import { isValidUUID } from '../utils/validation';
 
 type ScoreboardRow = Database['public']['Tables']['scoreboards']['Row'];
 type ScoreboardInsert = Database['public']['Tables']['scoreboards']['Insert'];
@@ -26,15 +27,6 @@ export interface PaginationOptions {
 }
 
 const DEFAULT_PAGE_SIZE = 30;
-
-// UUID validation regex (RFC 4122 compliant)
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-// Helper to validate UUID format for security
-const isValidUUID = (id: string): boolean => {
-  return UUID_REGEX.test(id);
-};
 
 // Types for Supabase query results with joined tables
 interface ScoreboardWithEntryCount extends ScoreboardRow {
