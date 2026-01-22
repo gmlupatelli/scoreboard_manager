@@ -6,9 +6,6 @@
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-// PostgREST special characters regex (compiled once for performance)
-const POSTGREST_SPECIAL_CHARS_REGEX = /[.*(),|]/g;
-
 /**
  * Validates if a string is a valid UUID format (RFC 4122)
  * @param id - String to validate
@@ -28,13 +25,3 @@ export const sanitizeUUID = (id: string | null | undefined): string | null => {
   return isValidUUID(id) ? id : null;
 };
 
-/**
- * Escapes special characters for use in PostgREST filters
- * Note: This is kept for potential future use, but UUIDs don't need escaping
- * @param value - String to escape
- * @returns Escaped string
- */
-export const escapeFilterValue = (value: string): string => {
-  // Escape special PostgREST characters: . * ( ) , |
-  return value.replace(POSTGREST_SPECIAL_CHARS_REGEX, '\\$&');
-};
