@@ -12,7 +12,11 @@ interface SlideContainerProps {
  * SlideContainer handles smooth fade-in/fade-out transitions.
  * New slides fade in smoothly, exiting slides fade out.
  */
-export default function SlideContainer({ children, isTransitioning, isActive }: SlideContainerProps) {
+export default function SlideContainer({
+  children,
+  isTransitioning,
+  isActive,
+}: SlideContainerProps) {
   // Track if we should show this slide (with fade-in delay)
   const [isVisible, setIsVisible] = useState(false);
 

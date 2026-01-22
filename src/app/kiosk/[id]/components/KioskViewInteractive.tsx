@@ -52,11 +52,11 @@ export default function KioskViewInteractive() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Split state: static data (fetched once, cached) vs dynamic entries (fetched frequently)
   const [staticData, setStaticData] = useState<StaticKioskData | null>(null);
   const [entries, setEntries] = useState<EntryData[]>([]);
-  
+
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
@@ -187,7 +187,7 @@ export default function KioskViewInteractive() {
       // Check if next slide is a scoreboard - if so, fetch fresh entries first
       const nextIndex = (currentSlideIndex + 1) % slides.length;
       const nextSlide = slides[nextIndex];
-      
+
       if (nextSlide?.type === 'scoreboard') {
         // Fetch fresh entries before showing scoreboard
         await fetchEntries();
@@ -368,7 +368,7 @@ export default function KioskViewInteractive() {
   }
 
   const slides = carouselSlides();
-  const currentSlide = slides[currentSlideIndex];
+  const _currentSlide = slides[currentSlideIndex];
   const nextSlide = slides[(currentSlideIndex + 1) % slides.length];
 
   return (
@@ -385,10 +385,7 @@ export default function KioskViewInteractive() {
           isTransitioning={isTransitioning && index === currentSlideIndex}
         >
           {slide.type === 'scoreboard' ? (
-            <KioskScoreboard
-              scoreboard={staticData.scoreboard}
-              entries={entries}
-            />
+            <KioskScoreboard scoreboard={staticData.scoreboard} entries={entries} />
           ) : slide.type === 'image' && slide.imageUrl ? (
             <KioskImageSlide
               imageUrl={slide.imageUrl}

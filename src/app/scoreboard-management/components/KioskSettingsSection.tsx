@@ -243,6 +243,12 @@ export default function KioskSettingsSection({
     loadKioskDataRef.current = loadKioskData;
   }, [loadKioskData]);
 
+  // Keep getAuthHeaders ref updated for stable reference in realtime callbacks
+  const getAuthHeadersRef = useRef(getAuthHeaders);
+  useEffect(() => {
+    getAuthHeadersRef.current = getAuthHeaders;
+  }, [getAuthHeaders]);
+
   // Ref to batch realtime UPDATE events and sort once
   const pendingUpdatesRef = useRef<Map<string, number>>(new Map());
   const updateDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -264,32 +270,32 @@ export default function KioskSettingsSection({
         },
         async (payload) => {
           const newSlide = payload.new as KioskSlide;
-          
+
           // If image slide, sign URLs before adding to state
           let slideToAdd = newSlide;
           if (newSlide.slide_type === 'image' && (newSlide.image_url || newSlide.thumbnail_url)) {
             try {
-              const headers = await getAuthHeaders();
+              const headers = await getAuthHeadersRef.current();
               const pathsToSign: string[] = [];
-              
+
               if (newSlide.image_url) pathsToSign.push(newSlide.image_url);
               if (newSlide.thumbnail_url) pathsToSign.push(newSlide.thumbnail_url);
-              
-              const response = await fetch(
-                `/api/kiosk/${scoreboardId}/sign-urls`,
-                {
-                  method: 'POST',
-                  headers,
-                  body: JSON.stringify({ paths: pathsToSign }),
-                }
-              );
-              
+
+              const response = await fetch(`/api/kiosk/${scoreboardId}/sign-urls`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ paths: pathsToSign }),
+              });
+
               if (response.ok) {
                 const { signedUrls } = await response.json();
                 slideToAdd = {
                   ...newSlide,
-                  image_url: (newSlide.image_url && signedUrls[newSlide.image_url]) || newSlide.image_url,
-                  thumbnail_url: (newSlide.thumbnail_url && signedUrls[newSlide.thumbnail_url]) || newSlide.thumbnail_url,
+                  image_url:
+                    (newSlide.image_url && signedUrls[newSlide.image_url]) || newSlide.image_url,
+                  thumbnail_url:
+                    (newSlide.thumbnail_url && signedUrls[newSlide.thumbnail_url]) ||
+                    newSlide.thumbnail_url,
                 };
               }
             } catch (error) {
@@ -298,7 +304,7 @@ export default function KioskSettingsSection({
               // Keep original slide with unsigned paths; periodic refresh will update them
             }
           }
-          
+
           setSlides((prev) => {
             // Check if slide already exists (avoid duplicates from optimistic UI)
             if (prev.some((s) => s.id === slideToAdd.id)) {
@@ -423,12 +429,6 @@ export default function KioskSettingsSection({
       }
     };
   }, [scoreboardId, config?.id]);
-
-  // Keep getAuthHeaders ref updated for stable reference
-  const getAuthHeadersRef = useRef(getAuthHeaders);
-  useEffect(() => {
-    getAuthHeadersRef.current = getAuthHeaders;
-  }, [getAuthHeaders]);
 
   // Load data when expanded - only on initial expand or after stale threshold
   // Use ref for lastFetchTime to avoid triggering effect on realtime updates

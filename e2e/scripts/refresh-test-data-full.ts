@@ -26,7 +26,7 @@
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import * as path from 'path';
+import * as _path from 'path';
 import { randomUUID } from 'crypto';
 import { loadTestEnv } from '../loadTestEnv.js';
 import type { Database } from '../../src/types/database.types';

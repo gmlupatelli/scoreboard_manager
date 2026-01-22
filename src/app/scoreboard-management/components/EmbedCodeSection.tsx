@@ -17,7 +17,7 @@ export default function EmbedCodeSection({
   onToggleExpanded,
 }: EmbedCodeSectionProps) {
   const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState(false);
+  const [_copyError, setCopyError] = useState(false);
   const [embedWidth, setEmbedWidth] = useState('100%');
   const [embedHeight, setEmbedHeight] = useState('600');
 

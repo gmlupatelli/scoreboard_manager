@@ -70,10 +70,7 @@ export async function POST(
     // Get service role client for signing
     const serviceClient = getServiceRoleClient();
     if (!serviceClient) {
-      return NextResponse.json(
-        { error: 'Service role client not available' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Service role client not available' }, { status: 500 });
     }
 
     // Sign all paths

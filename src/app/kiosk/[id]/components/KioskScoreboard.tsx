@@ -215,7 +215,8 @@ export default memo(KioskScoreboardComponent, (prevProps, nextProps) => {
     prevProps.scoreboard.score_type !== nextProps.scoreboard.score_type ||
     prevProps.scoreboard.sort_order !== nextProps.scoreboard.sort_order ||
     prevProps.scoreboard.time_format !== nextProps.scoreboard.time_format ||
-    JSON.stringify(prevProps.scoreboard.custom_styles) !== JSON.stringify(nextProps.scoreboard.custom_styles);
+    JSON.stringify(prevProps.scoreboard.custom_styles) !==
+      JSON.stringify(nextProps.scoreboard.custom_styles);
 
   const entriesChanged =
     prevProps.entries.length !== nextProps.entries.length ||
