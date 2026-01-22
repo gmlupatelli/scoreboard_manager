@@ -308,7 +308,7 @@ const ScoreboardManagementInteractive = () => {
 
       if (result.error || !result.data) throw result.error;
 
-      updateEntriesState((prevEntries) => [...prevEntries, result.data]);
+      updateEntriesState((prevEntries) => [...prevEntries, result.data as ScoreboardEntry]);
       showToast('Entry added successfully', 'success');
     } catch (_err) {
       showToast('Failed to add entry', 'error');

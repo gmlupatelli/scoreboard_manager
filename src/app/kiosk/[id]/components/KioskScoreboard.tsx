@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import { formatScoreDisplay } from '@/utils/timeUtils';
 import { getStylePreset } from '@/utils/stylePresets';
@@ -28,7 +28,7 @@ interface KioskScoreboardProps {
   entries: EntryData[];
 }
 
-export default function KioskScoreboard({ scoreboard, entries }: KioskScoreboardProps) {
+function KioskScoreboardComponent({ scoreboard, entries }: KioskScoreboardProps) {
   // Sort entries and assign ranks
   const rankedEntries = useMemo(() => {
     const sorted = [...entries].sort((a, b) => {
@@ -205,3 +205,27 @@ export default function KioskScoreboard({ scoreboard, entries }: KioskScoreboard
     </div>
   );
 }
+
+export default memo(KioskScoreboardComponent, (prevProps, nextProps) => {
+  // Custom comparison: re-render only if scoreboard data or entries actually changed
+  const scoreboardChanged =
+    prevProps.scoreboard.id !== nextProps.scoreboard.id ||
+    prevProps.scoreboard.title !== nextProps.scoreboard.title ||
+    prevProps.scoreboard.description !== nextProps.scoreboard.description ||
+    prevProps.scoreboard.score_type !== nextProps.scoreboard.score_type ||
+    prevProps.scoreboard.sort_order !== nextProps.scoreboard.sort_order ||
+    prevProps.scoreboard.time_format !== nextProps.scoreboard.time_format ||
+    JSON.stringify(prevProps.scoreboard.custom_styles) !== JSON.stringify(nextProps.scoreboard.custom_styles);
+
+  const entriesChanged =
+    prevProps.entries.length !== nextProps.entries.length ||
+    prevProps.entries.some(
+      (entry, index) =>
+        entry.id !== nextProps.entries[index]?.id ||
+        entry.score !== nextProps.entries[index]?.score ||
+        entry.name !== nextProps.entries[index]?.name
+    );
+
+  // Return true to skip re-render (memoize), false to re-render
+  return !scoreboardChanged && !entriesChanged;
+});

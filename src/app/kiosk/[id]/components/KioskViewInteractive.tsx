@@ -7,6 +7,7 @@ import Icon from '@/components/ui/AppIcon';
 import KioskScoreboard from './KioskScoreboard';
 import KioskImageSlide from './KioskImageSlide';
 import PinEntryModal from './PinEntryModal';
+import SlideContainer from './SlideContainer';
 
 interface SlideData {
   id: string;
@@ -33,7 +34,7 @@ interface EntryData {
   details: string | null;
 }
 
-interface KioskData {
+interface StaticKioskData {
   scoreboard: ScoreboardData;
   config: {
     id: string;
@@ -43,7 +44,6 @@ interface KioskData {
     signedUrlExpirySeconds?: number;
   };
   slides: SlideData[];
-  entries: EntryData[];
 }
 
 export default function KioskViewInteractive() {
@@ -52,7 +52,11 @@ export default function KioskViewInteractive() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [kioskData, setKioskData] = useState<KioskData | null>(null);
+  
+  // Split state: static data (fetched once, cached) vs dynamic entries (fetched frequently)
+  const [staticData, setStaticData] = useState<StaticKioskData | null>(null);
+  const [entries, setEntries] = useState<EntryData[]>([]);
+  
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
@@ -64,16 +68,14 @@ export default function KioskViewInteractive() {
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const slideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingRefreshRef = useRef(false);
+  const refreshDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Build carousel slides array from database order (already sorted by position)
+  // Build carousel slides array from database order
   const carouselSlides = useCallback(() => {
-    if (!kioskData) return [];
+    if (!staticData) return [];
 
-    const defaultDuration = kioskData.config.slideDurationSeconds;
-
-    // Use slides in their database order (already sorted by position)
-    const slides = kioskData.slides.map((slide) => ({
+    const defaultDuration = staticData.config.slideDurationSeconds;
+    const slides = staticData.slides.map((slide) => ({
       id: slide.slide_type === 'scoreboard' ? 'scoreboard' : slide.id,
       type: slide.slide_type,
       imageUrl: slide.image_url ?? undefined,
@@ -91,21 +93,21 @@ export default function KioskViewInteractive() {
     }
 
     return slides;
-  }, [kioskData]);
+  }, [staticData]);
 
-  // Fetch kiosk data
-  const fetchKioskData = useCallback(async () => {
+  // Fetch static kiosk data (scoreboard, config, slides)
+  const fetchStaticData = useCallback(async () => {
     if (!scoreboardId) return;
 
     try {
-      const response = await fetch(`/api/kiosk/public/${scoreboardId}`);
+      const response = await fetch(`/api/kiosk/public/${scoreboardId}/static`);
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to load kiosk');
       }
 
-      setKioskData(data);
+      setStaticData(data);
 
       // Check if PIN protection is enabled
       if (data.config.hasPinProtection && !isPinVerified) {
@@ -120,28 +122,58 @@ export default function KioskViewInteractive() {
     }
   }, [scoreboardId, isPinVerified]);
 
-  // Initial load
-  useEffect(() => {
-    fetchKioskData();
-  }, [fetchKioskData]);
+  // Fetch entries data only
+  const fetchEntries = useCallback(async () => {
+    if (!scoreboardId) return;
 
-  // Refresh signed URLs before they expire (refresh at 80% of expiry time)
-  useEffect(() => {
-    if (!kioskData?.config.signedUrlExpirySeconds) return;
+    try {
+      const response = await fetch(`/api/kiosk/public/${scoreboardId}/entries`);
+      const data = await response.json();
 
-    const expirySeconds = kioskData.config.signedUrlExpirySeconds;
-    const refreshInterval = expirySeconds * 0.8 * 1000; // Refresh at 80% of expiry
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load entries');
+      }
+
+      setEntries(data.entries || []);
+    } catch (err) {
+      console.error('Failed to fetch entries:', err);
+    }
+  }, [scoreboardId]);
+
+  // Debounced entries refresh
+  const debouncedRefreshEntries = useCallback(() => {
+    if (refreshDebounceRef.current) {
+      clearTimeout(refreshDebounceRef.current);
+    }
+
+    refreshDebounceRef.current = setTimeout(() => {
+      fetchEntries();
+    }, 2000); // Debounce rapid changes to 2 seconds
+  }, [fetchEntries]);
+
+  // Initial load: fetch static data and initial entries
+  useEffect(() => {
+    fetchStaticData();
+    fetchEntries();
+  }, [fetchStaticData, fetchEntries]);
+
+  // Refresh static data only when signed URLs expire (80% of expiry time)
+  useEffect(() => {
+    if (!staticData?.config.signedUrlExpirySeconds) return;
+
+    const expirySeconds = staticData.config.signedUrlExpirySeconds;
+    const refreshInterval = expirySeconds * 0.8 * 1000;
 
     const intervalId = setInterval(() => {
-      fetchKioskData();
+      fetchStaticData();
     }, refreshInterval);
 
     return () => clearInterval(intervalId);
-  }, [kioskData?.config.signedUrlExpirySeconds, fetchKioskData]);
+  }, [staticData?.config.signedUrlExpirySeconds, fetchStaticData]);
 
   // Auto-advance slides
   useEffect(() => {
-    if (!kioskData || isPaused || (kioskData.config.hasPinProtection && !isPinVerified)) {
+    if (!staticData || isPaused || (staticData.config.hasPinProtection && !isPinVerified)) {
       return;
     }
 
@@ -164,20 +196,7 @@ export default function KioskViewInteractive() {
         clearTimeout(slideTimeoutRef.current);
       }
     };
-  }, [kioskData, currentSlideIndex, isPaused, isPinVerified, carouselSlides]);
-
-  // Refresh scoreboard data periodically
-  useEffect(() => {
-    if (!kioskData || (kioskData.config.hasPinProtection && !isPinVerified)) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      fetchKioskData();
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [kioskData, isPinVerified, fetchKioskData]);
+  }, [staticData, currentSlideIndex, isPaused, isPinVerified, carouselSlides]);
 
   // Subscribe to realtime scoreboard entry changes
   useEffect(() => {
@@ -194,8 +213,8 @@ export default function KioskViewInteractive() {
           filter: `scoreboard_id=eq.${scoreboardId}`,
         },
         () => {
-          // Mark that we need to refresh before showing scoreboard
-          pendingRefreshRef.current = true;
+          // Immediately fetch entries when changes detected (debounced)
+          debouncedRefreshEntries();
         }
       )
       .subscribe();
@@ -203,21 +222,7 @@ export default function KioskViewInteractive() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [scoreboardId]);
-
-  // Check for pending refresh when transitioning to scoreboard slide
-  useEffect(() => {
-    if (!kioskData) return;
-
-    const slides = carouselSlides();
-    const currentSlide = slides[currentSlideIndex];
-
-    // If we're about to show the scoreboard and there's a pending refresh, fetch new data
-    if (currentSlide?.type === 'scoreboard' && pendingRefreshRef.current) {
-      pendingRefreshRef.current = false;
-      fetchKioskData();
-    }
-  }, [currentSlideIndex, kioskData, carouselSlides, fetchKioskData]);
+  }, [scoreboardId, debouncedRefreshEntries]);
 
   // Auto-hide cursor and controls
   useEffect(() => {
@@ -323,7 +328,7 @@ export default function KioskViewInteractive() {
   }
 
   // Error state
-  if (error || !kioskData) {
+  if (error || !staticData) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
         <div className="text-center max-w-md px-8">
@@ -355,6 +360,7 @@ export default function KioskViewInteractive() {
 
   const slides = carouselSlides();
   const currentSlide = slides[currentSlideIndex];
+  const nextSlide = slides[(currentSlideIndex + 1) % slides.length];
 
   return (
     <div
@@ -362,18 +368,26 @@ export default function KioskViewInteractive() {
       className="fixed inset-0 bg-black overflow-hidden"
       data-testid="kiosk-container"
     >
-      {/* Current slide */}
-      <div
-        className={`absolute inset-0 transition-opacity duration-500 ${
-          isTransitioning ? 'opacity-0' : 'opacity-100'
-        }`}
-      >
-        {currentSlide?.type === 'scoreboard' ? (
-          <KioskScoreboard scoreboard={kioskData.scoreboard} entries={kioskData.entries} />
-        ) : currentSlide?.type === 'image' && currentSlide.imageUrl ? (
-          <KioskImageSlide imageUrl={currentSlide.imageUrl} />
-        ) : null}
-      </div>
+      {/* Slide rendering - show only active slide with transition */}
+      {slides.map((slide, index) => (
+        <SlideContainer
+          key={`slide-${slide.id}-${index}`}
+          isActive={index === currentSlideIndex}
+          isTransitioning={isTransitioning && index === currentSlideIndex}
+        >
+          {slide.type === 'scoreboard' ? (
+            <KioskScoreboard
+              scoreboard={staticData.scoreboard}
+              entries={entries}
+            />
+          ) : slide.type === 'image' && slide.imageUrl ? (
+            <KioskImageSlide
+              imageUrl={slide.imageUrl}
+              nextImageUrl={nextSlide?.type === 'image' ? nextSlide.imageUrl : undefined}
+            />
+          ) : null}
+        </SlideContainer>
+      ))}
 
       {/* Controls overlay */}
       <div
@@ -385,7 +399,7 @@ export default function KioskViewInteractive() {
         <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/50 to-transparent">
           <div className="flex items-center justify-between">
             <h1 className="text-white text-lg font-semibold truncate">
-              {kioskData.scoreboard.title}
+              {staticData.scoreboard.title}
             </h1>
             <div className="flex items-center gap-2 text-white/70 text-sm">
               {isPaused && (

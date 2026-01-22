@@ -288,8 +288,8 @@ export default function KioskSettingsSection({
                 const { signedUrls } = await response.json();
                 slideToAdd = {
                   ...newSlide,
-                  image_url: signedUrls[newSlide.image_url] || newSlide.image_url,
-                  thumbnail_url: signedUrls[newSlide.thumbnail_url] || newSlide.thumbnail_url,
+                  image_url: (newSlide.image_url && signedUrls[newSlide.image_url]) || newSlide.image_url,
+                  thumbnail_url: (newSlide.thumbnail_url && signedUrls[newSlide.thumbnail_url]) || newSlide.thumbnail_url,
                 };
               }
             } catch (error) {

@@ -5,9 +5,10 @@ import Image from 'next/image';
 
 interface KioskImageSlideProps {
   imageUrl: string;
+  nextImageUrl?: string; // Pre-load next image
 }
 
-export default function KioskImageSlide({ imageUrl }: KioskImageSlideProps) {
+export default function KioskImageSlide({ imageUrl, nextImageUrl }: KioskImageSlideProps) {
   const [hasError, setHasError] = useState(false);
 
   if (hasError) {
@@ -21,16 +22,32 @@ export default function KioskImageSlide({ imageUrl }: KioskImageSlideProps) {
   }
 
   return (
-    <div className="h-full w-full relative bg-black">
-      <Image
-        src={imageUrl}
-        alt="Kiosk slide"
-        fill
-        className="object-contain"
-        onError={() => setHasError(true)}
-        priority
-        unoptimized // Allow external images
-      />
-    </div>
+    <>
+      {/* Main image */}
+      <div className="h-full w-full relative bg-black">
+        <Image
+          src={imageUrl}
+          alt="Kiosk slide"
+          fill
+          className="object-contain"
+          onError={() => setHasError(true)}
+          priority
+          unoptimized // Allow external images
+        />
+      </div>
+
+      {/* Hidden next image preload */}
+      {nextImageUrl && (
+        <Image
+          src={nextImageUrl}
+          alt="Preload"
+          width={0}
+          height={0}
+          className="hidden"
+          unoptimized
+          onError={() => {}} // Silent error for preload
+        />
+      )}
+    </>
   );
 }
