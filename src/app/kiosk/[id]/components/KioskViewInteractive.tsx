@@ -183,7 +183,16 @@ export default function KioskViewInteractive() {
     const currentSlide = slides[currentSlideIndex];
     const duration = (currentSlide?.duration ?? 10) * 1000;
 
-    slideTimeoutRef.current = setTimeout(() => {
+    slideTimeoutRef.current = setTimeout(async () => {
+      // Check if next slide is a scoreboard - if so, fetch fresh entries first
+      const nextIndex = (currentSlideIndex + 1) % slides.length;
+      const nextSlide = slides[nextIndex];
+      
+      if (nextSlide?.type === 'scoreboard') {
+        // Fetch fresh entries before showing scoreboard
+        await fetchEntries();
+      }
+
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
@@ -196,7 +205,7 @@ export default function KioskViewInteractive() {
         clearTimeout(slideTimeoutRef.current);
       }
     };
-  }, [staticData, currentSlideIndex, isPaused, isPinVerified, carouselSlides]);
+  }, [staticData, currentSlideIndex, isPaused, isPinVerified, carouselSlides, fetchEntries]);
 
   // Subscribe to realtime scoreboard entry changes
   useEffect(() => {
