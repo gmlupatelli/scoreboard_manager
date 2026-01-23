@@ -60,6 +60,7 @@ const AdminDashboardInteractive = () => {
   const pendingDeletesRef = useRef<
     Map<string, { scoreboard: ScoreboardModel; timerId: NodeJS.Timeout }>
   >(new Map());
+  const hasLoadedRef = useRef(false);
 
   // Cache isSystemAdmin result to avoid function reference changes
   const isAdmin = isSystemAdmin();
@@ -186,12 +187,19 @@ const AdminDashboardInteractive = () => {
   // Effect for data fetching - ONLY depends on search and owner filter
   // Sort is always done client-side, never triggers a reload
   // Wait for userProfile to be loaded before fetching to ensure isAdmin is correct
+  // Only load on initial mount OR when search/filter changes to prevent tab-switch reloads
   useEffect(() => {
     if (isAuthorized && user && userProfile) {
+      // Skip if already loaded and no search/filter change
+      if (hasLoadedRef.current && debouncedSearch === '' && selectedOwnerId === 'all') {
+        return;
+      }
+      hasLoadedRef.current = true;
       // Always fetch with default sort (date desc), sorting is done client-side
       loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
     }
-  }, [isAuthorized, user, userProfile, debouncedSearch, selectedOwnerId, loadScoreboards]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthorized, user, userProfile, debouncedSearch, selectedOwnerId]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
