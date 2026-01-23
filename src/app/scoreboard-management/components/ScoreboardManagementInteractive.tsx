@@ -42,6 +42,7 @@ const ScoreboardManagementInteractive = () => {
   const pendingDeletesRef = useRef<
     Map<string, { entry: ScoreboardEntry; timerId: NodeJS.Timeout }>
   >(new Map());
+  const hasLoadedRef = useRef(false);
 
   const [isHydrated, setIsHydrated] = useState(false);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
@@ -196,12 +197,20 @@ const ScoreboardManagementInteractive = () => {
     isMounted,
   ]);
 
-  // Load scoreboard and entries (wait for userProfile to be loaded for role check)
+  // Reset load ref when scoreboard ID changes (navigating to different scoreboard)
   useEffect(() => {
-    if (user && userProfile && scoreboardId) {
+    hasLoadedRef.current = false;
+  }, [scoreboardId]);
+
+  // Load scoreboard and entries (wait for userProfile to be loaded for role check)
+  // Only load once on mount to prevent reloading when switching tabs
+  useEffect(() => {
+    if (user && userProfile && scoreboardId && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
       loadScoreboardData();
     }
-  }, [user, userProfile, scoreboardId, loadScoreboardData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, userProfile, scoreboardId]);
 
   useEffect(() => {
     let filtered = entries.filter((entry) =>
