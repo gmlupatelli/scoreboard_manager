@@ -10,7 +10,6 @@ import ErrorDisplay from './ErrorDisplay';
 
 import LoadingSkeleton from './LoadingSkeleton';
 import ScoreboardHeader from './ScoreboardHeader';
-import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
 
 interface EntryWithRank extends ScoreboardEntry {
@@ -19,20 +18,19 @@ interface EntryWithRank extends ScoreboardEntry {
 
 interface ScoreboardInteractiveProps {
   scoreboard: Scoreboard | null;
+  entries: ScoreboardEntry[];
   appliedStyles: ScoreboardCustomStyles | null;
 }
 
 export default function ScoreboardInteractive({
   scoreboard,
+  entries,
   appliedStyles,
 }: ScoreboardInteractiveProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage] = useState(50);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [entries, setEntries] = useState<ScoreboardEntry[]>([]);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -42,49 +40,6 @@ export default function ScoreboardInteractive({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Only load entries (not scoreboard) here
-  useEffect(() => {
-    if (!isHydrated || !scoreboard?.id) {
-      if (isHydrated && !scoreboard?.id) {
-        setError('No scoreboard ID provided');
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    const loadEntriesOnly = async () => {
-      try {
-        const { data: entriesData, error: entriesError } =
-          await scoreboardService.getScoreboardEntries(scoreboard.id);
-        if (entriesError) {
-          setError(entriesError.message || 'Failed to load entries');
-          setIsLoading(false);
-          return;
-        }
-        setEntries(entriesData || []);
-        setError(null);
-      } catch {
-        setError('Failed to load entries');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadEntriesOnly();
-
-    // Set up real-time subscription for entries only
-    const unsubscribe = scoreboardService.subscribeToScoreboardChanges(scoreboard.id, {
-      onScoreboardChange: () => {}, // parent will handle scoreboard changes
-      onEntriesChange: () => {
-        loadEntriesOnly();
-      },
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [isHydrated, scoreboard]);
 
   const sortedEntries = useMemo(() => {
     const scoreboardSortOrder = scoreboard?.sortOrder || 'desc';
@@ -130,7 +85,7 @@ export default function ScoreboardInteractive({
     }
   };
 
-  if (!isHydrated || isLoading) {
+  if (!isHydrated) {
     return (
       <div className="min-h-screen">
         <main className="pt-16 landscape-mobile:pt-12">
@@ -142,12 +97,12 @@ export default function ScoreboardInteractive({
     );
   }
 
-  if (error || !scoreboard) {
+  if (!scoreboard) {
     return (
       <div className="min-h-screen">
         <main className="pt-16 landscape-mobile:pt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 landscape-mobile:py-4">
-            <ErrorDisplay message={error || 'Scoreboard not found'} />
+            <ErrorDisplay message="Scoreboard not found" />
           </div>
         </main>
       </div>
