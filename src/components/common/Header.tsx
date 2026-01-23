@@ -206,7 +206,11 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                           Profile
                         </Link>
                         <Link
-                          href="/invitations"
+                          href={
+                            userProfile?.role === 'system_admin'
+                              ? '/system-admin/invitations'
+                              : '/invitations'
+                          }
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
                           style={customStyles ? textStyle : undefined}
@@ -390,7 +394,11 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     Profile
                   </Link>
                   <Link
-                    href="/invitations"
+                    href={
+                      userProfile?.role === 'system_admin'
+                        ? '/system-admin/invitations'
+                        : '/invitations'
+                    }
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
                     style={customStyles ? textStyle : undefined}
