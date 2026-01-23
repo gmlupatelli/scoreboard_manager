@@ -90,7 +90,7 @@ Reset your Scoreboard Manager password
                 style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
               >
                 <img
-                  src="{{ .SiteURL }}/scoreboard-logo.png"
+                  src="{{ .SiteURL }}/assets/scoreboard-logo.png"
                   alt="Scoreboard Manager Logo"
                   style="width: 80px; height: 80px; margin-bottom: 20px;"
                 />
@@ -197,7 +197,7 @@ Welcome to Scoreboard Manager - Confirm your email
                 style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
               >
                 <img
-                  src="{{ .SiteURL }}/scoreboard-logo.png"
+                  src="{{ .SiteURL }}/assets/scoreboard-logo.png"
                   alt="Scoreboard Manager Logo"
                   style="width: 80px; height: 80px; margin-bottom: 20px;"
                 />
@@ -313,7 +313,7 @@ Confirm your new email address - Scoreboard Manager
                 style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
               >
                 <img
-                  src="{{ .SiteURL }}/scoreboard-logo.png"
+                  src="{{ .SiteURL }}/assets/scoreboard-logo.png"
                   alt="Scoreboard Manager Logo"
                   style="width: 80px; height: 80px; margin-bottom: 20px;"
                 />
@@ -422,7 +422,7 @@ Your Scoreboard Manager login link
                 style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
               >
                 <img
-                  src="{{ .SiteURL }}/scoreboard-logo.png"
+                  src="{{ .SiteURL }}/assets/scoreboard-logo.png"
                   alt="Scoreboard Manager Logo"
                   style="width: 80px; height: 80px; margin-bottom: 20px;"
                 />
@@ -531,7 +531,7 @@ You've been invited to join Scoreboard Manager
                 style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
               >
                 <img
-                  src="{{ .SiteURL }}/scoreboard-logo.png"
+                  src="{{ .SiteURL }}/assets/scoreboard-logo.png"
                   alt="Scoreboard Manager Logo"
                   style="width: 80px; height: 80px; margin-bottom: 20px;"
                 />
@@ -647,7 +647,7 @@ Your verification code - Scoreboard Manager
                 style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
               >
                 <img
-                  src="{{ .SiteURL }}/scoreboard-logo.png"
+                  src="{{ .SiteURL }}/assets/scoreboard-logo.png"
                   alt="Scoreboard Manager Logo"
                   style="width: 80px; height: 80px; margin-bottom: 20px;"
                 />
@@ -737,113 +737,66 @@ Your Scoreboard Manager password has been changed
 ```html
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Password Changed</title>
-  </head>
-  <body
-    style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #FAFAFA;"
-  >
-    <table
-      role="presentation"
-      cellspacing="0"
-      cellpadding="0"
-      border="0"
-      width="100%"
-      style="background-color: #FAFAFA;"
-    >
-      <tr>
-        <td style="padding: 40px 20px;">
-          <table
-            role="presentation"
-            cellspacing="0"
-            cellpadding="0"
-            border="0"
-            width="100%"
-            style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
-          >
-            <!-- Header -->
-            <tr>
-              <td
-                style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;"
-              >
-                <img
-                  src="{{ .SiteURL }}/scoreboard-logo.png"
-                  alt="Scoreboard Manager Logo"
-                  style="width: 80px; height: 80px; margin-bottom: 20px;"
-                />
-              </td>
-            </tr>
-            <!-- Content -->
-            <tr>
-              <td style="padding: 40px;">
-                <h1
-                  style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #20203e; text-align: center;"
-                >
-                  Password Changed
-                </h1>
-                <p
-                  style="margin: 0 0 25px; font-size: 16px; line-height: 24px; color: #38385e; text-align: center;"
-                >
-                  Your Scoreboard Manager password has been successfully changed. If you did not
-                  make this change, please secure your account immediately.
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Changed</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #FAFAFA;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #FAFAFA;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 30px; text-align: center; border-bottom: 1px solid #E2E8F0;">
+              <img src="{{ .SiteURL }}/assets/scoreboard-logo.png" alt="Scoreboard Manager Logo" style="width: 80px; height: 80px; margin-bottom: 20px;">
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 40px;">
+              <h1 style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #20203e; text-align: center;">Password Changed</h1>
+              <p style="margin: 0 0 25px; font-size: 16px; line-height: 24px; color: #38385e; text-align: center;">
+                Your Scoreboard Manager password has been successfully changed. If you did not make this change, please secure your account immediately.
+              </p>
+              <div style="margin: 30px 0; padding: 20px; background-color: #FEF7EC; border-radius: 8px; border-left: 4px solid #eba977;">
+                <p style="margin: 0; font-size: 14px; line-height: 22px; color: #20203e;">
+                  <strong>Security Tip:</strong> Always use a strong, unique password with a mix of uppercase, lowercase, numbers, and special characters.
                 </p>
-                <div
-                  style="margin: 30px 0; padding: 20px; background-color: #FFF5F5; border-radius: 8px; border-left: 4px solid #f77174;"
-                >
-                  <p style="margin: 0; font-size: 14px; line-height: 22px; color: #20203e;">
-                    <strong>Security Tip:</strong> Always use a strong, unique password with a mix
-                    of uppercase, lowercase, numbers, and special characters.
-                  </p>
-                </div>
-                <div
-                  style="margin: 20px 0; padding: 16px; background-color: #FEF7EC; border-radius: 8px; border-left: 4px solid #eba977;"
-                >
-                  <p style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #20203e;">
-                    If this wasn't you:
-                  </p>
-                  <p style="margin: 0; font-size: 14px; line-height: 22px; color: #38385e;">
-                    Your account may have been compromised. Please reset your password immediately
-                    or contact our support team for assistance.
-                  </p>
-                </div>
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                  <tr>
-                    <td style="text-align: center; padding: 25px 0;">
-                      <a
-                        href="{{ .SiteURL }}/user-profile-management"
-                        style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px;"
-                        >Manage Account</a
-                      >
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <!-- Footer -->
-            <tr>
-              <td
-                style="padding: 30px 40px; background-color: #FAFAFA; border-top: 1px solid #E2E8F0; border-radius: 0 0 16px 16px;"
-              >
-                <p
-                  style="margin: 0 0 10px; font-size: 12px; line-height: 20px; color: #38385e; text-align: center;"
-                >
-                  This email was sent by Scoreboard Manager.<br />
-                  If you have questions, please contact our support team.
+              </div>
+              <div style="margin: 20px 0; padding: 16px; background-color: #FFF5F5; border-radius: 8px; border-left: 4px solid #f77174;">
+                <p style="margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #20203e;">Didn't make this change?</p>
+                <p style="margin: 0; font-size: 14px; line-height: 22px; color: #38385e;">
+                  Your account may have been compromised. Please reset your password immediately or contact our support team for assistance.
                 </p>
-                <p
-                  style="margin: 10px 0 0; font-size: 11px; line-height: 18px; color: #999; text-align: center;"
-                >
-                  Password changes are logged for your security.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
+              </div>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="text-align: center; padding: 25px 0;">
+                    <a href="{{ .SiteURL }}/user-profile-management" style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #f77174 0%, #eba977 100%); color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 8px;">Manage Account</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; background-color: #FAFAFA; border-top: 1px solid #E2E8F0; border-radius: 0 0 16px 16px;">
+              <p style="margin: 0 0 10px; font-size: 12px; line-height: 20px; color: #38385e; text-align: center;">
+                This email was sent by Scoreboard Manager.<br>
+                If you have questions, please contact our support team.
+              </p>
+              <p style="margin: 10px 0 0; font-size: 11px; line-height: 18px; color: #999; text-align: center;">
+                Password changes are logged for your security.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
 </html>
 ```
 
