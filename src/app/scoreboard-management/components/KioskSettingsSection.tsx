@@ -462,6 +462,28 @@ export default function KioskSettingsSection({
     setConfig(null);
   }, [scoreboardId]);
 
+  // Load enabled status on mount (for header badge) without full data load
+  useEffect(() => {
+    const loadEnabledStatus = async () => {
+      if (!scoreboardId) return;
+      try {
+        const authHeaders = await getAuthHeaders();
+        const response = await fetch(`/api/kiosk/${scoreboardId}`, {
+          headers: authHeaders,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.config) {
+            setEnabled(data.config.enabled);
+          }
+        }
+      } catch {
+        // Silent fail - badge just won't show until section is expanded
+      }
+    };
+    loadEnabledStatus();
+  }, [scoreboardId, getAuthHeaders]);
+
   // Save config
   const handleSaveConfig = async () => {
     // Validate slide duration
