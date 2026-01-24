@@ -462,6 +462,70 @@ export default function KioskSettingsSection({
     setConfig(null);
   }, [scoreboardId]);
 
+  // Track if initial enabled status has been loaded
+  const hasLoadedEnabledRef = useRef(false);
+
+  // Load enabled status on mount (for header badge) without full data load
+  // Only runs once per scoreboardId to avoid reloading on window focus
+  useEffect(() => {
+    // Reset the flag when scoreboardId changes
+    hasLoadedEnabledRef.current = false;
+  }, [scoreboardId]);
+
+  useEffect(() => {
+    if (!scoreboardId || hasLoadedEnabledRef.current) return;
+
+    const loadEnabledStatus = async () => {
+      try {
+        const authHeaders = await getAuthHeadersRef.current();
+        const response = await fetch(`/api/kiosk/${scoreboardId}`, {
+          headers: authHeaders,
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.config) {
+            setEnabled(data.config.enabled);
+            setConfig(data.config);
+            hasLoadedEnabledRef.current = true;
+          }
+        }
+      } catch {
+        // Silent fail - badge just won't show until section is expanded
+      }
+    };
+    loadEnabledStatus();
+  }, [scoreboardId]);
+
+  // Subscribe to realtime changes for kiosk_configs (enabled status)
+  useEffect(() => {
+    if (!scoreboardId) return;
+
+    const channel = supabase
+      .channel(`kiosk-config-${scoreboardId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'kiosk_configs',
+          filter: `scoreboard_id=eq.${scoreboardId}`,
+        },
+        (payload) => {
+          const updatedConfig = payload.new as KioskConfig;
+          setEnabled(updatedConfig.enabled);
+          setConfig((prev) => (prev ? { ...prev, ...updatedConfig } : updatedConfig));
+          setSlideDuration(String(updatedConfig.slide_duration_seconds));
+          setScoreboardPosition(updatedConfig.scoreboard_position);
+          setPinCode(updatedConfig.pin_code || '');
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [scoreboardId]);
+
   // Save config
   const handleSaveConfig = async () => {
     // Validate slide duration

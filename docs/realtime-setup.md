@@ -185,7 +185,7 @@ subscribeToScoreboardChanges(
 )
 ```
 
-**Note:** The current implementation subscribes to all table changes and filters client-side. This avoids issues with Supabase realtime filter syntax on UUID columns.
+**Note:** The subscription uses Supabase Realtime's `filter` parameter to only receive events for the specific scoreboard. This is more efficient than filtering client-side as it reduces network traffic.
 
 ## Related Files
 

@@ -89,20 +89,10 @@ export const scoreboardService = {
           event: '*',
           schema: 'public',
           table: 'scoreboard_entries',
+          filter: `scoreboard_id=eq.${scoreboardId}`,
         },
-        (payload) => {
-          // Only process if it matches our scoreboard
-          if (
-            payload.new &&
-            (payload.new as { scoreboard_id?: string }).scoreboard_id === scoreboardId
-          ) {
-            callbacks.onEntriesChange?.();
-          } else if (
-            payload.old &&
-            (payload.old as { scoreboard_id?: string }).scoreboard_id === scoreboardId
-          ) {
-            callbacks.onEntriesChange?.();
-          }
+        () => {
+          callbacks.onEntriesChange?.();
         }
       )
       .on(
@@ -111,13 +101,10 @@ export const scoreboardService = {
           event: '*',
           schema: 'public',
           table: 'scoreboards',
+          filter: `id=eq.${scoreboardId}`,
         },
-        (payload) => {
-          if (payload.new && (payload.new as { id?: string }).id === scoreboardId) {
-            callbacks.onScoreboardChange?.();
-          } else if (payload.old && (payload.old as { id?: string }).id === scoreboardId) {
-            callbacks.onScoreboardChange?.();
-          }
+        () => {
+          callbacks.onScoreboardChange?.();
         }
       )
       .subscribe();

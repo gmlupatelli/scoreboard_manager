@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import ScoreboardInteractive from './ScoreboardInteractive';
 import LoadingSkeleton from './LoadingSkeleton';
 import { scoreboardService } from '@/services/scoreboardService';
-import { Scoreboard, ScoreboardCustomStyles } from '@/types/models';
+import { Scoreboard, ScoreboardCustomStyles, ScoreboardEntry } from '@/types/models';
 import { getAppliedScoreboardStyles, getStylePreset } from '@/utils/stylePresets';
 
 export default function ScoreboardViewLayout() {
@@ -17,50 +17,65 @@ export default function ScoreboardViewLayout() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
+  const [entries, setEntries] = useState<ScoreboardEntry[]>([]);
   const [appliedStyles, setAppliedStyles] = useState<ScoreboardCustomStyles | null>(null);
 
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  useEffect(() => {
-    const loadScoreboard = async () => {
-      if (!isHydrated || !scoreboardId) return;
+  const loadScoreboard = useCallback(async () => {
+    if (!scoreboardId) return;
 
-      setIsLoading(true);
-      try {
-        const { data } = await scoreboardService.getScoreboard(scoreboardId);
-        setScoreboard(data);
+    try {
+      const { data } = await scoreboardService.getScoreboard(scoreboardId);
+      setScoreboard(data);
 
-        if (data) {
-          const styles = getAppliedScoreboardStyles(data, 'main');
-          setAppliedStyles(styles);
-        }
-      } catch {
-        // Error handled in ScoreboardInteractive
-      } finally {
-        setIsLoading(false);
+      if (data) {
+        const styles = getAppliedScoreboardStyles(data, 'main');
+        setAppliedStyles(styles);
       }
-    };
+    } catch {
+      // Error handled in ScoreboardInteractive
+    }
+  }, [scoreboardId]);
 
-    loadScoreboard();
+  const loadEntries = useCallback(async () => {
+    if (!scoreboardId) return;
 
-    // Set up real-time subscription to detect scoreboard changes
+    try {
+      const { data: entriesData } = await scoreboardService.getScoreboardEntries(scoreboardId);
+      setEntries(entriesData || []);
+    } catch {
+      // Error handled in ScoreboardInteractive
+    }
+  }, [scoreboardId]);
+
+  useEffect(() => {
     if (!isHydrated || !scoreboardId) return;
 
+    const loadInitialData = async () => {
+      setIsLoading(true);
+      await Promise.all([loadScoreboard(), loadEntries()]);
+      setIsLoading(false);
+    };
+
+    loadInitialData();
+
+    // Set up single real-time subscription for both scoreboard and entries
     const unsubscribe = scoreboardService.subscribeToScoreboardChanges(scoreboardId, {
       onScoreboardChange: () => {
         loadScoreboard();
       },
       onEntriesChange: () => {
-        // Entries are handled by ScoreboardInteractive
+        loadEntries();
       },
     });
 
     return () => {
       unsubscribe();
     };
-  }, [isHydrated, scoreboardId]);
+  }, [isHydrated, scoreboardId, loadScoreboard, loadEntries]);
 
   useEffect(() => {
     if (scoreboard) {
@@ -95,7 +110,11 @@ export default function ScoreboardViewLayout() {
     >
       <Header isAuthenticated={false} customStyles={appliedStyles} />
       <main className="pt-16 flex-1">
-        <ScoreboardInteractive scoreboard={scoreboard} appliedStyles={appliedStyles} />
+        <ScoreboardInteractive
+          scoreboard={scoreboard}
+          entries={entries}
+          appliedStyles={appliedStyles}
+        />
       </main>
       <Footer customStyles={appliedStyles} />
     </div>
