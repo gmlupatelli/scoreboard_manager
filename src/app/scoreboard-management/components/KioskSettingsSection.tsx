@@ -1126,6 +1126,7 @@ export default function KioskSettingsSection({
                         setHasChanges(true);
                       }}
                       placeholder="Enter 4-6 digit PIN"
+                      autoComplete="off"
                       className="w-full px-3 py-2 pr-10 bg-background border border-input rounded-md text-text-primary focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                     <button
