@@ -29,40 +29,70 @@ For Supabase manual setup steps, see [docs/supabase-manual-setup.md](docs/supaba
 - **Lint:** `npm run lint`
 - **Type check:** `npm run type-check`
 - **Build:** `npm run build`
-- **E2E tests:** `npm run test:e2e`
+- **Unit tests:** `npm run test:unit` (local), runs on every PR
+- **Unit tests (watch):** `npm run test:unit:watch`
+- **E2E tests:** `npm run test:e2e` (local), runs nightly
 
-## Coding Standards
+## Testing
 
-- TypeScript strict mode (no `any`)
-- Use `@/` alias for imports from `src/`
-- Use `export default function ComponentName` (no `React.FC`)
-- Use `async/await`, avoid raw `.then()`
-- Tailwind for styling; avoid inline styles except for user-configured colors
+We use a two-tier testing approach: fast unit tests for PRs, comprehensive E2E tests nightly.
 
-See `.github/copilot-instructions.md` for project conventions and UI patterns.
+### Unit Tests
 
-## Submitting Issues
+Run locally and on every PR (must pass to merge):
+```bash
+# Run all tests
+npm run test:unit
 
-Before creating a new issue:
+# Watch mode (re-runs on changes)
+npm run test:unit:watch
 
-1. Search existing issues to avoid duplicates
-2. Provide clear steps to reproduce
-3. Include expected vs actual behavior
-4. Add screenshots or logs if applicable
+# Coverage report
+npm run test:unit  # generates coverage/ directory
+```
 
-## Submitting Pull Requests
+Unit tests focus on pure functions, services, and business logic. Place tests in `__tests__/` directories or adjacent to implementation:
+- `src/utils/__tests__/timeUtils.test.ts`
+- `src/hooks/__tests__/useTimeoutRef.test.ts`
+- `src/services/__tests__/scoreboardService.test.ts`
 
-1. Create a feature branch from `dev`
-2. Keep PRs focused and small when possible
-3. Ensure `npm run lint` and `npm run type-check` pass
-4. Add or update tests when relevant
-5. Reference related issues in the PR description
+**Coverage targets**: 70-80% for utils, 50%+ for critical paths.
 
-For branch strategy details, see [.github/GIT_WORKFLOW.md](.github/GIT_WORKFLOW.md).
+### E2E Tests
+
+Run nightly (2 AM UTC) or manually for full browser/viewport testing:
+```bash
+# Run all E2E tests (takes ~10 minutes)
+npm run test:e2e
+
+# Run only fast tests (@fast tag)
+npm run test:e2e:fast
+
+# Interactive UI browser
+npm run test:e2e:ui
+
+# Debug mode (step through)
+npm run test:e2e:debug
+```
+
+E2E tests verify user workflows, real-time subscriptions, accessibility, and responsive design.
+
+### When to Write Tests
+
+- **Unit tests**: All business logic, transformations, utilities, subscription setup
+- **E2E tests**: User workflows, real-time updates across browsers, multi-viewport experience
+- **Real-time**: Especially important—verify subscription setup in unit tests AND multi-browser verification in E2E
+
+**Example**: Adding a new real-time feature?
+1. Unit test: subscription channel name, filters, cleanup
+2. E2E test: change in one browser → appears in another without reload
+
+For detailed testing guidelines, see [docs/testing.md](docs/testing.md).
 
 ## Code Review
 
 - Maintainers may request changes before merging
+- All tests must pass (unit tests block merge, E2E checked nightly)
 - Be responsive to feedback
 - Keep discussions respectful and constructive
 

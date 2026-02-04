@@ -278,7 +278,6 @@ export default function PricingPage() {
               ))}
             </div>
           </div>
-
         </div>
       </main>
       <Footer />
