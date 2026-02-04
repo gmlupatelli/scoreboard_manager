@@ -7,12 +7,15 @@ function loadTestEnv() {
   const envLocalPath = path.join(projectRoot, '.env.local');
   const envTestPath = path.join(projectRoot, '.env.test');
 
+  // Suppress dotenv tips/warnings
+  const options = { quiet: true };
+
   if (fs.existsSync(envLocalPath)) {
-    dotenv.config({ path: envLocalPath });
+    dotenv.config({ path: envLocalPath, ...options });
   }
 
   if (fs.existsSync(envTestPath)) {
-    dotenv.config({ path: envTestPath });
+    dotenv.config({ path: envTestPath, ...options });
   }
 }
 

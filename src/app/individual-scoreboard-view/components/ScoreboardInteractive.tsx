@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import SearchInterface from '@/components/common/SearchInterface';
 import EntryTable from './EntryTable';
 import EntryCard from './EntryCard';

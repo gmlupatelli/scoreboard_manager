@@ -15,22 +15,25 @@ authTest.describe('User Invitations - Access & Display', () => {
   // Authorization - viewport-independent
   authTest('@fast @desktop-only john can access invitations page', async ({ johnAuth }) => {
     await johnAuth.goto('/invitations');
-    await johnAuth.waitForTimeout(2000);
-
-    await expect(johnAuth).toHaveURL(/\/invitations/);
+    await johnAuth.waitForLoadState('domcontentloaded');
+    await expect(johnAuth.locator('h1:has-text("Invitations")')).toBeVisible({ timeout: 10000 });
+    await expect(johnAuth).toHaveURL(/\/invitations/, { timeout: 10000 });
   });
 
   // Authorization - viewport-independent
   authTest('@fast @desktop-only sarah can send invitations', async ({ sarahAuth }) => {
     await sarahAuth.goto('/invitations');
-    await sarahAuth.waitForTimeout(1000);
+    await sarahAuth.waitForLoadState('domcontentloaded');
+    await expect(sarahAuth.locator('h1:has-text("Invitations")')).toBeVisible({ timeout: 10000 });
 
     // Send invitation button should be visible
     const sendButton = sarahAuth
       .locator('button:has-text("Send")')
-      .or(sarahAuth.locator('text=Send Invitation'));
+      .or(sarahAuth.locator('text=Send Invitation'))
+      .or(sarahAuth.locator('button:has-text("Invite User")'))
+      .or(sarahAuth.locator('button:has-text("Send Your First Invitation")'));
 
-    await expect(sendButton.first()).toBeVisible();
+    await expect(sendButton.first()).toBeVisible({ timeout: 10000 });
   });
 
   // Functional - viewport-independent
@@ -72,6 +75,8 @@ authTest.describe('Invitation Form', () => {
     const sendButton = johnAuth
       .locator('button:has-text("Send")')
       .or(johnAuth.locator('text=Send Invitation'))
+      .or(johnAuth.locator('button:has-text("Invite User")'))
+      .or(johnAuth.locator('button:has-text("Send Your First Invitation")'))
       .first();
 
     if (await sendButton.isVisible()) {

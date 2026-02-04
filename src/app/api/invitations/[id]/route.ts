@@ -4,8 +4,12 @@ import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/s
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     const token = extractBearerToken(request.headers.get('Authorization'));
 
     if (!token) {
@@ -36,7 +40,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const { data: invitation, error: fetchError } = await dbClient
       .from('invitations')
       .select('inviter_id, status, invitee_email')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (fetchError || !invitation) {
@@ -73,7 +77,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     const { error: updateError } = await dbClient
       .from('invitations')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-      .eq('id', params.id);
+      .eq('id', id);
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 500 });

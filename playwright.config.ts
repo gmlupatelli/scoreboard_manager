@@ -50,10 +50,10 @@ export default defineConfig({
     },
 
     // Mobile - iPhone 12 (standard mobile)
-    // Skips @desktop-only tests (authorization, validation, keyboard, static pages)
+    // Skips @desktop-only and @no-mobile tests (kiosk mode and large-screen features)
     {
       name: 'Mobile iPhone 12',
-      grepInvert: /@desktop-only/,
+      grepInvert: /@desktop-only|@no-mobile/,
       use: {
         ...devices['iPhone 12'],
         viewport: { width: 390, height: 844 },
@@ -108,6 +108,10 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 60000, // Reduced from 120s to 60s
     stdout: 'ignore', // Suppress dev server logs
-    stderr: 'pipe', // Only show errors
+    stderr: 'ignore', // Suppress warnings including Fast Refresh
+    env: {
+      ...process.env,
+      NEXT_DISABLE_FAST_REFRESH: 'true',
+    },
   },
 });

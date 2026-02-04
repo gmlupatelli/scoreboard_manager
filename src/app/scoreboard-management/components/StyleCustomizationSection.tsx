@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/AppIcon';
 import ColorPicker from '@/components/ui/ColorPicker';
 import { ScoreboardCustomStyles } from '@/types/models';

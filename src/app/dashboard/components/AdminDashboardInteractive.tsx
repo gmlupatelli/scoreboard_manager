@@ -95,7 +95,8 @@ const AdminDashboardInteractive = () => {
       if (!error && data) {
         setAllOwners(data);
       }
-    } catch {
+    } catch (_error) {
+      setError('Failed to load owners. Please try again.');
     } finally {
       setLoadingOwners(false);
     }

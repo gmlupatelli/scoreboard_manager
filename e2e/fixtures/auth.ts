@@ -11,7 +11,7 @@ import { test as base, type Page, type BrowserContext as _BrowserContext } from 
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.test') });
+dotenv.config({ path: path.resolve(__dirname, '../.env.test'), quiet: true });
 
 interface AuthUser {
   email: string;
@@ -43,27 +43,60 @@ const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000'
  * Perform login via UI
  */
 async function performLogin(page: Page, user: AuthUser) {
-  await page.goto(`${BASE_URL}/login`);
-  await page.waitForLoadState('networkidle');
-  await page.fill('input[name="email"]', user.email);
-  await page.fill('input[name="password"]', user.password);
-  await page.click('button[type="submit"]');
+  const maxAttempts = 3;
 
-  // Wait for redirect to dashboard (allow up to 45s for slower mobile viewports)
-  await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 45000 });
-  // Ensure page is fully stable before returning to test
-  await page.waitForLoadState('networkidle');
-  await page.waitForLoadState('domcontentloaded');
-  // Wait for authenticated header (logout button or user menu appears)
-  await page
-    .waitForSelector(
-      '[data-testid="user-menu"], button:has-text("Logout"), button:has-text("Sign Out")',
-      { timeout: 10000 }
-    )
-    .catch(() => {
-      // If no user menu found, wait a bit more for auth state to propagate
-    });
-  await page.waitForTimeout(500);
+  const waitForDashboard = async (): Promise<boolean> => {
+    try {
+      await page.waitForURL(/\/dashboard(\?|$)/, {
+        timeout: 45000,
+        waitUntil: 'domcontentloaded',
+      });
+      return true;
+    } catch {
+      return page.url().includes('/dashboard');
+    }
+  };
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    await page.context().clearCookies();
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('domcontentloaded');
+
+    const emailInput = page.locator('input[name="email"]');
+    const passwordInput = page.locator('input[name="password"]');
+    const submitButton = page.locator('button[type="submit"]');
+
+    await emailInput.waitFor({ state: 'visible', timeout: 10000 });
+    await passwordInput.waitFor({ state: 'visible', timeout: 10000 });
+    await submitButton.waitFor({ state: 'visible', timeout: 10000 });
+
+    await emailInput.fill(user.email);
+    await passwordInput.fill(user.password);
+
+    await submitButton.click();
+
+    const loginSucceeded = await waitForDashboard();
+
+    if (loginSucceeded) {
+      await page.waitForLoadState('domcontentloaded');
+      await page
+        .waitForSelector(
+          '[data-testid="user-menu"], button:has-text("Logout"), button:has-text("Sign Out")',
+          { timeout: 10000 }
+        )
+        .catch(() => {
+          // If no user menu found, continue - auth may still be settling
+        });
+      await page.waitForTimeout(500);
+      return;
+    }
+
+    if (attempt === maxAttempts || page.isClosed()) {
+      throw new Error('Failed to sign in after multiple attempts');
+    }
+
+    await page.waitForTimeout(1000);
+  }
 }
 
 /**

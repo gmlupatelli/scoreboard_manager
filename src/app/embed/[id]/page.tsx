@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
@@ -55,7 +55,9 @@ export default function EmbedScoreboardPage() {
       if (!entriesError) {
         setEntries(entriesData || []);
       }
-    } catch {}
+    } catch (_error) {
+      setError('Failed to refresh entries');
+    }
   }, [scoreboardId]);
 
   const loadScoreboardData = useCallback(async () => {

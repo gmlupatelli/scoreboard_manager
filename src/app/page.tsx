@@ -185,6 +185,7 @@ export default function Home() {
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center"
+                    aria-label="View Scoreboard Manager on GitHub"
                     title="View Scoreboard Manager on GitHub"
                   >
                     <Image
@@ -192,6 +193,7 @@ export default function Home() {
                       alt="GitHub stars"
                       width={120}
                       height={28}
+                      unoptimized
                     />
                   </a>
                 </div>

@@ -397,6 +397,7 @@ export default function KioskViewInteractive() {
 
       {/* Controls overlay */}
       <div
+        data-testid="kiosk-controls"
         className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${
           showControls ? 'opacity-100' : 'opacity-0'
         }`}

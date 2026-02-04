@@ -4,18 +4,27 @@ import { scoreboardService } from '../scoreboardService';
  * Unit tests for scoreboardService
  * Tests data transformation, subscription setup, and subscription cleanup
  */
+interface PostgresChangeConfig {
+  event?: string;
+  schema?: string;
+  table?: string;
+  filter?: string;
+}
+
+interface RealtimeChannelMock {
+  on: jest.Mock<RealtimeChannelMock, [string, PostgresChangeConfig, () => void]>;
+  subscribe: jest.Mock<RealtimeChannelMock, []>;
+}
+
+const mockChannel: RealtimeChannelMock = {
+  on: jest.fn<RealtimeChannelMock, [string, PostgresChangeConfig, () => void]>(),
+  subscribe: jest.fn<RealtimeChannelMock, []>(),
+};
+
 jest.mock('@/lib/supabase/client', () => ({
   supabase: {
     from: jest.fn(),
-    channel: jest.fn(function () {
-      return this;
-    }),
-    on: jest.fn(function () {
-      return this;
-    }),
-    subscribe: jest.fn(function () {
-      return undefined;
-    }),
+    channel: jest.fn(() => mockChannel),
     removeChannel: jest.fn(),
   },
 }));
@@ -25,6 +34,8 @@ import { supabase } from '@/lib/supabase/client';
 describe('scoreboardService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockChannel.on.mockReturnValue(mockChannel);
+    mockChannel.subscribe.mockReturnValue(mockChannel);
   });
 
   describe('subscribeToScoreboardChanges', () => {
@@ -37,7 +48,7 @@ describe('scoreboardService', () => {
       });
 
       expect(supabase.channel).toHaveBeenCalledWith(`scoreboard-${scoreboardId}`);
-      expect(supabase.subscribe).toHaveBeenCalled();
+      expect(mockChannel.subscribe).toHaveBeenCalled();
 
       // Verify cleanup function
       expect(typeof unsubscribe).toBe('function');
@@ -52,7 +63,7 @@ describe('scoreboardService', () => {
       });
 
       expect(supabase.channel).toHaveBeenCalledWith(`scoreboard-${scoreboardId}`);
-      expect(supabase.on).toHaveBeenCalled();
+      expect(mockChannel.on).toHaveBeenCalled();
     });
 
     it('should clean up subscription when unsubscribe is called', () => {
@@ -98,7 +109,7 @@ describe('scoreboardService', () => {
       });
 
       // Both callbacks are configured
-      expect(supabase.on).toHaveBeenCalledTimes(2);
+      expect(mockChannel.on).toHaveBeenCalledTimes(2);
     });
 
     it('should use correct postgres_changes event for entries', () => {
@@ -109,7 +120,7 @@ describe('scoreboardService', () => {
       });
 
       // Verify postgres_changes event configuration
-      const callArgs = (supabase.on as jest.Mock).mock.calls;
+      const callArgs = mockChannel.on.mock.calls;
       const entriesCall = callArgs.find(
         (args) =>
           args[1] &&
@@ -128,7 +139,7 @@ describe('scoreboardService', () => {
       });
 
       // Verify postgres_changes event configuration
-      const callArgs = (supabase.on as jest.Mock).mock.calls;
+      const callArgs = mockChannel.on.mock.calls;
       const scoreboardCall = callArgs.find(
         (args) =>
           args[1] && args[1].table === 'scoreboards' && args[1].filter === `id=eq.${scoreboardId}`
@@ -160,24 +171,16 @@ describe('scoreboardService', () => {
     it('should trigger callbacks on postgres_changes events', () => {
       const onEntriesChange = jest.fn();
 
-      // Set up mock to simulate subscription
-      let entryChangedCallback: (() => void) | null = null;
-
-      (supabase.on as jest.Mock).mockImplementation((event, config, callback) => {
-        if (config.table === 'scoreboard_entries') {
-          entryChangedCallback = callback;
-        }
-        return supabase;
-      });
-
       scoreboardService.subscribeToScoreboardChanges('board-id', {
         onEntriesChange,
       });
 
       // Simulate database change
-      if (entryChangedCallback) {
-        entryChangedCallback();
-      }
+      const callArgs = mockChannel.on.mock.calls;
+      const entriesCall = callArgs.find((args) => args[1]?.table === 'scoreboard_entries');
+      const entryChangedCallback = entriesCall?.[2];
+
+      entryChangedCallback?.();
 
       expect(onEntriesChange).toHaveBeenCalled();
     });
@@ -187,7 +190,7 @@ describe('scoreboardService', () => {
         onEntriesChange: jest.fn(),
       });
 
-      const callArgs = (supabase.on as jest.Mock).mock.calls;
+      const callArgs = mockChannel.on.mock.calls;
       const hasWildcard = callArgs.some((args) => args[1] && args[1].event === '*');
 
       expect(hasWildcard).toBe(true);

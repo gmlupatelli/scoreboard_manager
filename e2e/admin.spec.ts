@@ -11,12 +11,22 @@
  */
 
 import { test, expect } from './fixtures/auth';
+import { type Page } from '@playwright/test';
+
+const safeGoto = async (page: Page, url: string) => {
+  try {
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+  } catch {
+    await page.waitForTimeout(500);
+    await page.goto(url, { waitUntil: 'domcontentloaded' });
+  }
+};
 
 test.describe('System Admin - Dashboard Oversight', () => {
   test('@fast @desktop-only admin should see owner filter dropdown in dashboard', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/dashboard');
+    await safeGoto(adminAuth, '/dashboard');
 
     const ownerFilter = adminAuth
       .locator('text=Filter by Owner')
@@ -27,7 +37,7 @@ test.describe('System Admin - Dashboard Oversight', () => {
   test('@full @desktop-only admin should see scoreboards from multiple owners', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/dashboard');
+    await safeGoto(adminAuth, '/dashboard');
     await adminAuth.waitForTimeout(2000);
 
     const scoreboards = adminAuth.locator('.bg-card.rounded-lg h3');
@@ -38,7 +48,7 @@ test.describe('System Admin - Dashboard Oversight', () => {
   test('@full @desktop-only admin should be able to filter scoreboards by owner', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/dashboard');
+    await safeGoto(adminAuth, '/dashboard');
     await adminAuth.waitForTimeout(2000);
 
     const filterInput = adminAuth
@@ -123,7 +133,7 @@ test.describe('System Admin - Invitations Oversight', () => {
   test('@full @desktop-only admin should see invitations from multiple users', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/system-admin/invitations');
+    await safeGoto(adminAuth, '/system-admin/invitations');
     await adminAuth.waitForTimeout(2000);
 
     const invitationsContainer = adminAuth
@@ -139,7 +149,7 @@ test.describe('System Admin - Scoreboard Access', () => {
   test('@full @desktop-only admin should be able to access another users scoreboard', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/dashboard');
+    await safeGoto(adminAuth, '/dashboard');
     await adminAuth.waitForTimeout(2000);
 
     const firstScoreboard = adminAuth
@@ -159,7 +169,7 @@ test.describe('System Admin - Scoreboard Access', () => {
   test('@full @desktop-only admin should be able to navigate to manage view of another users scoreboard', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/dashboard');
+    await safeGoto(adminAuth, '/dashboard');
     await adminAuth.waitForTimeout(2000);
 
     const manageButton = adminAuth

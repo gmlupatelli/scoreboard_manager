@@ -91,20 +91,33 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}): UseAuthGuardRes
     if (!user) {
       hasRedirectedRef.current = true;
       router.push(redirectTo);
+      if (isMountedRef.current) {
+        setIsAuthorized(false);
+        setIsChecking(false);
+      }
       return;
     }
 
     // Check role if required
     if (requiredRole) {
-      // Wait for profile to load if we need role check
+      // If profile didn't load, treat as unauthorized
       if (!userProfile) {
-        // Profile still loading, don't make a decision yet
+        hasRedirectedRef.current = true;
+        router.push(unauthorizedRedirectTo);
+        if (isMountedRef.current) {
+          setIsAuthorized(false);
+          setIsChecking(false);
+        }
         return;
       }
 
       if (userProfile.role !== requiredRole) {
         hasRedirectedRef.current = true;
         router.push(unauthorizedRedirectTo);
+        if (isMountedRef.current) {
+          setIsAuthorized(false);
+          setIsChecking(false);
+        }
         return;
       }
     }

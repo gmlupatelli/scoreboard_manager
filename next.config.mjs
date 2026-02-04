@@ -5,9 +5,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
   // Optimize package imports for better tree-shaking
   experimental: {
     optimizePackageImports: ['@heroicons/react', '@supabase/supabase-js'],

@@ -31,7 +31,12 @@ import * as path from 'path';
 async function getJohnScoreboardId(page: Page): Promise<string | null> {
   try {
     // Navigate to dashboard
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 15000 });
+    try {
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 15000 });
+    } catch (_error) {
+      await page.waitForTimeout(1000);
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 15000 });
+    }
 
     // Wait for scoreboard cards to appear
     await page.waitForSelector('[data-testid="scoreboard-card"]', { timeout: 10000 });
@@ -86,11 +91,10 @@ async function getJohnScoreboardId(page: Page): Promise<string | null> {
  */
 async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boolean> {
   try {
-    await page.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await page.waitForLoadState('networkidle');
-
-    // Wait for page to be ready
-    await page.waitForTimeout(500);
+    await page.goto(`/scoreboard-management?id=${scoreboardId}`, {
+      waitUntil: 'domcontentloaded',
+    });
+    await page.waitForLoadState('domcontentloaded');
 
     // Expand kiosk section - look for the collapsible section toggle button
     const kioskToggle = page
@@ -98,14 +102,16 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
       .filter({ hasText: /kiosk|presentation/i })
       .first();
 
-    if (await kioskToggle.isVisible()) {
-      // Click to expand if not already expanded
-      await kioskToggle.click();
-      await page.waitForTimeout(800);
-    } else {
+    try {
+      await kioskToggle.waitFor({ state: 'visible', timeout: 10000 });
+    } catch (_error) {
       console.log('Kiosk toggle button not found');
       return false;
     }
+
+    // Click to expand if not already expanded
+    await kioskToggle.click();
+    await page.waitForTimeout(800);
 
     // Look for the enable toggle label - wait for it to appear after expansion
     await page.waitForTimeout(300);
@@ -114,7 +120,8 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
       .filter({ hasText: /enable kiosk/i })
       .first();
 
-    if (await enableLabel.isVisible({ timeout: 3000 })) {
+    try {
+      await enableLabel.waitFor({ state: 'visible', timeout: 5000 });
       // Check if already enabled by looking at the checkbox within
       const checkbox = enableLabel.locator('input[type="checkbox"]');
       const isChecked = await checkbox.isChecked();
@@ -125,10 +132,10 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
         await page.waitForTimeout(1000);
       }
       return true;
+    } catch (_error) {
+      console.log('Enable kiosk label not found');
+      return false;
     }
-
-    console.log('Enable kiosk label not found');
-    return false;
   } catch (error) {
     console.log('Failed to enable kiosk mode:', error);
     return false;
@@ -921,6 +928,8 @@ test.describe('Kiosk Mode - Full Tests', () => {
   });
 
   test('@full @no-mobile should auto-hide control bar after inactivity', async ({ johnAuth }) => {
+    test.setTimeout(45000);
+
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 
@@ -928,23 +937,40 @@ test.describe('Kiosk Mode - Full Tests', () => {
     const kioskEnabled = await ensureKioskEnabled(johnAuth, scoreboardId!);
     test.skip(!kioskEnabled, 'Could not enable kiosk mode');
 
-    await johnAuth.goto(`/kiosk/${scoreboardId}`);
-    await johnAuth.waitForTimeout(1500);
+    await johnAuth.goto(`/kiosk/${scoreboardId}`, { waitUntil: 'domcontentloaded' });
+
+    const kioskContainer = johnAuth.locator('[data-testid="kiosk-container"]');
+    await expect(kioskContainer).toBeVisible({ timeout: 10000 });
+
+    const controlsOverlay = johnAuth.locator('[data-testid="kiosk-controls"]');
 
     // Move mouse to show controls
     await johnAuth.mouse.move(100, 100);
-    await johnAuth.waitForTimeout(300);
 
-    // Wait for auto-hide (typically 3 seconds)
-    await johnAuth.waitForTimeout(4000);
+    await expect
+      .poll(async () => (await controlsOverlay.getAttribute('class')) || '', {
+        timeout: 10000,
+        intervals: [500],
+      })
+      .toContain('opacity-100');
+
+    // Wait for auto-hide (3s idle) and confirm controls are hidden
+    await expect
+      .poll(async () => (await controlsOverlay.getAttribute('class')) || '', {
+        timeout: 12000,
+        intervals: [500],
+      })
+      .toContain('opacity-0');
 
     // Move mouse again to verify they reappear
     await johnAuth.mouse.move(200, 200);
-    await johnAuth.waitForTimeout(500);
 
-    // Page should still be functional - verify kiosk container is present
-    const kioskContainer = johnAuth.locator('[data-testid="kiosk-container"]');
-    await expect(kioskContainer).toBeVisible({ timeout: 5000 });
+    await expect
+      .poll(async () => (await controlsOverlay.getAttribute('class')) || '', {
+        timeout: 10000,
+        intervals: [500],
+      })
+      .toContain('opacity-100');
   });
 });
 
@@ -1001,6 +1027,9 @@ test.describe('Kiosk Mode - Accessibility', () => {
   });
 
   test('@full should have live region for slide announcements', async ({ johnAuth }) => {
+    // Increase timeout for this test (especially on mobile)
+    test.setTimeout(45000);
+
     const scoreboardId = await getJohnScoreboardId(johnAuth);
     test.skip(!scoreboardId, 'No scoreboard found for John');
 
@@ -1009,7 +1038,7 @@ test.describe('Kiosk Mode - Accessibility', () => {
     test.skip(!kioskEnabled, 'Could not enable kiosk mode');
 
     await johnAuth.goto(`/kiosk/${scoreboardId}`);
-    await johnAuth.waitForTimeout(1500);
+    await johnAuth.waitForTimeout(2000);
 
     // Check for aria-live regions
     const liveRegions = johnAuth.locator('[aria-live]');

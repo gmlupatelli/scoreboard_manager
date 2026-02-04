@@ -314,7 +314,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150 min-w-[44px] min-h-[44px]"
+              className="w-11 h-11 p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150 min-w-[44px] min-h-[44px]"
               style={customStyles ? textStyle : undefined}
               aria-label="Toggle menu"
               aria-expanded={isMobileMenuOpen}

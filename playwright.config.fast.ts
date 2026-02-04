@@ -10,10 +10,10 @@ loadTestEnv();
  */
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0, // No retries for faster feedback
-  workers: 6, // More parallel workers
+  workers: 2, // Reduce concurrency for auth stability
   reporter: 'list', // Simpler reporter
   timeout: 30000,
 
@@ -47,5 +47,9 @@ export default defineConfig({
     timeout: 60000,
     stdout: 'ignore',
     stderr: 'pipe',
+    env: {
+      ...process.env,
+      NEXT_DISABLE_FAST_REFRESH: 'true',
+    },
   },
 });

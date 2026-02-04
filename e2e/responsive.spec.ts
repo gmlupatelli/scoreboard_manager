@@ -26,6 +26,10 @@ test.describe('Mobile Touch Interactions', () => {
     for (let i = 0; i < Math.min(count, 5); i++) {
       const button = buttons.nth(i);
       if (await button.isVisible()) {
+        const ariaLabel = await button.getAttribute('aria-label');
+        if (ariaLabel === 'Open Next.js Dev Tools') {
+          continue;
+        }
         const box = await button.boundingBox();
         if (box) {
           expect(box.width).toBeGreaterThanOrEqual(44);

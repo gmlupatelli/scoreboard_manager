@@ -322,6 +322,10 @@ export default function SystemAdminInvitationsPage() {
     );
   }
 
+  if (!isAuthorized) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header isAuthenticated={true} />
