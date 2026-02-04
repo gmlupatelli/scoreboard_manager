@@ -204,6 +204,9 @@ sudo npx playwright install-deps
 # Run all tests
 npm run test:e2e
 
+# Run fast E2E tests (tagged @fast only)
+npm run test:e2e:fast
+
 # Run tests in UI mode (interactive)
 npm run test:e2e:ui
 
@@ -217,6 +220,19 @@ npx playwright test e2e/mobile.spec.ts
 npx playwright test --project="Desktop Chrome"
 npx playwright test --project="Mobile iPhone SE"
 npx playwright test --project="Mobile Minimum"
+```
+
+#### **CI E2E Runs (GitHub Actions)**
+
+- **PRs to `main`** run fast E2E tests against the Netlify deploy preview URL (required check).
+- **Manual runs only** for scheduled workflows:
+   - **Fast E2E** against https://dev--myscoreboardmanager.netlify.app
+   - **Full E2E** against https://dev--myscoreboardmanager.netlify.app
+
+To run locally against a remote environment:
+
+```powershell
+PLAYWRIGHT_TEST_BASE_URL=https://dev--myscoreboardmanager.netlify.app npm run test:e2e:fast
 ```
 
 #### **Test Coverage**

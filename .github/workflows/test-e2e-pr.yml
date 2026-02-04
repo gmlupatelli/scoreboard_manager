@@ -1,16 +1,21 @@
-name: E2E Tests (Nightly)
+name: E2E Tests (PR Preview)
 
 on:
-  workflow_dispatch: # Allow manual trigger
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   test-e2e:
-    name: Playwright E2E Tests
+    if: github.event.pull_request.draft == false
+    name: Playwright E2E Tests (Fast)
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45
     strategy:
       matrix:
         node-version: [20.x]
+    env:
+      PREVIEW_URL: https://deploy-preview-${{ github.event.number }}--myscoreboardmanager.netlify.app
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,27 +32,25 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Wait for dev deployment
-        env:
-          DEV_URL: https://dev--myscoreboardmanager.netlify.app
+      - name: Wait for deploy preview
         run: |
-          echo "Waiting for $DEV_URL to be ready..."
+          echo "Waiting for $PREVIEW_URL to be ready..."
           for attempt in {1..20}; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" -L "$DEV_URL")
+            status=$(curl -s -o /dev/null -w "%{http_code}" -L "$PREVIEW_URL")
             if [ "$status" -ge 200 ] && [ "$status" -lt 400 ]; then
-              echo "Dev deployment is ready (status $status)."
+              echo "Deploy preview is ready (status $status)."
               exit 0
             fi
             echo "Not ready yet (status $status). Retrying in 30s..."
             sleep 30
           done
-          echo "Timed out waiting for $DEV_URL"
+          echo "Timed out waiting for $PREVIEW_URL"
           exit 1
 
       - name: Run E2E tests
         run: npm run test:e2e:fast
         env:
-          PLAYWRIGHT_TEST_BASE_URL: https://dev--myscoreboardmanager.netlify.app
+          PLAYWRIGHT_TEST_BASE_URL: ${{ env.PREVIEW_URL }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v3

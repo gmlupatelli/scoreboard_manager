@@ -4,6 +4,9 @@ import { loadTestEnv } from './e2e/loadTestEnv.js';
 // Load .env.local first, then .env.test overrides for Playwright
 loadTestEnv();
 
+const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
+const isLocalhost = baseURL.includes('localhost') || baseURL.includes('127.0.0.1');
+
 /**
  * Fast Playwright configuration for rapid development/debugging
  * Only runs Desktop Chrome for quick feedback
@@ -21,7 +24,7 @@ export default defineConfig({
   globalTeardown: './e2e/global-teardown.ts',
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000',
+    baseURL,
     trace: 'off', // Disable trace for speed
     screenshot: 'only-on-failure',
     video: 'off', // Disable video for speed
@@ -40,16 +43,18 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60000,
-    stdout: 'ignore',
-    stderr: 'pipe',
-    env: {
-      ...process.env,
-      NEXT_DISABLE_FAST_REFRESH: 'true',
-    },
-  },
+  webServer: isLocalhost
+    ? {
+        command: 'npm run dev',
+        url: 'http://localhost:5000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 60000,
+        stdout: 'ignore',
+        stderr: 'pipe',
+        env: {
+          ...process.env,
+          NEXT_DISABLE_FAST_REFRESH: 'true',
+        },
+      }
+    : undefined,
 });

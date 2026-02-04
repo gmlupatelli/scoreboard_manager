@@ -4,6 +4,9 @@ import { loadTestEnv } from './e2e/loadTestEnv.js';
 // Load .env.local first, then .env.test overrides for Playwright
 loadTestEnv();
 
+const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
+const isLocalhost = baseURL.includes('localhost') || baseURL.includes('127.0.0.1');
+
 /**
  * Playwright configuration for E2E testing
  * Tests mobile (375x667, 320x568), tablet (1024x768), and desktop (1920x1080)
@@ -30,7 +33,7 @@ export default defineConfig({
   globalTeardown: './e2e/global-teardown.ts',
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure', // Only keep video on failure
@@ -102,16 +105,18 @@ export default defineConfig({
     // },
   ],
 
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60000, // Reduced from 120s to 60s
-    stdout: 'ignore', // Suppress dev server logs
-    stderr: 'ignore', // Suppress warnings including Fast Refresh
-    env: {
-      ...process.env,
-      NEXT_DISABLE_FAST_REFRESH: 'true',
-    },
-  },
+  webServer: isLocalhost
+    ? {
+        command: 'npm run dev',
+        url: 'http://localhost:5000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 60000, // Reduced from 120s to 60s
+        stdout: 'ignore', // Suppress dev server logs
+        stderr: 'ignore', // Suppress warnings including Fast Refresh
+        env: {
+          ...process.env,
+          NEXT_DISABLE_FAST_REFRESH: 'true',
+        },
+      }
+    : undefined,
 });
