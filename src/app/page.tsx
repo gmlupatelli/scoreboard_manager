@@ -1,3 +1,22 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import Image from 'next/image';
 import Icon from '@/components/ui/AppIcon';
 import Button from '@/components/ui/Button';
 import Footer from '@/components/common/Footer';
@@ -97,9 +116,9 @@ export default function Home() {
     },
     {
       icon: 'BoltIcon',
-      title: 'Zero Setup Required',
+      title: 'Hosted or Self-Hosted',
       description:
-        'Start tracking scores in seconds. No installation, no configuration - just sign up and create your first scoreboard instantly.',
+        'Use the hosted app for instant setup, or self-host for full control with the same features.',
     },
   ];
 
@@ -156,17 +175,34 @@ export default function Home() {
           <div className="relative max-w-7xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600/15 rounded-full text-accent font-semibold text-sm mb-6">
-                  <Icon name="SparklesIcon" size={16} />
-                  <span>Trusted by 10,000+ Event Organizers</span>
+                <div className="flex flex-wrap items-center gap-3 mb-6">
+                  <div className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600/10 rounded-full text-green-700 font-semibold text-sm">
+                    <Icon name="SparklesIcon" size={16} />
+                    <span>Open Source • AGPL v3</span>
+                  </div>
+                  <a
+                    href="https://github.com/gmlupatelli/scoreboard_manager"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center"
+                    title="View Scoreboard Manager on GitHub"
+                  >
+                    <Image
+                      src="https://img.shields.io/github/stars/gmlupatelli/scoreboard_manager?style=social"
+                      alt="GitHub stars"
+                      width={120}
+                      height={28}
+                    />
+                  </a>
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6 leading-tight">
                   Manage Scoreboards{' '}
-                  <span className="text-primary whitespace-nowrap">Like a Pro</span>
+                  <span className="text-primary whitespace-nowrap">Your Way</span>
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-text-secondary mb-8 leading-relaxed">
-                  The ultimate platform for creating, managing, and sharing real-time scoreboards.
-                  Perfect for tournaments, leagues, and competitions of any size.
+                  Scoreboard Manager is open source and built by a solo developer who wanted a
+                  simple, reliable way to run events. Self-host for free or use the hosted app and
+                  pay what you want to help cover hosting (and the occasional coffee).
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
@@ -175,18 +211,52 @@ export default function Home() {
                     size="lg"
                     icon="ArrowRightIcon"
                     iconPosition="right"
+                    title="Start using the hosted app"
                   >
-                    Create an Account
+                    Start Hosted Free
                   </Button>
                   <Button
-                    href="/public-scoreboard-list"
+                    href="/pricing"
                     variant="outline"
                     size="lg"
-                    icon="TrophyIcon"
+                    icon="GiftIcon"
                     iconPosition="left"
+                    title="View pricing and supporter tiers"
                   >
-                    Scoreboards
+                    View Pricing
                   </Button>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <a
+                    href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/supabase-manual-setup.md"
+                    className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2"
+                    title="Read the self-hosting guide"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Icon name="ServerStackIcon" size={16} />
+                    Self-host guide
+                  </a>
+                  <a
+                    href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/netlify-setup.md"
+                    className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2"
+                    title="Deploy with Netlify"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Icon name="ArrowTopRightOnSquareIcon" size={16} />
+                    Deploy on Netlify
+                  </a>
+                  <a
+                    href="https://github.com/gmlupatelli/scoreboard_manager"
+                    className="px-4 py-2 text-orange-900 rounded-md font-medium text-sm hover:bg-orange-900/10 transition-colors duration-150 flex items-center gap-2"
+                    title="View the source on GitHub"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Icon name="GitHubIcon" size={16} />
+                    View Source
+                  </a>
                 </div>
                 <div className="flex items-center space-x-4 sm:space-x-6 md:space-x-8 mt-8 pt-8 border-t border-border">
                   <div>
@@ -263,6 +333,151 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Open Source Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-bold text-text-primary mb-4">
+                  Why <span className="text-primary">Open Source</span>?
+                </h2>
+                <p className="text-text-secondary leading-relaxed mb-6">
+                  {
+                    "I'm a solo developer who built Scoreboard Manager with the help of AI coding agents. It started as a side project and grew into something worth sharing. Open source keeps it transparent and lets anyone self-host for free."
+                  }
+                </p>
+                <p className="text-text-secondary leading-relaxed">
+                  If you use the hosted app, you can pay what you want to support hosting costs —
+                  and maybe leave enough for a coffee. Every contribution helps keep the project
+                  moving.
+                </p>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-6 elevation-1">
+                <h3 className="text-xl font-semibold text-text-primary mb-4">Get involved</h3>
+                <ul className="space-y-3 text-text-secondary">
+                  <li className="flex items-start gap-3">
+                    <Icon name="GitHubIcon" size={18} className="text-text-secondary mt-0.5" />
+                    <a
+                      href="https://github.com/gmlupatelli/scoreboard_manager"
+                      className="hover:opacity-80 transition-opacity"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Star the repo and follow updates
+                    </a>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Icon name="CodeBracketIcon" size={18} className="text-text-secondary mt-0.5" />
+                    <a
+                      href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/CONTRIBUTING.md"
+                      className="hover:opacity-80 transition-opacity"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Read the contribution guide
+                    </a>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Icon name="HeartIcon" size={18} className="text-text-secondary mt-0.5" />
+                    <Button
+                      href="/supporters"
+                      variant="ghost"
+                      size="sm"
+                      className="p-0 h-auto text-text-secondary hover:bg-transparent"
+                      title="See supporter tiers and perks"
+                    >
+                      See supporter tiers and perks
+                    </Button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Open Source Path Section */}
+        <section id="open-source" className="py-16 px-4 sm:px-6 lg:px-8 bg-surface">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-4">
+                Choose <span className="text-primary">Hosted</span> or{' '}
+                <span className="text-primary">Self-Hosted</span>
+              </h2>
+              <p className="text-lg text-text-secondary max-w-3xl mx-auto">
+                {
+                  'Full functionality either way. Self-host for free, or use the hosted app for instant setup and pay what you want.'
+                }
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-card border border-border rounded-lg p-6 elevation-1">
+                <div className="w-12 h-12 rounded-lg bg-red-600/10 flex items-center justify-center mb-4">
+                  <Icon name="ServerStackIcon" size={24} className="text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-text-primary mb-2">Self-host for free</h3>
+                <p className="text-text-secondary mb-4">
+                  Run Scoreboard Manager on your own infrastructure with the AGPL v3 license. Full
+                  control, full features, zero platform fees.
+                </p>
+                <ul className="list-disc list-inside text-text-secondary space-y-2">
+                  <li>
+                    <a
+                      href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/supabase-manual-setup.md"
+                      className="hover:opacity-80 transition-opacity"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Supabase manual setup guide
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/netlify-setup.md"
+                      className="hover:opacity-80 transition-opacity"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Netlify deployment guide
+                    </a>
+                  </li>
+                </ul>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-6 elevation-1">
+                <div className="w-12 h-12 rounded-lg bg-green-600/10 flex items-center justify-center mb-4">
+                  <Icon name="BoltIcon" size={24} className="text-success" />
+                </div>
+                <h3 className="text-xl font-bold text-text-primary mb-2">Hosted convenience</h3>
+                <p className="text-text-secondary mb-4">
+                  No setup, no maintenance, just sign up and start. Pay what you want to keep the
+                  servers running and support ongoing development.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    href="/register"
+                    variant="primary"
+                    size="md"
+                    icon="ArrowRightIcon"
+                    iconPosition="right"
+                    title="Start with the hosted app"
+                  >
+                    Start Hosted Free
+                  </Button>
+                  <Button
+                    href="/pricing"
+                    variant="outline"
+                    size="md"
+                    icon="GiftIcon"
+                    iconPosition="left"
+                    title="View pricing and supporter tiers"
+                  >
+                    View Pricing
+                  </Button>
                 </div>
               </div>
             </div>

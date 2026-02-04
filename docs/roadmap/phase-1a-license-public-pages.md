@@ -2,7 +2,8 @@
 
 **Priority:** 🔴 High  
 **Dependencies:** None  
-**Estimated Scope:** Small-Medium
+**Estimated Scope:** Small-Medium  
+**Status:** ✅ Done
 
 ## Overview
 
@@ -35,10 +36,10 @@ Add the GNU Affero General Public License v3 to the repository. This license:
 
 **Acceptance Criteria:**
 
-- [ ] `LICENSE` file added to repository root
-- [ ] License is valid AGPL v3 text
-- [ ] README updated with license badge and section
-- [ ] All source files have appropriate license header (optional, discuss)
+- [x] `LICENSE` file added to repository root
+- [x] License is valid AGPL v3 text
+- [x] README updated with license badge and section
+- [x] All source files have appropriate license header (optional, discuss)
 
 **Technical Notes:**
 
@@ -67,13 +68,13 @@ Update the existing landing page (`src/app/page.tsx`) to communicate:
 
 **Acceptance Criteria:**
 
-- [ ] Add "Open Source" badge/banner prominently displayed
-- [ ] Link to GitHub repository with star count badge
-- [ ] "Fork on GitHub" or "View Source" button
-- [ ] Self-hosting section with link to documentation
-- [ ] SaaS value proposition (convenience, no setup, support)
-- [ ] Pricing preview or link to pricing page
-- [ ] Call-to-action for both self-host and SaaS signup
+- [x] Add "Open Source" badge/banner prominently displayed
+- [x] Link to GitHub repository with star count badge
+- [x] "Fork on GitHub" or "View Source" button
+- [x] Self-hosting section with link to documentation
+- [x] SaaS value proposition (convenience, no setup, support)
+- [x] Pricing preview or link to pricing page
+- [x] Call-to-action for both self-host and SaaS signup
 
 **Technical Notes:**
 
@@ -98,13 +99,13 @@ Create a dedicated pricing page that clearly shows:
 
 **Acceptance Criteria:**
 
-- [ ] Route `/pricing` created
-- [ ] Free vs Supporter comparison table
-- [ ] Clear display of minimums ($5/month, $50/year)
-- [ ] Appreciation tiers explained with badges
-- [ ] FAQ section addressing common questions
-- [ ] CTA buttons for signup/upgrade
-- [ ] Note about self-hosting option
+- [x] Route `/pricing` created
+- [x] Free vs Supporter comparison table
+- [x] Clear display of minimums ($5/month, $50/year)
+- [x] Appreciation tiers explained with badges
+- [x] FAQ section addressing common questions
+- [x] CTA buttons for signup/upgrade
+- [x] Note about self-hosting option
 
 **Content to Include:**
 
@@ -158,11 +159,11 @@ Update the existing about page (`src/app/about/page.tsx`) to include open source
 
 **Acceptance Criteria:**
 
-- [ ] Add "Open Source" section explaining the philosophy
-- [ ] Link to GitHub repository
-- [ ] Link to CONTRIBUTING.md
-- [ ] Acknowledgment of contributors (or link to GitHub contributors)
-- [ ] Link to supporters page
+- [x] Add "Open Source" section explaining the philosophy
+- [x] Link to GitHub repository
+- [x] Link to CONTRIBUTING.md
+- [x] Acknowledgment of contributors (or link to GitHub contributors)
+- [x] Link to supporters page
 
 **Technical Notes:**
 
@@ -186,11 +187,11 @@ Create a CONTRIBUTING.md file to guide potential contributors on:
 
 **Acceptance Criteria:**
 
-- [ ] `CONTRIBUTING.md` file added to repository root
-- [ ] Development setup instructions
-- [ ] Coding standards documented
-- [ ] PR process explained
-- [ ] Issue templates referenced or created
+- [x] `CONTRIBUTING.md` file added to repository root
+- [x] Development setup instructions
+- [x] Coding standards documented
+- [x] PR process explained
+- [x] Issue templates referenced or created
 
 ---
 
@@ -210,11 +211,11 @@ Update the existing footer (`src/components/common/Footer.tsx`) and header (`src
 
 **Acceptance Criteria:**
 
-- [ ] GitHub link in footer with icon
-- [ ] Pricing link in footer under "Product" section
-- [ ] Supporters link in footer (when implemented)
-- [ ] License mention in footer (e.g., "Open source under AGPL v3")
-- [ ] Add pricing link to header navigation for unauthenticated users
+- [x] GitHub link in footer with icon
+- [x] Pricing link in footer under "Product" section
+- [x] Supporters link in footer (when implemented)
+- [x] License mention in footer (e.g., "Open source under AGPL v3")
+- [x] Add pricing link to header navigation for unauthenticated users
 
 **Technical Notes:**
 

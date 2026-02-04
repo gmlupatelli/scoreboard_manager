@@ -1,3 +1,21 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 'use client';
 
 import { useState } from 'react';
@@ -59,15 +77,31 @@ export default function ContactPage() {
                 <Icon name="ClockIcon" size={24} className="text-primary" />
               </div>
               <h3 className="font-semibold text-text-primary mb-2">Response Time</h3>
-              <p className="text-text-secondary text-sm">Within 24-48 hours</p>
+              <p className="text-text-secondary text-sm">Within 48 hours</p>
             </div>
             <div className="bg-card border border-border rounded-lg p-6 text-center">
               <div className="w-12 h-12 bg-red-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Icon name="GlobeAltIcon" size={24} className="text-primary" />
               </div>
               <h3 className="font-semibold text-text-primary mb-2">Availability</h3>
-              <p className="text-text-secondary text-sm">Monday - Friday</p>
+              <p className="text-text-secondary text-sm">Weekdays (solo dev)</p>
             </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6 mb-12">
+            <h2 className="text-xl font-semibold text-text-primary mb-2">Open-source support</h2>
+            <p className="text-text-secondary leading-relaxed mb-4">
+              Scoreboard Manager is open source, so you can self-host and share fixes with the
+              community. For bug reports and feature requests, GitHub Issues is the fastest path.
+            </p>
+            <a
+              href="https://github.com/gmlupatelli/scoreboard_manager/issues"
+              className="text-primary hover:opacity-80 transition-opacity text-sm"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open a GitHub Issue
+            </a>
           </div>
 
           {submitted ? (

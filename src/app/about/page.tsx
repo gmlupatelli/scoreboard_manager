@@ -1,3 +1,22 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import Link from 'next/link';
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 import Logo from '@/components/ui/Logo';
@@ -27,6 +46,54 @@ export default function AboutPage() {
                 reliable platform for managing scoreboards for any type of competition. Whether
                 you're running a local sports tournament, a gaming championship, or a company event,
                 we believe tracking scores should be effortless and accessible to everyone.
+              </p>
+            </section>
+
+            <section className="bg-card border border-border rounded-lg p-8">
+              <h2 className="text-2xl font-semibold text-text-primary mb-4">Open Source</h2>
+              <p className="text-text-secondary leading-relaxed mb-4">
+                Scoreboard Manager is open source under the AGPL v3 license. You can self-host it
+                for free, modify it to fit your needs, and share improvements with the community.
+              </p>
+              <p className="text-text-secondary leading-relaxed mb-4">
+                {
+                  "I'm a solo developer who built this with the help of AI coding agents. If you use the hosted version, you can pay what you want to help cover hosting costs and keep development going."
+                }
+              </p>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <a
+                  href="https://github.com/gmlupatelli/scoreboard_manager"
+                  className="text-primary hover:opacity-80 transition-opacity"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View the GitHub repository
+                </a>
+                <a
+                  href="https://github.com/gmlupatelli/scoreboard_manager/graphs/contributors"
+                  className="text-primary hover:opacity-80 transition-opacity"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Contributor list
+                </a>
+                <a
+                  href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/CONTRIBUTING.md"
+                  className="text-primary hover:opacity-80 transition-opacity"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Read CONTRIBUTING.md
+                </a>
+                <Link
+                  href="/supporters"
+                  className="text-primary hover:opacity-80 transition-opacity"
+                >
+                  Supporters page
+                </Link>
+              </div>
+              <p className="text-text-secondary leading-relaxed mt-4">
+                Huge thanks to everyone who has contributed code, ideas, and feedback.
               </p>
             </section>
 

@@ -30,6 +30,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'img.shields.io',
+      },
     ],
   },
   async headers() {
@@ -46,7 +50,7 @@ const nextConfig = {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co",
+          "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co https://img.shields.io",
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
           "frame-ancestors 'self'",
           "base-uri 'self'",
@@ -59,7 +63,7 @@ const nextConfig = {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co",
+      "img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://images.pixabay.com https://*.supabase.co https://img.shields.io",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
       'frame-ancestors *',
       "base-uri 'self'",

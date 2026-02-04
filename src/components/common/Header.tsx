@@ -1,3 +1,20 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -143,6 +160,14 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   <Icon name="TrophyIcon" size={18} />
                   <span>Scoreboards</span>
                 </Link>
+                <Link
+                  href="/pricing"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
+                >
+                  <Icon name="GiftIcon" size={18} />
+                  <span>Pricing</span>
+                </Link>
               </>
             )}
             {isAuthenticated ? (
@@ -251,6 +276,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   size="sm"
                   icon="UserPlusIcon"
                   iconPosition="left"
+                  title="Create a free account"
                   style={
                     customStyles
                       ? {
@@ -269,6 +295,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   size="sm"
                   icon="ArrowRightOnRectangleIcon"
                   iconPosition="left"
+                  title="Sign in to your account"
                   style={
                     customStyles
                       ? {
@@ -349,6 +376,15 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 >
                   <Icon name="TrophyIcon" size={20} />
                   <span>Scoreboards</span>
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                  style={customStyles ? textStyle : undefined}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Icon name="GiftIcon" size={20} />
+                  <span>Pricing</span>
                 </Link>
               </div>
             )}
@@ -436,6 +472,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     icon="UserPlusIcon"
                     iconPosition="left"
                     fullWidth
+                    title="Create a free account"
                     style={
                       customStyles
                         ? {
@@ -455,6 +492,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     icon="ArrowRightOnRectangleIcon"
                     iconPosition="left"
                     fullWidth
+                    title="Sign in to your account"
                     style={customStyles ? { backgroundColor: customStyles.accentColor } : undefined}
                   >
                     Login

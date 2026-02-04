@@ -1,3 +1,21 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 
@@ -9,7 +27,7 @@ export default function CookiePolicyPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-text-primary mb-4">Cookie Policy</h1>
-            <p className="text-text-secondary">Last updated: November 2025</p>
+            <p className="text-text-secondary">Last updated: February 2026</p>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-8 space-y-8">
@@ -97,7 +115,19 @@ export default function CookiePolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">5. Managing Cookies</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                5. Open Source & Self-Hosting
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                Scoreboard Manager is open source under the AGPL v3 license. If you self-host the
+                software, you control which cookies are used and are responsible for notifying your
+                users. The AGPL v3 also requires operators who modify and host the software for
+                others to provide access to the corresponding source code.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">6. Managing Cookies</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 You can control and manage cookies in several ways:
               </p>
@@ -119,7 +149,7 @@ export default function CookiePolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">6. Essential Cookies</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">7. Essential Cookies</h2>
               <p className="text-text-secondary leading-relaxed">
                 Some cookies are essential for the operation of our website. These cookies enable
                 core functionality such as security, network management, and account access. You
@@ -130,7 +160,7 @@ export default function CookiePolicyPage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                7. Updates to This Policy
+                8. Updates to This Policy
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 We may update this Cookie Policy from time to time to reflect changes in our
@@ -140,7 +170,7 @@ export default function CookiePolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">8. Contact Us</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">9. Contact Us</h2>
               <p className="text-text-secondary leading-relaxed">
                 If you have any questions about our use of cookies, please contact us at
                 privacy@scoreboardmanager.com.

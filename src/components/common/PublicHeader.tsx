@@ -1,3 +1,21 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -76,12 +94,20 @@ export default function PublicHeader() {
               <Icon name="TrophyIcon" size={18} />
               <span>Scoreboards</span>
             </Link>
+            <Link
+              href="/pricing"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+            >
+              <Icon name="GiftIcon" size={18} />
+              <span>Pricing</span>
+            </Link>
             <Button
               href="/register"
               variant="outline"
               size="sm"
               icon="UserPlusIcon"
               iconPosition="left"
+              title="Create a free account"
             >
               Sign Up
             </Button>
@@ -91,6 +117,7 @@ export default function PublicHeader() {
               size="sm"
               icon="ArrowRightOnRectangleIcon"
               iconPosition="left"
+              title="Sign in to your account"
             >
               Login
             </Button>
@@ -152,6 +179,14 @@ export default function PublicHeader() {
                 <Icon name="TrophyIcon" size={20} />
                 <span>Scoreboards</span>
               </Link>
+              <Link
+                href="/pricing"
+                className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Icon name="GiftIcon" size={20} />
+                <span>Pricing</span>
+              </Link>
             </div>
 
             <div className="border-t border-border px-2 pt-4 pb-3">
@@ -163,6 +198,7 @@ export default function PublicHeader() {
                   icon="UserPlusIcon"
                   iconPosition="left"
                   fullWidth
+                  title="Create a free account"
                 >
                   Sign Up
                 </Button>
@@ -173,6 +209,7 @@ export default function PublicHeader() {
                   icon="ArrowRightOnRectangleIcon"
                   iconPosition="left"
                   fullWidth
+                  title="Sign in to your account"
                 >
                   Login
                 </Button>

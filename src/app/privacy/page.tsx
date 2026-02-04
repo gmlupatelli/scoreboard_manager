@@ -1,3 +1,21 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 
@@ -9,7 +27,7 @@ export default function PrivacyPolicyPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-text-primary mb-4">Privacy Policy</h1>
-            <p className="text-text-secondary">Last updated: November 2025</p>
+            <p className="text-text-secondary">Last updated: February 2026</p>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-8 space-y-8">
@@ -69,7 +87,19 @@ export default function PrivacyPolicyPage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                5. Public Scoreboards
+                5. Open Source & Self-Hosting
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                Scoreboard Manager is open source under the AGPL v3 license. You can self-host the
+                software, and if you run a modified version for others over a network, the license
+                requires you to offer the source code to those users. For self-hosted instances, the
+                operator is responsible for their own privacy practices and data handling.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                6. Public Scoreboards
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 When you create a public scoreboard, the scoreboard title, description, and all
@@ -79,7 +109,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">6. Data Security</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">7. Data Security</h2>
               <p className="text-text-secondary leading-relaxed">
                 We implement appropriate technical and organizational security measures to protect
                 your personal information against unauthorized access, alteration, disclosure, or
@@ -89,7 +119,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">7. Your Rights</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">8. Your Rights</h2>
               <p className="text-text-secondary leading-relaxed mb-4">You have the right to:</p>
               <ul className="list-disc list-inside text-text-secondary space-y-2 ml-4">
                 <li>Access and receive a copy of your personal data</li>
@@ -100,7 +130,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">8. Data Retention</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">9. Data Retention</h2>
               <p className="text-text-secondary leading-relaxed">
                 We retain your personal information for as long as your account is active or as
                 needed to provide you services. If you wish to delete your account, please contact
@@ -110,7 +140,7 @@ export default function PrivacyPolicyPage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                9. Changes to This Policy
+                10. Changes to This Policy
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 We may update this Privacy Policy from time to time. We will notify you of any
@@ -120,7 +150,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">10. Contact Us</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">11. Contact Us</h2>
               <p className="text-text-secondary leading-relaxed">
                 If you have any questions about this Privacy Policy, please contact us at
                 privacy@scoreboardmanager.com.

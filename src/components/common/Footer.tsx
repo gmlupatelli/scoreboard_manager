@@ -1,3 +1,21 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import Link from 'next/link';
 import Logo from '@/components/ui/Logo';
 import { ScoreboardCustomStyles } from '@/types/models';
@@ -81,6 +99,15 @@ export default function Footer({ customStyles = null }: FooterProps) {
               </li>
               <li>
                 <Link
+                  href="/pricing"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
+                  style={customStyles ? { color: customStyles.textColor } : undefined}
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/login"
                   className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
@@ -137,6 +164,26 @@ export default function Footer({ customStyles = null }: FooterProps) {
                   Support
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/supporters"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
+                  style={customStyles ? { color: customStyles.textColor } : undefined}
+                >
+                  Supporters
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="https://github.com/gmlupatelli/scoreboard_manager"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={customStyles ? { color: customStyles.textColor } : undefined}
+                >
+                  GitHub
+                </a>
+              </li>
             </ul>
           </div>
           <div>
@@ -186,6 +233,30 @@ export default function Footer({ customStyles = null }: FooterProps) {
         >
           <p className="text-sm text-text-secondary" style={customStyles ? textStyle : undefined}>
             &copy; {new Date()?.getFullYear()} Scoreboard Manager. All rights reserved.
+          </p>
+          <p
+            className="text-sm text-text-secondary mt-2"
+            style={customStyles ? textStyle : undefined}
+          >
+            Open source under the{' '}
+            <a
+              href="https://www.gnu.org/licenses/agpl-3.0"
+              className="hover:opacity-80 transition-opacity"
+              target="_blank"
+              rel="noreferrer"
+            >
+              AGPL v3
+            </a>
+            . View the code on{' '}
+            <a
+              href="https://github.com/gmlupatelli/scoreboard_manager"
+              className="hover:opacity-80 transition-opacity"
+              target="_blank"
+              rel="noreferrer"
+            >
+              GitHub
+            </a>
+            .
           </p>
         </div>
       </div>

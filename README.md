@@ -1,8 +1,12 @@
 # Scoreboard Manager
 
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 ## Overview
 
 A modern Next.js 14 scoreboard management application with TypeScript, Tailwind CSS, and Supabase authentication. This app provides a comprehensive platform for creating, managing, and viewing scoreboards with real-time updates optimized for TV displays.
+
+Scoreboard Manager is open source under the GNU Affero General Public License v3. You can self-host for free or use the hosted app and pay what you want to help cover hosting costs.
 
 ## Project Status
 
@@ -398,6 +402,10 @@ npx playwright test --project="Mobile iPhone SE"
 
 - Full testing guide: `e2e/README.md`
 - Manual testing checklist: `docs/mobile-testing-checklist.md`
+
+## License
+
+Scoreboard Manager is licensed under the GNU Affero General Public License v3. See [LICENSE](LICENSE).
 - Mobile optimization summary: `docs/mobile-optimization-summary.md`
 
 ## Deployment

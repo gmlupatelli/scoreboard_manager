@@ -1,3 +1,21 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 
@@ -9,7 +27,7 @@ export default function TermsOfServicePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-text-primary mb-4">Terms of Service</h1>
-            <p className="text-text-secondary">Last updated: November 2025</p>
+            <p className="text-text-secondary">Last updated: February 2026</p>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-8 space-y-8">
@@ -36,7 +54,19 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">3. User Accounts</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                3. Open Source License (AGPL v3)
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                Scoreboard Manager is licensed under the GNU Affero General Public License v3. If
+                you run a modified version of the software and make it available to others over a
+                network, you must offer the corresponding source code to those users. This
+                requirement applies to hosted or self-hosted deployments that serve third parties.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">4. User Accounts</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 To use certain features of our service, you must create an account. You agree to:
               </p>
@@ -49,7 +79,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">4. User Content</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">5. User Content</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 You retain ownership of all content you create through our service. By posting
                 content, you grant us a non-exclusive, worldwide license to use, display, and
@@ -63,7 +93,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">5. Acceptable Use</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">6. Acceptable Use</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 You agree not to use our service to:
               </p>
@@ -79,7 +109,7 @@ export default function TermsOfServicePage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                6. Service Availability
+                7. Service Availability
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 We strive to maintain high availability of our service, but we do not guarantee
@@ -90,7 +120,7 @@ export default function TermsOfServicePage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                7. Limitation of Liability
+                8. Limitation of Liability
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 To the maximum extent permitted by law, Scoreboard Manager shall not be liable for
@@ -100,7 +130,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">8. Indemnification</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">9. Indemnification</h2>
               <p className="text-text-secondary leading-relaxed">
                 You agree to indemnify and hold harmless Scoreboard Manager and its affiliates from
                 any claims, damages, or expenses arising from your use of the service or violation
@@ -109,7 +139,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">9. Termination</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">10. Termination</h2>
               <p className="text-text-secondary leading-relaxed">
                 We reserve the right to suspend or terminate your account at any time for violation
                 of these terms or for any other reason at our sole discretion. You may also delete
@@ -118,7 +148,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">10. Changes to Terms</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">11. Changes to Terms</h2>
               <p className="text-text-secondary leading-relaxed">
                 We may modify these Terms of Service at any time. We will notify users of
                 significant changes by posting a notice on our website. Continued use of the service
@@ -127,7 +157,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">11. Governing Law</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">12. Governing Law</h2>
               <p className="text-text-secondary leading-relaxed">
                 These Terms of Service shall be governed by and construed in accordance with
                 applicable laws, without regard to conflict of law principles.
@@ -136,7 +166,7 @@ export default function TermsOfServicePage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                12. Contact Information
+                13. Contact Information
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 For any questions regarding these Terms of Service, please contact us at

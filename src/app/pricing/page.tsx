@@ -1,0 +1,287 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+'use client';
+
+import { useState } from 'react';
+import PublicHeader from '@/components/common/PublicHeader';
+import Footer from '@/components/common/Footer';
+import Icon from '@/components/ui/AppIcon';
+import Button from '@/components/ui/Button';
+
+const comparisonRows = [
+  { feature: 'Public scoreboards', free: '2', supporter: 'Unlimited' },
+  { feature: 'Private scoreboards', free: '—', supporter: 'Unlimited' },
+  { feature: 'Entries per scoreboard', free: '50', supporter: 'Unlimited' },
+  { feature: 'History snapshots', free: '10', supporter: '100' },
+  { feature: 'Theme presets', free: 'All presets', supporter: 'All presets + builder' },
+  { feature: 'Embeds', free: 'Powered by badge', supporter: 'No badge' },
+  { feature: 'Kiosk / TV Mode', free: '—', supporter: 'Included' },
+  { feature: 'Team collaboration', free: '—', supporter: 'Included' },
+  { feature: 'Support', free: 'Community (GitHub)', supporter: 'Priority email (48h)' },
+];
+
+const faqs = [
+  {
+    question: 'Is self-hosting really free?',
+    answer:
+      'Yes. The software is open source under the AGPL v3, so you can self-host with full functionality at no cost beyond your hosting provider.',
+  },
+  {
+    question: 'What does “pay what you want” mean?',
+    answer:
+      'The hosted plan is supported by optional contributions. You can use the hosted app for free or choose a supporter amount that fits your budget.',
+  },
+  {
+    question: 'Do supporter tiers unlock different features?',
+    answer:
+      'All supporter tiers unlock the same features. Higher tiers simply show appreciation badges and help cover hosting costs.',
+  },
+];
+
+export default function PricingPage() {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const supporterPrice = billingCycle === 'monthly' ? '$5+/month' : '$50+/year';
+  const monthlyButtonClassName =
+    'px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-150';
+  const monthlyButtonState =
+    billingCycle === 'monthly'
+      ? 'bg-white text-text-primary shadow-sm'
+      : 'text-text-secondary hover:text-text-primary';
+  const yearlyButtonClassName =
+    'px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-150';
+  const yearlyButtonState =
+    billingCycle === 'yearly'
+      ? 'bg-white text-text-primary shadow-sm'
+      : 'text-text-secondary hover:text-text-primary';
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <PublicHeader />
+      <main className="flex-1 pt-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-text-primary mb-4">Pricing</h1>
+            <p className="text-lg text-text-secondary max-w-3xl mx-auto">
+              Scoreboard Manager is open source and free to self-host. The hosted app runs on a
+              pay-what-you-want model so you can support hosting and development.
+            </p>
+          </div>
+
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex bg-muted rounded-lg p-1">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`${monthlyButtonClassName} ${monthlyButtonState}`}
+                title="Show monthly pricing"
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('yearly')}
+                className={`${yearlyButtonClassName} ${yearlyButtonState}`}
+                title="Show yearly pricing"
+              >
+                Yearly
+              </button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <div className="bg-card border border-border rounded-lg p-6 elevation-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="CheckBadgeIcon" size={20} className="text-success" />
+                <h2 className="text-2xl font-semibold text-text-primary">Free</h2>
+              </div>
+              <p className="text-text-secondary mb-4">Self-host or use the hosted app for free.</p>
+              <div className="text-3xl font-bold text-text-primary mb-4">$0</div>
+              <ul className="space-y-2 text-text-secondary">
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>2 public scoreboards</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>50 entries per scoreboard</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>10 history snapshots per scoreboard</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>All theme presets</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>Community support (GitHub Issues)</span>
+                </li>
+              </ul>
+              <div className="mt-6">
+                <Button
+                  href="/register"
+                  variant="outline"
+                  size="md"
+                  icon="ArrowRightIcon"
+                  iconPosition="right"
+                  title="Start with the hosted app"
+                >
+                  Start Hosted Free
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-card border border-border rounded-lg p-6 elevation-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="GiftIcon" size={20} className="text-primary" />
+                <h2 className="text-2xl font-semibold text-text-primary">Supporter</h2>
+              </div>
+              <p className="text-text-secondary mb-4">
+                Pay what you want to support hosting and unlock all hosted features.
+              </p>
+              <div className="text-3xl font-bold text-text-primary mb-4">{supporterPrice}</div>
+              <ul className="space-y-2 text-text-secondary">
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>Unlimited public & private scoreboards</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>Unlimited entries</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>100 history snapshots per scoreboard</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>Custom theme builder</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>No “Powered by” badge on embeds</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>Kiosk / TV Mode</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>Team collaboration</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="CheckIcon" size={16} className="text-success" />
+                  <span>Priority email support (48h response)</span>
+                </li>
+              </ul>
+              <div className="mt-6">
+                <Button
+                  href="/contact"
+                  variant="primary"
+                  size="md"
+                  icon="ArrowRightIcon"
+                  iconPosition="right"
+                  title="Contact us to become a supporter"
+                >
+                  Become a Supporter
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6 mb-12">
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">Compare plans</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-text-secondary">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 font-semibold text-text-primary">Feature</th>
+                    <th className="text-left py-3 px-4 font-semibold text-text-primary">Free</th>
+                    <th className="text-left py-3 px-4 font-semibold text-text-primary">
+                      Supporter
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparisonRows.map((row) => (
+                    <tr key={row.feature} className="border-b border-border last:border-0">
+                      <td className="py-3 px-4">{row.feature}</td>
+                      <td className="py-3 px-4">{row.free}</td>
+                      <td className="py-3 px-4">{row.supporter}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6 mb-12">
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">Appreciation tiers</h2>
+            <p className="text-text-secondary mb-6">
+              All supporter tiers include the same features. Higher tiers simply show appreciation
+              badges and help keep the project sustainable.
+            </p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="border border-border rounded-lg p-4 text-center">
+                <div className="text-2xl mb-2">🙌</div>
+                <p className="font-semibold text-text-primary">Supporter</p>
+                <p className="text-sm text-text-secondary">$5–9/mo</p>
+              </div>
+              <div className="border border-border rounded-lg p-4 text-center">
+                <div className="text-2xl mb-2">🏆</div>
+                <p className="font-semibold text-text-primary">Champion</p>
+                <p className="text-sm text-text-secondary">$10–24/mo</p>
+              </div>
+              <div className="border border-border rounded-lg p-4 text-center">
+                <div className="text-2xl mb-2">🌟</div>
+                <p className="font-semibold text-text-primary">Legend</p>
+                <p className="text-sm text-text-secondary">$25–49/mo</p>
+              </div>
+              <div className="border border-border rounded-lg p-4 text-center">
+                <div className="text-2xl mb-2">👑</div>
+                <p className="font-semibold text-text-primary">Hall of Famer</p>
+                <p className="text-sm text-text-secondary">$50+/mo</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-6 mb-12">
+            <h2 className="text-2xl font-semibold text-text-primary mb-4">FAQ</h2>
+            <div className="space-y-6">
+              {faqs.map((faq) => (
+                <div key={faq.question} className="border-b border-border pb-6 last:border-0">
+                  <h3 className="font-medium text-text-primary mb-2 flex items-start gap-3">
+                    <Icon
+                      name="QuestionMarkCircleIcon"
+                      size={20}
+                      className="text-primary flex-shrink-0 mt-0.5"
+                    />
+                    {faq.question}
+                  </h3>
+                  <p className="text-text-secondary text-sm leading-relaxed pl-8">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}

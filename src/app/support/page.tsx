@@ -1,7 +1,25 @@
+/*
+ * Scoreboard Manager
+ * Copyright (c) 2026 Scoreboard Manager contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+import Link from 'next/link';
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
-import Link from 'next/link';
 
 const faqs = [
   {
@@ -79,6 +97,35 @@ export default function SupportPage() {
             </div>
           </div>
 
+          <div className="bg-card border border-border rounded-lg p-6 mb-12">
+            <h2 className="text-xl font-semibold text-text-primary mb-2">Open-source community</h2>
+            <p className="text-text-secondary text-sm leading-relaxed mb-4">
+              Scoreboard Manager is maintained by a solo developer and the community. If you
+              self-host or want to contribute, GitHub Issues and pull requests are the best way to
+              get help and improve the project.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="https://github.com/gmlupatelli/scoreboard_manager/issues"
+                className="px-4 py-2 text-orange-900 rounded-md font-medium text-sm hover:bg-orange-900/10 transition-colors duration-150 flex items-center gap-2"
+                title="Open a GitHub Issue"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon name="GitHubIcon" size={16} />
+                GitHub Issues
+              </a>
+              <Link
+                href="/pricing"
+                className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2"
+                title="View supporter pricing"
+              >
+                <Icon name="GiftIcon" size={16} />
+                Support the project
+              </Link>
+            </div>
+          </div>
+
           <div className="bg-card border border-border rounded-lg p-8">
             <h2 className="text-2xl font-semibold text-text-primary mb-6">
               Frequently Asked Questions
@@ -108,6 +155,7 @@ export default function SupportPage() {
             <Link
               href="/contact"
               className="inline-flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:opacity-90 transition-opacity"
+              title="Contact the support team"
             >
               <Icon name="ChatBubbleLeftRightIcon" size={18} />
               Contact Us
