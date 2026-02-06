@@ -29,7 +29,7 @@ const comparisonRows = [
   { feature: 'Private scoreboards', free: '—', supporter: 'Unlimited' },
   { feature: 'Entries per scoreboard', free: '50', supporter: 'Unlimited' },
   { feature: 'History snapshots', free: '10', supporter: '100' },
-  { feature: 'Theme', free: 'Preset themes', supporter: 'Custom themes' },
+  { feature: 'Theme presets', free: 'All presets', supporter: 'All presets + builder' },
   { feature: 'Embeds', free: 'Powered by badge', supporter: 'No badge' },
   { feature: 'Kiosk / TV Mode', free: '—', supporter: 'Included' },
   { feature: 'Team collaboration', free: '—', supporter: 'Included' },
@@ -38,7 +38,7 @@ const comparisonRows = [
 
 const faqs = [
   {
-    question: 'Can I self-host and get all the supporter features for free?',
+    question: 'Is self-hosting really free?',
     answer:
       'Yes. The software is open source under the AGPL v3, so you can self-host with full functionality at no cost beyond your hosting provider.',
   },
@@ -108,14 +108,14 @@ export default function PricingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-card border border-border rounded-lg p-6 elevation-1 flex flex-col">
+            <div className="bg-card border border-border rounded-lg p-6 elevation-1">
               <div className="flex items-center gap-2 mb-2">
                 <Icon name="CheckBadgeIcon" size={20} className="text-success" />
                 <h2 className="text-2xl font-semibold text-text-primary">Free</h2>
               </div>
-              <p className="text-text-secondary mb-4">Use the hosted app for free.</p>
+              <p className="text-text-secondary mb-4">Self-host or use the hosted app for free.</p>
               <div className="text-3xl font-bold text-text-primary mb-4">$0</div>
-              <ul className="space-y-2 text-text-secondary flex-1">
+              <ul className="space-y-2 text-text-secondary">
                 <li className="flex items-center gap-2">
                   <Icon name="CheckIcon" size={16} className="text-success" />
                   <span>2 public scoreboards</span>
@@ -130,14 +130,14 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Icon name="CheckIcon" size={16} className="text-success" />
-                  <span>Presets themes</span>
+                  <span>All theme presets</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Icon name="CheckIcon" size={16} className="text-success" />
                   <span>Community support (GitHub Issues)</span>
                 </li>
               </ul>
-              <div className="mt-auto pt-6">
+              <div className="mt-6">
                 <Button
                   href="/register"
                   variant="outline"
@@ -146,12 +146,12 @@ export default function PricingPage() {
                   iconPosition="right"
                   title="Start with the hosted app"
                 >
-                  Sign Up for Free
+                  Start Hosted Free
                 </Button>
               </div>
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-6 elevation-1 flex flex-col">
+            <div className="bg-card border border-border rounded-lg p-6 elevation-1">
               <div className="flex items-center gap-2 mb-2">
                 <Icon name="GiftIcon" size={20} className="text-primary" />
                 <h2 className="text-2xl font-semibold text-text-primary">Supporter</h2>
@@ -160,7 +160,7 @@ export default function PricingPage() {
                 Choose from four fixed tiers to support hosting and unlock all hosted features.
               </p>
               <div className="text-3xl font-bold text-text-primary mb-4">{supporterPrice}</div>
-              <ul className="space-y-2 text-text-secondary flex-1">
+              <ul className="space-y-2 text-text-secondary">
                 <li className="flex items-center gap-2">
                   <Icon name="CheckIcon" size={16} className="text-success" />
                   <span>Unlimited public & private scoreboards</span>
@@ -175,7 +175,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Icon name="CheckIcon" size={16} className="text-success" />
-                  <span>Custom themes</span>
+                  <span>Custom theme builder</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Icon name="CheckIcon" size={16} className="text-success" />
@@ -194,7 +194,7 @@ export default function PricingPage() {
                   <span>Priority email support (48h response)</span>
                 </li>
               </ul>
-              <div className="mt-auto pt-6">
+              <div className="mt-6">
                 <Button
                   href="/contact"
                   variant="primary"

@@ -1,0 +1,79 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0" y1="0" x2="1600" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#38385e" stop-opacity="0.08" />
+      <stop offset="0.5" stop-color="#c43e41" stop-opacity="0.06" />
+      <stop offset="1" stop-color="#eba977" stop-opacity="0.08" />
+    </linearGradient>
+    <linearGradient id="accentWave" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c43e41" />
+      <stop offset="1" stop-color="#38385e" />
+    </linearGradient>
+    <filter id="cardShadow" x="0" y="0" width="1600" height="1200" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#20203e" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1200" fill="#fafafa" />
+  <rect width="1600" height="1200" fill="url(#bgGradient)" />
+
+  <g filter="url(#cardShadow)">
+    <rect x="160" y="140" width="1280" height="920" rx="36" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+  </g>
+
+  <rect x="230" y="200" width="220" height="44" rx="22" fill="#f1f5f9" />
+  <text x="340" y="229" text-anchor="middle" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="20" fill="#38385e" font-weight="700" letter-spacing="0.5">
+    SUBSCRIPTION
+  </text>
+
+  <text x="230" y="330" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="64" fill="#20203e" font-weight="800">
+    Yearly Support
+  </text>
+  <text x="230" y="390" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="28" fill="#38385e" font-weight="600">
+    Pay what you want • From $50 / year
+  </text>
+
+  <rect x="230" y="450" width="320" height="64" rx="12" fill="#38385e" />
+  <text x="390" y="493" text-anchor="middle" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="26" fill="#ffffff" font-weight="700">
+    Best value yearly
+  </text>
+
+  <g>
+    <rect x="230" y="560" width="540" height="78" rx="18" fill="#f8fafc" />
+    <text x="260" y="608" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="22" fill="#20203e" font-weight="600">
+      ✓ Unlimited dashboards
+    </text>
+
+    <rect x="230" y="650" width="540" height="78" rx="18" fill="#f8fafc" />
+    <text x="260" y="698" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="22" fill="#20203e" font-weight="600">
+      ✓ Unlock all features
+    </text>
+
+    <rect x="230" y="740" width="540" height="78" rx="18" fill="#f8fafc" />
+    <text x="260" y="788" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="22" fill="#20203e" font-weight="600">
+      ✓ Support long-term roadmap
+    </text>
+  </g>
+
+  <g>
+    <circle cx="1180" cy="420" r="170" fill="#38385e" fill-opacity="0.16" />
+    <circle cx="1220" cy="370" r="120" fill="#c43e41" fill-opacity="0.18" />
+    <circle cx="1140" cy="320" r="70" fill="#eba977" fill-opacity="0.22" />
+
+    <path d="M900 640 C 1020 540, 1220 560, 1300 660 C 1380 760, 1500 760, 1500 760 L 1500 920 L 900 920 Z" fill="url(#accentWave)" opacity="0.15" />
+
+    <rect x="920" y="560" width="520" height="320" rx="28" fill="#ffffff" stroke="#e2e8f0" stroke-width="2" />
+    <text x="1180" y="630" text-anchor="middle" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="28" fill="#20203e" font-weight="700">
+      Scoreboard Manager
+    </text>
+    <text x="1180" y="680" text-anchor="middle" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="22" fill="#38385e" font-weight="600">
+      Community support plan
+    </text>
+
+    <rect x="980" y="730" width="400" height="60" rx="12" fill="#c43e41" />
+    <text x="1180" y="768" text-anchor="middle" font-family="'Nunito Sans','Segoe UI',sans-serif" font-size="22" fill="#ffffff" font-weight="700">
+      Yearly billing
+    </text>
+  </g>
+
+</svg>

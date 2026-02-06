@@ -217,6 +217,156 @@ export type Database = {
           },
         ];
       };
+      payment_history: {
+        Row: {
+          created_at: string;
+          currency: string | null;
+          currency_rate: number | null;
+          discount_total_cents: number | null;
+          discount_total_usd_cents: number | null;
+          id: string;
+          lemonsqueezy_customer_id: string | null;
+          lemonsqueezy_order_id: string;
+          lemonsqueezy_order_item_id: string | null;
+          lemonsqueezy_order_number: number | null;
+          lemonsqueezy_product_id: string | null;
+          lemonsqueezy_subscription_id: string | null;
+          lemonsqueezy_variant_id: string | null;
+          order_identifier: string | null;
+          order_item_created_at: string | null;
+          order_item_deleted_at: string | null;
+          order_item_price_cents: number | null;
+          order_item_product_name: string | null;
+          order_item_quantity: number | null;
+          order_item_test_mode: boolean | null;
+          order_item_updated_at: string | null;
+          order_item_variant_name: string | null;
+          order_items: Json | null;
+          receipt_url: string | null;
+          refunded: boolean;
+          refunded_at: string | null;
+          status: string | null;
+          status_formatted: string | null;
+          subscription_id: string | null;
+          subtotal_cents: number | null;
+          subtotal_usd_cents: number | null;
+          tax_cents: number | null;
+          tax_name: string | null;
+          tax_rate: string | null;
+          tax_usd_cents: number | null;
+          test_mode: boolean;
+          total_cents: number | null;
+          total_usd_cents: number | null;
+          updated_at: string;
+          user_email: string | null;
+          user_id: string;
+          user_name: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          currency?: string | null;
+          currency_rate?: number | null;
+          discount_total_cents?: number | null;
+          discount_total_usd_cents?: number | null;
+          id?: string;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_order_id: string;
+          lemonsqueezy_order_item_id?: string | null;
+          lemonsqueezy_order_number?: number | null;
+          lemonsqueezy_product_id?: string | null;
+          lemonsqueezy_subscription_id?: string | null;
+          lemonsqueezy_variant_id?: string | null;
+          order_identifier?: string | null;
+          order_item_created_at?: string | null;
+          order_item_deleted_at?: string | null;
+          order_item_price_cents?: number | null;
+          order_item_product_name?: string | null;
+          order_item_quantity?: number | null;
+          order_item_test_mode?: boolean | null;
+          order_item_updated_at?: string | null;
+          order_item_variant_name?: string | null;
+          order_items?: Json | null;
+          receipt_url?: string | null;
+          refunded?: boolean;
+          refunded_at?: string | null;
+          status?: string | null;
+          status_formatted?: string | null;
+          subscription_id?: string | null;
+          subtotal_cents?: number | null;
+          subtotal_usd_cents?: number | null;
+          tax_cents?: number | null;
+          tax_name?: string | null;
+          tax_rate?: string | null;
+          tax_usd_cents?: number | null;
+          test_mode?: boolean;
+          total_cents?: number | null;
+          total_usd_cents?: number | null;
+          updated_at?: string;
+          user_email?: string | null;
+          user_id: string;
+          user_name?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          currency?: string | null;
+          currency_rate?: number | null;
+          discount_total_cents?: number | null;
+          discount_total_usd_cents?: number | null;
+          id?: string;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_order_id?: string;
+          lemonsqueezy_order_item_id?: string | null;
+          lemonsqueezy_order_number?: number | null;
+          lemonsqueezy_product_id?: string | null;
+          lemonsqueezy_subscription_id?: string | null;
+          lemonsqueezy_variant_id?: string | null;
+          order_identifier?: string | null;
+          order_item_created_at?: string | null;
+          order_item_deleted_at?: string | null;
+          order_item_price_cents?: number | null;
+          order_item_product_name?: string | null;
+          order_item_quantity?: number | null;
+          order_item_test_mode?: boolean | null;
+          order_item_updated_at?: string | null;
+          order_item_variant_name?: string | null;
+          order_items?: Json | null;
+          receipt_url?: string | null;
+          refunded?: boolean;
+          refunded_at?: string | null;
+          status?: string | null;
+          status_formatted?: string | null;
+          subscription_id?: string | null;
+          subtotal_cents?: number | null;
+          subtotal_usd_cents?: number | null;
+          tax_cents?: number | null;
+          tax_name?: string | null;
+          tax_rate?: string | null;
+          tax_usd_cents?: number | null;
+          test_mode?: boolean;
+          total_cents?: number | null;
+          total_usd_cents?: number | null;
+          updated_at?: string;
+          user_email?: string | null;
+          user_id?: string;
+          user_name?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'payment_history_subscription_id_fkey';
+            columns: ['subscription_id'];
+            isOneToOne: false;
+            referencedRelation: 'subscriptions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'payment_history_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'user_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       scoreboard_entries: {
         Row: {
           created_at: string;
@@ -302,6 +452,110 @@ export type Database = {
           {
             foreignKeyName: 'scoreboards_owner_id_fkey';
             columns: ['owner_id'];
+            isOneToOne: false;
+            referencedRelation: 'user_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      subscriptions: {
+        Row: {
+          amount_cents: number;
+          billing_interval: Database['public']['Enums']['billing_interval'];
+          cancelled_at: string | null;
+          card_brand: string | null;
+          card_last_four: string | null;
+          created_at: string;
+          currency: string;
+          customer_portal_update_subscription_url: string | null;
+          customer_portal_url: string | null;
+          current_period_end: string | null;
+          current_period_start: string | null;
+          id: string;
+          lemonsqueezy_customer_id: string | null;
+          lemonsqueezy_order_id: string | null;
+          lemonsqueezy_order_item_id: string | null;
+          lemonsqueezy_product_id: string | null;
+          lemonsqueezy_subscription_id: string | null;
+          lemonsqueezy_variant_id: string | null;
+          payment_processor: string | null;
+          show_created_by: boolean;
+          show_on_supporters_page: boolean;
+          status: Database['public']['Enums']['subscription_status'];
+          status_formatted: string | null;
+          supporter_display_name: string | null;
+          test_mode: boolean;
+          tier: Database['public']['Enums']['appreciation_tier'];
+          update_payment_method_url: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          amount_cents: number;
+          billing_interval: Database['public']['Enums']['billing_interval'];
+          cancelled_at?: string | null;
+          card_brand?: string | null;
+          card_last_four?: string | null;
+          created_at?: string;
+          currency?: string;
+          customer_portal_update_subscription_url?: string | null;
+          customer_portal_url?: string | null;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          id?: string;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_order_id?: string | null;
+          lemonsqueezy_order_item_id?: string | null;
+          lemonsqueezy_product_id?: string | null;
+          lemonsqueezy_subscription_id?: string | null;
+          lemonsqueezy_variant_id?: string | null;
+          payment_processor?: string | null;
+          show_created_by?: boolean;
+          show_on_supporters_page?: boolean;
+          status?: Database['public']['Enums']['subscription_status'];
+          status_formatted?: string | null;
+          supporter_display_name?: string | null;
+          test_mode?: boolean;
+          tier: Database['public']['Enums']['appreciation_tier'];
+          update_payment_method_url?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          amount_cents?: number;
+          billing_interval?: Database['public']['Enums']['billing_interval'];
+          cancelled_at?: string | null;
+          card_brand?: string | null;
+          card_last_four?: string | null;
+          created_at?: string;
+          currency?: string;
+          customer_portal_update_subscription_url?: string | null;
+          customer_portal_url?: string | null;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          id?: string;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_order_id?: string | null;
+          lemonsqueezy_order_item_id?: string | null;
+          lemonsqueezy_product_id?: string | null;
+          lemonsqueezy_subscription_id?: string | null;
+          lemonsqueezy_variant_id?: string | null;
+          payment_processor?: string | null;
+          show_created_by?: boolean;
+          show_on_supporters_page?: boolean;
+          status?: Database['public']['Enums']['subscription_status'];
+          status_formatted?: string | null;
+          supporter_display_name?: string | null;
+          test_mode?: boolean;
+          tier?: Database['public']['Enums']['appreciation_tier'];
+          update_payment_method_url?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'subscriptions_user_id_fkey';
+            columns: ['user_id'];
             isOneToOne: false;
             referencedRelation: 'user_profiles';
             referencedColumns: ['id'];
@@ -397,9 +651,19 @@ export type Database = {
     };
     Enums: {
       invitation_status: 'pending' | 'accepted' | 'expired' | 'cancelled';
+      appreciation_tier: 'supporter' | 'champion' | 'legend' | 'hall_of_famer';
+      billing_interval: 'monthly' | 'yearly';
       kiosk_file_type: 'original' | 'thumbnail';
       scoreboard_visibility: 'public' | 'private';
       slide_type: 'image' | 'scoreboard';
+      subscription_status:
+        | 'active'
+        | 'cancelled'
+        | 'past_due'
+        | 'paused'
+        | 'expired'
+        | 'trialing'
+        | 'unpaid';
       user_role: 'system_admin' | 'user';
     };
     CompositeTypes: {

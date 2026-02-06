@@ -7,6 +7,7 @@ import { profileService } from '@/services/profileService';
 import PersonalInfoSection from './PersonalInfoSection';
 import SecuritySection from './SecuritySection';
 import DangerZoneSection from './DangerZoneSection';
+import SubscriptionSection from './SubscriptionSection';
 import Toast from './Toast';
 import Icon from '@/components/ui/AppIcon';
 
@@ -205,6 +206,9 @@ export default function UserProfileInteractive() {
 
         {/* Security Settings */}
         <SecuritySection onChangePassword={handleChangePassword} />
+
+        {/* Subscription */}
+        <SubscriptionSection />
 
         {/* Danger Zone */}
         <DangerZoneSection onDeleteAccount={handleDeleteAccount} />

@@ -63,6 +63,71 @@ export interface ScoreboardEntry {
 }
 
 // ============================================================================
+// SUBSCRIPTIONS & BILLING TYPES
+// ============================================================================
+
+export type SubscriptionStatus =
+  | 'active'
+  | 'cancelled'
+  | 'past_due'
+  | 'paused'
+  | 'expired'
+  | 'trialing'
+  | 'unpaid';
+
+export type BillingInterval = 'monthly' | 'yearly';
+
+export type AppreciationTier = 'supporter' | 'champion' | 'legend' | 'hall_of_famer';
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  lemonsqueezySubscriptionId?: string | null;
+  status: SubscriptionStatus;
+  statusFormatted?: string | null;
+  billingInterval: BillingInterval;
+  amountCents: number;
+  currency: string;
+  tier: AppreciationTier;
+  showCreatedBy: boolean;
+  showOnSupportersPage: boolean;
+  supporterDisplayName?: string | null;
+  updatePaymentMethodUrl?: string | null;
+  customerPortalUrl?: string | null;
+  customerPortalUpdateSubscriptionUrl?: string | null;
+  cardBrand?: string | null;
+  cardLastFour?: string | null;
+  paymentProcessor?: string | null;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
+  cancelledAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PaymentHistoryEntry {
+  id: string;
+  userId: string;
+  subscriptionId?: string | null;
+  lemonsqueezyOrderId: string;
+  orderNumber?: number | null;
+  orderIdentifier?: string | null;
+  status?: string | null;
+  statusFormatted?: string | null;
+  currency?: string | null;
+  totalCents?: number | null;
+  totalUsdCents?: number | null;
+  taxCents?: number | null;
+  discountTotalCents?: number | null;
+  createdAt: string;
+  receiptUrl?: string | null;
+  orderItemProductName?: string | null;
+  orderItemVariantName?: string | null;
+  orderItemQuantity?: number | null;
+  orderItemPriceCents?: number | null;
+}
+
+// ============================================================================
 // KIOSK MODE TYPES
 // ============================================================================
 

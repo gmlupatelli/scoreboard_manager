@@ -8,6 +8,8 @@
 
 Integrate LemonSqueezy as the payment provider with "Pay What You Want" pricing and recurring subscriptions.
 
+For setup steps and environment variables, see [docs/lemonsqueezy-setup.md](docs/lemonsqueezy-setup.md).
+
 ---
 
 ## Issues
@@ -77,7 +79,8 @@ CREATE TYPE subscription_status AS ENUM (
   'past_due',
   'paused',
   'expired',
-  'trialing'
+  'trialing',
+  'unpaid'
 );
 
 -- Billing interval enum
@@ -199,6 +202,68 @@ CREATE TRIGGER trg_update_subscription_tier
   BEFORE INSERT OR UPDATE OF amount_cents, billing_interval ON subscriptions
   FOR EACH ROW
   EXECUTE FUNCTION update_subscription_tier();
+
+-- Payment history table (itemized order fields)
+CREATE TABLE payment_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  subscription_id UUID REFERENCES subscriptions(id) ON DELETE SET NULL,
+
+  -- LemonSqueezy identifiers
+  lemonsqueezy_subscription_id TEXT,
+  lemonsqueezy_order_id TEXT UNIQUE NOT NULL,
+  lemonsqueezy_order_number INTEGER,
+  order_identifier TEXT,
+  lemonsqueezy_customer_id TEXT,
+  lemonsqueezy_product_id TEXT,
+  lemonsqueezy_variant_id TEXT,
+  lemonsqueezy_order_item_id TEXT,
+
+  -- Order details
+  status TEXT,
+  status_formatted TEXT,
+  currency TEXT,
+  currency_rate NUMERIC(12, 4),
+  subtotal_cents INTEGER,
+  discount_total_cents INTEGER,
+  tax_cents INTEGER,
+  total_cents INTEGER,
+  subtotal_usd_cents INTEGER,
+  discount_total_usd_cents INTEGER,
+  tax_usd_cents INTEGER,
+  total_usd_cents INTEGER,
+  tax_name TEXT,
+  tax_rate TEXT,
+  refunded BOOLEAN NOT NULL DEFAULT false,
+  refunded_at TIMESTAMPTZ,
+
+  -- Customer details snapshot
+  user_name TEXT,
+  user_email TEXT,
+
+  -- Receipt
+  receipt_url TEXT,
+
+  -- First order item snapshot
+  order_item_quantity INTEGER,
+  order_item_price_cents INTEGER,
+  order_item_product_name TEXT,
+  order_item_variant_name TEXT,
+  order_item_created_at TIMESTAMPTZ,
+  order_item_updated_at TIMESTAMPTZ,
+  order_item_deleted_at TIMESTAMPTZ,
+  order_item_test_mode BOOLEAN,
+  order_items JSONB,
+
+  -- Flags
+  test_mode BOOLEAN NOT NULL DEFAULT false,
+
+  -- Metadata
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT chk_payment_history_timestamps CHECK (created_at <= updated_at)
+);
 ```
 
 **Technical Notes:**

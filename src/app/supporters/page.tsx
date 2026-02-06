@@ -58,30 +58,30 @@ export default function SupportersPage() {
             <div className="border border-border rounded-lg p-4 text-center">
               <div className="text-2xl mb-2">🙌</div>
               <p className="font-semibold text-text-primary">Supporter</p>
-              <p className="text-sm text-text-secondary">$5–9/mo</p>
+              <p className="text-sm text-text-secondary">$4/mo</p>
             </div>
             <div className="border border-border rounded-lg p-4 text-center">
               <div className="text-2xl mb-2">🏆</div>
               <p className="font-semibold text-text-primary">Champion</p>
-              <p className="text-sm text-text-secondary">$10–24/mo</p>
+              <p className="text-sm text-text-secondary">$8/mo</p>
             </div>
             <div className="border border-border rounded-lg p-4 text-center">
               <div className="text-2xl mb-2">🌟</div>
               <p className="font-semibold text-text-primary">Legend</p>
-              <p className="text-sm text-text-secondary">$25–49/mo</p>
+              <p className="text-sm text-text-secondary">$23/mo</p>
             </div>
             <div className="border border-border rounded-lg p-4 text-center">
               <div className="text-2xl mb-2">👑</div>
               <p className="font-semibold text-text-primary">Hall of Famer</p>
-              <p className="text-sm text-text-secondary">$50+/mo</p>
+              <p className="text-sm text-text-secondary">$48/mo</p>
             </div>
           </div>
 
           <div className="bg-card border border-border rounded-lg p-6">
             <h2 className="text-2xl font-semibold text-text-primary mb-4">Ready to support?</h2>
             <p className="text-text-secondary mb-6">
-              All supporter tiers unlock the same hosted features. You can choose any amount and
-              change it anytime.
+              All supporter tiers unlock the same hosted features. Choose a tier that works for
+              you and change it anytime.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link

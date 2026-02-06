@@ -5,6 +5,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  // Enable Turbopack (default in Next.js 16+)
+  turbopack: {},
   // Optimize package imports for better tree-shaking
   experimental: {
     optimizePackageImports: ['@heroicons/react', '@supabase/supabase-js'],

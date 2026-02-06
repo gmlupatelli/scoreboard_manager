@@ -61,3 +61,5 @@ turbo/
 .branches
 .temp
 .env.keys
+# Local Netlify folder
+.netlify
