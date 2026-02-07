@@ -31,10 +31,10 @@ export default function AboutPage() {
             <div className="flex justify-center mb-6">
               <Logo size={80} />
             </div>
-            <h1 className="text-4xl font-bold text-text-primary mb-4">About Us</h1>
+            <h1 className="text-4xl font-bold text-text-primary mb-4">About Scoreboard Manager</h1>
             <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Learn more about Scoreboard Manager and our mission to make score tracking simple and
-              accessible.
+              Learn more about the open-source project behind Scoreboard Manager and the mission to
+              make score tracking simple and accessible.
             </p>
           </div>
 
@@ -42,10 +42,9 @@ export default function AboutPage() {
             <section className="bg-card border border-border rounded-lg p-8">
               <h2 className="text-2xl font-semibold text-text-primary mb-4">Our Mission</h2>
               <p className="text-text-secondary leading-relaxed">
-                Scoreboard Manager was created with a simple goal: to provide an easy-to-use,
-                reliable platform for managing scoreboards for any type of competition. Whether
-                you're running a local sports tournament, a gaming championship, or a company event,
-                we believe tracking scores should be effortless and accessible to everyone.
+                Scoreboard Manager exists to make score tracking effortless and accessible for any
+                competition. From local tournaments to company events, the goal is the same: a
+                reliable, easy-to-use platform that keeps everyone in sync.
               </p>
             </section>
 
@@ -57,10 +56,22 @@ export default function AboutPage() {
               </p>
               <p className="text-text-secondary leading-relaxed mb-4">
                 {
-                  "I'm a solo developer who built this with the help of AI coding agents. If you use the hosted version, you can pay what you want to help cover hosting costs and keep development going."
+                  "I'm a solo developer who built this with the help of AI coding agents. The hosted version is supported by donations, so you can pay what you want to help cover hosting costs and keep development going."
                 }
               </p>
+              <p className="text-text-secondary leading-relaxed mb-4">
+                If hosting costs become unsustainable, I may pause or discontinue the hosted
+                service. When possible, I will provide reasonable notice.
+              </p>
               <div className="flex flex-wrap gap-4 text-sm">
+                <a
+                  href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/LICENSE"
+                  className="text-primary hover:opacity-80 transition-opacity"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Read the AGPL v3 license
+                </a>
                 <a
                   href="https://github.com/gmlupatelli/scoreboard_manager"
                   className="text-primary hover:opacity-80 transition-opacity"
@@ -68,6 +79,14 @@ export default function AboutPage() {
                   rel="noreferrer"
                 >
                   View the GitHub repository
+                </a>
+                <a
+                  href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/supabase-manual-setup.md"
+                  className="text-primary hover:opacity-80 transition-opacity"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Self-host setup guide
                 </a>
                 <a
                   href="https://github.com/gmlupatelli/scoreboard_manager/graphs/contributors"
@@ -135,11 +154,9 @@ export default function AboutPage() {
             <section className="bg-card border border-border rounded-lg p-8">
               <h2 className="text-2xl font-semibold text-text-primary mb-4">Our Story</h2>
               <p className="text-text-secondary leading-relaxed">
-                Scoreboard Manager started from a simple need: keeping track of scores during local
-                tournaments without the hassle of complicated software or expensive solutions. We
-                built a tool that's powerful enough for professional events yet simple enough for
-                anyone to use. Today, we're proud to help organizers around the world run smoother,
-                more engaging competitions.
+                Scoreboard Manager started as a side project to replace complicated and expensive
+                scoring tools. It has grown into a community-friendly, open-source platform used by
+                organizers who want speed, clarity, and control.
               </p>
             </section>
           </div>

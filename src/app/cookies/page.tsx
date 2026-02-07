@@ -34,9 +34,9 @@ export default function CookiePolicyPage() {
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">1. What Are Cookies</h2>
               <p className="text-text-secondary leading-relaxed">
-                Cookies are small text files that are stored on your device when you visit a
-                website. They are widely used to make websites work more efficiently and to provide
-                information to website owners.
+                Cookies are small text files stored on your device when you visit a website. We
+                also use similar technologies like local storage where appropriate. These tools help
+                us keep the service secure, remember preferences, and improve performance.
               </p>
             </section>
 
@@ -49,24 +49,28 @@ export default function CookiePolicyPage() {
               </p>
               <ul className="list-disc list-inside text-text-secondary space-y-2 ml-4">
                 <li>
-                  <strong className="text-text-primary">Essential Cookies:</strong> Required for the
-                  operation of our website, including authentication and session management.
+                  <strong className="text-text-primary">Essential Cookies:</strong> Required for
+                  authentication, security, and session management.
                 </li>
                 <li>
-                  <strong className="text-text-primary">Functionality Cookies:</strong> Allow us to
-                  remember your preferences and provide enhanced features.
+                  <strong className="text-text-primary">Functionality Cookies:</strong> Remember
+                  your preferences and settings.
                 </li>
                 <li>
-                  <strong className="text-text-primary">Analytics Cookies:</strong> Help us
-                  understand how visitors interact with our website so we can improve our service.
+                  <strong className="text-text-primary">Analytics Cookies:</strong> If enabled,
+                  help us understand usage so we can improve the service.
                 </li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                3. Types of Cookies We Use
+                3. Cookie Details
               </h2>
+              <p className="text-text-secondary leading-relaxed mb-4">
+                The cookies used by the hosted service may include the following. Names and
+                durations can vary by environment or updates.
+              </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-text-secondary text-sm">
                   <thead>
@@ -108,9 +112,9 @@ export default function CookiePolicyPage() {
                 4. Third-Party Cookies
               </h2>
               <p className="text-text-secondary leading-relaxed">
-                We may use third-party services that set their own cookies, such as analytics
-                providers. These third parties have their own privacy policies governing the use of
-                their cookies.
+                We may use third-party services that set their own cookies, such as analytics or
+                infrastructure providers. These third parties have their own privacy policies
+                governing the use of their cookies.
               </p>
             </section>
 
@@ -160,7 +164,18 @@ export default function CookiePolicyPage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                8. Updates to This Policy
+                8. Do Not Track and Global Privacy Control
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                Some browsers offer a "Do Not Track" signal or Global Privacy Control (GPC). The
+                service may not respond to these signals uniformly because there is no consistent
+                industry standard.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                9. Updates to This Policy
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 We may update this Cookie Policy from time to time to reflect changes in our
@@ -170,7 +185,7 @@ export default function CookiePolicyPage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">9. Contact Us</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">10. Contact Us</h2>
               <p className="text-text-secondary leading-relaxed">
                 If you have any questions about our use of cookies, please contact us at
                 privacy@scoreboardmanager.com.

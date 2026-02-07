@@ -16,7 +16,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import Image from 'next/image';
 import Icon from '@/components/ui/AppIcon';
 import Button from '@/components/ui/Button';
 import Footer from '@/components/common/Footer';
@@ -82,7 +81,44 @@ const TestimonialCard = ({ quote, author, role }: TestimonialCardProps) => (
   </div>
 );
 
-export default function Home() {
+const getGitHubStars = async () => {
+  try {
+    const response = await fetch('https://api.github.com/repos/gmlupatelli/scoreboard_manager', {
+      headers: {
+        Accept: 'application/vnd.github+json',
+      },
+      next: {
+        revalidate: 3600,
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data: { stargazers_count?: number } = await response.json();
+
+    if (typeof data.stargazers_count !== 'number') {
+      return null;
+    }
+
+    return data.stargazers_count;
+  } catch (_error) {
+    return null;
+  }
+};
+
+export default async function Home() {
+  const githubStars = await getGitHubStars();
+  const formattedStars = githubStars
+    ? new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      }).format(githubStars)
+    : null;
+  const githubStarsLabel = formattedStars
+    ? `View Scoreboard Manager on GitHub (${formattedStars} stars)`
+    : 'View Scoreboard Manager on GitHub';
   const features = [
     {
       icon: 'PaintBrushIcon',
@@ -176,25 +212,26 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <div className="inline-flex items-center space-x-2 px-4 py-2 bg-green-600/10 rounded-full text-green-700 font-semibold text-sm">
-                    <Icon name="SparklesIcon" size={16} />
+                  <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary">
+                    <Icon name="SparklesIcon" size={16} className="text-success" />
                     <span>Open Source • AGPL v3</span>
                   </div>
                   <a
                     href="https://github.com/gmlupatelli/scoreboard_manager"
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center"
-                    aria-label="View Scoreboard Manager on GitHub"
-                    title="View Scoreboard Manager on GitHub"
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary transition-colors duration-150 hover:bg-muted hover:text-text-primary"
+                    aria-label={githubStarsLabel}
+                    title={githubStarsLabel}
                   >
-                    <Image
-                      src="https://img.shields.io/github/stars/gmlupatelli/scoreboard_manager?style=social"
-                      alt="GitHub stars"
-                      width={120}
-                      height={28}
-                      unoptimized
-                    />
+                    <Icon name="StarIcon" size={16} className="text-amber-600" />
+                    <span>Star on GitHub</span>
+                    {formattedStars ? (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-text-secondary">
+                        {formattedStars}
+                      </span>
+                    ) : null}
+                    <Icon name="ArrowTopRightOnSquareIcon" size={14} className="text-text-secondary" />
                   </a>
                 </div>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-6 leading-tight">
@@ -209,17 +246,17 @@ export default function Home() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     href="/register"
-                    variant="primary"
+                    variant="outline"
                     size="lg"
                     icon="ArrowRightIcon"
                     iconPosition="right"
                     title="Start using the hosted app"
                   >
-                    Start Hosted Free
+                    Sign Up for Free
                   </Button>
                   <Button
                     href="/pricing"
-                    variant="outline"
+                    variant="primary"
                     size="lg"
                     icon="GiftIcon"
                     iconPosition="left"
@@ -227,38 +264,6 @@ export default function Home() {
                   >
                     View Pricing
                   </Button>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <a
-                    href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/supabase-manual-setup.md"
-                    className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2"
-                    title="Read the self-hosting guide"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Icon name="ServerStackIcon" size={16} />
-                    Self-host guide
-                  </a>
-                  <a
-                    href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/netlify-setup.md"
-                    className="px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 flex items-center gap-2"
-                    title="Deploy with Netlify"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Icon name="ArrowTopRightOnSquareIcon" size={16} />
-                    Deploy on Netlify
-                  </a>
-                  <a
-                    href="https://github.com/gmlupatelli/scoreboard_manager"
-                    className="px-4 py-2 text-orange-900 rounded-md font-medium text-sm hover:bg-orange-900/10 transition-colors duration-150 flex items-center gap-2"
-                    title="View the source on GitHub"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Icon name="GitHubIcon" size={16} />
-                    View Source
-                  </a>
                 </div>
                 <div className="flex items-center space-x-4 sm:space-x-6 md:space-x-8 mt-8 pt-8 border-t border-border">
                   <div>
@@ -387,100 +392,15 @@ export default function Home() {
                   </li>
                   <li className="flex items-start gap-3">
                     <Icon name="HeartIcon" size={18} className="text-text-secondary mt-0.5" />
-                    <Button
+                    <a
                       href="/supporters"
-                      variant="ghost"
-                      size="sm"
-                      className="p-0 h-auto text-text-secondary hover:bg-transparent"
+                      className="hover:opacity-80 transition-opacity"
                       title="See supporter tiers and perks"
                     >
                       See supporter tiers and perks
-                    </Button>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Open Source Path Section */}
-        <section id="open-source" className="py-16 px-4 sm:px-6 lg:px-8 bg-surface">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-4">
-                Choose <span className="text-primary">Hosted</span> or{' '}
-                <span className="text-primary">Self-Hosted</span>
-              </h2>
-              <p className="text-lg text-text-secondary max-w-3xl mx-auto">
-                {
-                  'Full functionality either way. Self-host for free, or use the hosted app for instant setup and pay what you want.'
-                }
-              </p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="bg-card border border-border rounded-lg p-6 elevation-1">
-                <div className="w-12 h-12 rounded-lg bg-red-600/10 flex items-center justify-center mb-4">
-                  <Icon name="ServerStackIcon" size={24} className="text-primary" />
-                </div>
-                <h3 className="text-xl font-bold text-text-primary mb-2">Self-host for free</h3>
-                <p className="text-text-secondary mb-4">
-                  Run Scoreboard Manager on your own infrastructure with the AGPL v3 license. Full
-                  control, full features, zero platform fees.
-                </p>
-                <ul className="list-disc list-inside text-text-secondary space-y-2">
-                  <li>
-                    <a
-                      href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/supabase-manual-setup.md"
-                      className="hover:opacity-80 transition-opacity"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Supabase manual setup guide
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="https://github.com/gmlupatelli/scoreboard_manager/blob/main/docs/netlify-setup.md"
-                      className="hover:opacity-80 transition-opacity"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Netlify deployment guide
                     </a>
                   </li>
                 </ul>
-              </div>
-              <div className="bg-card border border-border rounded-lg p-6 elevation-1">
-                <div className="w-12 h-12 rounded-lg bg-green-600/10 flex items-center justify-center mb-4">
-                  <Icon name="BoltIcon" size={24} className="text-success" />
-                </div>
-                <h3 className="text-xl font-bold text-text-primary mb-2">Hosted convenience</h3>
-                <p className="text-text-secondary mb-4">
-                  No setup, no maintenance, just sign up and start. Pay what you want to keep the
-                  servers running and support ongoing development.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    href="/register"
-                    variant="primary"
-                    size="md"
-                    icon="ArrowRightIcon"
-                    iconPosition="right"
-                    title="Start with the hosted app"
-                  >
-                    Start Hosted Free
-                  </Button>
-                  <Button
-                    href="/pricing"
-                    variant="outline"
-                    size="md"
-                    icon="GiftIcon"
-                    iconPosition="left"
-                    title="View pricing and supporter tiers"
-                  >
-                    View Pricing
-                  </Button>
-                </div>
               </div>
             </div>
           </div>

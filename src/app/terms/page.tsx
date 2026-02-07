@@ -66,7 +66,27 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">4. User Accounts</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">4. Eligibility</h2>
+              <p className="text-text-secondary leading-relaxed">
+                You must be at least 18 years old to use the service. If you are under 18, you may
+                only use the service with the consent of a parent or legal guardian who agrees to
+                these Terms on your behalf.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">5. Privacy</h2>
+              <p className="text-text-secondary leading-relaxed">
+                Your use of the service is subject to our{' '}
+                <a href="/privacy" className="text-primary hover:opacity-80 transition-opacity">
+                  Privacy Policy
+                </a>
+                .
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">6. User Accounts</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 To use certain features of our service, you must create an account. You agree to:
               </p>
@@ -79,7 +99,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">5. User Content</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">7. User Content</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 You retain ownership of all content you create through our service. By posting
                 content, you grant us a non-exclusive, worldwide license to use, display, and
@@ -93,7 +113,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">6. Acceptable Use</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">8. Acceptable Use</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 You agree not to use our service to:
               </p>
@@ -109,7 +129,19 @@ export default function TermsOfServicePage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                7. Service Availability
+                9. Donations and Payments
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                Donations and supporter payments are voluntary and non-refundable. If you choose
+                to contribute, you acknowledge that contributions help cover hosting costs and
+                ongoing development but do not guarantee any specific features, support level, or
+                service availability.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                10. Service Availability
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 We strive to maintain high availability of our service, but we do not guarantee
@@ -120,17 +152,53 @@ export default function TermsOfServicePage() {
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                8. Limitation of Liability
+                11. Hosted Service Funding
               </h2>
               <p className="text-text-secondary leading-relaxed">
-                To the maximum extent permitted by law, Scoreboard Manager shall not be liable for
-                any indirect, incidental, special, consequential, or punitive damages resulting from
-                your use of or inability to use the service.
+                The hosted version of Scoreboard Manager is supported by donations. If hosting
+                costs become unsustainable or I am paying too much out of pocket, I may suspend or
+                discontinue the hosted service. When possible, I will provide reasonable notice to
+                users.
               </p>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">9. Indemnification</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                12. Third-Party Services and Links
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                The service may include links to third-party websites or services. We do not
+                control and are not responsible for the content, policies, or practices of any
+                third-party sites or services, and your use of them is at your own risk.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                13. Disclaimer of Warranties
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                The service is provided "as is" and "as available" without warranties of any kind,
+                whether express or implied, including implied warranties of merchantability,
+                fitness for a particular purpose, and non-infringement.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">
+                14. Limitation of Liability
+              </h2>
+              <p className="text-text-secondary leading-relaxed">
+                To the maximum extent permitted by law, Scoreboard Manager shall not be liable for
+                any indirect, incidental, special, consequential, or punitive damages resulting from
+                your use of or inability to use the service. To the extent liability is permitted,
+                our total liability for any claims related to the service will not exceed the amount
+                you paid to use the service in the twelve months prior to the claim.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">15. Indemnification</h2>
               <p className="text-text-secondary leading-relaxed">
                 You agree to indemnify and hold harmless Scoreboard Manager and its affiliates from
                 any claims, damages, or expenses arising from your use of the service or violation
@@ -139,7 +207,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">10. Termination</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">16. Termination</h2>
               <p className="text-text-secondary leading-relaxed">
                 We reserve the right to suspend or terminate your account at any time for violation
                 of these terms or for any other reason at our sole discretion. You may also delete
@@ -148,7 +216,7 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">11. Changes to Terms</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">17. Changes to Terms</h2>
               <p className="text-text-secondary leading-relaxed">
                 We may modify these Terms of Service at any time. We will notify users of
                 significant changes by posting a notice on our website. Continued use of the service
@@ -157,16 +225,18 @@ export default function TermsOfServicePage() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">12. Governing Law</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">18. Governing Law</h2>
               <p className="text-text-secondary leading-relaxed">
-                These Terms of Service shall be governed by and construed in accordance with
-                applicable laws, without regard to conflict of law principles.
+                These Terms of Service shall be governed by and construed in accordance with the
+                laws of the Province of Ontario and the federal laws of Canada applicable therein,
+                without regard to conflict of law principles. You agree to submit to the exclusive
+                jurisdiction of the courts located in Ontario, Canada.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">
-                13. Contact Information
+                19. Contact Information
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 For any questions regarding these Terms of Service, please contact us at
