@@ -1,8 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import { Database } from '@/types/database.types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+type SubscriptionStatus = Database['public']['Enums']['subscription_status'];
+
+type LemonSqueezySubscriptionResponse = {
+  data?: {
+    attributes?: Record<string, unknown>;
+  };
+};
+
+const getString = (value: unknown): string | null => (typeof value === 'string' ? value : null);
+
+const normalizeStatus = (status: string): SubscriptionStatus => {
+  switch (status) {
+    case 'on_trial':
+      return 'trialing';
+    case 'active':
+    case 'paused':
+    case 'past_due':
+    case 'expired':
+    case 'cancelled':
+    case 'unpaid':
+      return status;
+    default:
+      return 'active';
+  }
+};
 
 /**
  * GET /api/admin/subscriptions
@@ -120,34 +147,100 @@ export async function GET(request: NextRequest) {
       }>;
     };
 
-    let filteredUsers = (users as UserWithSubscription[]).map((user) => {
-      // Get the latest subscription if any
-      const subscription = user.subscriptions?.[0] || null;
-      return {
-        id: user.id,
-        email: user.email,
-        fullName: user.full_name,
-        role: user.role,
-        createdAt: user.created_at,
-        subscription: subscription
-          ? {
-              id: subscription.id,
-              status: subscription.status,
-              statusFormatted: subscription.status_formatted,
-              tier: subscription.tier,
-              billingInterval: subscription.billing_interval,
-              amountCents: subscription.amount_cents,
-              currency: subscription.currency,
-              isGifted: subscription.is_gifted,
-              giftedExpiresAt: subscription.gifted_expires_at,
-              currentPeriodEnd: subscription.current_period_end,
-              lemonsqueezySubscriptionId: subscription.lemonsqueezy_subscription_id,
-              createdAt: subscription.created_at,
-              updatedAt: subscription.updated_at,
-            }
-          : null,
-      };
-    });
+    const lemonSqueezyApiKey = process.env.LEMONSQUEEZY_API_KEY;
+
+    const getLatestSubscription = (
+      subscriptions: UserWithSubscription['subscriptions']
+    ): UserWithSubscription['subscriptions'][number] | null => {
+      if (!subscriptions || subscriptions.length === 0) return null;
+      return [...subscriptions].sort(
+        (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+      )[0];
+    };
+
+    const syncSubscriptionStatus = async (
+      subscription: UserWithSubscription['subscriptions'][number] | null
+    ): Promise<UserWithSubscription['subscriptions'][number] | null> => {
+      if (!subscription || subscription.is_gifted) return subscription;
+      if (!lemonSqueezyApiKey || !subscription.lemonsqueezy_subscription_id) {
+        return subscription;
+      }
+
+      try {
+        const lsResponse = await fetch(
+          `https://api.lemonsqueezy.com/v1/subscriptions/${subscription.lemonsqueezy_subscription_id}`,
+          {
+            headers: {
+              Accept: 'application/vnd.api+json',
+              Authorization: `Bearer ${lemonSqueezyApiKey}`,
+            },
+          }
+        );
+
+        if (!lsResponse.ok) {
+          return subscription;
+        }
+
+        const lsData = (await lsResponse.json()) as LemonSqueezySubscriptionResponse;
+        const lsAttributes = lsData.data?.attributes ?? {};
+        const statusRaw = getString(lsAttributes.status) ?? subscription.status;
+        const status = normalizeStatus(statusRaw);
+        const statusFormatted = getString(lsAttributes.status_formatted) ?? subscription.status_formatted;
+
+        if (status !== subscription.status || statusFormatted !== subscription.status_formatted) {
+          await serviceClient
+            .from('subscriptions')
+            .update({
+              status,
+              status_formatted: statusFormatted,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', subscription.id);
+        }
+
+        return {
+          ...subscription,
+          status,
+          status_formatted: statusFormatted,
+        };
+      } catch (_error) {
+        return subscription;
+      }
+    };
+
+    const usersWithLatestSubscription = await Promise.all(
+      (users as UserWithSubscription[]).map(async (user) => {
+        const latestSubscription = getLatestSubscription(user.subscriptions);
+        const syncedSubscription = await syncSubscriptionStatus(latestSubscription);
+
+        return {
+          id: user.id,
+          email: user.email,
+          fullName: user.full_name,
+          role: user.role,
+          createdAt: user.created_at,
+          subscription: syncedSubscription
+            ? {
+                id: syncedSubscription.id,
+                status: syncedSubscription.status,
+                statusFormatted: syncedSubscription.status_formatted,
+                tier: syncedSubscription.tier,
+                billingInterval: syncedSubscription.billing_interval,
+                amountCents: syncedSubscription.amount_cents,
+                currency: syncedSubscription.currency,
+                isGifted: syncedSubscription.is_gifted,
+                giftedExpiresAt: syncedSubscription.gifted_expires_at,
+                currentPeriodEnd: syncedSubscription.current_period_end,
+                lemonsqueezySubscriptionId: syncedSubscription.lemonsqueezy_subscription_id,
+                createdAt: syncedSubscription.created_at,
+                updatedAt: syncedSubscription.updated_at,
+              }
+            : null,
+        };
+      })
+    );
+
+    let filteredUsers = usersWithLatestSubscription;
 
     // Apply filter
     if (filter !== 'all') {
