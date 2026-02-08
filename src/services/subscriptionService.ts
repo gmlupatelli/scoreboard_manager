@@ -27,6 +27,29 @@ interface PortalResponse {
   customerPortalUpdateSubscriptionUrl: string | null;
 }
 
+interface UpdateSubscriptionOptions {
+  subscriptionId: string;
+  tier: AppreciationTier;
+  billingInterval: BillingInterval;
+}
+
+interface UpdateSubscriptionResponse {
+  success: boolean;
+  requiresPortal?: boolean;
+  portalUrl?: string;
+  message?: string;
+  subscription?: {
+    id: string;
+    status: string;
+    variantId: number;
+    productName: string;
+    variantName: string;
+    tier: string;
+    billingInterval: string;
+    amountCents: number;
+  };
+}
+
 const ACTIVE_STATUSES: Subscription['status'][] = ['active', 'trialing'];
 
 const rowToSubscription = (row: SubscriptionRow): Subscription => ({
@@ -48,6 +71,8 @@ const rowToSubscription = (row: SubscriptionRow): Subscription => ({
   cardBrand: row.card_brand,
   cardLastFour: row.card_last_four,
   paymentProcessor: row.payment_processor,
+  isGifted: row.is_gifted ?? false,
+  giftedExpiresAt: row.gifted_expires_at,
   currentPeriodStart: row.current_period_start,
   currentPeriodEnd: row.current_period_end,
   cancelledAt: row.cancelled_at,
@@ -78,8 +103,15 @@ const rowToPaymentHistory = (row: PaymentHistoryRow): PaymentHistoryEntry => ({
 });
 
 const getAuthHeaders = async (): Promise<Record<string, string>> => {
-  const { data } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    console.error('Failed to get auth session:', error.message);
+    return {};
+  }
   const accessToken = data.session?.access_token;
+  if (!accessToken) {
+    console.warn('No access token in session - user may need to re-login');
+  }
   return accessToken ? { Authorization: `Bearer ${accessToken}` } : {};
 };
 
@@ -151,6 +183,7 @@ export const subscriptionService = {
 
   /**
    * Check if user has an active subscription
+   * Includes cancelled subscriptions that are still within their grace period (before ends_at)
    */
   async hasActiveSubscription(userId: string) {
     const { data, error } = await this.getSubscription(userId);
@@ -159,8 +192,25 @@ export const subscriptionService = {
       return { data: false, error };
     }
 
-    const isActive = data ? ACTIVE_STATUSES.includes(data.status) : false;
-    return { data: isActive, error: null };
+    if (!data) {
+      return { data: false, error: null };
+    }
+
+    // Active or trialing subscriptions
+    if (ACTIVE_STATUSES.includes(data.status)) {
+      return { data: true, error: null };
+    }
+
+    // Cancelled subscriptions - still active until ends_at (stored as cancelledAt)
+    // LemonSqueezy's ends_at field indicates when the subscription actually expires
+    if (data.status === 'cancelled' && data.cancelledAt) {
+      const endsAt = new Date(data.cancelledAt);
+      if (endsAt > new Date()) {
+        return { data: true, error: null };
+      }
+    }
+
+    return { data: false, error: null };
   },
 
   /**
@@ -211,6 +261,112 @@ export const subscriptionService = {
   },
 
   /**
+   * Update an existing subscription (change tier/billing interval)
+   */
+  async updateSubscription(options: UpdateSubscriptionOptions) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/lemonsqueezy/update-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify(options),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return {
+          data: null,
+          error: errorBody.error || 'Failed to update subscription.',
+        };
+      }
+
+      const data = (await response.json()) as UpdateSubscriptionResponse;
+      return { data, error: null };
+    } catch (_error) {
+      return {
+        data: null,
+        error: 'Failed to update subscription. Please try again.',
+      };
+    }
+  },
+
+  /**
+   * Resume a cancelled subscription (before period end)
+   * This "un-cancels" the subscription so it will continue renewing
+   */
+  async resumeSubscription(subscriptionId: string) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/lemonsqueezy/resume-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({ subscriptionId }),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return {
+          data: null,
+          error: errorBody.error || 'Failed to resume subscription.',
+        };
+      }
+
+      const data = (await response.json()) as {
+        success: boolean;
+        subscription?: { id: string; status: string };
+      };
+      return { data, error: null };
+    } catch (_error) {
+      return {
+        data: null,
+        error: 'Failed to resume subscription. Please try again.',
+      };
+    }
+  },
+
+  /**
+   * Cancel a subscription (will end at the end of the current billing period)
+   */
+  async cancelSubscription(subscriptionId: string) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/lemonsqueezy/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({ subscriptionId }),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return {
+          data: null,
+          error: errorBody.error || 'Failed to cancel subscription.',
+        };
+      }
+
+      const data = (await response.json()) as {
+        success: boolean;
+        subscription?: { id: string; status: string; endsAt: string };
+      };
+      return { data, error: null };
+    } catch (_error) {
+      return {
+        data: null,
+        error: 'Failed to cancel subscription. Please try again.',
+      };
+    }
+  },
+
+  /**
    * Fetch fresh customer portal URLs from Lemon Squeezy
    */
   async getCustomerPortalUrls(subscriptionId: string) {
@@ -240,6 +396,225 @@ export const subscriptionService = {
         data: null,
         error: 'Failed to fetch customer portal links.',
       };
+    }
+  },
+
+  // =========================================================================
+  // Admin-only methods - These call API endpoints that require system_admin role
+  // =========================================================================
+
+  /**
+   * [Admin] Get all subscriptions with user info
+   */
+  async getAllSubscriptionsAdmin(options?: {
+    search?: string;
+    filter?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    try {
+      const headers = await getAuthHeaders();
+      const params = new URLSearchParams();
+      if (options?.search) params.set('search', options.search);
+      if (options?.filter) params.set('filter', options.filter);
+      if (options?.page) params.set('page', options.page.toString());
+      if (options?.limit) params.set('limit', options.limit.toString());
+
+      const response = await fetch(`/api/admin/subscriptions?${params.toString()}`, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to fetch subscriptions.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to fetch subscriptions.' };
+    }
+  },
+
+  /**
+   * [Admin] Get a specific user's subscription details
+   */
+  async getSubscriptionByUserIdAdmin(userId: string) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/admin/subscriptions/${userId}`, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to fetch subscription.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to fetch subscription.' };
+    }
+  },
+
+  /**
+   * [Admin] Cancel a user's subscription via LemonSqueezy
+   */
+  async cancelSubscriptionAdmin(userId: string) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/admin/subscriptions/${userId}/cancel`, {
+        method: 'POST',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to cancel subscription.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to cancel subscription.' };
+    }
+  },
+
+  /**
+   * [Admin] Verify a LemonSqueezy subscription ID before linking
+   */
+  async verifySubscriptionLinkAdmin(lemonSqueezySubscriptionId: string) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch('/api/admin/subscriptions/verify-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({ lemonSqueezySubscriptionId }),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to verify subscription.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to verify subscription.' };
+    }
+  },
+
+  /**
+   * [Admin] Link a LemonSqueezy subscription to a user account
+   */
+  async linkSubscriptionAdmin(
+    userId: string,
+    lemonSqueezySubscriptionId: string,
+    override: boolean = false
+  ) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/admin/subscriptions/${userId}/link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({ lemonSqueezySubscriptionId, override }),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to link subscription.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to link subscription.' };
+    }
+  },
+
+  /**
+   * [Admin] Gift appreciation tier to a user
+   */
+  async giftAppreciationTierAdmin(userId: string, expiresAt?: string | null) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/admin/subscriptions/${userId}/gift`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: JSON.stringify({ expiresAt }),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to gift appreciation tier.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to gift appreciation tier.' };
+    }
+  },
+
+  /**
+   * [Admin] Remove gifted appreciation tier from a user
+   */
+  async removeAppreciationTierAdmin(userId: string) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/admin/subscriptions/${userId}/gift`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to remove appreciation tier.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to remove appreciation tier.' };
+    }
+  },
+
+  /**
+   * [Admin] Get admin audit log history
+   */
+  async getAuditLogsAdmin(options?: { page?: number; limit?: number }) {
+    try {
+      const headers = await getAuthHeaders();
+      const params = new URLSearchParams();
+      if (options?.page) params.set('page', options.page.toString());
+      if (options?.limit) params.set('limit', options.limit.toString());
+
+      const response = await fetch(`/api/admin/subscriptions/audit-log?${params.toString()}`, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to fetch audit logs.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to fetch audit logs.' };
     }
   },
 };

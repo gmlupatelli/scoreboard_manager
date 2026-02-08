@@ -75,8 +75,8 @@ CREATE TABLE subscriptions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
   CONSTRAINT chk_amount_minimum CHECK (
-    (billing_interval = 'monthly' AND amount_cents >= 500) OR
-    (billing_interval = 'yearly' AND amount_cents >= 5000)
+    (billing_interval = 'monthly' AND amount_cents >= 400) OR
+    (billing_interval = 'yearly' AND amount_cents >= 4000)
   ),
   CONSTRAINT chk_subscriptions_timestamps CHECK (created_at <= updated_at)
 );
@@ -162,47 +162,8 @@ CREATE INDEX idx_payment_history_lemonsqueezy_order_id ON payment_history(lemons
 -- TRIGGERS & FUNCTIONS
 -- ==========================================================================
 
-CREATE OR REPLACE FUNCTION public.calculate_appreciation_tier(
-  amount_cents INTEGER,
-  billing_freq billing_interval
-)
-RETURNS appreciation_tier
-LANGUAGE plpgsql
-IMMUTABLE
-SET search_path = pg_temp, public
-AS $$
-DECLARE
-  monthly_amount INTEGER;
-BEGIN
-  monthly_amount := CASE
-    WHEN billing_freq = 'yearly' THEN amount_cents / 12
-    ELSE amount_cents
-  END;
-
-  RETURN CASE
-    WHEN monthly_amount >= 5000 THEN 'hall_of_famer'
-    WHEN monthly_amount >= 2500 THEN 'legend'
-    WHEN monthly_amount >= 1000 THEN 'champion'
-    ELSE 'supporter'
-  END;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION public.update_subscription_tier()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SET search_path = pg_temp, public
-AS $$
-BEGIN
-  NEW.tier := calculate_appreciation_tier(NEW.amount_cents, NEW.billing_interval);
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trg_update_subscription_tier
-  BEFORE INSERT OR UPDATE OF amount_cents, billing_interval ON subscriptions
-  FOR EACH ROW
-  EXECUTE FUNCTION update_subscription_tier();
+-- Note: Tier is determined by variant_id mapping in the application layer (webhook/API),
+-- not calculated from amount_cents. Each tier has a unique LemonSqueezy variant ID.
 
 CREATE OR REPLACE FUNCTION public.update_subscriptions_updated_at()
 RETURNS TRIGGER
@@ -236,8 +197,6 @@ CREATE TRIGGER trg_payment_history_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_payment_history_updated_at();
 
-COMMENT ON FUNCTION public.calculate_appreciation_tier IS 'Calculates supporter tier based on monthly equivalent amount.';
-COMMENT ON FUNCTION public.update_subscription_tier IS 'Updates tier based on amount/billing interval changes.';
 COMMENT ON FUNCTION public.update_subscriptions_updated_at IS 'Auto-updates subscriptions.updated_at timestamp.';
 COMMENT ON FUNCTION public.update_payment_history_updated_at IS 'Auto-updates payment_history.updated_at timestamp.';
 

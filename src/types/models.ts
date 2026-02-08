@@ -77,7 +77,12 @@ export type SubscriptionStatus =
 
 export type BillingInterval = 'monthly' | 'yearly';
 
-export type AppreciationTier = 'supporter' | 'champion' | 'legend' | 'hall_of_famer';
+export type AppreciationTier =
+  | 'supporter'
+  | 'champion'
+  | 'legend'
+  | 'hall_of_famer'
+  | 'appreciation';
 
 export interface Subscription {
   id: string;
@@ -98,6 +103,8 @@ export interface Subscription {
   cardBrand?: string | null;
   cardLastFour?: string | null;
   paymentProcessor?: string | null;
+  isGifted: boolean;
+  giftedExpiresAt?: string | null;
   currentPeriodStart?: string | null;
   currentPeriodEnd?: string | null;
   cancelledAt?: string | null;

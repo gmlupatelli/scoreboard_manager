@@ -80,8 +80,8 @@ export default function SupportersPage() {
           <div className="bg-card border border-border rounded-lg p-6">
             <h2 className="text-2xl font-semibold text-text-primary mb-4">Ready to support?</h2>
             <p className="text-text-secondary mb-6">
-              All supporter tiers unlock the same hosted features. Choose a tier that works for
-              you and change it anytime.
+              All supporter tiers unlock the same hosted features. Choose a tier that works for you
+              and change it anytime.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link

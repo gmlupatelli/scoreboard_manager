@@ -23,6 +23,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
 import Button from '@/components/ui/Button';
 import Logo from '@/components/ui/Logo';
+import TierBadge from '@/components/ui/TierBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { ScoreboardCustomStyles } from '@/types/models';
 
@@ -37,7 +38,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { userProfile, user, signOut } = useAuth();
+  const { userProfile, user, signOut, subscriptionTier } = useAuth();
 
   const headerStyle = customStyles
     ? {
@@ -186,7 +187,17 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   >
                     <Icon name="UserIcon" size={18} className="text-white" />
                   </div>
-                  <span className="text-sm font-medium">{displayName}</span>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium">{displayName}</span>
+                    {userProfile?.role !== 'system_admin' && (
+                      <TierBadge tier={subscriptionTier} size="sm" />
+                    )}
+                    {userProfile?.role === 'system_admin' && (
+                      <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-700 font-medium text-xs px-2 py-0.5">
+                        Admin
+                      </span>
+                    )}
+                  </div>
                   <Icon
                     name="ChevronDownIcon"
                     size={16}
@@ -230,6 +241,17 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                           <Icon name="UserCircleIcon" size={18} className="mr-3" />
                           Profile
                         </Link>
+                        {userProfile?.role !== 'system_admin' && (
+                          <Link
+                            href="/supporter-plan"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                            style={customStyles ? textStyle : undefined}
+                          >
+                            <Icon name="GiftIcon" size={18} className="mr-3" />
+                            Supporter Plan
+                          </Link>
+                        )}
                         <Link
                           href={
                             userProfile?.role === 'system_admin'
@@ -244,15 +266,26 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                           Invitations
                         </Link>
                         {userProfile?.role === 'system_admin' && (
-                          <Link
-                            href="/system-admin/settings"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                            style={customStyles ? textStyle : undefined}
-                          >
-                            <Icon name="Cog6ToothIcon" size={18} className="mr-3" />
-                            System Settings
-                          </Link>
+                          <>
+                            <Link
+                              href="/system-admin/subscriptions"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                              style={customStyles ? textStyle : undefined}
+                            >
+                              <Icon name="CreditCardIcon" size={18} className="mr-3" />
+                              Manage Subscriptions
+                            </Link>
+                            <Link
+                              href="/system-admin/settings"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                              style={customStyles ? textStyle : undefined}
+                            >
+                              <Icon name="Cog6ToothIcon" size={18} className="mr-3" />
+                              System Settings
+                            </Link>
+                          </>
                         )}
                         <button
                           onClick={handleLogout}
@@ -404,12 +437,22 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     >
                       <Icon name="UserIcon" size={20} className="text-white" />
                     </div>
-                    <span
-                      className="ml-3 text-base font-medium text-text-primary"
-                      style={customStyles ? { color: customStyles.textColor } : undefined}
-                    >
-                      {displayName}
-                    </span>
+                    <div className="ml-3 flex flex-col">
+                      <span
+                        className="text-base font-medium text-text-primary"
+                        style={customStyles ? { color: customStyles.textColor } : undefined}
+                      >
+                        {displayName}
+                      </span>
+                      {userProfile?.role !== 'system_admin' && (
+                        <TierBadge tier={subscriptionTier} size="sm" />
+                      )}
+                      {userProfile?.role === 'system_admin' && (
+                        <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-700 font-medium text-xs px-2 py-0.5">
+                          Admin
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <Link
                     href="/dashboard"
@@ -429,6 +472,17 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     <Icon name="UserCircleIcon" size={20} className="mr-3" />
                     Profile
                   </Link>
+                  {userProfile?.role !== 'system_admin' && (
+                    <Link
+                      href="/supporter-plan"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                      style={customStyles ? textStyle : undefined}
+                    >
+                      <Icon name="GiftIcon" size={20} className="mr-3" />
+                      Supporter Plan
+                    </Link>
+                  )}
                   <Link
                     href={
                       userProfile?.role === 'system_admin'
@@ -443,15 +497,26 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                     Invitations
                   </Link>
                   {userProfile?.role === 'system_admin' && (
-                    <Link
-                      href="/system-admin/settings"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                      style={customStyles ? textStyle : undefined}
-                    >
-                      <Icon name="Cog6ToothIcon" size={20} className="mr-3" />
-                      System Settings
-                    </Link>
+                    <>
+                      <Link
+                        href="/system-admin/subscriptions"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                        style={customStyles ? textStyle : undefined}
+                      >
+                        <Icon name="CreditCardIcon" size={20} className="mr-3" />
+                        Manage Subscriptions
+                      </Link>
+                      <Link
+                        href="/system-admin/settings"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
+                        style={customStyles ? textStyle : undefined}
+                      >
+                        <Icon name="Cog6ToothIcon" size={20} className="mr-3" />
+                        System Settings
+                      </Link>
+                    </>
                   )}
                   <button
                     onClick={handleLogout}

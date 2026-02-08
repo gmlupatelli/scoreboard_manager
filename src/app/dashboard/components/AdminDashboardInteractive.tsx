@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAuthGuard } from '../../../hooks/useAuthGuard';
 import { scoreboardService } from '../../../services/scoreboardService';
+import { subscriptionService } from '../../../services/subscriptionService';
 import { useInfiniteScroll, useUndoQueue } from '../../../hooks';
 import { Scoreboard as ScoreboardModel, ScoreType, TimeFormat } from '../../../types/models';
 import Header from '@/components/common/Header';
@@ -36,7 +37,17 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 const AdminDashboardInteractive = () => {
   const router = useRouter();
-  const { user, userProfile, signOut, isSystemAdmin } = useAuth();
+  const searchParams = useSearchParams();
+  const {
+    user,
+    userProfile,
+    signOut,
+    isSystemAdmin,
+    subscriptionTier,
+    subscriptionStatus,
+    subscriptionEndDate,
+    refreshSubscription,
+  } = useAuth();
   const { isAuthorized, isChecking } = useAuthGuard();
   const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
   const [scoreboards, setScoreboards] = useState<ScoreboardModel[]>([]);
@@ -56,14 +67,66 @@ const AdminDashboardInteractive = () => {
   const [allOwners, setAllOwners] = useState<Owner[]>([]);
   const [loadingOwners, setLoadingOwners] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isReactivating, setIsReactivating] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const pendingDeletesRef = useRef<
     Map<string, { scoreboard: ScoreboardModel; timerId: NodeJS.Timeout }>
   >(new Map());
   const hasLoadedRef = useRef(false);
+  const subscriptionRefreshAttemptedRef = useRef(false);
 
   // Cache isSystemAdmin result to avoid function reference changes
   const isAdmin = isSystemAdmin();
+
+  // Check if subscription is cancelled but still within grace period (before ends_at)
+  // subscriptionEndDate comes from cancelledAt for cancelled subs (LemonSqueezy's ends_at)
+  const isCancelledButActive =
+    subscriptionStatus === 'cancelled' &&
+    subscriptionEndDate &&
+    new Date(subscriptionEndDate) > new Date();
+
+  // Format date helper for cancelled subscription message
+  const formatBenefitEndDate = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  // Refresh subscription tier after successful checkout
+  // Uses retry logic since webhook processing may take a moment
+  useEffect(() => {
+    const isSubscriptionSuccess = searchParams.get('subscription') === 'success';
+
+    if (isSubscriptionSuccess && user && !subscriptionRefreshAttemptedRef.current) {
+      subscriptionRefreshAttemptedRef.current = true;
+
+      // Clear the URL param
+      router.replace('/dashboard');
+
+      // Show success toast
+      setToast({
+        message: 'Welcome! Your subscription is being activated...',
+        type: 'success',
+        isVisible: true,
+      });
+
+      // Refresh subscription with retry logic (webhook may take a moment)
+      const refreshWithRetry = async (attempts = 0) => {
+        await refreshSubscription();
+
+        // If still no tier after refresh and we haven't exceeded retries, try again
+        if (attempts < 3) {
+          setTimeout(() => refreshWithRetry(attempts + 1), 2000);
+        }
+      };
+
+      // Start refresh after a short delay to allow webhook processing
+      setTimeout(() => refreshWithRetry(), 1000);
+    }
+  }, [searchParams, user, router, refreshSubscription]);
 
   // Execute all pending deletes on unmount (Option A: execute on navigation)
   useEffect(() => {
@@ -262,6 +325,56 @@ const AdminDashboardInteractive = () => {
     await signOut();
   };
 
+  const handleResumeSubscription = async () => {
+    // Need to get the subscription ID first
+    if (!user?.id || isReactivating) return;
+
+    setIsReactivating(true);
+
+    // Get the subscription to find the LemonSqueezy subscription ID
+    const { data: subscription, error: subError } = await subscriptionService.getSubscription(
+      user.id
+    );
+
+    if (subError || !subscription?.lemonsqueezySubscriptionId) {
+      setToast({
+        message: 'Unable to find subscription. Please try from the Supporter page.',
+        type: 'error',
+        isVisible: true,
+      });
+      setIsReactivating(false);
+      return;
+    }
+
+    const { data, error: resumeError } = await subscriptionService.resumeSubscription(
+      subscription.lemonsqueezySubscriptionId
+    );
+
+    if (resumeError || !data) {
+      setToast({
+        message: resumeError || 'Unable to resume subscription.',
+        type: 'error',
+        isVisible: true,
+      });
+      setIsReactivating(false);
+      return;
+    }
+
+    // Success
+    setToast({
+      message: 'Your subscription has been reactivated!',
+      type: 'success',
+      isVisible: true,
+    });
+
+    // Refresh subscription data
+    if (refreshSubscription) {
+      refreshSubscription();
+    }
+
+    setIsReactivating(false);
+  };
+
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type, isVisible: true });
   };
@@ -375,19 +488,49 @@ const AdminDashboardInteractive = () => {
                   : 'Manage your scoreboards and competition entries'}
               </p>
             </div>
+
+            {/* Cancelled subscription warning banner */}
+            {!isAdmin && isCancelledButActive && (
+              <div className="mt-4 sm:mt-0 sm:ml-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg max-w-md">
+                <div className="flex items-start gap-2">
+                  <Icon
+                    name="ExclamationTriangleIcon"
+                    size={18}
+                    className="text-warning flex-shrink-0 mt-0.5"
+                  />
+                  <div className="text-sm">
+                    <p className="font-medium text-warning">Subscription Cancelled</p>
+                    <p className="text-text-secondary mt-0.5">
+                      Benefits active until{' '}
+                      <strong className="text-text-primary">
+                        {formatBenefitEndDate(subscriptionEndDate)}
+                      </strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center space-x-3 mt-4 sm:mt-0">
               {isAdmin && (
                 <>
                   <Link
                     href="/system-admin/invitations"
-                    className="flex items-center space-x-2 px-4 py-2 border border-border text-text-secondary rounded-md hover:bg-muted transition-smooth"
+                    className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
                   >
                     <Icon name="EnvelopeIcon" size={20} />
                     <span>Invitations</span>
                   </Link>
+                  <Link
+                    href="/system-admin/subscriptions"
+                    className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
+                  >
+                    <Icon name="CreditCardIcon" size={20} />
+                    <span>Subscriptions</span>
+                  </Link>
                   <button
                     onClick={() => router.push('/system-admin/settings')}
-                    className="flex items-center space-x-2 px-4 py-2 border border-border text-text-secondary rounded-md hover:bg-muted transition-smooth"
+                    className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
                     title="System settings"
                   >
                     <Icon name="Cog6ToothIcon" size={20} />
@@ -396,18 +539,47 @@ const AdminDashboardInteractive = () => {
                 </>
               )}
               {!isAdmin && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setIsInviteModalOpen(true);
-                  }}
-                  className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
-                  title="Invite Users"
-                >
-                  <Icon name="UserPlusIcon" size={20} />
-                  <span className="hidden sm:inline">Invite</span>
-                </button>
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsInviteModalOpen(true);
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
+                    title="Invite Users"
+                  >
+                    <Icon name="UserPlusIcon" size={20} />
+                    <span className="hidden sm:inline">Invite</span>
+                  </button>
+                  {!subscriptionTier && !isCancelledButActive && (
+                    <Link
+                      href="/supporter-plan"
+                      className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
+                      title="Support Scoreboard Manager and unlock more features"
+                    >
+                      <Icon name="HeartIcon" size={20} />
+                      <span className="hidden sm:inline">Become a Supporter</span>
+                    </Link>
+                  )}
+                  {isCancelledButActive && (
+                    <button
+                      onClick={handleResumeSubscription}
+                      disabled={isReactivating}
+                      className="flex items-center space-x-2 px-4 py-2 text-warning hover:text-yellow-600 hover:bg-yellow-500/10 rounded-md transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Reactivate your supporter subscription"
+                    >
+                      <Icon
+                        name="ArrowPathIcon"
+                        size={20}
+                        className={isReactivating ? 'animate-spin' : ''}
+                      />
+                      <span className="hidden sm:inline">
+                        {isReactivating ? 'Reactivating...' : 'Reactivate'}
+                      </span>
+                    </button>
+                  )}
+                </>
               )}
               <button
                 onClick={(e) => {

@@ -6,18 +6,25 @@ import { supabase } from '../lib/supabase/client';
 import { UserProfile } from '../types/models';
 import { Database } from '../types/database.types';
 import { useRouter } from 'next/navigation';
+import { subscriptionService } from '@/services/subscriptionService';
 
 type UserProfileRow = Database['public']['Tables']['user_profiles']['Row'];
+type AppreciationTier = Database['public']['Enums']['appreciation_tier'];
 
 interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
   session: Session | null;
   loading: boolean;
+  subscriptionTier: AppreciationTier | null;
+  subscriptionStatus: string | null;
+  subscriptionEndDate: string | null;
+  subscriptionLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
   isSystemAdmin: () => boolean;
 }
@@ -29,7 +36,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionTier, setSubscriptionTier] = useState<AppreciationTier | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const _router = useRouter();
+
+  const loadSubscriptionTier = async (userId: string) => {
+    setSubscriptionLoading(true);
+    try {
+      const { data } = await subscriptionService.getSubscription(userId);
+      if (data) {
+        // Store status and end date for UI display
+        // For cancelled subscriptions, use cancelledAt (LemonSqueezy's ends_at)
+        // For active subscriptions, use currentPeriodEnd (LemonSqueezy's renews_at)
+        setSubscriptionStatus(data.status);
+        if (data.status === 'cancelled') {
+          setSubscriptionEndDate(data.cancelledAt || null);
+        } else {
+          setSubscriptionEndDate(data.currentPeriodEnd || null);
+        }
+
+        // Check for gifted appreciation tier
+        if (data.isGifted && data.tier === 'appreciation') {
+          // Check if gifted tier has expired
+          if (data.giftedExpiresAt) {
+            const expiresAt = new Date(data.giftedExpiresAt);
+            if (expiresAt <= new Date()) {
+              // Gifted tier has expired
+              setSubscriptionTier(null);
+              return;
+            }
+          }
+          // Gifted tier is valid (no expiry or not yet expired)
+          setSubscriptionTier(data.tier);
+        } else if (data.status === 'active' || data.status === 'trialing') {
+          // Regular paid subscription
+          setSubscriptionTier(data.tier);
+        } else if (data.status === 'cancelled' && data.cancelledAt) {
+          // Cancelled but still within grace period (before ends_at)
+          // LemonSqueezy stores the expiry date in ends_at, we store it as cancelledAt
+          const endsAt = new Date(data.cancelledAt);
+          if (endsAt > new Date()) {
+            setSubscriptionTier(data.tier);
+          } else {
+            setSubscriptionTier(null);
+          }
+        } else {
+          setSubscriptionTier(null);
+        }
+      } else {
+        setSubscriptionTier(null);
+        setSubscriptionStatus(null);
+        setSubscriptionEndDate(null);
+      }
+    } catch (_error) {
+      setSubscriptionTier(null);
+      setSubscriptionStatus(null);
+      setSubscriptionEndDate(null);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Get initial session
@@ -38,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadUserProfile(session.user.id);
+        loadSubscriptionTier(session.user.id);
       } else {
         setLoading(false);
       }
@@ -51,8 +120,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         loadUserProfile(session.user.id);
+        loadSubscriptionTier(session.user.id);
       } else {
         setUserProfile(null);
+        setSubscriptionTier(null);
+        setSubscriptionStatus(null);
+        setSubscriptionEndDate(null);
         setLoading(false);
       }
     });
@@ -133,6 +206,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshSubscription = async () => {
+    if (user?.id) {
+      await loadSubscriptionTier(user.id);
+    }
+  };
+
   const updateUserProfile = (updates: Partial<UserProfile>) => {
     setUserProfile((prev) => {
       if (!prev) return prev;
@@ -151,10 +230,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userProfile,
         session,
         loading,
+        subscriptionTier,
+        subscriptionStatus,
+        subscriptionEndDate,
+        subscriptionLoading,
         signIn,
         signUp,
         signOut,
         refreshProfile,
+        refreshSubscription,
         updateUserProfile,
         isSystemAdmin,
       }}

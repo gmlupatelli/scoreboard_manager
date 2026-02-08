@@ -98,9 +98,9 @@ export default function PrivacyPolicyPage() {
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 If you are in Canada, we process personal information in accordance with PIPEDA and
-                other applicable privacy laws. You may withdraw consent where processing is based
-                on consent, subject to legal or contractual restrictions. If you have concerns, you
-                may also contact the Office of the Privacy Commissioner of Canada.
+                other applicable privacy laws. You may withdraw consent where processing is based on
+                consent, subject to legal or contractual restrictions. If you have concerns, you may
+                also contact the Office of the Privacy Commissioner of Canada.
               </p>
             </section>
 
@@ -123,8 +123,8 @@ export default function PrivacyPolicyPage() {
               <p className="text-text-secondary leading-relaxed">
                 If you are a resident of certain U.S. states, you may have rights to access,
                 correct, delete, or obtain a copy of your personal data, and to opt out of certain
-                processing. We do not sell personal information. To exercise your rights, contact
-                us using the details below.
+                processing. We do not sell personal information. To exercise your rights, contact us
+                using the details below.
               </p>
             </section>
 
@@ -133,8 +133,8 @@ export default function PrivacyPolicyPage() {
                 8. Information Sharing
               </h2>
               <p className="text-text-secondary leading-relaxed mb-4">
-                We do not sell your personal information. We may share information in the
-                following situations:
+                We do not sell your personal information. We may share information in the following
+                situations:
               </p>
               <ul className="list-disc list-inside text-text-secondary space-y-2 ml-4">
                 <li>
@@ -187,8 +187,8 @@ export default function PrivacyPolicyPage() {
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">12. Data Retention</h2>
               <p className="text-text-secondary leading-relaxed">
-                We retain personal information for as long as your account is active or as needed
-                to provide the service. If you request deletion, we will delete your data within a
+                We retain personal information for as long as your account is active or as needed to
+                provide the service. If you request deletion, we will delete your data within a
                 reasonable timeframe, subject to legal requirements and backup retention.
               </p>
             </section>

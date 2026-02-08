@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTimeoutRef, useUndoQueue } from '@/hooks';
@@ -36,7 +37,7 @@ const ScoreboardManagementInteractive = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const scoreboardId = searchParams.get('id');
-  const { user, userProfile, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading, subscriptionTier } = useAuth();
   const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
   const pendingDeletesRef = useRef<
@@ -548,14 +549,26 @@ const ScoreboardManagementInteractive = () => {
                 {scoreboard.description || 'No description available'}
               </p>
             </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
-              title="Back to dashboard"
-            >
-              <Icon name="ArrowLeftIcon" size={18} />
-              <span className="hidden sm:inline">Back to Dashboard</span>
-            </button>
+            <div className="flex items-center gap-3">
+              {!subscriptionTier && (
+                <Link
+                  href="/supporter-plan"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors duration-150"
+                  title="Support Scoreboard Manager and unlock more features"
+                >
+                  <Icon name="HeartIcon" size={18} />
+                  <span className="hidden sm:inline">Become a Supporter</span>
+                </Link>
+              )}
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+                title="Back to dashboard"
+              >
+                <Icon name="ArrowLeftIcon" size={18} />
+                <span className="hidden sm:inline">Back to Dashboard</span>
+              </button>
+            </div>
           </div>
           <div className="flex items-center justify-between text-sm text-text-secondary">
             <div className="flex items-center gap-2">

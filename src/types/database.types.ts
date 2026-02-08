@@ -471,7 +471,9 @@ export type Database = {
           customer_portal_url: string | null;
           current_period_end: string | null;
           current_period_start: string | null;
+          gifted_expires_at: string | null;
           id: string;
+          is_gifted: boolean;
           lemonsqueezy_customer_id: string | null;
           lemonsqueezy_order_id: string | null;
           lemonsqueezy_order_item_id: string | null;
@@ -502,7 +504,9 @@ export type Database = {
           customer_portal_url?: string | null;
           current_period_end?: string | null;
           current_period_start?: string | null;
+          gifted_expires_at?: string | null;
           id?: string;
+          is_gifted?: boolean;
           lemonsqueezy_customer_id?: string | null;
           lemonsqueezy_order_id?: string | null;
           lemonsqueezy_order_item_id?: string | null;
@@ -533,7 +537,9 @@ export type Database = {
           customer_portal_url?: string | null;
           current_period_end?: string | null;
           current_period_start?: string | null;
+          gifted_expires_at?: string | null;
           id?: string;
+          is_gifted?: boolean;
           lemonsqueezy_customer_id?: string | null;
           lemonsqueezy_order_id?: string | null;
           lemonsqueezy_order_item_id?: string | null;
@@ -651,7 +657,7 @@ export type Database = {
     };
     Enums: {
       invitation_status: 'pending' | 'accepted' | 'expired' | 'cancelled';
-      appreciation_tier: 'supporter' | 'champion' | 'legend' | 'hall_of_famer';
+      appreciation_tier: 'supporter' | 'champion' | 'legend' | 'hall_of_famer' | 'appreciation';
       billing_interval: 'monthly' | 'yearly';
       kiosk_file_type: 'original' | 'thumbnail';
       scoreboard_visibility: 'public' | 'private';

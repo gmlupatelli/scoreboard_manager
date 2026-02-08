@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
               user_id: user.id,
               tier,
               billing_interval: billingInterval,
-              amount_cents: priceCents,
+              amount_cents: String(priceCents),
               cancel_url: cancelUrl,
             },
           },

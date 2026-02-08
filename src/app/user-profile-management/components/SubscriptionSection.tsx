@@ -7,11 +7,24 @@ import Icon from '@/components/ui/AppIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscriptionService } from '@/services/subscriptionService';
 import { PaymentHistoryEntry, Subscription } from '@/types/models';
-import { TIER_PRICES, getTierLabel, getTierEmoji, getTierPrice, getMonthlyEquivalent, type AppreciationTier, type BillingInterval } from '@/lib/subscription/tiers';
+import {
+  TIER_PRICES,
+  getTierLabel,
+  getTierEmoji,
+  getTierPrice,
+  getMonthlyEquivalent,
+  type AppreciationTier,
+  type BillingInterval,
+} from '@/lib/subscription/tiers';
 
 declare global {
   interface Window {
     createLemonSqueezy?: () => void;
+    LemonSqueezy?: {
+      Url: {
+        Open: (url: string) => void;
+      };
+    };
   }
 }
 
@@ -50,7 +63,7 @@ const getStatusBadge = (status: Subscription['status']) => {
 };
 
 export default function SubscriptionSection() {
-  const { user } = useAuth();
+  const { user, refreshSubscription } = useAuth();
   const searchParams = useSearchParams();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -95,6 +108,20 @@ export default function SubscriptionSection() {
 
     loadSubscription();
   }, [user?.id]);
+
+  // Refresh subscription tier in AuthContext after successful checkout
+  useEffect(() => {
+    if (successState === 'success' && refreshSubscription) {
+      // Refresh with retry logic since webhook may take a moment
+      const refreshWithRetry = async (attempts = 0) => {
+        await refreshSubscription();
+        if (attempts < 3) {
+          setTimeout(() => refreshWithRetry(attempts + 1), 2000);
+        }
+      };
+      setTimeout(() => refreshWithRetry(), 1000);
+    }
+  }, [successState, refreshSubscription]);
 
   useEffect(() => {
     if (!checkoutUrl) return;
@@ -145,15 +172,27 @@ export default function SubscriptionSection() {
     );
 
     if (portalErrorMessage || !data) {
-      setPortalError(portalErrorMessage || 'Unable to open the customer portal.');
+      // Provide more helpful message for auth errors
+      const errorMsg =
+        portalErrorMessage === 'Unauthorized'
+          ? 'Your session has expired. Please sign out and sign back in.'
+          : portalErrorMessage || 'Unable to open the customer portal.';
+      setPortalError(errorMsg);
       setIsPortalLoading(false);
       return;
     }
 
-    const portalUrl = data.customerPortalUrl || data.updatePaymentMethodUrl;
+    // Use update_payment_method URL for overlay (works with Lemon.js)
+    // Fall back to customer_portal_url if needed
+    const portalUrl = data.updatePaymentMethodUrl || data.customerPortalUrl;
 
     if (portalUrl) {
-      window.open(portalUrl, '_blank', 'noopener,noreferrer');
+      // Use Lemon.js to open as overlay if available, otherwise fall back to new tab
+      if (window.LemonSqueezy?.Url?.Open) {
+        window.LemonSqueezy.Url.Open(portalUrl);
+      } else {
+        window.open(portalUrl, '_blank', 'noopener,noreferrer');
+      }
     } else {
       setPortalError('No customer portal link is available yet.');
     }
@@ -215,11 +254,13 @@ export default function SubscriptionSection() {
                 </span>
               </div>
               <p className="text-text-secondary mt-1">
-                {getTierEmoji(subscription.tier)} {getTierLabel(subscription.tier)} • {subscription.billingInterval} • $
-                {subscription.amountCents / 100}
+                {getTierEmoji(subscription.tier)} {getTierLabel(subscription.tier)} •{' '}
+                {subscription.billingInterval} • ${subscription.amountCents / 100}
               </p>
               <p className="text-sm text-text-secondary mt-1">
-                Next billing date: {formatDate(subscription.currentPeriodEnd)}
+                {subscription.status === 'cancelled' && subscription.cancelledAt
+                  ? `Benefits active until: ${formatDate(subscription.cancelledAt)}`
+                  : `Next billing date: ${formatDate(subscription.currentPeriodEnd)}`}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -244,14 +285,13 @@ export default function SubscriptionSection() {
             </div>
           </div>
 
-          {portalError && (
-            <p className="text-sm text-destructive">{portalError}</p>
-          )}
+          {portalError && <p className="text-sm text-destructive">{portalError}</p>}
         </div>
       ) : (
         <div className="space-y-6">
           <p className="text-text-secondary">
-            Support Scoreboard Manager with a fixed-tier subscription. All tiers unlock the same features.
+            Support Scoreboard Manager with a fixed-tier subscription. All tiers unlock the same
+            features.
           </p>
 
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -280,43 +320,49 @@ export default function SubscriptionSection() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {TIER_PRICES.map((tierPrice) => {
-              const price = getTierPrice(tierPrice.tier, billingInterval);
-              const monthlyEquiv = billingInterval === 'yearly' ? getMonthlyEquivalent(tierPrice.tier) : null;
-              const isSelected = selectedTier === tierPrice.tier;
+            {TIER_PRICES.filter((tierPrice) => tierPrice.tier !== 'appreciation').map(
+              (tierPrice) => {
+                const price = getTierPrice(tierPrice.tier, billingInterval);
+                const monthlyEquiv =
+                  billingInterval === 'yearly' ? getMonthlyEquivalent(tierPrice.tier) : null;
+                const isSelected = selectedTier === tierPrice.tier;
 
-              return (
-                <button
-                  key={tierPrice.tier}
-                  onClick={() => setSelectedTier(tierPrice.tier)}
-                  className={`border rounded-lg p-4 text-center transition-all duration-150 ${
-                    isSelected
-                      ? 'border-primary bg-red-600/5 shadow-md'
-                      : 'border-border hover:border-primary/50 hover:shadow-sm'
-                  }`}
-                  title={`Select ${tierPrice.label} tier`}
-                >
-                  <div className="text-3xl mb-2">{tierPrice.emoji}</div>
-                  <p className="font-semibold text-text-primary mb-1">{tierPrice.label}</p>
-                  <p className="text-2xl font-bold text-primary mb-1">
-                    {formatCurrency(price * 100)}
-                  </p>
-                  <p className="text-xs text-text-secondary">
-                    per {billingInterval === 'monthly' ? 'month' : 'year'}
-                  </p>
-                  {monthlyEquiv && (
-                    <p className="text-xs text-text-secondary mt-1">
-                      = ${monthlyEquiv}/mo
+                return (
+                  <button
+                    key={tierPrice.tier}
+                    onClick={() => setSelectedTier(tierPrice.tier)}
+                    className={`border rounded-lg p-4 text-center transition-all duration-150 ${
+                      isSelected
+                        ? 'border-primary bg-red-600/5 shadow-md'
+                        : 'border-border hover:border-primary/50 hover:shadow-sm'
+                    }`}
+                    title={`Select ${tierPrice.label} tier`}
+                  >
+                    <div className="text-3xl mb-2">{tierPrice.emoji}</div>
+                    <p className="font-semibold text-text-primary mb-1">{tierPrice.label}</p>
+                    <p className="text-2xl font-bold text-primary mb-1">
+                      {formatCurrency(price * 100)}
                     </p>
-                  )}
-                  {isSelected && (
-                    <div className="mt-3">
-                      <Icon name="CheckCircleIcon" size={20} className="text-primary mx-auto" variant="solid" />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                    <p className="text-xs text-text-secondary">
+                      per {billingInterval === 'monthly' ? 'month' : 'year'}
+                    </p>
+                    {monthlyEquiv && (
+                      <p className="text-xs text-text-secondary mt-1">= ${monthlyEquiv}/mo</p>
+                    )}
+                    {isSelected && (
+                      <div className="mt-3">
+                        <Icon
+                          name="CheckCircleIcon"
+                          size={20}
+                          className="text-primary mx-auto"
+                          variant="solid"
+                        />
+                      </div>
+                    )}
+                  </button>
+                );
+              }
+            )}
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

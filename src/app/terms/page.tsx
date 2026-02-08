@@ -132,10 +132,10 @@ export default function TermsOfServicePage() {
                 9. Donations and Payments
               </h2>
               <p className="text-text-secondary leading-relaxed">
-                Donations and supporter payments are voluntary and non-refundable. If you choose
-                to contribute, you acknowledge that contributions help cover hosting costs and
-                ongoing development but do not guarantee any specific features, support level, or
-                service availability.
+                Donations and supporter payments are voluntary and non-refundable. If you choose to
+                contribute, you acknowledge that contributions help cover hosting costs and ongoing
+                development but do not guarantee any specific features, support level, or service
+                availability.
               </p>
             </section>
 
@@ -155,8 +155,8 @@ export default function TermsOfServicePage() {
                 11. Hosted Service Funding
               </h2>
               <p className="text-text-secondary leading-relaxed">
-                The hosted version of Scoreboard Manager is supported by donations. If hosting
-                costs become unsustainable or I am paying too much out of pocket, I may suspend or
+                The hosted version of Scoreboard Manager is supported by donations. If hosting costs
+                become unsustainable or I am paying too much out of pocket, I may suspend or
                 discontinue the hosted service. When possible, I will provide reasonable notice to
                 users.
               </p>
@@ -167,9 +167,9 @@ export default function TermsOfServicePage() {
                 12. Third-Party Services and Links
               </h2>
               <p className="text-text-secondary leading-relaxed">
-                The service may include links to third-party websites or services. We do not
-                control and are not responsible for the content, policies, or practices of any
-                third-party sites or services, and your use of them is at your own risk.
+                The service may include links to third-party websites or services. We do not control
+                and are not responsible for the content, policies, or practices of any third-party
+                sites or services, and your use of them is at your own risk.
               </p>
             </section>
 
@@ -179,8 +179,8 @@ export default function TermsOfServicePage() {
               </h2>
               <p className="text-text-secondary leading-relaxed">
                 The service is provided "as is" and "as available" without warranties of any kind,
-                whether express or implied, including implied warranties of merchantability,
-                fitness for a particular purpose, and non-infringement.
+                whether express or implied, including implied warranties of merchantability, fitness
+                for a particular purpose, and non-infringement.
               </p>
             </section>
 

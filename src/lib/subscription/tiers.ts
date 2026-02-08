@@ -48,6 +48,13 @@ export const TIER_PRICES: TierPrice[] = [
     label: 'Hall of Famer',
     emoji: '👑',
   },
+  {
+    tier: 'appreciation',
+    monthly: 0,
+    yearly: 0,
+    label: 'Appreciation',
+    emoji: '🎁',
+  },
 ];
 
 /**

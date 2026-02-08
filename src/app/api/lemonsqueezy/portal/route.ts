@@ -55,6 +55,11 @@ export async function POST(request: NextRequest) {
 
     if (!subscriptionResponse.ok) {
       const errorBody = await subscriptionResponse.json();
+      console.error('LemonSqueezy API Error:', {
+        status: subscriptionResponse.status,
+        subscriptionId: body.subscriptionId,
+        error: errorBody,
+      });
       return NextResponse.json(
         { error: errorBody?.errors?.[0]?.detail ?? 'Failed to fetch subscription' },
         { status: 500 }

@@ -18,11 +18,33 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
 import Button from '@/components/ui/Button';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  TIER_PRICES,
+  getTierLabel,
+  getTierPrice,
+  type AppreciationTier,
+} from '@/lib/subscription/tiers';
+
+export const dynamic = 'force-dynamic';
+
+// Declare LemonSqueezy global type
+declare global {
+  interface Window {
+    createLemonSqueezy?: () => void;
+    LemonSqueezy?: {
+      Url: {
+        Open: (url: string) => void;
+      };
+    };
+  }
+}
 
 const comparisonRows = [
   { feature: 'Public scoreboards', free: '2', supporter: 'Unlimited' },
@@ -60,8 +82,159 @@ const faqs = [
 ];
 
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
-  const supporterPrice = billingCycle === 'monthly' ? 'from $4/month' : 'from $40/year';
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, session, loading: authLoading } = useAuth();
+  const hasTriggeredCheckout = useRef(false);
+
+  // Read billing and tier params from URL (persisted through registration flow)
+  const billingParam = searchParams.get('billing');
+  const tierParam = searchParams.get('tier') as AppreciationTier | null;
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(
+    billingParam === 'yearly' ? 'yearly' : 'monthly'
+  );
+  const [selectedTier, setSelectedTier] = useState<AppreciationTier>(
+    tierParam && ['supporter', 'champion', 'legend', 'hall_of_famer'].includes(tierParam)
+      ? tierParam
+      : 'supporter'
+  );
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [autoCheckoutPending, setAutoCheckoutPending] = useState(
+    searchParams.get('checkout') === 'true'
+  );
+  const supporterPrice = `$${getTierPrice(selectedTier, billingCycle)}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
+
+  // Load LemonSqueezy SDK for overlay checkout
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://app.lemonsqueezy.com/js/lemon.js';
+    script.defer = true;
+    script.onload = () => {
+      window.createLemonSqueezy?.();
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Auto-trigger checkout when returning from registration/login with checkout=true
+  useEffect(() => {
+    const shouldCheckout = searchParams.get('checkout') === 'true';
+    const billingFromUrl = (searchParams.get('billing') as 'monthly' | 'yearly') || 'monthly';
+
+    // Only need user and valid session - don't wait for full auth loading
+    if (shouldCheckout && user && session?.access_token && !hasTriggeredCheckout.current) {
+      hasTriggeredCheckout.current = true;
+      // Clear the URL params before triggering checkout
+      router.replace('/pricing');
+
+      // Trigger checkout with tier and billing from URL to avoid stale state
+      const tierFromUrl = (searchParams.get('tier') as AppreciationTier) || 'supporter';
+      const validTier = ['supporter', 'champion', 'legend', 'hall_of_famer'].includes(tierFromUrl)
+        ? tierFromUrl
+        : 'supporter';
+
+      const doCheckout = async () => {
+        try {
+          setIsCheckoutLoading(true);
+          const response = await fetch('/api/lemonsqueezy/checkout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              tier: validTier,
+              billingInterval: billingFromUrl,
+              successUrl: `${window.location.origin}/dashboard?subscription=success`,
+              cancelUrl: `${window.location.origin}/pricing`,
+            }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to create checkout');
+          }
+
+          const { checkoutUrl } = await response.json();
+          if (checkoutUrl) {
+            // Use overlay if SDK loaded, otherwise fallback to redirect
+            if (window.LemonSqueezy?.Url?.Open) {
+              window.LemonSqueezy.Url.Open(checkoutUrl);
+              setIsCheckoutLoading(false);
+              setAutoCheckoutPending(false);
+            } else {
+              window.location.href = checkoutUrl;
+            }
+          }
+        } catch (err) {
+          console.error('Checkout error:', err);
+          setIsCheckoutLoading(false);
+          setAutoCheckoutPending(false);
+        }
+      };
+
+      // Small delay to ensure everything is ready
+      setTimeout(doCheckout, 300);
+    } else if (shouldCheckout && !user && !authLoading) {
+      // User not logged in but checkout=true - clear the state
+      setAutoCheckoutPending(false);
+    }
+  }, [user, session, searchParams, router, authLoading]);
+
+  const triggerCheckout = async () => {
+    if (!session?.access_token) return;
+
+    setIsCheckoutLoading(true);
+    try {
+      const response = await fetch('/api/lemonsqueezy/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          tier: selectedTier,
+          billingInterval: billingCycle,
+          successUrl: `${window.location.origin}/dashboard?subscription=success`,
+          cancelUrl: `${window.location.origin}/pricing`,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create checkout');
+      }
+
+      const { checkoutUrl } = await response.json();
+      // Use overlay if SDK loaded, otherwise fallback to redirect
+      if (window.LemonSqueezy?.Url?.Open) {
+        window.LemonSqueezy.Url.Open(checkoutUrl);
+        setIsCheckoutLoading(false);
+      } else {
+        window.location.href = checkoutUrl;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  };
+
+  const handleBecomeSupporter = async () => {
+    // If not logged in, redirect to register with supporter intent
+    if (!user || !session?.access_token) {
+      router.push(`/register?intent=supporter&tier=${selectedTier}&billing=${billingCycle}`);
+      return;
+    }
+
+    await triggerCheckout();
+  };
   const monthlyButtonClassName =
     'px-4 py-2 text-sm font-semibold rounded-md transition-colors duration-150';
   const monthlyButtonState =
@@ -77,6 +250,18 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {/* Loading overlay when auto-checkout is pending after login */}
+      {autoCheckoutPending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg font-medium text-text-primary">Preparing checkout...</p>
+            <p className="text-sm text-text-secondary mt-2">
+              Please wait while we set up your supporter subscription.
+            </p>
+          </div>
+        </div>
+      )}
       <PublicHeader />
       <main className="flex-1 pt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -154,12 +339,43 @@ export default function PricingPage() {
             <div className="bg-card border border-border rounded-lg p-6 elevation-1 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
                 <Icon name="GiftIcon" size={20} className="text-primary" />
-                <h2 className="text-2xl font-semibold text-text-primary">Supporter</h2>
+                <h2 className="text-2xl font-semibold text-text-primary">
+                  {getTierLabel(selectedTier)}
+                </h2>
               </div>
               <p className="text-text-secondary mb-4">
-                Choose from four fixed tiers to support hosting and unlock all hosted features.
+                Choose your tier to support hosting and unlock all features.
               </p>
-              <div className="text-3xl font-bold text-text-primary mb-4">{supporterPrice}</div>
+
+              {/* Tier Selector */}
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {TIER_PRICES.filter((tier) => tier.tier !== 'appreciation').map((tier) => {
+                  const isSelected = selectedTier === tier.tier;
+                  const price = getTierPrice(tier.tier, billingCycle);
+                  return (
+                    <button
+                      key={tier.tier}
+                      onClick={() => setSelectedTier(tier.tier)}
+                      className={`p-2 rounded-lg border-2 transition-all duration-150 flex flex-col items-center ${
+                        isSelected
+                          ? 'border-primary bg-red-600/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      title={`Select ${tier.label} tier`}
+                    >
+                      <span className="text-lg">{tier.emoji}</span>
+                      <span className="text-xs font-medium text-text-primary">${price}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="text-3xl font-bold text-text-primary mb-4">
+                {supporterPrice}
+                <span className="text-base font-normal text-text-secondary ml-2">
+                  {getTierLabel(selectedTier)}
+                </span>
+              </div>
               <ul className="space-y-2 text-text-secondary flex-1">
                 <li className="flex items-center gap-2">
                   <Icon name="CheckIcon" size={16} className="text-success" />
@@ -196,14 +412,15 @@ export default function PricingPage() {
               </ul>
               <div className="mt-auto pt-6">
                 <Button
-                  href="/contact"
+                  onClick={handleBecomeSupporter}
                   variant="primary"
                   size="md"
-                  icon="ArrowRightIcon"
+                  icon={isCheckoutLoading ? undefined : 'ArrowRightIcon'}
                   iconPosition="right"
-                  title="Contact us to become a supporter"
+                  title="Start subscription checkout"
+                  disabled={isCheckoutLoading}
                 >
-                  Become a Supporter
+                  {isCheckoutLoading ? 'Loading...' : `Become a ${getTierLabel(selectedTier)}`}
                 </Button>
               </div>
             </div>
@@ -218,7 +435,7 @@ export default function PricingPage() {
                     <th className="text-left py-3 px-4 font-semibold text-text-primary">Feature</th>
                     <th className="text-left py-3 px-4 font-semibold text-text-primary">Free</th>
                     <th className="text-left py-3 px-4 font-semibold text-text-primary">
-                      Supporter
+                      Supporter (All Tiers)
                     </th>
                   </tr>
                 </thead>
@@ -232,36 +449,6 @@ export default function PricingPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          <div className="bg-card border border-border rounded-lg p-6 mb-12">
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">Appreciation tiers</h2>
-            <p className="text-text-secondary mb-6">
-              All supporter tiers include the same features. Higher tiers simply show appreciation
-              badges and help keep the project sustainable.
-            </p>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="border border-border rounded-lg p-4 text-center">
-                <div className="text-2xl mb-2">🙌</div>
-                <p className="font-semibold text-text-primary">Supporter</p>
-                <p className="text-sm text-text-secondary">$4/mo</p>
-              </div>
-              <div className="border border-border rounded-lg p-4 text-center">
-                <div className="text-2xl mb-2">🏆</div>
-                <p className="font-semibold text-text-primary">Champion</p>
-                <p className="text-sm text-text-secondary">$8/mo</p>
-              </div>
-              <div className="border border-border rounded-lg p-4 text-center">
-                <div className="text-2xl mb-2">🌟</div>
-                <p className="font-semibold text-text-primary">Legend</p>
-                <p className="text-sm text-text-secondary">$23/mo</p>
-              </div>
-              <div className="border border-border rounded-lg p-4 text-center">
-                <div className="text-2xl mb-2">👑</div>
-                <p className="font-semibold text-text-primary">Hall of Famer</p>
-                <p className="text-sm text-text-secondary">$48/mo</p>
-              </div>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
-import crypto from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceRoleClient } from '@/lib/supabase/apiClient';
+import { verifyWebhookSignature } from '@/lib/lemonsqueezy/webhookUtils';
 import { Database } from '@/types/database.types';
 import { getTierPrice } from '@/lib/subscription/tiers';
 
@@ -40,26 +40,13 @@ const getNumber = (value: unknown): number | null => {
   return null;
 };
 
-const getBoolean = (value: unknown): boolean | null =>
-  typeof value === 'boolean' ? value : null;
+const getBoolean = (value: unknown): boolean | null => (typeof value === 'boolean' ? value : null);
 
 const getObject = (value: unknown): Record<string, unknown> | null => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return null;
   }
   return value as Record<string, unknown>;
-};
-
-const verifySignature = (rawBody: string, signature: string, secret: string) => {
-  const digest = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  const digestBuffer = Buffer.from(digest, 'utf8');
-  const signatureBuffer = Buffer.from(signature, 'utf8');
-
-  if (digestBuffer.length !== signatureBuffer.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(digestBuffer, signatureBuffer);
 };
 
 const normalizeStatus = (status: string): SubscriptionStatus => {
@@ -125,29 +112,43 @@ export async function POST(request: NextRequest) {
       request.headers.get('X-Signature') ?? request.headers.get('x-signature') ?? '';
     const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
 
+    console.info('[Webhook] Received webhook request');
+    console.info('[Webhook] Has signature:', !!signature);
+    console.info('[Webhook] Has secret:', !!secret);
+
     if (!secret || !signature) {
+      console.info('[Webhook] Missing signature or secret');
       return NextResponse.json({ error: 'Webhook signature missing' }, { status: 401 });
     }
 
-    if (!verifySignature(rawBody, signature, secret)) {
+    if (!verifyWebhookSignature(rawBody, signature, secret)) {
+      console.info('[Webhook] Signature verification failed');
       return NextResponse.json({ error: 'Invalid webhook signature' }, { status: 401 });
     }
 
+    console.info('[Webhook] Signature verified');
+
     const payload = JSON.parse(rawBody) as LemonSqueezyPayload;
-    const eventName =
-      payload.meta?.event_name ?? request.headers.get('X-Event-Name') ?? 'unknown';
+    const eventName = payload.meta?.event_name ?? request.headers.get('X-Event-Name') ?? 'unknown';
     const userId = getString(payload.meta?.custom_data?.user_id ?? null);
     const dataType = getString(payload.data?.type);
     const dataId = getString(payload.data?.id);
     const attributes = payload.data?.attributes ?? {};
 
+    console.info('[Webhook] Event:', eventName);
+    console.info('[Webhook] User ID:', userId);
+    console.info('[Webhook] Data type:', dataType);
+
     const serviceClient = getServiceRoleClient();
 
     if (!serviceClient) {
+      console.info('[Webhook] Service role client not available');
       return NextResponse.json({ error: 'Service role not configured' }, { status: 500 });
     }
 
     if (!userId) {
+      console.info('[Webhook] Missing user_id in custom_data');
+      console.info('[Webhook] custom_data:', JSON.stringify(payload.meta?.custom_data));
       return NextResponse.json({ error: 'Missing user_id in custom data' }, { status: 400 });
     }
 
@@ -220,6 +221,11 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       } as Database['public']['Tables']['subscriptions']['Insert'];
 
+      console.info(
+        '[Webhook] Upserting subscription:',
+        JSON.stringify(subscriptionInsert, null, 2)
+      );
+
       const { error } = await serviceClient
         .from('subscriptions')
         .upsert(subscriptionInsert as never, {
@@ -227,8 +233,11 @@ export async function POST(request: NextRequest) {
         });
 
       if (error) {
+        console.error('[Webhook] Subscription upsert error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
+
+      console.info('[Webhook] Subscription upserted successfully');
     }
 
     if (dataType === 'orders') {
@@ -274,25 +283,31 @@ export async function POST(request: NextRequest) {
         order_item_updated_at: getString(firstOrderItem?.updated_at),
         order_item_deleted_at: getString(firstOrderItem?.deleted_at),
         order_item_test_mode: getBoolean(firstOrderItem?.test_mode),
-        order_items: orderItems ? (orderItems as Database['public']['Tables']['payment_history']['Row']['order_items']) : null,
+        order_items: orderItems
+          ? (orderItems as Database['public']['Tables']['payment_history']['Row']['order_items'])
+          : null,
         test_mode: getBoolean(attr.test_mode) ?? false,
         updated_at: new Date().toISOString(),
       } as Database['public']['Tables']['payment_history']['Insert'];
 
-      const { error } = await serviceClient
-        .from('payment_history')
-        .upsert(orderInsert as never, {
-          onConflict: 'lemonsqueezy_order_id',
-        });
+      console.info('[Webhook] Upserting order:', orderInsert.lemonsqueezy_order_id);
+
+      const { error } = await serviceClient.from('payment_history').upsert(orderInsert as never, {
+        onConflict: 'lemonsqueezy_order_id',
+      });
 
       if (error) {
+        console.error('[Webhook] Order upsert error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
+
+      console.info('[Webhook] Order upserted successfully');
     }
 
+    console.info('[Webhook] Successfully processed event:', eventName);
     return NextResponse.json({ received: true, event: eventName });
   } catch (error) {
-    console.error('Webhook Error:', error);
+    console.error('[Webhook] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

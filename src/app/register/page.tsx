@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTimeoutRef } from '@/hooks';
 import Header from '@/components/common/Header';
 import Icon from '@/components/ui/AppIcon';
+
+export const dynamic = 'force-dynamic';
 
 interface SystemSettings {
   allow_public_registration: boolean;
@@ -14,6 +16,7 @@ interface SystemSettings {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp, loading: authLoading } = useAuth();
   const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const [fullName, setFullName] = useState('');
@@ -27,6 +30,12 @@ export default function RegisterPage() {
   const [isPublicRegistrationAllowed, setIsPublicRegistrationAllowed] = useState(true);
   const [hasValidInvitation, setHasValidInvitation] = useState(false);
   const [checkingInvitation, setCheckingInvitation] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
+
+  // Read supporter intent, tier, and billing from URL
+  const supporterIntent = searchParams.get('intent') === 'supporter';
+  const tierParam = searchParams.get('tier') || 'supporter';
+  const billingParam = searchParams.get('billing') || 'monthly';
 
   useEffect(() => {
     const checkSettings = async () => {
@@ -80,6 +89,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setEmailExists(false);
 
     if (!isPublicRegistrationAllowed && !hasValidInvitation) {
       setError('Registration is currently by invitation only. Please use a valid invitation link.');
@@ -99,6 +109,22 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // Check if email already exists
+      const checkResponse = await fetch('/api/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+
+      if (checkResponse.ok) {
+        const checkData = await checkResponse.json();
+        if (checkData.exists) {
+          setEmailExists(true);
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await signUp(email, password, fullName);
       if (error) {
         setError(error.message);
@@ -113,7 +139,13 @@ export default function RegisterPage() {
         setSuccess(true);
         setTimeoutSafe(
           () => {
-            router.push('/login');
+            if (supporterIntent) {
+              // Redirect to login with returnTo pointing to pricing with checkout flag
+              const returnTo = `/pricing?checkout=true&tier=${tierParam}&billing=${billingParam}`;
+              router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+            } else {
+              router.push('/login');
+            }
           },
           2000,
           'redirect'
@@ -157,8 +189,16 @@ export default function RegisterPage() {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Account Created!</h2>
-              <p className="text-muted-foreground">Redirecting you to login...</p>
+              <h2 className="text-2xl font-bold text-foreground mb-2">Check Your Email!</h2>
+              <p className="text-muted-foreground mb-4">
+                We've sent a confirmation link to your email address. Please confirm your email to
+                continue.
+              </p>
+              {supporterIntent && (
+                <p className="text-sm text-text-secondary bg-muted rounded-lg p-3">
+                  After confirming your email, sign in to complete your Supporter checkout.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -174,8 +214,43 @@ export default function RegisterPage() {
           <div className="bg-card border border-border rounded-lg shadow-lg p-8">
             <h1 className="text-3xl font-bold text-center mb-2 text-foreground">Create Account</h1>
             <p className="text-center text-muted-foreground mb-8">
-              Start managing your scoreboards today
+              {supporterIntent
+                ? 'Create your account to become a Supporter'
+                : 'Start managing your scoreboards today'}
             </p>
+
+            {supporterIntent && (
+              <div className="mb-6 bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                <div className="flex items-start">
+                  <Icon
+                    name="GiftIcon"
+                    size={20}
+                    className="text-success mr-2 mt-0.5 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-success">
+                      Becoming a{' '}
+                      {tierParam === 'hall_of_famer'
+                        ? 'Hall of Famer'
+                        : tierParam.charAt(0).toUpperCase() + tierParam.slice(1)}
+                    </p>
+                    <p className="text-sm text-text-secondary mt-1">
+                      After creating your account and confirming your email, you'll be taken to
+                      checkout.
+                    </p>
+                    <p className="text-sm text-text-secondary mt-2">
+                      Already have an account?{' '}
+                      <Link
+                        href={`/login?returnTo=${encodeURIComponent(`/pricing?checkout=true&tier=${tierParam}&billing=${billingParam}`)}`}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Sign in instead
+                      </Link>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {!isPublicRegistrationAllowed && !hasValidInvitation && (
               <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
@@ -196,9 +271,37 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {error && (
+            {error && !emailExists && (
               <div className="bg-red-500/10 border border-destructive text-destructive px-4 py-3 rounded-md mb-6">
                 {error}
+              </div>
+            )}
+
+            {emailExists && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
+                <div className="flex items-start">
+                  <Icon
+                    name="ExclamationTriangleIcon"
+                    size={20}
+                    className="text-warning mr-2 mt-0.5 flex-shrink-0"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-warning">Account Already Exists</p>
+                    <p className="text-sm text-text-secondary mt-1">
+                      An account with this email address already exists.{' '}
+                      <Link
+                        href={
+                          supporterIntent
+                            ? `/login?returnTo=${encodeURIComponent(`/pricing?checkout=true&billing=${billingParam}`)}`
+                            : '/login'
+                        }
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Sign in instead
+                      </Link>
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -234,7 +337,10 @@ export default function RegisterPage() {
                         type="email"
                         autoComplete="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          setEmailExists(false);
+                        }}
                         required
                         className="w-full px-4 py-3 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
                         placeholder="you@example.com"
@@ -324,7 +430,14 @@ export default function RegisterPage() {
             <div className="mt-6 text-center text-sm">
               <p className="text-muted-foreground">
                 Already have an account?{' '}
-                <Link href="/login" className="text-primary hover:underline font-medium">
+                <Link
+                  href={
+                    supporterIntent
+                      ? `/login?returnTo=${encodeURIComponent(`/pricing?checkout=true&billing=${billingParam}`)}`
+                      : '/login'
+                  }
+                  className="text-primary hover:underline font-medium"
+                >
                   Sign in here
                 </Link>
               </p>

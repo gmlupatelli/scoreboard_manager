@@ -34,9 +34,9 @@ export default function CookiePolicyPage() {
             <section>
               <h2 className="text-xl font-semibold text-text-primary mb-4">1. What Are Cookies</h2>
               <p className="text-text-secondary leading-relaxed">
-                Cookies are small text files stored on your device when you visit a website. We
-                also use similar technologies like local storage where appropriate. These tools help
-                us keep the service secure, remember preferences, and improve performance.
+                Cookies are small text files stored on your device when you visit a website. We also
+                use similar technologies like local storage where appropriate. These tools help us
+                keep the service secure, remember preferences, and improve performance.
               </p>
             </section>
 
@@ -57,16 +57,14 @@ export default function CookiePolicyPage() {
                   your preferences and settings.
                 </li>
                 <li>
-                  <strong className="text-text-primary">Analytics Cookies:</strong> If enabled,
-                  help us understand usage so we can improve the service.
+                  <strong className="text-text-primary">Analytics Cookies:</strong> If enabled, help
+                  us understand usage so we can improve the service.
                 </li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-text-primary mb-4">
-                3. Cookie Details
-              </h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">3. Cookie Details</h2>
               <p className="text-text-secondary leading-relaxed mb-4">
                 The cookies used by the hosted service may include the following. Names and
                 durations can vary by environment or updates.

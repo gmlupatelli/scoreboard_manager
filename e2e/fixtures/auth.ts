@@ -37,6 +37,11 @@ const SARAH: AuthUser = {
   password: process.env.AUTOMATED_TEST_USER_2_PASSWORD || 'sarah456',
 };
 
+const SUPPORTER: AuthUser = {
+  email: process.env.AUTOMATED_TEST_USER_3_EMAIL || 'supporter@example.com',
+  password: process.env.AUTOMATED_TEST_USER_3_PASSWORD || 'supporter789',
+};
+
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
 
 /**
@@ -106,6 +111,7 @@ type AuthFixtures = {
   adminAuth: Page;
   johnAuth: Page;
   sarahAuth: Page;
+  supporterAuth: Page;
   loginAs: (user: AuthUser) => Promise<void>;
 };
 
@@ -131,6 +137,14 @@ export const test = base.extend<AuthFixtures>({
    */
   sarahAuth: async ({ page }, use) => {
     await performLogin(page, SARAH);
+    await use(page);
+  },
+
+  /**
+   * Supporter (user with subscription) authenticated page
+   */
+  supporterAuth: async ({ page }, use) => {
+    await performLogin(page, SUPPORTER);
     await use(page);
   },
 
@@ -163,4 +177,5 @@ export const TEST_USERS = {
   admin: ADMIN,
   john: JOHN,
   sarah: SARAH,
+  supporter: SUPPORTER,
 };
