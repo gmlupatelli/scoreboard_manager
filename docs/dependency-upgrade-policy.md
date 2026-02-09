@@ -4,67 +4,67 @@ This document outlines the strategy for managing dependencies in the Scoreboard 
 
 ## Overview
 
-We use a balanced approach to dependency management:
+We use a **manual-first** approach to dependency management:
 
-- **Automated updates** for patch and minor versions via Dependabot
-- **Manual review** for major versions to prevent breaking changes
-- **Immediate action** for security vulnerabilities
+- **No automated version-bump PRs** — Dependabot PRs are disabled (`open-pull-requests-limit: 0`)
+- **Security alerts remain active** — Dependabot Security Advisories still flag vulnerabilities
+- **Weekly audit workflow** — A GitHub Actions workflow (`dependency-check.yml`) runs `npm audit` and `npm outdated`, then creates/updates a GitHub Issue with the findings
+- **All updates are manual** — review changelogs, test locally, and apply changes yourself
 
 ## Dependabot Configuration
 
-Dependabot is configured in `.github/dependabot.yml` to:
+Dependabot is configured in `.github/dependabot.yml` in **alerts-only mode**:
+
+### What Dependabot Does
+
+- ✅ **Security Alerts** — flags known vulnerabilities in the Security tab
+- ✅ **Vulnerability Advisories** — shown on the repository's Security > Advisories page
+- ❌ **Version-bump PRs** — disabled (`open-pull-requests-limit: 0`)
 
 ### Schedule
 
 - **Frequency**: Weekly (Mondays at 6:00 AM ET)
-- **PR Limit**: 10 open PRs maximum
+- **PR Limit**: 0 (no automated PRs)
 
-### Update Grouping
+## Weekly Dependency Check Workflow
 
-Dependencies are grouped to reduce PR noise:
+A GitHub Actions workflow (`.github/workflows/dependency-check.yml`) runs every Monday at 7:00 AM ET and:
 
-| Group                     | Includes                                                | Update Types |
-| ------------------------- | ------------------------------------------------------- | ------------ |
-| `production-dependencies` | All packages except dev tools                           | Minor, Patch |
-| `dev-dependencies`        | @types/_, eslint_, prettier*, @playwright/*, typescript | Minor, Patch |
-| `github-actions`          | All GitHub Actions                                      | Minor, Patch |
+1. Runs `npm audit` against production and all dependencies
+2. Runs `npm outdated --long` to list available updates
+3. Creates or updates a GitHub Issue titled **"📋 Weekly Dependency Report"** with the full findings
+4. If everything is up to date and clean, no issue is created
 
-### Major Version Policy
+You can also trigger the workflow manually from the Actions tab.
 
-Major versions are **ignored by Dependabot** and handled manually. This applies to:
+### When to Upgrade
 
-| Package                                  | Reason                                       |
-| ---------------------------------------- | -------------------------------------------- |
-| `react`, `react-dom`, `@types/react*`    | Major versions require coordinated migration |
-| `next`, `eslint-config-next`             | Breaking changes between major versions      |
-| `typescript`                             | May require code changes                     |
-| `tailwindcss`                            | Breaking changes in utility classes          |
-| `@supabase/supabase-js`, `@supabase/ssr` | API changes between major versions           |
-
-**When to upgrade major versions:**
-
-1. Current version reaches End of Life (EOL)
-2. New major version has critical features we need
-3. Security vulnerability requires major version upgrade
+1. A security vulnerability is flagged (see response timeline below)
+2. Current version reaches End of Life (EOL)
+3. New version has critical features we need
+4. Weekly report shows a meaningful number of outdated packages
 
 ## Update Workflow
+
+All dependency updates are applied manually. The process varies by risk level:
 
 ### Patch Updates (x.x.PATCH)
 
 - **Risk**: Very Low
-- **Action**: Auto-merged after CI passes
+- **Action**: Review weekly report, update locally, verify CI passes
 - **Examples**: Bug fixes, security patches
+- **Command**: `npm update` or `npm install <package>@<version>`
 
 ### Minor Updates (x.MINOR.x)
 
 - **Risk**: Low
-- **Action**: Review changelog, merge after CI passes
+- **Action**: Review changelog, update locally, run tests, create PR
 - **Examples**: New features (backward compatible)
 
 ### Major Updates (MAJOR.x.x)
 
 - **Risk**: High
-- **Action**: Manual upgrade with dedicated branch
+- **Action**: Dedicated branch with thorough testing
 - **Process**:
   1. Create feature branch: `feat/upgrade-{package}-v{version}`
   2. Review migration guide and changelog
@@ -78,8 +78,8 @@ Major versions are **ignored by Dependabot** and handled manually. This applies 
 ### GitHub Security Advisories
 
 - Dependabot Security Advisories are **always enabled**
-- Critical vulnerabilities trigger immediate PRs regardless of ignore rules
-- Security PRs are labeled with `security` for prioritization
+- Vulnerabilities appear in the repository's Security tab and in the weekly audit issue
+- No automated PRs are created — you apply the fix manually after reviewing
 
 ### Response Timeline
 
@@ -112,14 +112,14 @@ Before merging any dependency update:
 
 ### Tools
 
-- **Dependabot**: Automated PR creation
-- **GitHub Security Advisories**: Vulnerability alerts
+- **Dependabot Security Alerts**: Vulnerability notifications (no PRs)
+- **Dependency Check Workflow**: Weekly `npm audit` + `npm outdated` → GitHub Issue
 - **npm audit**: Local security scanning
 - **CodeQL**: Code scanning for vulnerabilities
 
 ### Regular Review
 
-- Weekly: Review and merge Dependabot PRs
+- Weekly: Review the auto-generated dependency report issue
 - Monthly: Check for EOL packages
 - Quarterly: Evaluate major version upgrades
 
@@ -155,6 +155,7 @@ npm view {package} versions
 ## References
 
 - [Dependabot Configuration](../.github/dependabot.yml)
+- [Dependency Check Workflow](../.github/workflows/dependency-check.yml)
 - [GitHub Dependabot Docs](https://docs.github.com/en/code-security/dependabot)
 - [Semantic Versioning](https://semver.org/)
 - [npm Security Advisories](https://www.npmjs.com/advisories)

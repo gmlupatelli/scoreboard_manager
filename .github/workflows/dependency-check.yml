@@ -1,0 +1,156 @@
+# Weekly dependency audit workflow
+# Checks for outdated packages and known vulnerabilities,
+# then creates/updates a GitHub Issue with the findings.
+#
+# This replaces Dependabot's automated version-bump PRs while
+# keeping you informed about what needs attention.
+
+name: Dependency Check
+
+on:
+  schedule:
+    # Every Monday at 7:00 AM ET (after Dependabot alerts run at 6:00 AM)
+    - cron: '0 11 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  audit:
+    name: Audit Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        id: audit
+        continue-on-error: true
+        run: |
+          echo "## 🔒 Security Audit (npm audit)" > audit-report.md
+          echo "" >> audit-report.md
+
+          if npm audit --omit=dev 2>&1 | tee audit-output.txt; then
+            echo "✅ No known vulnerabilities found in production dependencies." >> audit-report.md
+            echo "audit_clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️ Vulnerabilities detected in production dependencies:" >> audit-report.md
+            echo "" >> audit-report.md
+            echo '```' >> audit-report.md
+            cat audit-output.txt >> audit-report.md
+            echo '```' >> audit-report.md
+            echo "audit_clean=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "" >> audit-report.md
+
+          if npm audit 2>&1 | tee audit-all-output.txt; then
+            echo "✅ No known vulnerabilities found (including dev dependencies)." >> audit-report.md
+          else
+            echo "<details>" >> audit-report.md
+            echo "<summary>⚠️ Vulnerabilities in all dependencies (including dev)</summary>" >> audit-report.md
+            echo "" >> audit-report.md
+            echo '```' >> audit-report.md
+            cat audit-all-output.txt >> audit-report.md
+            echo '```' >> audit-report.md
+            echo "</details>" >> audit-report.md
+          fi
+
+      - name: Check outdated packages
+        id: outdated
+        continue-on-error: true
+        run: |
+          echo "" >> audit-report.md
+          echo "---" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "## 📦 Outdated Packages" >> audit-report.md
+          echo "" >> audit-report.md
+
+          if npm outdated --long 2>&1 | tee outdated-output.txt; then
+            echo "✅ All packages are up to date." >> audit-report.md
+            echo "outdated_clean=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "The following packages have newer versions available:" >> audit-report.md
+            echo "" >> audit-report.md
+            echo '```' >> audit-report.md
+            cat outdated-output.txt >> audit-report.md
+            echo '```' >> audit-report.md
+            echo "outdated_clean=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Add report metadata
+        run: |
+          echo "" >> audit-report.md
+          echo "---" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "## ℹ️ Info" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "- **Generated**: $(date -u '+%Y-%m-%d %H:%M UTC')" >> audit-report.md
+          echo "- **Node.js**: $(node --version)" >> audit-report.md
+          echo "- **npm**: $(npm --version)" >> audit-report.md
+          echo "- **Branch**: \`${{ github.ref_name }}\`" >> audit-report.md
+          echo "" >> audit-report.md
+          echo "> This report is generated weekly by the [Dependency Check](${{ github.server_url }}/${{ github.repository }}/actions/workflows/dependency-check.yml) workflow." >> audit-report.md
+          echo "> To update dependencies manually, review each change locally and run \`npm update\` or \`npm install <package>@<version>\`." >> audit-report.md
+          echo "> See [docs/dependency-upgrade-policy.md](../docs/dependency-upgrade-policy.md) for the full process." >> audit-report.md
+
+      - name: Create or update GitHub Issue
+        if: steps.audit.outputs.audit_clean != 'true' || steps.outdated.outputs.outdated_clean != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('audit-report.md', 'utf8');
+            const title = '📋 Weekly Dependency Report — ' + new Date().toISOString().slice(0, 10);
+            const labels = ['dependencies', 'automated'];
+
+            // Check if there's already an open issue from this workflow
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: labels.join(','),
+              per_page: 5,
+            });
+
+            const existingIssue = existingIssues.find(i =>
+              i.title.startsWith('📋 Weekly Dependency Report')
+            );
+
+            if (existingIssue) {
+              // Update the existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                title: title,
+                body: body,
+              });
+              core.info(`Updated existing issue #${existingIssue.number}`);
+            } else {
+              // Create a new issue
+              const { data: newIssue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: labels,
+              });
+              core.info(`Created new issue #${newIssue.number}`);
+            }
+
+      - name: Summary (all clean)
+        if: steps.audit.outputs.audit_clean == 'true' && steps.outdated.outputs.outdated_clean == 'true'
+        run: echo "✅ All dependencies are up to date with no known vulnerabilities. No issue created."

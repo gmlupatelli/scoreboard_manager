@@ -1,10 +1,23 @@
 # Dependabot configuration
-# Automatically creates PRs to update dependencies with security vulnerabilities
+# Security-only mode: Dependabot alerts are enabled for vulnerability detection,
+# but automated version-bump PRs are disabled. Instead, a scheduled GitHub Actions
+# workflow (`dependency-check.yml`) audits for outdated/vulnerable packages and
+# creates a GitHub Issue as a manual review task.
+#
+# Why: We prefer to review and apply dependency updates manually to avoid
+# unexpected breakage from automated PRs.
+#
+# What still works automatically:
+#   - Dependabot Security Alerts (repo Settings > Security)
+#   - Dependabot vulnerability advisories in the Security tab
+#   - Weekly dependency audit via GitHub Actions → GitHub Issue
+#
+# See docs/dependency-upgrade-policy.md for full rationale.
 # https://docs.github.com/en/code-security/dependabot
 
 version: 2
 updates:
-  # npm dependencies
+  # npm dependencies — alerts only, no version-bump PRs
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
@@ -12,77 +25,19 @@ updates:
       day: 'monday'
       time: '06:00'
       timezone: 'America/New_York'
-    open-pull-requests-limit: 10
-    # Group minor and patch updates together
-    groups:
-      production-dependencies:
-        patterns:
-          - '*'
-        exclude-patterns:
-          - '@types/*'
-          - 'eslint*'
-          - 'prettier*'
-          - '@playwright/*'
-          - 'typescript'
-        update-types:
-          - 'minor'
-          - 'patch'
-      dev-dependencies:
-        patterns:
-          - '@types/*'
-          - 'eslint*'
-          - 'prettier*'
-          - '@playwright/*'
-          - 'typescript'
-        update-types:
-          - 'minor'
-          - 'patch'
-    # Ignore major version updates - handle these manually when current version is EOL.
-    # See docs/dependency-upgrade-policy.md for the rationale, process, and review cadence.
-    # GitHub Security Advisories will still alert on vulnerabilities
-    ignore:
-      # React ecosystem - major versions require coordinated migration
-      - dependency-name: 'react'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'react-dom'
-        update-types: ['version-update:semver-major']
-      - dependency-name: '@types/react'
-        update-types: ['version-update:semver-major']
-      - dependency-name: '@types/react-dom'
-        update-types: ['version-update:semver-major']
-      # Next.js - major versions have breaking changes
-      - dependency-name: 'next'
-        update-types: ['version-update:semver-major']
-      - dependency-name: 'eslint-config-next'
-        update-types: ['version-update:semver-major']
-      # TypeScript - major versions may require code changes
-      - dependency-name: 'typescript'
-        update-types: ['version-update:semver-major']
-      # Tailwind CSS - major versions have breaking changes
-      - dependency-name: 'tailwindcss'
-        update-types: ['version-update:semver-major']
-      # Supabase - major versions may have API changes
-      - dependency-name: '@supabase/supabase-js'
-        update-types: ['version-update:semver-major']
-      - dependency-name: '@supabase/ssr'
-        update-types: ['version-update:semver-major']
-    # Reviewers for security updates
-    reviewers:
-      - 'gmlupatelli'
+    # Setting to 0 disables all automated PRs while keeping security alerts active
+    open-pull-requests-limit: 0
     labels:
       - 'dependencies'
       - 'security'
-    commit-message:
-      prefix: 'chore(deps)'
 
-  # GitHub Actions
+  # GitHub Actions — alerts only, no version-bump PRs
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'weekly'
       day: 'monday'
+    open-pull-requests-limit: 0
     labels:
       - 'dependencies'
       - 'github-actions'
-    commit-message:
-      prefix: 'ci(deps)'
