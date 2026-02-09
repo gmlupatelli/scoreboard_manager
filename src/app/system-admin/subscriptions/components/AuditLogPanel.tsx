@@ -4,23 +4,29 @@ import { useState, useEffect, useCallback } from 'react';
 import { subscriptionService } from '@/services/subscriptionService';
 import Icon from '@/components/ui/AppIcon';
 
+interface AuditLogUser {
+  id: string;
+  email: string;
+  fullName: string | null;
+}
+
 interface AuditLog {
   id: string;
-  adminId: string;
-  adminEmail: string;
-  targetUserId: string;
-  targetUserEmail: string;
   action: string;
+  actionLabel: string;
   details: Record<string, unknown> | null;
   createdAt: string;
+  admin: AuditLogUser | null;
+  targetUser: AuditLogUser | null;
 }
 
 interface AuditLogPanelProps {
   isOpen: boolean;
   onToggle: () => void;
+  refreshKey?: number;
 }
 
-export default function AuditLogPanel({ isOpen, onToggle }: AuditLogPanelProps) {
+export default function AuditLogPanel({ isOpen, onToggle, refreshKey }: AuditLogPanelProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +59,7 @@ export default function AuditLogPanel({ isOpen, onToggle }: AuditLogPanelProps) 
     if (isOpen) {
       loadLogs();
     }
-  }, [isOpen, loadLogs]);
+  }, [isOpen, loadLogs, refreshKey]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -67,33 +73,39 @@ export default function AuditLogPanel({ isOpen, onToggle }: AuditLogPanelProps) 
 
   const getActionInfo = (action: string) => {
     switch (action) {
-      case 'gift_appreciation':
+      case 'gift_appreciation_tier':
         return {
-          label: 'Gifted Appreciation',
           icon: 'GiftIcon',
           color: 'text-purple-600 bg-purple-100',
         };
-      case 'remove_appreciation':
+      case 'remove_appreciation_tier':
         return {
-          label: 'Removed Appreciation',
-          icon: 'MinusCircleIcon',
+          icon: 'XCircleIcon',
           color: 'text-orange-600 bg-orange-100',
         };
       case 'cancel_subscription':
         return {
-          label: 'Cancelled Subscription',
-          icon: 'XCircleIcon',
+          icon: 'NoSymbolIcon',
           color: 'text-red-600 bg-red-100',
         };
       case 'link_subscription':
         return {
-          label: 'Linked Subscription',
           icon: 'LinkIcon',
           color: 'text-blue-600 bg-blue-100',
         };
+      case 'refetch_subscription':
+        return {
+          icon: 'ArrowPathIcon',
+          color: 'text-green-600 bg-green-100',
+        };
       default:
-        return { label: action, icon: 'DocumentTextIcon', color: 'text-gray-600 bg-gray-100' };
+        return { icon: 'DocumentTextIcon', color: 'text-gray-600 bg-gray-100' };
     }
+  };
+
+  const formatUserDisplay = (user: AuditLogUser | null) => {
+    if (!user) return 'Unknown';
+    return user.fullName || user.email;
   };
 
   const formatDetails = (details: Record<string, unknown> | null) => {
@@ -188,9 +200,7 @@ export default function AuditLogPanel({ isOpen, onToggle }: AuditLogPanelProps) 
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-text-primary">
-                              {actionInfo.label}
-                            </span>
+                            <span className="font-medium text-text-primary">{log.actionLabel}</span>
                             <span className="text-sm text-text-secondary">•</span>
                             <span className="text-sm text-text-secondary">
                               {formatDate(log.createdAt)}
@@ -198,10 +208,21 @@ export default function AuditLogPanel({ isOpen, onToggle }: AuditLogPanelProps) 
                           </div>
                           <div className="text-sm text-text-secondary mt-1">
                             <span className="font-medium">Target:</span>{' '}
-                            <span>{log.targetUserEmail}</span>
+                            <span>
+                              {formatUserDisplay(log.targetUser)}
+                              {log.targetUser?.fullName && (
+                                <span className="text-xs ml-1">({log.targetUser.email})</span>
+                              )}
+                            </span>
                           </div>
                           <div className="text-sm text-text-secondary">
-                            <span className="font-medium">By:</span> <span>{log.adminEmail}</span>
+                            <span className="font-medium">By:</span>{' '}
+                            <span>
+                              {formatUserDisplay(log.admin)}
+                              {log.admin?.fullName && (
+                                <span className="text-xs ml-1">({log.admin.email})</span>
+                              )}
+                            </span>
                           </div>
                           {formatDetails(log.details)}
                         </div>

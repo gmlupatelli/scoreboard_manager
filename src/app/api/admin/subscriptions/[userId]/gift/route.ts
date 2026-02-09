@@ -116,6 +116,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // 7. Create or update subscription with gifted appreciation tier
+    const now = new Date().toISOString();
     const subscriptionData = {
       user_id: userId,
       status: 'active' as const,
@@ -136,19 +137,42 @@ export async function POST(request: NextRequest, context: RouteContext) {
       customer_portal_update_subscription_url: null,
       card_brand: null,
       card_last_four: null,
-      current_period_start: new Date().toISOString(),
+      current_period_start: now,
       current_period_end: expiresAt || null,
       cancelled_at: null,
       test_mode: false,
-      updated_at: new Date().toISOString(),
+      created_at: now,
+      updated_at: now,
     };
 
     if (existingSub) {
-      // Update existing subscription
-      await serviceClient.from('subscriptions').update(subscriptionData).eq('id', existingSub.id);
+      // Update existing subscription (exclude created_at to preserve original)
+      const { created_at: _created_at, ...updateData } = subscriptionData;
+      const { error: updateError } = await serviceClient
+        .from('subscriptions')
+        .update(updateData as never)
+        .eq('id', existingSub.id);
+
+      if (updateError) {
+        console.error('Failed to update subscription for gift:', updateError);
+        return NextResponse.json(
+          { error: `Failed to gift appreciation tier: ${updateError.message}` },
+          { status: 500 }
+        );
+      }
     } else {
       // Insert new subscription
-      await serviceClient.from('subscriptions').insert(subscriptionData);
+      const { error: insertError } = await serviceClient
+        .from('subscriptions')
+        .insert(subscriptionData as never);
+
+      if (insertError) {
+        console.error('Failed to insert subscription for gift:', insertError);
+        return NextResponse.json(
+          { error: `Failed to gift appreciation tier: ${insertError.message}` },
+          { status: 500 }
+        );
+      }
     }
 
     // 8. Log admin action

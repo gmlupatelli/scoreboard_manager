@@ -110,11 +110,23 @@ export default function ScoreboardViewLayout() {
     >
       <Header isAuthenticated={false} customStyles={appliedStyles} />
       <main className="pt-16 flex-1">
-        <ScoreboardInteractive
-          scoreboard={scoreboard}
-          entries={entries}
-          appliedStyles={appliedStyles}
-        />
+        {scoreboard?.visibility === 'private' ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="bg-yellow-500/10 border border-warning rounded-lg p-6 text-center">
+              <h2 className="text-lg font-semibold text-text-primary mb-2">Private Scoreboard</h2>
+              <p className="text-sm text-text-secondary">
+                This scoreboard is private and not available for public viewing. The owner needs an
+                active Supporter plan to share private scoreboards.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <ScoreboardInteractive
+            scoreboard={scoreboard}
+            entries={entries}
+            appliedStyles={appliedStyles}
+          />
+        )}
       </main>
       <Footer customStyles={appliedStyles} />
     </div>

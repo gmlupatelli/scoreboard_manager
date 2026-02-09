@@ -20,11 +20,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
 import TierBadge from '@/components/ui/TierBadge';
+import DowngradeNoticeModal from '@/components/common/DowngradeNoticeModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscriptionService } from '@/services/subscriptionService';
 import { PaymentHistoryEntry, Subscription } from '@/types/models';
@@ -43,6 +44,7 @@ declare global {
       Url: {
         Open: (url: string) => void;
       };
+      Setup: (config: { eventHandler: (event: { event: string }) => void }) => void;
     };
   }
 }
@@ -84,6 +86,7 @@ const getStatusBadge = (status: Subscription['status']) => {
 export default function SupporterPlanInteractive() {
   const { user, loading: authLoading, subscriptionTier, refreshSubscription } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
@@ -99,6 +102,7 @@ export default function SupporterPlanInteractive() {
   const [changeTierSuccess, setChangeTierSuccess] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showDowngradeNotice, setShowDowngradeNotice] = useState(false);
 
   const successState = searchParams.get('subscription');
 
@@ -132,19 +136,13 @@ export default function SupporterPlanInteractive() {
     loadSubscription();
   }, [user?.id]);
 
-  // Refresh subscription tier after successful checkout with retry logic
+  // Redirect to dashboard on successful checkout
+  // The dashboard handles the success toast and subscription refresh
   useEffect(() => {
-    if (successState === 'success' && refreshSubscription) {
-      // Refresh with retry logic since webhook may take a moment
-      const refreshWithRetry = async (attempts = 0) => {
-        await refreshSubscription();
-        if (attempts < 3) {
-          setTimeout(() => refreshWithRetry(attempts + 1), 2000);
-        }
-      };
-      setTimeout(() => refreshWithRetry(), 1000);
+    if (successState === 'success') {
+      router.replace('/dashboard?subscription=success');
     }
-  }, [successState, refreshSubscription]);
+  }, [successState, router]);
 
   const handleCheckout = async () => {
     if (!user?.id || isSubmitting) return;
@@ -153,7 +151,7 @@ export default function SupporterPlanInteractive() {
     setError(null);
 
     const origin = window.location.origin;
-    const successUrl = `${origin}/supporter-plan?subscription=success`;
+    const successUrl = `${origin}/dashboard?subscription=success`;
     const cancelUrl = `${origin}/supporter-plan?subscription=cancel`;
 
     const { data, error: checkoutError } = await subscriptionService.createCheckout({
@@ -355,6 +353,7 @@ export default function SupporterPlanInteractive() {
     setChangeTierSuccess(
       'Your subscription has been cancelled. You will retain access until the end of your current billing period.'
     );
+    setShowDowngradeNotice(true);
 
     // Refresh subscription data
     if (user?.id) {
@@ -413,7 +412,12 @@ export default function SupporterPlanInteractive() {
     );
   }
 
-  const isActiveSubscriber = subscription && ['active', 'trialing'].includes(subscription.status);
+  // Gifted/appreciation subscriptions should not be treated as paid subscriptions
+  // so users still see pricing options and can become a paid supporter
+  const isGiftedSubscription = subscription?.isGifted && subscription?.tier === 'appreciation';
+
+  const isActiveSubscriber =
+    subscription && ['active', 'trialing'].includes(subscription.status) && !isGiftedSubscription;
 
   // Check if subscription is cancelled but still within grace period (benefits still active)
   // LemonSqueezy's ends_at (stored as cancelledAt) is the actual expiry deadline
@@ -421,7 +425,8 @@ export default function SupporterPlanInteractive() {
     subscription &&
     subscription.status === 'cancelled' &&
     subscription.cancelledAt &&
-    new Date(subscription.cancelledAt) > new Date();
+    new Date(subscription.cancelledAt) > new Date() &&
+    !isGiftedSubscription;
 
   // User still has benefits if active or cancelled-but-active
   const hasActiveSubscription = isActiveSubscriber || isCancelledButActive;
@@ -431,7 +436,16 @@ export default function SupporterPlanInteractive() {
       <Script
         src="https://app.lemonsqueezy.com/js/lemon.js"
         strategy="afterInteractive"
-        onLoad={() => window.createLemonSqueezy?.()}
+        onLoad={() => {
+          window.createLemonSqueezy?.();
+          window.LemonSqueezy?.Setup({
+            eventHandler: (event) => {
+              if (event.event === 'Checkout.Success') {
+                router.push('/dashboard?subscription=success');
+              }
+            },
+          });
+        }}
       />
 
       <Header isAuthenticated={true} />
@@ -457,14 +471,7 @@ export default function SupporterPlanInteractive() {
             </div>
           </div>
 
-          {/* Success / Cancel Messages */}
-          {successState === 'success' && (
-            <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700 flex items-center gap-2">
-              <Icon name="CheckCircleIcon" size={20} />
-              Thanks for supporting Scoreboard Manager! Your subscription is being activated.
-            </div>
-          )}
-
+          {/* Cancel Message */}
           {successState === 'cancel' && (
             <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700 flex items-center gap-2">
               <Icon name="ExclamationTriangleIcon" size={20} />
@@ -737,12 +744,46 @@ export default function SupporterPlanInteractive() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    <div className="p-4 bg-muted/50 rounded-lg">
-                      <p className="text-text-secondary">
-                        You&apos;re currently on the <strong>Free</strong> plan. Become a supporter
-                        to unlock additional features and help keep Scoreboard Manager running!
-                      </p>
-                    </div>
+                    {isGiftedSubscription ? (
+                      <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <span className="text-xl flex-shrink-0">🎁</span>
+                          <div className="text-sm">
+                            <p className="font-medium text-purple-700">Appreciation Tier Active</p>
+                            <p className="text-purple-600 mt-1">
+                              You have a gifted appreciation tier with full feature access.
+                              {subscription?.giftedExpiresAt ? (
+                                <>
+                                  {' '}
+                                  This tier expires on{' '}
+                                  <strong>
+                                    {new Date(subscription.giftedExpiresAt).toLocaleDateString(
+                                      undefined,
+                                      {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                      }
+                                    )}
+                                  </strong>
+                                  .
+                                </>
+                              ) : null}{' '}
+                              Becoming a paid supporter helps keep Scoreboard Manager running and
+                              will replace your appreciation tier.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <p className="text-text-secondary">
+                          You&apos;re currently on the <strong>Free</strong> plan. Become a
+                          supporter to unlock additional features and help keep Scoreboard Manager
+                          running!
+                        </p>
+                      </div>
+                    )}
 
                     {/* Tier Selection */}
                     <div>
@@ -952,7 +993,14 @@ export default function SupporterPlanInteractive() {
               <ul className="list-disc list-inside text-sm text-amber-800 mt-2 space-y-1">
                 <li>You&apos;ll keep your benefits until the end of your current billing period</li>
                 <li>No further charges will be made</li>
-                <li>You can reactivate anytime before your benefits expire</li>
+                <li>After your plan ends, Free plan limits apply:</li>
+                <li>2 public scoreboards maximum</li>
+                <li>Private scoreboards are locked</li>
+                <li>50 entries per scoreboard maximum</li>
+                <li>Preset themes only</li>
+                <li>Powered by badge on embeds</li>
+                <li>Kiosk / TV Mode disabled</li>
+                <li>You can resubscribe anytime to remove these limits</li>
               </ul>
             </div>
 
@@ -984,6 +1032,12 @@ export default function SupporterPlanInteractive() {
       )}
 
       <Footer />
+
+      <DowngradeNoticeModal
+        isOpen={showDowngradeNotice}
+        onDismiss={() => setShowDowngradeNotice(false)}
+        mode="cancelled"
+      />
     </div>
   );
 }

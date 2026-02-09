@@ -11,6 +11,9 @@ interface ScoreboardCardProps {
   createdAt: string;
   ownerName?: string;
   visibility?: 'public' | 'private';
+  isLocked?: boolean;
+  canUnlock?: boolean;
+  onUnlock?: () => void;
   onRename: (id: string, newTitle: string) => void;
   onDelete: () => void;
   onNavigate: (id: string) => void;
@@ -24,6 +27,9 @@ const ScoreboardCard = ({
   createdAt,
   ownerName,
   visibility = 'public',
+  isLocked = false,
+  canUnlock = false,
+  onUnlock,
   onRename,
   onDelete,
   onNavigate,
@@ -46,6 +52,15 @@ const ScoreboardCard = ({
     >
       {/* Card content */}
       <div className="relative bg-card p-6 hover-lift flex flex-col h-full">
+        {isLocked && (
+          <div className="mb-3">
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-700">
+              <Icon name="LockClosedIcon" size={14} />
+              Read-only
+            </span>
+          </div>
+        )}
+
         <div className="flex items-start justify-between mb-4">
           {isEditing ? (
             <input
@@ -75,17 +90,19 @@ const ScoreboardCard = ({
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
                 <div className="absolute right-0 mt-2 w-48 bg-popover border border-border rounded-md elevation-2 z-20">
-                  <button
-                    onClick={() => {
-                      setIsEditing(true);
-                      setShowMenu(false);
-                    }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth"
-                    title="Rename scoreboard"
-                  >
-                    <Icon name="PencilIcon" size={18} className="mr-3" />
-                    Rename
-                  </button>
+                  {!isLocked && (
+                    <button
+                      onClick={() => {
+                        setIsEditing(true);
+                        setShowMenu(false);
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth"
+                      title="Rename scoreboard"
+                    >
+                      <Icon name="PencilIcon" size={18} className="mr-3" />
+                      Rename
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       onDelete();
@@ -137,6 +154,17 @@ const ScoreboardCard = ({
             </div>
           </div>
         </div>
+
+        {isLocked && canUnlock && onUnlock && (
+          <button
+            onClick={onUnlock}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150"
+            title="Unlock this scoreboard"
+          >
+            <Icon name="LockClosedIcon" size={18} />
+            <span>Unlock Scoreboard</span>
+          </button>
+        )}
 
         <button
           onClick={() => onNavigate(id)}

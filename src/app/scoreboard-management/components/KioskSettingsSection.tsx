@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import Icon from '@/components/ui/AppIcon';
 import { useAuthGuard } from '@/hooks';
+import { useAuth } from '@/contexts/AuthContext';
 import { convertPdfToImages, isPdfFile, PdfProcessingProgress } from '@/utils/pdfToImages';
 import { supabase } from '@/lib/supabase/client';
 
@@ -44,6 +46,8 @@ export default function KioskSettingsSection({
   onShowToast,
 }: KioskSettingsSectionProps) {
   const { getAuthHeaders } = useAuthGuard();
+  const { subscriptionTier } = useAuth();
+  const isSupporter = Boolean(subscriptionTier);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // LocalStorage key for caching slide order (handles read replica lag)
@@ -1017,6 +1021,12 @@ export default function KioskSettingsSection({
                   Enabled
                 </span>
               )}
+              {!isSupporter && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-gray-100 text-text-secondary rounded-full">
+                  <Icon name="LockClosedIcon" size={12} />
+                  Supporter
+                </span>
+              )}
             </h3>
             <p className="text-sm text-text-secondary">
               Allow this scoreboard to be displayed with custom slides in full-screen mode
@@ -1031,7 +1041,33 @@ export default function KioskSettingsSection({
       </button>
 
       {/* Content */}
-      {isExpanded && (
+      {isExpanded && !isSupporter && (
+        <div className="px-6 pb-6 border-t border-border pt-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Icon
+                name="LockClosedIcon"
+                size={20}
+                className="text-gray-600 flex-shrink-0 mt-0.5"
+              />
+              <div className="flex-1 text-sm text-gray-700">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="font-medium">Supporter Feature</p>
+                  <Link
+                    href="/supporter-plan"
+                    className="inline-flex items-center text-orange-900 hover:bg-orange-900/10 px-2 py-1 rounded-md font-medium text-sm whitespace-nowrap transition-colors duration-150"
+                    title="Become a Supporter to unlock Kiosk / TV Mode"
+                  >
+                    Become a Supporter
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isExpanded && isSupporter && (
         <div className="px-4 pb-4 space-y-6 border-t border-border">
           {isLoading ? (
             <div className="py-8 text-center text-text-secondary">Loading kiosk settings...</div>

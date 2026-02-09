@@ -18,6 +18,12 @@ interface CreateScoreboardModalProps {
     sortOrder: 'asc' | 'desc',
     timeFormat: TimeFormat | null
   ) => Promise<{ success: boolean; message: string; scoreboardId?: string }>;
+  isSupporter: boolean;
+  publicUsage?: {
+    used: number;
+    max: number;
+    remaining: number;
+  } | null;
 }
 
 const TIME_FORMATS: TimeFormat[] = [
@@ -33,6 +39,8 @@ export default function CreateScoreboardModal({
   isOpen,
   onClose,
   onCreate,
+  isSupporter,
+  publicUsage,
 }: CreateScoreboardModalProps) {
   const router = useRouter();
   const [isHydrated, setIsHydrated] = useState(false);
@@ -44,6 +52,9 @@ export default function CreateScoreboardModal({
   const [timeFormat, setTimeFormat] = useState<TimeFormat>('mm:ss');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const isFreeUser = !isSupporter;
+  const isLimitReached =
+    isFreeUser && publicUsage?.remaining !== undefined && publicUsage.remaining <= 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +62,11 @@ export default function CreateScoreboardModal({
 
     if (!title.trim()) {
       setError('Title is required');
+      return;
+    }
+
+    if (isLimitReached) {
+      setError("You've reached the maximum of 2 public scoreboards on the free plan.");
       return;
     }
 
@@ -95,6 +111,12 @@ export default function CreateScoreboardModal({
   useEffect(() => {
     setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (isFreeUser && visibility === 'private') {
+      setVisibility('public');
+    }
+  }, [isFreeUser, visibility]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -202,18 +224,29 @@ export default function CreateScoreboardModal({
                         Public
                       </span>
                     </label>
-                    <label className="flex items-center cursor-pointer">
+                    <label
+                      className={`flex items-center ${isFreeUser ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
                       <input
                         type="radio"
                         value="private"
                         checked={visibility === 'private'}
                         onChange={(e) => setVisibility(e.target.value as 'public' | 'private')}
                         className="w-4 h-4 text-primary focus:ring-2 focus:ring-ring"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isFreeUser}
                       />
                       <span className="ml-2 text-sm text-text-primary flex items-center">
                         <Icon name="LockClosedIcon" size={16} className="mr-1" />
                         Private
+                        {isFreeUser && (
+                          <span
+                            className="ml-2 text-xs text-text-secondary flex items-center gap-1"
+                            title="Supporter feature"
+                          >
+                            <Icon name="LockClosedIcon" size={12} />
+                            Supporter feature
+                          </span>
+                        )}
                       </span>
                     </label>
                   </div>
@@ -222,6 +255,17 @@ export default function CreateScoreboardModal({
                       ? 'Anyone can view this scoreboard'
                       : 'Only you or someone with the scoreboard link can view this scoreboard'}
                   </p>
+                  {isFreeUser && publicUsage && (
+                    <p className="mt-2 text-xs text-text-secondary">
+                      You have used {publicUsage.used} of {publicUsage.max} public scoreboards.
+                    </p>
+                  )}
+                  {isLimitReached && (
+                    <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                      <p className="font-medium">Limit reached</p>
+                      <p className="mt-1">Become a Supporter for unlimited scoreboards.</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-border pt-4">
@@ -347,7 +391,7 @@ export default function CreateScoreboardModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 border border-input rounded-md text-sm font-medium text-text-secondary hover:bg-muted transition-smooth"
+                  className="px-4 py-2 border border-input rounded-md text-sm font-medium text-text-secondary hover:bg-muted transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                   disabled={isSubmitting}
                   title="Cancel and close"
                 >
@@ -355,9 +399,11 @@ export default function CreateScoreboardModal({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90 transition-smooth disabled:opacity-50"
-                  disabled={isSubmitting}
-                  title="Create new scoreboard"
+                  disabled={isSubmitting || isLimitReached}
+                  className="w-full py-2 px-4 bg-primary text-white rounded-md font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary transition-colors duration-150"
+                  title={
+                    isLimitReached ? 'Public scoreboard limit reached' : 'Create new scoreboard'
+                  }
                 >
                   {isSubmitting ? 'Creating...' : 'Create Scoreboard'}
                 </button>

@@ -5,6 +5,7 @@
  * Credentials are loaded from .env.test using the numbered naming convention:
  *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
  *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
+ *   AUTOMATED_TEST_SUPPORTER_<N>_EMAIL / AUTOMATED_TEST_SUPPORTER_<N>_PASSWORD
  */
 
 import { test as base, type Page, type BrowserContext as _BrowserContext } from '@playwright/test';
@@ -38,8 +39,8 @@ const SARAH: AuthUser = {
 };
 
 const SUPPORTER: AuthUser = {
-  email: process.env.AUTOMATED_TEST_USER_3_EMAIL || 'supporter@example.com',
-  password: process.env.AUTOMATED_TEST_USER_3_PASSWORD || 'supporter789',
+  email: process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'supporter@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_1_PASSWORD || 'supporter789',
 };
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';

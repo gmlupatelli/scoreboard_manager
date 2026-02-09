@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTimeoutRef, useUndoQueue } from '@/hooks';
 import { scoreboardService } from '../../../services/scoreboardService';
+import { limitsService } from '@/services/limitsService';
 import {
   Scoreboard,
   ScoreboardEntry,
@@ -16,6 +17,7 @@ import {
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
 import UndoToast from '@/components/common/UndoToast';
+import UsageCounterBlock from '@/components/common/UsageCounterBlock';
 import EntryRow from './EntryRow';
 import EntryCard from './EntryCard';
 import AddEntryModal from './AddEntryModal';
@@ -38,6 +40,7 @@ const ScoreboardManagementInteractive = () => {
   const searchParams = useSearchParams();
   const scoreboardId = searchParams.get('id');
   const { user, userProfile, loading: authLoading, subscriptionTier } = useAuth();
+  const isFreeUser = !subscriptionTier;
   const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
   const pendingDeletesRef = useRef<
@@ -64,11 +67,15 @@ const ScoreboardManagementInteractive = () => {
     title: string;
     message: string;
     onConfirm: () => void;
+    isProcessing?: boolean;
+    processingText?: string;
   }>({
     isOpen: false,
     title: '',
     message: '',
     onConfirm: () => {},
+    isProcessing: false,
+    processingText: '',
   });
   const [toast, setToast] = useState<ToastState>({
     message: '',
@@ -79,6 +86,8 @@ const ScoreboardManagementInteractive = () => {
   const [isStyleSectionExpanded, setIsStyleSectionExpanded] = useState(false);
   const [isEmbedSectionExpanded, setIsEmbedSectionExpanded] = useState(false);
   const [isKioskSectionExpanded, setIsKioskSectionExpanded] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [publicUnlockRemaining, setPublicUnlockRemaining] = useState<number | null>(null);
 
   // Execute all pending deletes on unmount (Option A: execute on navigation)
   useEffect(() => {
@@ -87,14 +96,16 @@ const ScoreboardManagementInteractive = () => {
       pendingDeletes.forEach(async ({ entry, timerId }) => {
         clearTimeout(timerId);
         try {
-          await scoreboardService.deleteEntry(entry.id);
+          if (scoreboardId) {
+            await scoreboardService.deleteEntry(scoreboardId, entry.id);
+          }
         } catch {
           // Silent failure on unmount
         }
       });
       pendingDeletes.clear();
     };
-  }, []);
+  }, [scoreboardId]);
 
   // Redirect if not authenticated or no scoreboard ID
   useEffect(() => {
@@ -111,6 +122,26 @@ const ScoreboardManagementInteractive = () => {
       }
     }
   }, [user, authLoading, scoreboardId, router, setTimeoutSafe]);
+
+  const loadPublicUnlockRemaining = useCallback(async () => {
+    if (!user?.id || !isFreeUser) {
+      setPublicUnlockRemaining(null);
+      return;
+    }
+
+    const { data: remaining, error } = await limitsService.getRemainingPublicScoreboards(user.id);
+    if (error || remaining === null || remaining === undefined) {
+      setPublicUnlockRemaining(null);
+      return;
+    }
+
+    const remainingValue = Number.isFinite(remaining) ? Number(remaining) : null;
+    setPublicUnlockRemaining(remainingValue);
+  }, [user?.id, isFreeUser]);
+
+  useEffect(() => {
+    loadPublicUnlockRemaining();
+  }, [loadPublicUnlockRemaining, scoreboard?.isLocked, entries.length]);
 
   const recalculateRanks = useCallback(
     (entriesList: ScoreboardEntry[]): ScoreboardEntry[] => {
@@ -236,6 +267,18 @@ const ScoreboardManagementInteractive = () => {
     setCurrentPage(1);
   }, [searchQuery, entries, sortBy, sortOrder, scoreboard?.sortOrder, recalculateRanks]);
 
+  const entryLimit = 50;
+  const entryUsage = entries.length;
+  const isReadOnly =
+    isFreeUser && (Boolean(scoreboard?.isLocked) || scoreboard?.visibility === 'private');
+  const isEntryLimitReached = isFreeUser && entryUsage >= entryLimit;
+  const isEntryApproachingLimit = isFreeUser && entryUsage >= 45 && entryUsage < entryLimit;
+  const canUnlockScoreboard =
+    isFreeUser &&
+    scoreboard?.visibility === 'public' &&
+    Boolean(scoreboard?.isLocked) &&
+    (publicUnlockRemaining || 0) > 0;
+
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type, isVisible: true });
   };
@@ -250,6 +293,11 @@ const ScoreboardManagementInteractive = () => {
     scoreTypeChanged: boolean
   ) => {
     if (!scoreboard) return;
+
+    if (isReadOnly) {
+      showToast('This scoreboard is read-only on the Free plan.', 'info');
+      return;
+    }
 
     try {
       if (scoreTypeChanged && entries.length > 0) {
@@ -280,11 +328,35 @@ const ScoreboardManagementInteractive = () => {
     }
   };
 
+  const handleUnlockScoreboard = async () => {
+    if (!scoreboard || isUnlocking) return;
+
+    setIsUnlocking(true);
+    try {
+      const { data, error } = await scoreboardService.unlockScoreboard(scoreboard.id);
+      if (error || !data) {
+        throw error || new Error('Unable to unlock scoreboard');
+      }
+
+      await loadScoreboardData();
+      showToast('Scoreboard unlocked', 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Unable to unlock scoreboard', 'error');
+    } finally {
+      setIsUnlocking(false);
+    }
+  };
+
   const handleSaveStyles = async (
     styles: ScoreboardCustomStyles,
     scope: 'main' | 'embed' | 'both'
   ) => {
     if (!scoreboard) return;
+
+    if (isReadOnly) {
+      showToast('This scoreboard is read-only on the Free plan.', 'info');
+      return;
+    }
 
     setIsSavingStyles(true);
     try {
@@ -307,6 +379,16 @@ const ScoreboardManagementInteractive = () => {
   const handleAddEntry = async (name: string, score: number) => {
     if (!scoreboard) return;
 
+    if (isReadOnly) {
+      showToast('This scoreboard is read-only on the Free plan.', 'info');
+      return;
+    }
+
+    if (isEntryLimitReached) {
+      showToast("You've reached the maximum of 50 entries on the free plan.", 'error');
+      return;
+    }
+
     try {
       // FIXED: Use createEntry instead of addEntry
       const result = await scoreboardService.createEntry({
@@ -321,15 +403,23 @@ const ScoreboardManagementInteractive = () => {
       updateEntriesState((prevEntries) => [...prevEntries, result.data as ScoreboardEntry]);
       showToast('Entry added successfully', 'success');
     } catch (_err) {
-      showToast('Failed to add entry', 'error');
+      showToast(_err instanceof Error ? _err.message : 'Failed to add entry', 'error');
     }
   };
 
   const handleEditEntry = async (id: string, name: string, score: number) => {
     if (!scoreboard) return;
 
+    if (isReadOnly) {
+      showToast('This scoreboard is read-only on the Free plan.', 'info');
+      return;
+    }
+
     try {
-      const { data, error } = await scoreboardService.updateEntry(id, { name, score });
+      const { data, error } = await scoreboardService.updateEntry(scoreboard.id, id, {
+        name,
+        score,
+      });
       if (error || !data) throw error;
 
       updateEntriesState((prevEntries) =>
@@ -337,11 +427,13 @@ const ScoreboardManagementInteractive = () => {
       );
       showToast('Entry updated successfully', 'success');
     } catch (_err) {
-      showToast('Failed to update entry', 'error');
+      showToast(_err instanceof Error ? _err.message : 'Failed to update entry', 'error');
     }
   };
 
   const handleDeleteEntry = (id: string) => {
+    if (!scoreboard) return;
+
     const entryToDelete = entries.find((e) => e.id === id);
     if (!entryToDelete) return;
 
@@ -354,7 +446,7 @@ const ScoreboardManagementInteractive = () => {
     const timerId = setTimeout(async () => {
       pendingDeletesRef.current.delete(deleteId);
       try {
-        const { error } = await scoreboardService.deleteEntry(id);
+        const { error } = await scoreboardService.deleteEntry(scoreboard.id, id);
         if (error) {
           // Restore on error
           setEntries((prev) => [...prev, entryToDelete]);
@@ -391,50 +483,67 @@ const ScoreboardManagementInteractive = () => {
   const handleImportCSV = async (importedEntries: { name: string; score: number }[]) => {
     if (!scoreboard) return;
 
-    const createdEntries: ScoreboardEntry[] = [];
+    if (isReadOnly) {
+      showToast('This scoreboard is read-only on the Free plan.', 'info');
+      return;
+    }
+
+    if (isEntryLimitReached) {
+      showToast("You've reached the maximum of 50 entries on the free plan.", 'error');
+      return;
+    }
+
+    if (isFreeUser && entryUsage + importedEntries.length > entryLimit) {
+      showToast('Import would exceed the 50-entry limit on the Free plan.', 'error');
+      return;
+    }
+
     try {
-      // FIXED: Use createEntry instead of addEntry for each entry
-      for (const entry of importedEntries) {
-        const result = await scoreboardService.createEntry({
-          scoreboardId: scoreboard.id,
-          name: entry.name,
-          score: entry.score,
-          details: null,
-        });
-        if (result.error || !result.data) throw result.error;
-        createdEntries.push(result.data);
+      const result = await scoreboardService.createEntriesBulk(
+        scoreboard.id,
+        importedEntries.map((e) => ({ name: e.name, score: e.score, details: null }))
+      );
+
+      if (result.error || !result.data) {
+        throw result.error || new Error('Failed to import entries');
       }
 
-      updateEntriesState((prevEntries) => [...prevEntries, ...createdEntries]);
-      showToast(`${importedEntries.length} entries imported successfully`, 'success');
+      updateEntriesState((prevEntries) => [...prevEntries, ...result.data!]);
+      showToast(`${result.data.length} entries imported successfully`, 'success');
     } catch (_err) {
-      if (createdEntries.length > 0) {
-        updateEntriesState((prevEntries) => [...prevEntries, ...createdEntries]);
-      }
-      showToast('Failed to import some entries', 'error');
+      showToast('Failed to import entries', 'error');
     }
   };
 
   const handleClearAll = () => {
+    if (!scoreboard) return;
+
     setConfirmModal({
       isOpen: true,
       title: 'Clear All Entries',
       message:
         'Are you sure you want to delete all entries? This action cannot be undone and will remove all participant data from this scoreboard.',
       onConfirm: async () => {
+        setConfirmModal((prev) => ({
+          ...prev,
+          isProcessing: true,
+          processingText: 'Clearing all entries...',
+        }));
         try {
-          // Delete all entries
-          for (const entry of entries) {
-            const { error } = await scoreboardService.deleteEntry(entry.id);
-            if (error) throw error;
-          }
+          const { error } = await scoreboardService.deleteAllEntries(scoreboard.id);
+          if (error) throw error;
 
           setEntries([]);
           showToast('All entries cleared successfully', 'success');
         } catch (_err) {
           showToast('Failed to clear all entries', 'error');
         } finally {
-          setConfirmModal({ ...confirmModal, isOpen: false });
+          setConfirmModal((prev) => ({
+            ...prev,
+            isOpen: false,
+            isProcessing: false,
+            processingText: '',
+          }));
         }
       },
     });
@@ -533,8 +642,9 @@ const ScoreboardManagementInteractive = () => {
                 <h1 className="text-2xl font-bold text-text-primary">{scoreboard.title}</h1>
                 <button
                   onClick={() => setIsEditScoreboardModalOpen(true)}
-                  className="p-1.5 rounded-md hover:bg-muted transition-smooth duration-150"
-                  title="Edit scoreboard details"
+                  disabled={isReadOnly}
+                  className="p-1.5 rounded-md hover:bg-muted transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  title={isReadOnly ? 'Scoreboard is read-only' : 'Edit scoreboard details'}
                 >
                   <Icon
                     name="PencilIcon"
@@ -550,16 +660,6 @@ const ScoreboardManagementInteractive = () => {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {!subscriptionTier && (
-                <Link
-                  href="/supporter-plan"
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors duration-150"
-                  title="Support Scoreboard Manager and unlock more features"
-                >
-                  <Icon name="HeartIcon" size={18} />
-                  <span className="hidden sm:inline">Become a Supporter</span>
-                </Link>
-              )}
               <button
                 onClick={() => router.push('/dashboard')}
                 className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
@@ -605,6 +705,58 @@ const ScoreboardManagementInteractive = () => {
           </div>
         </div>
 
+        {isReadOnly && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <Icon name="LockClosedIcon" size={20} className="text-yellow-700 flex-shrink-0" />
+              <div className="text-sm text-yellow-800">
+                <p className="font-medium">Read-only mode</p>
+                <p className="mt-1">
+                  This scoreboard is locked on the Free plan. Public boards can be unlocked up to
+                  your limit. Private boards remain locked.
+                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {canUnlockScoreboard ? (
+                    <button
+                      onClick={handleUnlockScoreboard}
+                      disabled={isUnlocking}
+                      className="px-3 py-1.5 text-primary rounded-md font-medium text-sm hover:bg-red-600/10 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      title="Unlock this scoreboard"
+                    >
+                      {isUnlocking ? 'Unlocking...' : 'Unlock Scoreboard'}
+                    </button>
+                  ) : (
+                    <Link
+                      href="/supporter-plan"
+                      className="px-3 py-1.5 text-orange-900 rounded-md font-medium text-sm hover:bg-orange-900/10 transition-colors duration-150"
+                      title="Become a Supporter to unlock more"
+                    >
+                      Become a Supporter to unlock more
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isFreeUser && (
+          <div className="mb-6">
+            <UsageCounterBlock
+              label="entries on this scoreboard"
+              used={entryUsage}
+              max={entryLimit}
+              ctaHref="/supporter-plan"
+              ctaLabel="Become a Supporter to unlock more"
+              warningText={
+                isEntryApproachingLimit
+                  ? 'You’re close to the 50-entry limit. Consider upgrading if you need more room.'
+                  : undefined
+              }
+            />
+          </div>
+        )}
+
         <StyleCustomizationSection
           currentStyles={scoreboard.customStyles}
           currentScope={scoreboard.styleScope || 'both'}
@@ -613,6 +765,8 @@ const ScoreboardManagementInteractive = () => {
           scoreboardId={scoreboard.id}
           isExpanded={isStyleSectionExpanded}
           onToggleExpanded={setIsStyleSectionExpanded}
+          isSupporter={Boolean(subscriptionTier)}
+          isReadOnly={isReadOnly}
         />
 
         <EmbedCodeSection
@@ -620,6 +774,7 @@ const ScoreboardManagementInteractive = () => {
           scoreboardTitle={scoreboard.title}
           isExpanded={isEmbedSectionExpanded}
           onToggleExpanded={setIsEmbedSectionExpanded}
+          isSupporter={Boolean(subscriptionTier)}
         />
 
         <KioskSettingsSection
@@ -643,8 +798,15 @@ const ScoreboardManagementInteractive = () => {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
-                  title="Add new entry"
+                  disabled={isReadOnly || isEntryLimitReached}
+                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-100"
+                  title={
+                    isReadOnly
+                      ? 'Scoreboard is read-only'
+                      : isEntryLimitReached
+                        ? 'Entry limit reached'
+                        : 'Add new entry'
+                  }
                 >
                   <Icon name="PlusIcon" size={20} />
                   <span className="hidden sm:inline">Add Entry</span>
@@ -652,8 +814,15 @@ const ScoreboardManagementInteractive = () => {
                 </button>
                 <button
                   onClick={() => setIsImportModalOpen(true)}
-                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-smooth duration-150 font-medium"
-                  title="Import entries from CSV file"
+                  disabled={isReadOnly || isEntryLimitReached}
+                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-100"
+                  title={
+                    isReadOnly
+                      ? 'Scoreboard is read-only'
+                      : isEntryLimitReached
+                        ? 'Entry limit reached'
+                        : 'Import entries from CSV file'
+                  }
                 >
                   <Icon name="ArrowUpTrayIcon" size={20} />
                   <span className="hidden sm:inline">Import CSV</span>
@@ -661,8 +830,8 @@ const ScoreboardManagementInteractive = () => {
                 </button>
                 <button
                   onClick={handleClearAll}
-                  disabled={entries.length === 0}
-                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={entries.length === 0 || isReadOnly}
+                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-destructive text-destructive-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-100"
                   title="Delete all entries"
                 >
                   <Icon name="TrashIcon" size={20} />
@@ -737,6 +906,7 @@ const ScoreboardManagementInteractive = () => {
                       onDelete={handleDeleteEntry}
                       scoreType={scoreboard?.scoreType || 'number'}
                       timeFormat={scoreboard?.timeFormat || null}
+                      isReadOnly={isReadOnly}
                     />
                   ))
                 ) : (
@@ -767,6 +937,7 @@ const ScoreboardManagementInteractive = () => {
                   onDelete={handleDeleteEntry}
                   scoreType={scoreboard?.scoreType || 'number'}
                   timeFormat={scoreboard?.timeFormat || null}
+                  isReadOnly={isReadOnly}
                 />
               ))
             ) : (
@@ -843,6 +1014,7 @@ const ScoreboardManagementInteractive = () => {
         currentSortOrder={scoreboard?.sortOrder || 'desc'}
         currentTimeFormat={scoreboard?.timeFormat || null}
         entryCount={entries.length}
+        isSupporter={!isFreeUser}
       />
 
       <ConfirmationModal
@@ -852,6 +1024,8 @@ const ScoreboardManagementInteractive = () => {
         title={confirmModal.title}
         message={confirmModal.message}
         variant="danger"
+        isProcessing={confirmModal.isProcessing}
+        processingText={confirmModal.processingText}
       />
 
       <Toast

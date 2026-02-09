@@ -12,6 +12,8 @@ interface ConfirmationModalProps {
   confirmText?: string;
   cancelText?: string;
   variant?: 'danger' | 'warning' | 'info';
+  isProcessing?: boolean;
+  processingText?: string;
 }
 
 const ConfirmationModal = ({
@@ -23,6 +25,8 @@ const ConfirmationModal = ({
   confirmText = 'Confirm',
   cancelText = 'Cancel',
   variant = 'danger',
+  isProcessing = false,
+  processingText,
 }: ConfirmationModalProps) => {
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -53,7 +57,10 @@ const ConfirmationModal = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-[1010]" onClick={onClose} />
+      <div
+        className="fixed inset-0 bg-black/50 z-[1010]"
+        onClick={isProcessing ? undefined : onClose}
+      />
       <div className="fixed inset-0 flex items-center justify-center z-[1011] p-4">
         <div className="bg-card border border-border rounded-lg w-full max-w-md elevation-2">
           <div className="p-6">
@@ -66,21 +73,37 @@ const ConfirmationModal = ({
                 <p className="text-sm text-text-secondary">{message}</p>
               </div>
             </div>
+            {isProcessing && (
+              <div className="mt-6">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-primary" />
+                  <span className="text-sm text-text-secondary">
+                    {processingText || 'Processing...'}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-primary h-1.5 rounded-full animate-pulse w-full" />
+                </div>
+              </div>
+            )}
             <div className="flex items-center space-x-3 mt-6">
               <button
                 onClick={onConfirm}
-                className={`flex-1 px-4 py-2 rounded-md transition-smooth duration-150 font-medium ${buttonClass}`}
+                disabled={isProcessing}
+                className={`flex-1 px-4 py-2 rounded-md transition-smooth duration-150 font-medium ${buttonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
                 title={confirmText}
               >
-                {confirmText}
+                {isProcessing ? processingText || 'Processing...' : confirmText}
               </button>
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
-                title={cancelText}
-              >
-                {cancelText}
-              </button>
+              {!isProcessing && (
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
+                  title={cancelText}
+                >
+                  {cancelText}
+                </button>
+              )}
             </div>
           </div>
         </div>

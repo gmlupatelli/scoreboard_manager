@@ -18,7 +18,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
@@ -42,6 +42,7 @@ declare global {
       Url: {
         Open: (url: string) => void;
       };
+      Setup: (config: { eventHandler: (event: { event: string }) => void }) => void;
     };
   }
 }
@@ -82,6 +83,14 @@ const faqs = [
 ];
 
 export default function PricingPage() {
+  return (
+    <Suspense>
+      <PricingContent />
+    </Suspense>
+  );
+}
+
+function PricingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
@@ -111,6 +120,13 @@ export default function PricingPage() {
     script.defer = true;
     script.onload = () => {
       window.createLemonSqueezy?.();
+      window.LemonSqueezy?.Setup({
+        eventHandler: (event: { event: string }) => {
+          if (event.event === 'Checkout.Success') {
+            window.location.href = '/dashboard?subscription=success';
+          }
+        },
+      });
     };
     document.head.appendChild(script);
 

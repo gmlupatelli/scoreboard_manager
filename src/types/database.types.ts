@@ -411,6 +411,7 @@ export type Database = {
           custom_styles: Json | null;
           description: string | null;
           id: string;
+          is_locked: boolean;
           owner_id: string;
           score_type: string;
           sort_order: string;
@@ -425,6 +426,7 @@ export type Database = {
           custom_styles?: Json | null;
           description?: string | null;
           id?: string;
+          is_locked?: boolean;
           owner_id: string;
           score_type?: string;
           sort_order?: string;
@@ -439,6 +441,7 @@ export type Database = {
           custom_styles?: Json | null;
           description?: string | null;
           id?: string;
+          is_locked?: boolean;
           owner_id?: string;
           score_type?: string;
           sort_order?: string;
@@ -595,6 +598,7 @@ export type Database = {
       user_profiles: {
         Row: {
           created_at: string;
+          downgrade_notice_seen_at: string | null;
           email: string;
           full_name: string;
           id: string;
@@ -603,6 +607,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          downgrade_notice_seen_at?: string | null;
           email: string;
           full_name: string;
           id: string;
@@ -611,6 +616,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          downgrade_notice_seen_at?: string | null;
           email?: string;
           full_name?: string;
           id?: string;

@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import SearchInterface from '@/components/common/SearchInterface';
 import Icon from '@/components/ui/AppIcon';
+import Logo from '@/components/ui/Logo';
 import { scoreboardService } from '@/services/scoreboardService';
 import { Scoreboard, ScoreboardEntry, ScoreboardCustomStyles } from '@/types/models';
 import { getStylePreset, generateCustomStyles } from '@/utils/stylePresets';
@@ -40,6 +41,7 @@ export default function EmbedScoreboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [scoreboard, setScoreboard] = useState<Scoreboard | null>(null);
   const [entries, setEntries] = useState<ScoreboardEntry[]>([]);
+  const [showPoweredBy, setShowPoweredBy] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -67,33 +69,24 @@ export default function EmbedScoreboardPage() {
     setError(null);
 
     try {
-      const { data: scoreboardData, error: scoreboardError } =
-        await scoreboardService.getScoreboard(scoreboardId);
+      const { data, error: embedError } =
+        await scoreboardService.getEmbedScoreboardData(scoreboardId);
 
-      if (scoreboardError) {
-        setError(scoreboardError.message || 'Failed to load scoreboard');
+      if (embedError) {
+        setError(embedError.message || 'Failed to load scoreboard');
         setIsLoading(false);
         return;
       }
 
-      if (!scoreboardData) {
+      if (!data?.scoreboard) {
         setError('Scoreboard not found');
         setIsLoading(false);
         return;
       }
 
-      setScoreboard(scoreboardData);
-
-      const { data: entriesData, error: entriesError } =
-        await scoreboardService.getScoreboardEntries(scoreboardId);
-
-      if (entriesError) {
-        setError(entriesError.message || 'Failed to load entries');
-        setIsLoading(false);
-        return;
-      }
-
-      setEntries(entriesData || []);
+      setScoreboard(data.scoreboard);
+      setEntries(data.entries || []);
+      setShowPoweredBy(data.showPoweredBy);
       setError(null);
     } catch {
       setError('Failed to load scoreboard data');
@@ -392,6 +385,26 @@ export default function EmbedScoreboardPage() {
               </div>
             )}
           </>
+        )}
+
+        {showPoweredBy && (
+          <div className="mt-6 text-center text-sm">
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md transition-opacity duration-150 opacity-80 hover:opacity-100"
+              style={{
+                color: appliedStyles.textColor,
+              }}
+              title="Powered by Scoreboard Manager"
+            >
+              <Logo size={20} />
+              <span>
+                Powered by <strong>Scoreboard Manager</strong>
+              </span>
+            </a>
+          </div>
         )}
       </div>
     </div>

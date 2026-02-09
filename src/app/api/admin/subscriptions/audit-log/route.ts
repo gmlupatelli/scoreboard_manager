@@ -144,6 +144,7 @@ function formatActionLabel(action: string): string {
     link_subscription: 'Linked Subscription',
     gift_appreciation_tier: 'Gifted Appreciation Tier',
     remove_appreciation_tier: 'Removed Appreciation Tier',
+    refetch_subscription: 'Refetched Subscription',
   };
   return actionLabels[action] || action.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 }

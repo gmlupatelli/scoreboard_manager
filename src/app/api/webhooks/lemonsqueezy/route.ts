@@ -146,8 +146,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Service role not configured' }, { status: 500 });
     }
 
-    if (!userId) {
-      console.info('[Webhook] Missing user_id in custom_data');
+    // Try to get user_id from custom_data first, then fall back to DB lookup by subscription ID
+    let resolvedUserId = userId;
+
+    if (!resolvedUserId && dataId && dataType === 'subscriptions') {
+      console.info('[Webhook] No user_id in custom_data, looking up by subscription ID:', dataId);
+      const { data: existingSub } = await serviceClient
+        .from('subscriptions')
+        .select('user_id')
+        .eq('lemonsqueezy_subscription_id', String(dataId))
+        .maybeSingle();
+
+      if (existingSub?.user_id) {
+        resolvedUserId = existingSub.user_id;
+        console.info('[Webhook] Found user_id from existing subscription:', resolvedUserId);
+      }
+    }
+
+    if (!resolvedUserId) {
+      console.info('[Webhook] Missing user_id in custom_data and no existing subscription found');
       console.info('[Webhook] custom_data:', JSON.stringify(payload.meta?.custom_data));
       return NextResponse.json({ error: 'Missing user_id in custom data' }, { status: 400 });
     }
@@ -194,8 +211,12 @@ export async function POST(request: NextRequest) {
       // Use price from webhook if available, otherwise use fixed price
       const finalAmountCents = amountCents ?? fixedPriceCents;
 
+      // Use a single timestamp for both created_at and updated_at to prevent
+      // chk_subscriptions_timestamps constraint violation (created_at <= updated_at)
+      const now = new Date().toISOString();
+
       const subscriptionInsert = {
-        user_id: userId,
+        user_id: resolvedUserId,
         lemonsqueezy_subscription_id: dataId,
         lemonsqueezy_customer_id: getString(attr.customer_id),
         lemonsqueezy_order_id: getString(attr.order_id),
@@ -218,7 +239,8 @@ export async function POST(request: NextRequest) {
         current_period_start: getString(attr.created_at),
         current_period_end: getString(attr.renews_at),
         cancelled_at: getString(attr.ends_at),
-        updated_at: new Date().toISOString(),
+        created_at: now,
+        updated_at: now,
       } as Database['public']['Tables']['subscriptions']['Insert'];
 
       console.info(
@@ -237,6 +259,21 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
 
+      // Deactivate any gifted appreciation subscription for this user
+      // A paid subscription should replace the gifted one
+      // Note: Gifted subscriptions have lemonsqueezy_subscription_id = NULL,
+      // so we filter by is_gifted = true (which also avoids SQL NULL comparison issues)
+      const { error: deactivateError } = await serviceClient
+        .from('subscriptions')
+        .delete()
+        .eq('user_id', resolvedUserId)
+        .eq('is_gifted', true);
+
+      if (deactivateError) {
+        console.error('[Webhook] Failed to deactivate gifted subscription:', deactivateError);
+        // Non-fatal — the paid subscription is already saved
+      }
+
       console.info('[Webhook] Subscription upserted successfully');
     }
 
@@ -245,8 +282,12 @@ export async function POST(request: NextRequest) {
       const firstOrderItem = getObject(attr.first_order_item);
       const orderItems = attr.order_items ?? (firstOrderItem ? [firstOrderItem] : null);
 
+      // Use a single timestamp for both created_at and updated_at to prevent
+      // chk_payment_history_timestamps constraint violation (created_at <= updated_at)
+      const now = new Date().toISOString();
+
       const orderInsert = {
-        user_id: userId,
+        user_id: resolvedUserId,
         subscription_id: null,
         lemonsqueezy_subscription_id: getString(attr.subscription_id),
         lemonsqueezy_order_id: dataId,
@@ -287,7 +328,8 @@ export async function POST(request: NextRequest) {
           ? (orderItems as Database['public']['Tables']['payment_history']['Row']['order_items'])
           : null,
         test_mode: getBoolean(attr.test_mode) ?? false,
-        updated_at: new Date().toISOString(),
+        created_at: now,
+        updated_at: now,
       } as Database['public']['Tables']['payment_history']['Insert'];
 
       console.info('[Webhook] Upserting order:', orderInsert.lemonsqueezy_order_id);

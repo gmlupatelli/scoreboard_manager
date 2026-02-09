@@ -185,7 +185,8 @@ export async function GET(request: NextRequest) {
         const lsAttributes = lsData.data?.attributes ?? {};
         const statusRaw = getString(lsAttributes.status) ?? subscription.status;
         const status = normalizeStatus(statusRaw);
-        const statusFormatted = getString(lsAttributes.status_formatted) ?? subscription.status_formatted;
+        const statusFormatted =
+          getString(lsAttributes.status_formatted) ?? subscription.status_formatted;
 
         if (status !== subscription.status || statusFormatted !== subscription.status_formatted) {
           await serviceClient

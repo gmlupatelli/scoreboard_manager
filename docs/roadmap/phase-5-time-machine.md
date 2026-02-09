@@ -244,3 +244,5 @@ Add entry point to Time Machine from scoreboard management view.
 - [ ] Supporters see full history (100 snapshots)
 - [ ] Disabled with tooltip if no snapshots exist
 - [ ] Show "Upgrade to keep more history" for free users near limit
+- [ ] Snapshot usage counter displayed (e.g., "You have used 3 of 10 snapshots")
+- [ ] Light "Become a Supporter" informational CTA alongside the counter

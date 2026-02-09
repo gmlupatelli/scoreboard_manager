@@ -2,11 +2,13 @@
  * Global Setup for Playwright E2E Tests
  *
  * Runs once before all test files.
- * Seeds test data for automated test users.
+ * Verifies test environment is ready (users exist, settings configured).
+ * Test data is seeded by refresh-test-data script, not by global-setup.
  *
- * Credentials load from .env.local (Supabase) with .env.test overrides for test users:
+ * Credentials load from .env.local (Supabase) with .env.test overrides:
  *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
  *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
+ *   AUTOMATED_TEST_SUPPORTER_<N>_EMAIL / AUTOMATED_TEST_SUPPORTER_<N>_PASSWORD
  */
 
 import { chromium, type FullConfig, type Page } from '@playwright/test';
@@ -27,6 +29,12 @@ interface TestUser {
  * Get test user credentials from environment variables
  * Falls back to defaults if not configured (for backwards compatibility)
  */
+const ADMIN: TestUser = {
+  email: process.env.AUTOMATED_TEST_ADMIN_1_EMAIL || 'admin@example.com',
+  password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'admin123',
+  name: 'Test Admin',
+};
+
 const JOHN: TestUser = {
   email: process.env.AUTOMATED_TEST_USER_1_EMAIL || 'john@example.com',
   password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'user123',
@@ -39,10 +47,10 @@ const SARAH: TestUser = {
   name: 'Sarah Smith',
 };
 
-const ADMIN: TestUser = {
-  email: process.env.AUTOMATED_TEST_ADMIN_1_EMAIL || 'admin@example.com',
-  password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'admin123',
-  name: 'Test Admin',
+const SUPPORTER: TestUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'supporter@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_1_PASSWORD || 'supporter789',
+  name: 'Supporter User',
 };
 
 async function login(page: Page, user: TestUser) {
@@ -52,61 +60,6 @@ async function login(page: Page, user: TestUser) {
   await page.click('button[type="submit"]');
   await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 10000 });
   console.log(`✓ Logged in as ${user.email}`);
-}
-
-async function createScoreboard(
-  page: Page,
-  title: string,
-  description: string,
-  scoreType: 'number' | 'time' = 'number',
-  visibility: 'public' | 'private' = 'public'
-) {
-  try {
-    // Navigate to dashboard
-    await page.goto(`${BASE_URL}/dashboard`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(2000);
-
-    // Open create modal - use more specific selector
-    const createButton = page.locator('button:has-text("Create New Scoreboard")');
-    await createButton.waitFor({ state: 'visible', timeout: 10000 });
-    await createButton.click();
-
-    // Wait for modal to be visible - look for the heading instead of role
-    await page.waitForSelector('h2:has-text("Create New Scoreboard")', {
-      state: 'visible',
-      timeout: 5000,
-    });
-    await page.waitForTimeout(500);
-
-    // Fill form - use id selectors which match the actual form
-    await page.fill('#title', title);
-    await page.fill('#description', description);
-
-    // Select score type
-    if (scoreType === 'time') {
-      await page.click('input[value="time"]');
-    }
-
-    // Select visibility
-    if (visibility === 'private') {
-      await page.click('input[value="private"]');
-    }
-
-    // Submit - find button by text
-    await page.click('button:has-text("Create Scoreboard")');
-
-    // Wait for modal to close - wait for heading to disappear
-    await page.waitForSelector('h2:has-text("Create New Scoreboard")', {
-      state: 'hidden',
-      timeout: 10000,
-    });
-    await page.waitForTimeout(1000);
-    console.log(`✓ Created scoreboard: ${title}`);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.log(`✗ Failed to create scoreboard "${title}":`, message);
-    throw error;
-  }
 }
 
 async function enablePublicRegistration(page: Page) {
@@ -149,6 +102,30 @@ async function enablePublicRegistration(page: Page) {
   }
 }
 
+/**
+ * Verify that a test user can log in (data already exists from refresh-test-data).
+ * This checks that the test environment is properly set up.
+ */
+async function verifyUserLogin(page: Page, user: TestUser): Promise<boolean> {
+  try {
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+    await page.fill('input[name="email"]', user.email);
+    await page.fill('input[name="password"]', user.password);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 10000 });
+
+    // Check that dashboard loads with content
+    await page.waitForTimeout(2000);
+    console.log(`✓ Verified ${user.email} can log in`);
+    await page.context().clearCookies();
+    return true;
+  } catch {
+    console.log(`⚠️  ${user.email} login failed - user may not exist yet`);
+    await page.context().clearCookies();
+    return false;
+  }
+}
+
 async function globalSetup(_config: FullConfig) {
   console.log('\n🌱 Starting test data setup...\n');
 
@@ -157,59 +134,23 @@ async function globalSetup(_config: FullConfig) {
   const page = await context.newPage();
 
   try {
-    // First, ensure public registration is enabled
+    // Step 1: Log in as admin and ensure public registration is enabled
     console.log('\n🔑 Logging in as admin...');
     await login(page, ADMIN);
     await enablePublicRegistration(page);
     await page.context().clearCookies();
 
-    // Seed data for John
-    console.log("\n👤 Setting up John's scoreboards...");
-    await login(page, JOHN);
-
-    await createScoreboard(
-      page,
-      "John's Gaming Leaderboard",
-      'High scores for gaming competition',
-      'number',
-      'public'
-    );
-    await createScoreboard(
-      page,
-      'Speed Run Records',
-      'Best times for speed runs',
-      'time',
-      'public'
-    );
-    await createScoreboard(
-      page,
-      'Private Tracker',
-      'Personal progress tracking',
-      'number',
-      'private'
-    );
-
-    await page.context().clearCookies();
-
-    // Seed data for Sarah
-    console.log("\n👤 Setting up Sarah's scoreboards...");
-    await login(page, SARAH);
-
-    await createScoreboard(
-      page,
-      "Sarah's Quiz Scores",
-      'Quiz competition results',
-      'number',
-      'public'
-    );
-    await createScoreboard(page, 'Marathon Times', 'Running event times', 'time', 'public');
-
-    await page.context().clearCookies();
+    // Step 2: Verify test users can log in
+    // (Test data is seeded by refresh-test-data script, not by global-setup)
+    console.log('\n👤 Verifying test users...');
+    await verifyUserLogin(page, JOHN);
+    await verifyUserLogin(page, SARAH);
+    await verifyUserLogin(page, SUPPORTER);
 
     console.log('\n✅ Test data setup complete!\n');
   } catch (error) {
     console.error('\n❌ Test data setup failed:', error);
-    // Don't fail the test run if seeding fails - data might already exist
+    // Don't fail the test run if verification fails - data might already exist
     console.log('⚠️  Continuing with existing data...\n');
   } finally {
     await browser.close();

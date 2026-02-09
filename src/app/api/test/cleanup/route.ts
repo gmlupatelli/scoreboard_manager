@@ -6,7 +6,8 @@ export const runtime = 'nodejs';
 
 /**
  * Parse automated test user emails from environment variables
- * Reads AUTOMATED_TEST_ADMIN_<N>_EMAIL and AUTOMATED_TEST_USER_<N>_EMAIL
+ * Reads AUTOMATED_TEST_ADMIN_<N>_EMAIL, AUTOMATED_TEST_USER_<N>_EMAIL,
+ * and AUTOMATED_TEST_SUPPORTER_<N>_EMAIL
  */
 function getAutomatedTestUserEmails(): string[] {
   const emails: string[] = [];
@@ -23,6 +24,12 @@ function getAutomatedTestUserEmails(): string[] {
     if (email) emails.push(email);
   }
 
+  // Parse AUTOMATED_TEST_SUPPORTER_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`AUTOMATED_TEST_SUPPORTER_${i}_EMAIL`];
+    if (email) emails.push(email);
+  }
+
   return emails;
 }
 
@@ -35,6 +42,7 @@ function getAutomatedTestUserEmails(): string[] {
  * Credentials are read from:
  *   AUTOMATED_TEST_ADMIN_<N>_EMAIL
  *   AUTOMATED_TEST_USER_<N>_EMAIL
+ *   AUTOMATED_TEST_SUPPORTER_<N>_EMAIL
  *
  * Usage:
  * POST /api/test/cleanup

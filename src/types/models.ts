@@ -3,6 +3,7 @@ export interface UserProfile {
   email: string;
   fullName: string;
   role: 'system_admin' | 'user';
+  downgradeNoticeSeenAt?: string | null; // Added downgrade notice field
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +45,7 @@ export interface Scoreboard {
   timeFormat?: TimeFormat | null;
   customStyles?: ScoreboardCustomStyles | null;
   styleScope?: 'main' | 'embed' | 'both';
+  isLocked: boolean;
   createdAt: string;
   updatedAt: string;
   // Optional populated fields

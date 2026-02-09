@@ -18,6 +18,7 @@
  * Credentials load from .env.local (Supabase) with .env.test overrides using the numbered naming convention:
  *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
  *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
+ *   AUTOMATED_TEST_SUPPORTER_<N>_EMAIL / AUTOMATED_TEST_SUPPORTER_<N>_PASSWORD
  *
  * Prerequisites:
  * - .env.local must be configured with SUPABASE credentials
@@ -63,6 +64,7 @@ interface TestUserConfig {
   role: 'system_admin' | 'user';
   name: string;
   purpose: string;
+  isSupporter: boolean;
 }
 
 function getAutomatedTestUsers(): TestUserConfig[] {
@@ -79,6 +81,7 @@ function getAutomatedTestUsers(): TestUserConfig[] {
         role: 'system_admin',
         name: `Test Admin ${i}`,
         purpose: 'Automated test system admin',
+        isSupporter: false,
       });
     }
   }
@@ -93,7 +96,24 @@ function getAutomatedTestUsers(): TestUserConfig[] {
         password,
         role: 'user',
         name: `Test User ${i}`,
-        purpose: 'Automated test user',
+        purpose: 'Automated test user (free tier)',
+        isSupporter: false,
+      });
+    }
+  }
+
+  // Parse AUTOMATED_TEST_SUPPORTER_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`AUTOMATED_TEST_SUPPORTER_${i}_EMAIL`];
+    const password = process.env[`AUTOMATED_TEST_SUPPORTER_${i}_PASSWORD`];
+    if (email && password) {
+      users.push({
+        email,
+        password,
+        role: 'user',
+        name: `Test Supporter ${i}`,
+        purpose: 'Automated test supporter (with subscription)',
+        isSupporter: true,
       });
     }
   }
@@ -125,6 +145,12 @@ function getManualTestUserEmails(): string[] {
   // Parse MANUAL_TEST_USER_<N>
   for (let i = 1; i <= 10; i++) {
     const email = process.env[`MANUAL_TEST_USER_${i}_EMAIL`];
+    if (email) emails.push(email);
+  }
+
+  // Parse MANUAL_TEST_SUPPORTER_<N>
+  for (let i = 1; i <= 10; i++) {
+    const email = process.env[`MANUAL_TEST_SUPPORTER_${i}_EMAIL`];
     if (email) emails.push(email);
   }
 
@@ -541,6 +567,42 @@ async function seedInvitations(
 }
 
 /**
+ * Seed an active supporter subscription for a user
+ */
+async function seedSupporterSubscription(supabase: SupabaseServiceClient, userId: string) {
+  // Remove any existing subscription
+  await supabase.from('subscriptions').delete().eq('user_id', userId);
+
+  const now = new Date();
+  const futureDate = new Date(now);
+  futureDate.setMonth(futureDate.getMonth() + 1);
+
+  const { error } = await supabase.from('subscriptions').insert({
+    user_id: userId,
+    lemonsqueezy_subscription_id: `test_sub_active_${Date.now()}`,
+    lemonsqueezy_customer_id: `test_cust_${Date.now()}`,
+    status: 'active',
+    status_formatted: 'Active',
+    billing_interval: 'monthly',
+    amount_cents: 400,
+    currency: 'USD',
+    tier: 'supporter',
+    is_gifted: false,
+    show_created_by: true,
+    show_on_supporters_page: true,
+    card_brand: 'visa',
+    card_last_four: '4242',
+    current_period_start: now.toISOString(),
+    current_period_end: futureDate.toISOString(),
+    cancelled_at: null,
+  } as never);
+
+  if (error) {
+    throw new Error(`Failed to seed supporter subscription: ${error.message}`);
+  }
+}
+
+/**
  * Clean up orphaned data (scoreboards without valid owners, entries without valid scoreboards)
  */
 async function cleanupOrphanedData(supabase: SupabaseServiceClient) {
@@ -690,12 +752,12 @@ async function main() {
 
     console.log('\n✅ Automated users created successfully\n');
 
-    // Get first two regular users for seeding test data
-    const regularUsers = AUTOMATED_TEST_USERS.filter((u) => u.role === 'user');
-    const user1Email = regularUsers[0]?.email;
-    const user2Email = regularUsers[1]?.email;
+    // Get first two regular (free-tier) users for seeding test data
+    const freeUsers = AUTOMATED_TEST_USERS.filter((u) => u.role === 'user' && !u.isSupporter);
+    const user1Email = freeUsers[0]?.email;
+    const user2Email = freeUsers[1]?.email;
 
-    // Step 4: Seed first user's scoreboards (if exists)
+    // Step 4: Seed first free user's scoreboards (if exists)
     if (user1Email && createdUsers[user1Email]) {
       console.log(`\n📝 Seeding ${user1Email}'s scoreboards...`);
       const user1Id = createdUsers[user1Email];
@@ -711,7 +773,7 @@ async function main() {
       console.log(`  ✓ Created ${invitationsCount} invitations for invitation testing`);
     }
 
-    // Step 5: Seed second user's scoreboards (if exists)
+    // Step 5: Seed second free user's scoreboards (if exists)
     if (user2Email && createdUsers[user2Email]) {
       console.log(`\n📝 Seeding ${user2Email}'s scoreboards...`);
       const user2Id = createdUsers[user2Email];
@@ -722,12 +784,31 @@ async function main() {
       }
     }
 
+    // Step 6: Seed supporter subscriptions for supporter users
+    const supporterUsers = AUTOMATED_TEST_USERS.filter((u) => u.isSupporter);
+    if (supporterUsers.length > 0) {
+      console.log('\n🎫 Seeding supporter subscriptions...');
+      for (const user of supporterUsers) {
+        if (createdUsers[user.email]) {
+          await seedSupporterSubscription(supabase, createdUsers[user.email]);
+          console.log(`  ✓ Seeded active subscription for ${user.email}`);
+        }
+      }
+    }
+
     // Success summary
     console.log('\n✅ Test data refresh completed successfully!\n');
     console.log('📊 Summary:');
     console.log('  Automated users refreshed:');
     for (const user of AUTOMATED_TEST_USERS) {
-      const extras = user.role === 'user' ? ' - with seeded test data' : ' - clean for testing';
+      let extras: string;
+      if (user.isSupporter) {
+        extras = ' - with supporter subscription';
+      } else if (user.role === 'user') {
+        extras = ' - free tier with seeded test data';
+      } else {
+        extras = ' - clean for testing';
+      }
       console.log(`    - ${user.email} (${user.role})${extras}`);
     }
     if (MANUAL_TEST_USER_EMAILS.length > 0) {

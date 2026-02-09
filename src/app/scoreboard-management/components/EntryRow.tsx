@@ -22,6 +22,7 @@ interface EntryRowProps {
   onDelete: (id: string) => void;
   scoreType?: ScoreType;
   timeFormat?: TimeFormat | null;
+  isReadOnly?: boolean;
 }
 
 const EntryRow = ({
@@ -30,6 +31,7 @@ const EntryRow = ({
   onDelete,
   scoreType = 'number',
   timeFormat = null,
+  isReadOnly = false,
 }: EntryRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(entry.name);
@@ -210,9 +212,18 @@ const EntryRow = ({
           <button
             type="button"
             onClick={handleStartEdit}
-            className="p-2 rounded-md text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth duration-150"
+            disabled={isReadOnly}
+            className={`p-2 rounded-md transition-smooth duration-150 ${
+              isReadOnly
+                ? 'text-text-secondary/40 cursor-not-allowed'
+                : 'text-text-secondary hover:bg-muted hover:text-text-primary'
+            }`}
             aria-label="Edit entry"
-            title="Edit entry"
+            title={
+              isReadOnly
+                ? 'Editing is disabled on locked/private scoreboards (Free plan)'
+                : 'Edit entry'
+            }
           >
             <Icon name="PencilIcon" size={20} />
           </button>

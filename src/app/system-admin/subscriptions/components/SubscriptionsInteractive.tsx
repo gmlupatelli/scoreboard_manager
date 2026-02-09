@@ -58,9 +58,11 @@ export default function SubscriptionsInteractive() {
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
+  const [auditLogRefreshKey, setAuditLogRefreshKey] = useState(0);
 
   // Success/error messages
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [refetchingUserId, setRefetchingUserId] = useState<string | null>(null);
 
   // Debounce search
   useEffect(() => {
@@ -112,6 +114,10 @@ export default function SubscriptionsInteractive() {
     }
   }, [successMessage]);
 
+  const refreshAuditLog = () => {
+    setAuditLogRefreshKey((prev) => prev + 1);
+  };
+
   const handleRefresh = () => {
     fetchUsers();
   };
@@ -120,6 +126,7 @@ export default function SubscriptionsInteractive() {
     setShowLinkModal(false);
     setSelectedUser(null);
     setSuccessMessage('Subscription linked successfully');
+    refreshAuditLog();
     fetchUsers();
   };
 
@@ -127,6 +134,7 @@ export default function SubscriptionsInteractive() {
     setShowGiftModal(false);
     setSelectedUser(null);
     setSuccessMessage('Appreciation tier gifted successfully');
+    refreshAuditLog();
     fetchUsers();
   };
 
@@ -134,12 +142,42 @@ export default function SubscriptionsInteractive() {
     setShowCancelModal(false);
     setSelectedUser(null);
     setSuccessMessage('Subscription cancelled successfully');
+    refreshAuditLog();
     fetchUsers();
   };
 
   const handleRemoveGiftSuccess = () => {
     setSuccessMessage('Appreciation tier removed successfully');
+    refreshAuditLog();
     fetchUsers();
+  };
+
+  const handleRefetchSubscription = async (userId: string) => {
+    setRefetchingUserId(userId);
+    setError(null);
+
+    const { data, error: refetchError } =
+      await subscriptionService.refetchSubscriptionAdmin(userId);
+
+    if (refetchError) {
+      setError(refetchError);
+      setRefetchingUserId(null);
+      return;
+    }
+
+    // Update just the affected user's subscription in local state
+    // instead of reloading the entire table
+    if (data?.subscription) {
+      setUsers((prev) =>
+        prev.map((user) =>
+          user.id === userId ? { ...user, subscription: data.subscription } : user
+        )
+      );
+    }
+
+    setSuccessMessage(data?.message || 'Subscription data refetched successfully');
+    setRefetchingUserId(null);
+    refreshAuditLog();
   };
 
   const getStatusBadge = (user: UserSubscription) => {
@@ -155,7 +193,7 @@ export default function SubscriptionsInteractive() {
     if (sub.isGifted) {
       return (
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-          🎁 Gifted
+          Gifted
         </span>
       );
     }
@@ -389,81 +427,152 @@ export default function SubscriptionsInteractive() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
-                            {/* Link subscription button - show if no subscription or no LS ID */}
-                            {(!user.subscription ||
-                              !user.subscription.lemonsqueezySubscriptionId) &&
-                              !user.subscription?.isGifted && (
-                                <button
-                                  onClick={() => {
-                                    setSelectedUser(user);
-                                    setShowLinkModal(true);
-                                  }}
-                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                  title="Link LemonSqueezy subscription"
-                                >
-                                  <Icon name="LinkIcon" size={18} />
-                                </button>
-                              )}
+                            {/* Link subscription - always available */}
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowLinkModal(true);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Link LemonSqueezy subscription"
+                            >
+                              <Icon name="LinkIcon" size={18} />
+                            </button>
 
-                            {/* Gift appreciation tier button - show if no active subscription */}
-                            {(!user.subscription ||
-                              (user.subscription.status !== 'active' &&
-                                user.subscription.status !== 'trialing')) &&
-                              !user.subscription?.isGifted && (
+                            {/* Refetch subscription from LemonSqueezy */}
+                            {(() => {
+                              const canRefetch =
+                                !!user.subscription?.lemonsqueezySubscriptionId &&
+                                !user.subscription?.isGifted;
+                              const isRefetching = refetchingUserId === user.id;
+                              return (
+                                <button
+                                  onClick={() => canRefetch && handleRefetchSubscription(user.id)}
+                                  disabled={!canRefetch || isRefetching}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    canRefetch
+                                      ? 'text-blue-600 hover:bg-blue-50'
+                                      : 'text-gray-400 cursor-not-allowed'
+                                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  title={
+                                    canRefetch
+                                      ? 'Refetch subscription data from LemonSqueezy'
+                                      : 'No LemonSqueezy subscription to refetch'
+                                  }
+                                >
+                                  <Icon
+                                    name="ArrowPathIcon"
+                                    size={18}
+                                    className={isRefetching ? 'animate-spin' : ''}
+                                  />
+                                </button>
+                              );
+                            })()}
+
+                            {/* Gift appreciation tier */}
+                            {(() => {
+                              const canGift =
+                                (!user.subscription ||
+                                  (user.subscription.status !== 'active' &&
+                                    user.subscription.status !== 'trialing')) &&
+                                !user.subscription?.isGifted;
+                              return (
                                 <button
                                   onClick={() => {
-                                    setSelectedUser(user);
-                                    setShowGiftModal(true);
+                                    if (canGift) {
+                                      setSelectedUser(user);
+                                      setShowGiftModal(true);
+                                    }
                                   }}
-                                  className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                                  title="Gift appreciation tier"
+                                  disabled={!canGift}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    canGift
+                                      ? 'text-purple-600 hover:bg-purple-50'
+                                      : 'text-gray-400 cursor-not-allowed'
+                                  }`}
+                                  title={
+                                    canGift
+                                      ? 'Gift appreciation tier'
+                                      : user.subscription?.isGifted
+                                        ? 'User already has a gifted tier'
+                                        : 'User has an active subscription'
+                                  }
                                 >
                                   <Icon name="GiftIcon" size={18} />
                                 </button>
-                              )}
+                              );
+                            })()}
 
-                            {/* Remove gift button - show if has gifted subscription */}
-                            {user.subscription?.isGifted && (
-                              <button
-                                onClick={async () => {
-                                  if (
-                                    confirm(
-                                      'Are you sure you want to remove the appreciation tier from this user?'
-                                    )
-                                  ) {
-                                    const { error } =
-                                      await subscriptionService.removeAppreciationTierAdmin(
-                                        user.id
-                                      );
-                                    if (error) {
-                                      setError(error);
-                                    } else {
-                                      handleRemoveGiftSuccess();
+                            {/* Remove gift */}
+                            {(() => {
+                              const canRemoveGift = !!user.subscription?.isGifted;
+                              return (
+                                <button
+                                  onClick={async () => {
+                                    if (!canRemoveGift) return;
+                                    if (
+                                      confirm(
+                                        'Are you sure you want to remove the appreciation tier from this user?'
+                                      )
+                                    ) {
+                                      const { error } =
+                                        await subscriptionService.removeAppreciationTierAdmin(
+                                          user.id
+                                        );
+                                      if (error) {
+                                        setError(error);
+                                      } else {
+                                        handleRemoveGiftSuccess();
+                                      }
                                     }
+                                  }}
+                                  disabled={!canRemoveGift}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    canRemoveGift
+                                      ? 'text-red-600 hover:bg-red-50'
+                                      : 'text-gray-400 cursor-not-allowed'
+                                  }`}
+                                  title={
+                                    canRemoveGift
+                                      ? 'Remove appreciation tier'
+                                      : 'No gifted tier to remove'
                                   }
-                                }}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Remove appreciation tier"
-                              >
-                                <Icon name="XCircleIcon" size={18} />
-                              </button>
-                            )}
+                                >
+                                  <Icon name="XCircleIcon" size={18} />
+                                </button>
+                              );
+                            })()}
 
-                            {/* Cancel subscription button - show if has active LS subscription */}
-                            {user.subscription?.lemonsqueezySubscriptionId &&
-                              user.subscription.status === 'active' &&
-                              !user.subscription.isGifted && (
+                            {/* Cancel subscription */}
+                            {(() => {
+                              const canCancel =
+                                !!user.subscription?.lemonsqueezySubscriptionId &&
+                                user.subscription.status === 'active' &&
+                                !user.subscription.isGifted;
+                              return (
                                 <button
                                   onClick={() => {
-                                    setSelectedUser(user);
-                                    setShowCancelModal(true);
+                                    if (canCancel) {
+                                      setSelectedUser(user);
+                                      setShowCancelModal(true);
+                                    }
                                   }}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Cancel subscription"
+                                  disabled={!canCancel}
+                                  className={`p-2 rounded-lg transition-colors ${
+                                    canCancel
+                                      ? 'text-red-600 hover:bg-red-50'
+                                      : 'text-gray-400 cursor-not-allowed'
+                                  }`}
+                                  title={
+                                    canCancel
+                                      ? 'Cancel subscription'
+                                      : 'No active subscription to cancel'
+                                  }
                                 >
                                   <Icon name="NoSymbolIcon" size={18} />
                                 </button>
-                              )}
+                              );
+                            })()}
                           </div>
                         </td>
                       </tr>
@@ -502,7 +611,11 @@ export default function SubscriptionsInteractive() {
 
           {/* Audit Log Panel */}
           <div className="mt-6">
-            <AuditLogPanel isOpen={showAuditLog} onToggle={() => setShowAuditLog(!showAuditLog)} />
+            <AuditLogPanel
+              isOpen={showAuditLog}
+              onToggle={() => setShowAuditLog(!showAuditLog)}
+              refreshKey={auditLogRefreshKey}
+            />
           </div>
         </div>
       </main>

@@ -24,6 +24,7 @@ interface EditScoreboardModalProps {
   currentSortOrder: 'asc' | 'desc';
   currentTimeFormat: TimeFormat | null;
   entryCount: number;
+  isSupporter?: boolean;
 }
 
 const TIME_FORMATS: TimeFormat[] = [
@@ -46,7 +47,9 @@ const EditScoreboardModal = ({
   currentSortOrder,
   currentTimeFormat,
   entryCount,
+  isSupporter = true,
 }: EditScoreboardModalProps) => {
+  const isFreeUser = !isSupporter;
   const [title, setTitle] = useState(currentTitle);
   const [description, setDescription] = useState(currentDescription);
   const [visibility, setVisibility] = useState<'public' | 'private'>(currentVisibility);
@@ -161,7 +164,7 @@ const EditScoreboardModal = ({
 
   if (showTypeChangeConfirm) {
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="fixed inset-0 z-[1010] overflow-y-auto">
         <div className="flex min-h-screen items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
 
@@ -215,7 +218,7 @@ const EditScoreboardModal = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-[1010] overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -291,7 +294,9 @@ const EditScoreboardModal = ({
                     Public
                   </span>
                 </label>
-                <label className="flex items-center cursor-pointer">
+                <label
+                  className={`flex items-center ${isFreeUser ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                >
                   <input
                     type="radio"
                     name="visibility"
@@ -299,10 +304,20 @@ const EditScoreboardModal = ({
                     checked={visibility === 'private'}
                     onChange={() => setVisibility('private')}
                     className="w-4 h-4 text-primary border-input focus:ring-primary"
+                    disabled={isFreeUser}
                   />
                   <span className="ml-2 text-sm text-text-primary flex items-center">
                     <Icon name="LockClosedIcon" size={16} className="mr-1" />
                     Private
+                    {isFreeUser && (
+                      <span
+                        className="ml-2 text-xs text-text-secondary flex items-center gap-1"
+                        title="Supporter feature"
+                      >
+                        <Icon name="LockClosedIcon" size={12} />
+                        Supporter feature
+                      </span>
+                    )}
                   </span>
                 </label>
               </div>

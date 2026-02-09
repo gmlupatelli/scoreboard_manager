@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import { getSupporterStatus } from '@/lib/supabase/subscriptionHelpers';
+import { Database } from '@/types/database.types';
 import sharp from 'sharp';
 
 export const dynamic = 'force-dynamic';
@@ -55,6 +58,22 @@ export async function POST(
 
     if (scoreboard.owner_id !== user.id) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    // Kiosk uploads require a Supporter subscription
+    const serviceClient = getServiceRoleClient();
+    const readClient = (serviceClient || supabase) as SupabaseClient<Database>;
+    const isSupporter = await getSupporterStatus(readClient, user.id);
+
+    if (!isSupporter) {
+      return NextResponse.json(
+        {
+          error: 'limit_reached',
+          message: 'Kiosk mode requires a Supporter plan.',
+          upgrade_url: '/supporter-plan',
+        },
+        { status: 403 }
+      );
     }
 
     // Parse the form data

@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useAuthGuard } from '@/hooks';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
@@ -30,7 +31,9 @@ export default function UserProfileManagementPage() {
     <div className="min-h-screen flex flex-col">
       <Header isAuthenticated={true} />
       <div className="pt-16 flex-1">
-        <UserProfileInteractive />
+        <Suspense>
+          <UserProfileInteractive />
+        </Suspense>
       </div>
       <Footer />
     </div>

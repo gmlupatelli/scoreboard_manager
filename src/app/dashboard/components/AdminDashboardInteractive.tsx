@@ -2,14 +2,17 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAuthGuard } from '../../../hooks/useAuthGuard';
 import { scoreboardService } from '../../../services/scoreboardService';
 import { subscriptionService } from '../../../services/subscriptionService';
 import { useInfiniteScroll, useUndoQueue } from '../../../hooks';
 import { Scoreboard as ScoreboardModel, ScoreType, TimeFormat } from '../../../types/models';
+import { limitsService } from '@/services/limitsService';
 import Header from '@/components/common/Header';
 import UndoToast from '@/components/common/UndoToast';
+import UsageCounterBlock from '@/components/common/UsageCounterBlock';
 import ScoreboardCard from './ScoreboardCard';
 import CreateScoreboardModal from './CreateScoreboardModal';
 import InviteUserModal from './InviteUserModal';
@@ -18,7 +21,6 @@ import EmptyState from './EmptyState';
 import StatsCard from './StatsCard';
 import Icon from '@/components/ui/AppIcon';
 import SearchableSelect from '@/components/ui/SearchableSelect';
-import Link from 'next/link';
 
 interface ToastState {
   message: string;
@@ -68,6 +70,11 @@ const AdminDashboardInteractive = () => {
   const [loadingOwners, setLoadingOwners] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isReactivating, setIsReactivating] = useState(false);
+  const [publicUsage, setPublicUsage] = useState<{
+    used: number;
+    max: number;
+    remaining: number;
+  } | null>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout>();
   const pendingDeletesRef = useRef<
     Map<string, { scoreboard: ScoreboardModel; timerId: NodeJS.Timeout }>
@@ -164,6 +171,31 @@ const AdminDashboardInteractive = () => {
       setLoadingOwners(false);
     }
   };
+
+  const loadPublicUsage = useCallback(async () => {
+    if (!user?.id) return;
+
+    if (subscriptionTier) {
+      setPublicUsage(null);
+      return;
+    }
+
+    const { data: remaining, error } = await limitsService.getRemainingPublicScoreboards(user.id);
+    if (error || remaining === null || remaining === undefined) {
+      setPublicUsage(null);
+      return;
+    }
+
+    const max = limitsService.getLimitsForUser(false).maxPublicScoreboards;
+    const remainingValue = Number.isFinite(remaining) ? Number(remaining) : max;
+    const used = Math.max(max - remainingValue, 0);
+
+    setPublicUsage({ used, max, remaining: remainingValue });
+  }, [user?.id, subscriptionTier]);
+
+  useEffect(() => {
+    loadPublicUsage();
+  }, [loadPublicUsage, scoreboards.length]);
 
   // Load scoreboards function - uses isAdmin and user from closure
   const loadScoreboards = useCallback(
@@ -295,6 +327,7 @@ const AdminDashboardInteractive = () => {
         visibility,
         scoreType,
         timeFormat,
+        isLocked: false,
       });
 
       if (error) {
@@ -302,9 +335,13 @@ const AdminDashboardInteractive = () => {
       }
 
       await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
+      await loadPublicUsage();
       return { success: true, message: 'Scoreboard created successfully', scoreboardId: data?.id };
-    } catch (_err) {
-      return { success: false, message: 'Failed to create scoreboard' };
+    } catch (err) {
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : 'Failed to create scoreboard',
+      };
     }
   };
 
@@ -317,6 +354,25 @@ const AdminDashboardInteractive = () => {
       return { success: true };
     } catch (_err) {
       return { success: false };
+    }
+  };
+
+  const handleUnlockScoreboard = async (scoreboardId: string) => {
+    try {
+      const { data, error } = await scoreboardService.unlockScoreboard(scoreboardId);
+      if (error || !data) {
+        throw error || new Error('Unable to unlock scoreboard');
+      }
+
+      await loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
+      await loadPublicUsage();
+      setToast({ message: 'Scoreboard unlocked', type: 'success', isVisible: true });
+    } catch (err) {
+      setToast({
+        message: err instanceof Error ? err.message : 'Unable to unlock scoreboard',
+        type: 'error',
+        isVisible: true,
+      });
     }
   };
 
@@ -552,16 +608,17 @@ const AdminDashboardInteractive = () => {
                     <Icon name="UserPlusIcon" size={20} />
                     <span className="hidden sm:inline">Invite</span>
                   </button>
-                  {!subscriptionTier && !isCancelledButActive && (
-                    <Link
-                      href="/supporter-plan"
-                      className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
-                      title="Support Scoreboard Manager and unlock more features"
-                    >
-                      <Icon name="HeartIcon" size={20} />
-                      <span className="hidden sm:inline">Become a Supporter</span>
-                    </Link>
-                  )}
+                  {(!subscriptionTier || subscriptionTier === 'appreciation') &&
+                    !isCancelledButActive && (
+                      <Link
+                        href="/supporter-plan"
+                        className="flex items-center space-x-2 px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-muted rounded-md transition-smooth"
+                        title="Support Scoreboard Manager and unlock more features"
+                      >
+                        <Icon name="HeartIcon" size={20} />
+                        <span className="hidden sm:inline">Become a Supporter</span>
+                      </Link>
+                    )}
                   {isCancelledButActive && (
                     <button
                       onClick={handleResumeSubscription}
@@ -616,6 +673,18 @@ const AdminDashboardInteractive = () => {
               description="Average participation rate"
             />
           </div>
+
+          {!subscriptionTier && publicUsage && (
+            <div className="mb-6">
+              <UsageCounterBlock
+                label="public scoreboards"
+                used={publicUsage.used}
+                max={publicUsage.max}
+                ctaHref="/supporter-plan"
+                ctaLabel="Become a Supporter to unlock more"
+              />
+            </div>
+          )}
 
           {loading || isChecking ? (
             <div className="text-center py-12">
@@ -726,6 +795,14 @@ const AdminDashboardInteractive = () => {
                         createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
                         ownerName={isAdmin ? scoreboard.owner?.fullName : undefined}
                         visibility={scoreboard.visibility}
+                        isLocked={!subscriptionTier && scoreboard.isLocked}
+                        canUnlock={
+                          !subscriptionTier &&
+                          scoreboard.visibility === 'public' &&
+                          scoreboard.isLocked &&
+                          (publicUsage?.remaining || 0) > 0
+                        }
+                        onUnlock={() => handleUnlockScoreboard(scoreboard.id)}
                         onRename={handleRenameScoreboard}
                         onDelete={() => handleDeleteScoreboard(scoreboard)}
                         onNavigate={handleNavigateToScoreboard}
@@ -770,6 +847,8 @@ const AdminDashboardInteractive = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateScoreboard}
+        isSupporter={Boolean(subscriptionTier)}
+        publicUsage={publicUsage}
       />
 
       <ToastNotification

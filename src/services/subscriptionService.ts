@@ -611,10 +611,40 @@ export const subscriptionService = {
         return { data: null, error: errorBody.error || 'Failed to fetch audit logs.' };
       }
 
+      const responseData = await response.json();
+      return {
+        data: {
+          logs: responseData.logs || [],
+          hasMore: responseData.pagination?.hasMore ?? false,
+          totalCount: responseData.pagination?.total ?? 0,
+        },
+        error: null,
+      };
+    } catch (_error) {
+      return { data: null, error: 'Failed to fetch audit logs.' };
+    }
+  },
+
+  /**
+   * [Admin] Refetch subscription data from LemonSqueezy API and update local DB
+   */
+  async refetchSubscriptionAdmin(userId: string) {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/admin/subscriptions/${userId}/refetch`, {
+        method: 'POST',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to refetch subscription.' };
+      }
+
       const data = await response.json();
       return { data, error: null };
     } catch (_error) {
-      return { data: null, error: 'Failed to fetch audit logs.' };
+      return { data: null, error: 'Failed to refetch subscription.' };
     }
   },
 };

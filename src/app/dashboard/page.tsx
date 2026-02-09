@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import AdminDashboardInteractive from './components/AdminDashboardInteractive';
 import Footer from '@/components/common/Footer';
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 export default function DashboardPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      <AdminDashboardInteractive />
+      <Suspense>
+        <AdminDashboardInteractive />
+      </Suspense>
       <Footer />
     </div>
   );

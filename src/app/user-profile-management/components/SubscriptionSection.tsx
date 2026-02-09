@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscriptionService } from '@/services/subscriptionService';
@@ -24,6 +24,7 @@ declare global {
       Url: {
         Open: (url: string) => void;
       };
+      Setup: (config: { eventHandler: (event: { event: string }) => void }) => void;
     };
   }
 }
@@ -63,8 +64,9 @@ const getStatusBadge = (status: Subscription['status']) => {
 };
 
 export default function SubscriptionSection() {
-  const { user, refreshSubscription } = useAuth();
+  const { user, refreshSubscription: _refreshSubscription } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
@@ -109,19 +111,12 @@ export default function SubscriptionSection() {
     loadSubscription();
   }, [user?.id]);
 
-  // Refresh subscription tier in AuthContext after successful checkout
+  // Redirect to dashboard on successful checkout
   useEffect(() => {
-    if (successState === 'success' && refreshSubscription) {
-      // Refresh with retry logic since webhook may take a moment
-      const refreshWithRetry = async (attempts = 0) => {
-        await refreshSubscription();
-        if (attempts < 3) {
-          setTimeout(() => refreshWithRetry(attempts + 1), 2000);
-        }
-      };
-      setTimeout(() => refreshWithRetry(), 1000);
+    if (successState === 'success') {
+      router.replace('/dashboard?subscription=success');
     }
-  }, [successState, refreshSubscription]);
+  }, [successState, router]);
 
   useEffect(() => {
     if (!checkoutUrl) return;
@@ -141,7 +136,7 @@ export default function SubscriptionSection() {
     setError(null);
 
     const origin = window.location.origin;
-    const successUrl = `${origin}/user-profile-management?subscription=success`;
+    const successUrl = `${origin}/dashboard?subscription=success`;
     const cancelUrl = `${origin}/user-profile-management?subscription=cancel`;
 
     const { data, error: checkoutError } = await subscriptionService.createCheckout({
@@ -216,16 +211,19 @@ export default function SubscriptionSection() {
       <Script
         src="https://app.lemonsqueezy.com/js/lemon.js"
         strategy="afterInteractive"
-        onLoad={() => window.createLemonSqueezy?.()}
+        onLoad={() => {
+          window.createLemonSqueezy?.();
+          window.LemonSqueezy?.Setup({
+            eventHandler: (event) => {
+              if (event.event === 'Checkout.Success') {
+                router.push('/dashboard?subscription=success');
+              }
+            },
+          });
+        }}
       />
 
       <h2 className="text-xl font-semibold text-text-primary mb-6">Subscription</h2>
-
-      {successState === 'success' && (
-        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          Thanks for supporting Scoreboard Manager! Your subscription is being activated.
-        </div>
-      )}
 
       {successState === 'cancel' && (
         <div className="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-700">

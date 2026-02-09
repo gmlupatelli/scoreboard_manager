@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
+import { getSupporterStatus } from '@/lib/supabase/subscriptionHelpers';
+import { Database } from '@/types/database.types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -199,6 +202,22 @@ export async function PUT(
 
     if (scoreboard.owner_id !== user.id) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    // Kiosk configuration requires an active Supporter subscription
+    const serviceClient = getServiceRoleClient();
+    const readClient = (serviceClient || supabase) as SupabaseClient<Database>;
+    const isSupporter = await getSupporterStatus(readClient, user.id);
+
+    if (!isSupporter) {
+      return NextResponse.json(
+        {
+          error: 'limit_reached',
+          message: 'Kiosk mode requires a Supporter plan.',
+          upgrade_url: '/supporter-plan',
+        },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();

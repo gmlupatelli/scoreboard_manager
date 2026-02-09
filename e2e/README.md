@@ -21,19 +21,22 @@ Test user credentials are configured in `.env.test` using a numbered naming conv
 # Automated test users (auto-cleaned between test runs)
 AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
 AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
+AUTOMATED_TEST_SUPPORTER_<N>_EMAIL / AUTOMATED_TEST_SUPPORTER_<N>_PASSWORD
 
 # Manual test users (NOT auto-cleaned, for manual testing)
 MANUAL_TEST_ADMIN_<N>_EMAIL / MANUAL_TEST_ADMIN_<N>_PASSWORD
 MANUAL_TEST_USER_<N>_EMAIL / MANUAL_TEST_USER_<N>_PASSWORD
+MANUAL_TEST_SUPPORTER_<N>_EMAIL / MANUAL_TEST_SUPPORTER_<N>_PASSWORD
 ```
 
 ### Default Test Users
 
-| Variable                 | Role         | Purpose                           |
-| ------------------------ | ------------ | --------------------------------- |
-| `AUTOMATED_TEST_ADMIN_1` | system_admin | Admin for E2E tests               |
-| `AUTOMATED_TEST_USER_1`  | user         | First regular user (seeded data)  |
-| `AUTOMATED_TEST_USER_2`  | user         | Second regular user (seeded data) |
+| Variable                     | Role            | Purpose                                       |
+| ---------------------------- | --------------- | --------------------------------------------- |
+| `AUTOMATED_TEST_ADMIN_1`     | system_admin    | Admin for E2E tests                            |
+| `AUTOMATED_TEST_USER_1`      | user (free)     | First regular user (seeded data, free tier)    |
+| `AUTOMATED_TEST_USER_2`      | user (free)     | Second regular user (seeded data, free tier)   |
+| `AUTOMATED_TEST_SUPPORTER_1` | user (supporter)| Supporter user (seeded with subscription data) |
 
 ### Adding More Test Users
 
@@ -42,6 +45,9 @@ Simply add more numbered entries to `.env.test`:
 ```bash
 AUTOMATED_TEST_USER_3_EMAIL=newuser@example.com
 AUTOMATED_TEST_USER_3_PASSWORD=secure_password
+
+AUTOMATED_TEST_SUPPORTER_2_EMAIL=another_supporter@example.com
+AUTOMATED_TEST_SUPPORTER_2_PASSWORD=secure_password
 ```
 
 ## Test Data Management

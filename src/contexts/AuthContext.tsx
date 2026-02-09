@@ -150,6 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: profile.email,
           fullName: profile.full_name,
           role: profile.role,
+          downgradeNoticeSeenAt: profile.downgrade_notice_seen_at,
           createdAt: profile.created_at,
           updatedAt: profile.updated_at,
         });

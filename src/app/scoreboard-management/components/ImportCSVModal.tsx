@@ -15,7 +15,7 @@ interface CSVEntry {
 interface ImportCSVModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (entries: { name: string; score: number }[]) => void;
+  onImport: (entries: { name: string; score: number }[]) => Promise<void> | void;
   scoreType?: ScoreType;
   timeFormat?: TimeFormat | null;
 }
@@ -33,6 +33,7 @@ const ImportCSVModal = ({
   const [showPreview, setShowPreview] = useState(false);
   const [validCount, setValidCount] = useState(0);
   const [invalidCount, setInvalidCount] = useState(0);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true);
@@ -135,13 +136,18 @@ const ImportCSVModal = ({
     setShowPreview(true);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     const validEntries = previewEntries
       .filter((entry) => entry.isValid)
       .map((entry) => ({ name: entry.name, score: entry.score }));
 
     if (validEntries.length > 0) {
-      onImport(validEntries);
+      setIsImporting(true);
+      try {
+        await onImport(validEntries);
+      } finally {
+        setIsImporting(false);
+      }
       onClose();
     }
   };
@@ -285,20 +291,37 @@ const ImportCSVModal = ({
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={handleImport}
-                    disabled={validCount === 0}
+                    disabled={validCount === 0 || isImporting}
                     className="flex-1 px-4 py-2 rounded-md bg-success text-success-foreground hover:opacity-90 transition-smooth duration-150 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                     title="Import valid entries"
                   >
-                    Import {validCount} Valid {validCount === 1 ? 'Entry' : 'Entries'}
+                    {isImporting
+                      ? `Importing ${validCount} ${validCount === 1 ? 'entry' : 'entries'}...`
+                      : `Import ${validCount} Valid ${validCount === 1 ? 'Entry' : 'Entries'}`}
                   </button>
-                  <button
-                    onClick={onClose}
-                    className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
-                    title="Cancel import"
-                  >
-                    Cancel
-                  </button>
+                  {!isImporting && (
+                    <button
+                      onClick={onClose}
+                      className="flex-1 px-4 py-2 rounded-md bg-muted text-text-secondary hover:bg-muted/80 transition-smooth duration-150 font-medium"
+                      title="Cancel import"
+                    >
+                      Cancel
+                    </button>
+                  )}
                 </div>
+                {isImporting && (
+                  <div className="mt-3">
+                    <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-success rounded-full animate-pulse"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <p className="text-xs text-text-secondary mt-1 text-center">
+                      Importing entries, please wait...
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

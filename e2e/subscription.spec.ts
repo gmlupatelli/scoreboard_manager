@@ -269,25 +269,34 @@ authTest.describe('Supporter Plan - Gifted Subscription', () => {
     await removeSubscription(SUPPORTER_EMAIL);
   });
 
-  authTest('@fast shows gifted badge', async ({ page, loginAs }) => {
+  authTest('@fast shows gifted subscription as active', async ({ page, loginAs }) => {
     await loginAs(TEST_USERS.supporter);
     await page.goto('/supporter-plan');
     await page.waitForLoadState('networkidle');
 
-    // Should show gifted indicator
-    const giftedBadge = page.locator('text=/gift/i');
-    await expect(giftedBadge.first()).toBeVisible();
+    // Gifted subscriptions should show as active with Current Plan card
+    const currentPlan = page.locator('text=/Current Plan/i');
+    await expect(currentPlan.first()).toBeVisible();
+
+    // Should show active status indicator
+    const activeStatus = page.locator('text=/active/i');
+    await expect(activeStatus.first()).toBeVisible();
   });
 
-  authTest('@fast does not show billing management for gifted', async ({ page, loginAs }) => {
-    await loginAs(TEST_USERS.supporter);
-    await page.goto('/supporter-plan');
-    await page.waitForLoadState('networkidle');
+  authTest(
+    '@fast gifted subscription has disabled billing management',
+    async ({ page, loginAs }) => {
+      await loginAs(TEST_USERS.supporter);
+      await page.goto('/supporter-plan');
+      await page.waitForLoadState('networkidle');
 
-    // Should not show manage billing for gifted subscriptions
-    const manageBillingButton = page.locator('button:has-text("Manage Billing")');
-    await expect(manageBillingButton).not.toBeVisible();
-  });
+      // Manage Billing button should be visible but disabled for gifted subscriptions
+      // (gifted subs have no LemonSqueezy subscription ID)
+      const manageBillingButton = page.locator('button:has-text("Manage Billing")');
+      await expect(manageBillingButton).toBeVisible();
+      await expect(manageBillingButton).toBeDisabled();
+    }
+  );
 });
 
 // =============================================================================
@@ -307,23 +316,11 @@ authTest.describe('Dashboard - Subscription Warnings', () => {
       await page.goto('/dashboard');
       await page.waitForLoadState('networkidle');
 
-      // Should show cancellation warning on dashboard
-      const warningBanner = page.locator('text=/subscription.*cancelled/i');
-      const reactivateLink = page
-        .locator('a:has-text("Reactivate")')
-        .or(page.locator('button:has-text("Reactivate")'));
-
-      // Either warning banner or reactivate link should be visible
-      const hasWarning = await warningBanner
-        .first()
-        .isVisible()
-        .catch(() => false);
-      const hasReactivate = await reactivateLink
-        .first()
-        .isVisible()
-        .catch(() => false);
-
-      expect(hasWarning || hasReactivate).toBeTruthy();
+      // Subscription status loads asynchronously from AuthContext.
+      // Wait for the "Subscription Cancelled" warning text to appear
+      // with a generous timeout to handle the async loading.
+      const warningText = page.locator('text=/Subscription Cancelled/i').first();
+      await expect(warningText).toBeVisible({ timeout: 15000 });
     }
   );
 });

@@ -16,6 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Suspense } from 'react';
 import SupporterPlanInteractive from './components/SupporterPlanInteractive';
 
 export const dynamic = 'force-dynamic';
@@ -26,5 +27,9 @@ export const metadata = {
 };
 
 export default function SupporterPlanPage() {
-  return <SupporterPlanInteractive />;
+  return (
+    <Suspense>
+      <SupporterPlanInteractive />
+    </Suspense>
+  );
 }

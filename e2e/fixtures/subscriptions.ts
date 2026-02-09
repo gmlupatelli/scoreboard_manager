@@ -291,4 +291,5 @@ export const cleanupTestSubscription = async (userEmail: string) => {
 // EXPORT TEST USER EMAIL
 // =============================================================================
 
-export const SUPPORTER_EMAIL = process.env.AUTOMATED_TEST_USER_3_EMAIL || 'supporter@example.com';
+export const SUPPORTER_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'supporter@example.com';

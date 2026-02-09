@@ -74,6 +74,56 @@ export const profileService = {
   },
 
   /**
+   * Mark downgrade notice as seen (global)
+   */
+  async markDowngradeNoticeSeen(userId: string) {
+    try {
+      const updateData = {
+        downgrade_notice_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as Database['public']['Tables']['user_profiles']['Update'];
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(updateData as never)
+        .eq('id', userId);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { error: null };
+    } catch (_error) {
+      return { error: 'Failed to update downgrade notice status.' };
+    }
+  },
+
+  /**
+   * Clear downgrade notice seen flag (global reset)
+   */
+  async clearDowngradeNoticeSeen(userId: string) {
+    try {
+      const updateData = {
+        downgrade_notice_seen_at: null,
+        updated_at: new Date().toISOString(),
+      } as Database['public']['Tables']['user_profiles']['Update'];
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(updateData as never)
+        .eq('id', userId);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return { error: null };
+    } catch (_error) {
+      return { error: 'Failed to reset downgrade notice status.' };
+    }
+  },
+
+  /**
    * Update user email (requires Supabase Auth API)
    * Note: This only initiates the email change - the actual email update
    * happens in Supabase Auth after the user verifies the new address.
