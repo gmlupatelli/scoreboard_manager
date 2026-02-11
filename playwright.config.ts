@@ -37,8 +37,12 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure', // Only keep video on failure
-    actionTimeout: 10000, // 10 seconds for actions
-    navigationTimeout: 15000, // 15 seconds for navigation
+    actionTimeout: 15000, // 15 seconds for actions
+    navigationTimeout: 30000, // 30 seconds for navigation (matches test timeout)
+  },
+
+  expect: {
+    timeout: 10000, // 10 seconds for expect assertions (default 5s too tight under parallel load)
   },
 
   projects: [

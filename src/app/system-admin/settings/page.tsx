@@ -285,6 +285,9 @@ export default function SystemAdminSettingsPage() {
                 <button
                   onClick={() => handleToggle('allow_public_registration')}
                   disabled={saving}
+                  role="switch"
+                  aria-checked={settings?.allow_public_registration ?? false}
+                  aria-label="Allow Public Registration"
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     settings?.allow_public_registration ? 'bg-primary' : 'bg-muted'
                   } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -307,6 +310,9 @@ export default function SystemAdminSettingsPage() {
                 <button
                   onClick={() => handleToggle('require_email_verification')}
                   disabled={saving}
+                  role="switch"
+                  aria-checked={settings?.require_email_verification ?? false}
+                  aria-label="Require Email Verification"
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     settings?.require_email_verification ? 'bg-primary' : 'bg-muted'
                   } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}

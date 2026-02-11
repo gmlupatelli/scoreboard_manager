@@ -4,7 +4,7 @@
  * Provides helpers to seed and manage subscription data for testing.
  * These fixtures create database records with various subscription states.
  *
- * Note: The supporter@example.com user must exist in the database first.
+ * Note: The patron@example.com user must exist in the database first.
  * Run the test user setup before using these fixtures.
  */
 
@@ -214,6 +214,21 @@ export const seedSubscription = async (
     return { success: false, error: error.message };
   }
 
+  // When seeding an active subscription, ensure the downgrade notice is dismissed
+  // and scoreboards are unlocked. This prevents the DowngradeNoticeModal from
+  // blocking test interactions after a previous removeSubscription call.
+  if (state === 'active' || state === 'gifted') {
+    await client
+      .from('user_profiles')
+      .update({ downgrade_notice_seen_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    await client
+      .from('scoreboards')
+      .update({ is_locked: false })
+      .eq('owner_id', userId);
+  }
+
   return { success: true, subscriptionId: data?.id };
 };
 
@@ -231,6 +246,112 @@ export const removeSubscription = async (
   }
 
   const { error } = await client.from('subscriptions').delete().eq('user_id', userId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+};
+
+/**
+ * Unlock all scoreboards for a user (reset is_locked to false).
+ * Use in afterEach to clean up after downgrade tests that trigger locking.
+ */
+export const unlockAllScoreboards = async (
+  userEmail: string
+): Promise<{ success: boolean; error?: string }> => {
+  const client = getServiceClient();
+
+  const userId = await getUserIdByEmail(userEmail);
+  if (!userId) {
+    return { success: false, error: `User not found: ${userEmail}` };
+  }
+
+  const { error } = await client
+    .from('scoreboards')
+    .update({ is_locked: false })
+    .eq('owner_id', userId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+};
+
+/**
+ * Clear the downgrade notice seen timestamp for a user.
+ * Use in afterEach to ensure the downgrade modal appears on next expired login.
+ */
+export const clearDowngradeNotice = async (
+  userEmail: string
+): Promise<{ success: boolean; error?: string }> => {
+  const client = getServiceClient();
+
+  const userId = await getUserIdByEmail(userEmail);
+  if (!userId) {
+    return { success: false, error: `User not found: ${userEmail}` };
+  }
+
+  const { error } = await client
+    .from('user_profiles')
+    .update({ downgrade_notice_seen_at: null })
+    .eq('id', userId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+};
+
+/**
+ * Lock all scoreboards for a user (set is_locked to true).
+ * Use in beforeEach to simulate the effect of a downgrade without
+ * relying on the client-side DowngradeNoticeManager.
+ */
+export const lockAllScoreboards = async (
+  userEmail: string
+): Promise<{ success: boolean; error?: string }> => {
+  const client = getServiceClient();
+
+  const userId = await getUserIdByEmail(userEmail);
+  if (!userId) {
+    return { success: false, error: `User not found: ${userEmail}` };
+  }
+
+  const { error } = await client
+    .from('scoreboards')
+    .update({ is_locked: true })
+    .eq('owner_id', userId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+};
+
+/**
+ * Mark the downgrade notice as seen for a user.
+ * Use in beforeEach to prevent the DowngradeNoticeModal from appearing
+ * and blocking interactions with the dashboard in tests that don't test the modal itself.
+ */
+export const markDowngradeNoticeSeen = async (
+  userEmail: string
+): Promise<{ success: boolean; error?: string }> => {
+  const client = getServiceClient();
+
+  const userId = await getUserIdByEmail(userEmail);
+  if (!userId) {
+    return { success: false, error: `User not found: ${userEmail}` };
+  }
+
+  const { error } = await client
+    .from('user_profiles')
+    .update({ downgrade_notice_seen_at: new Date().toISOString() })
+    .eq('id', userId);
 
   if (error) {
     return { success: false, error: error.message };
@@ -292,4 +413,19 @@ export const cleanupTestSubscription = async (userEmail: string) => {
 // =============================================================================
 
 export const SUPPORTER_EMAIL =
-  process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'supporter@example.com';
+  process.env.AUTOMATED_TEST_SUPPORTER_2_EMAIL || 'patron@example.com';
+
+export const SARAH_SUPPORTER_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'sarah@example.com';
+
+/** Per-project supporter email for Mobile iPhone 12 (avoids cross-project subscription races) */
+export const SUPPORTER_3_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_3_EMAIL || 'patron2@example.com';
+
+/** Per-project supporter email for Mobile Minimum (avoids cross-project subscription races) */
+export const SUPPORTER_4_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_4_EMAIL || 'patron3@example.com';
+
+/** Dedicated supporter email for tier-limits downgrade tests (avoids races with subscription.spec.ts) */
+export const SUPPORTER_6_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_6_EMAIL || 'patron5@example.com';

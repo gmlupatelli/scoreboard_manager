@@ -20,6 +20,16 @@ const safeGoto = async (page: Page, url: string) => {
     await page.waitForTimeout(500);
     await page.goto(url, { waitUntil: 'domcontentloaded' });
   }
+  // Wait for page to settle and auth state to load
+  await page.waitForLoadState('networkidle').catch(() => {});
+  // Verify authenticated state — admin should see user menu, not Login link
+  await page
+    .locator('button[aria-label="User menu"], button:has-text("User menu")')
+    .first()
+    .waitFor({ state: 'visible', timeout: 15000 })
+    .catch(() => {
+      // Auth may still be settling, continue
+    });
 };
 
 test.describe('System Admin - Dashboard Oversight', () => {
@@ -27,11 +37,10 @@ test.describe('System Admin - Dashboard Oversight', () => {
     adminAuth,
   }) => {
     await safeGoto(adminAuth, '/dashboard');
+    await adminAuth.waitForLoadState('networkidle');
 
-    const ownerFilter = adminAuth
-      .locator('text=Filter by Owner')
-      .or(adminAuth.locator('[placeholder*="owner"]'));
-    await expect(ownerFilter).toBeVisible();
+    const ownerFilter = adminAuth.getByRole('combobox', { name: /filter scoreboards by owner/i });
+    await expect(ownerFilter).toBeVisible({ timeout: 15000 });
   });
 
   test('@full @desktop-only admin should see scoreboards from multiple owners', async ({
@@ -42,7 +51,7 @@ test.describe('System Admin - Dashboard Oversight', () => {
 
     const scoreboards = adminAuth.locator('.bg-card.rounded-lg h3');
     const count = await scoreboards.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    expect(count).toBeGreaterThan(0);
   });
 
   test('@full @desktop-only admin should be able to filter scoreboards by owner', async ({
@@ -86,13 +95,19 @@ test.describe('System Admin - Settings Management', () => {
     adminAuth,
   }) => {
     await adminAuth.goto('/system-admin/settings');
-    await adminAuth.waitForTimeout(1000);
+    await adminAuth.waitForLoadState('networkidle');
+
+    // Wait for settings to finish loading (the page shows "Loading settings..." initially)
+    await adminAuth
+      .locator('text=/Loading settings/i')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
 
     const publicRegToggle = adminAuth
       .locator('text=Public Registration')
       .or(adminAuth.locator('text=Allow Public Registration'));
 
-    await expect(publicRegToggle).toBeVisible();
+    await expect(publicRegToggle).toBeVisible({ timeout: 10000 });
   });
 
   test('@full @desktop-only admin should see require_email_verification setting', async ({
@@ -120,14 +135,19 @@ test.describe('System Admin - Invitations Oversight', () => {
 
   test('@full @desktop-only admin should see inviter filter dropdown', async ({ adminAuth }) => {
     await adminAuth.goto('/system-admin/invitations');
-    await adminAuth.waitForTimeout(2000);
+    await adminAuth.waitForLoadState('networkidle');
+
+    // Wait for the page to finish loading (may show "Loading..." initially)
+    await adminAuth
+      .locator('text=/^Loading\.\.\.$/')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
 
     const inviterFilter = adminAuth
       .locator('text=Filter by Inviter')
       .or(adminAuth.locator('[placeholder*="inviter"]'));
 
-    const isVisible = await inviterFilter.isVisible();
-    expect(typeof isVisible).toBe('boolean');
+    await expect(inviterFilter).toBeVisible({ timeout: 10000 });
   });
 
   test('@full @desktop-only admin should see invitations from multiple users', async ({
@@ -140,8 +160,7 @@ test.describe('System Admin - Invitations Oversight', () => {
       .locator('table')
       .or(adminAuth.locator('[data-testid="invitations-list"]'));
 
-    const exists = await invitationsContainer.isVisible().catch(() => false);
-    expect(typeof exists).toBe('boolean');
+    await expect(invitationsContainer).toBeVisible({ timeout: 10000 });
   });
 });
 
@@ -169,22 +188,34 @@ test.describe('System Admin - Scoreboard Access', () => {
   test('@full @desktop-only admin should be able to navigate to manage view of another users scoreboard', async ({
     adminAuth,
   }) => {
+    test.setTimeout(60000);
     await safeGoto(adminAuth, '/dashboard');
-    await adminAuth.waitForTimeout(2000);
+
+    // Wait for scoreboard cards to fully load — not just "Loading scoreboards..."
+    // The dashboard stats should move past 0 when cards are loaded
+    await expect(
+      adminAuth.locator('.bg-card h3, [data-testid="scoreboard-card"] h3').first()
+    ).toBeVisible({ timeout: 30000 });
 
     const manageButton = adminAuth
-      .locator('text=Manage')
-      .or(adminAuth.locator('button:has-text("Edit")'))
+      .locator('button:has-text("Manage Scoreboard")')
       .first();
 
-    if (await manageButton.isVisible()) {
-      await manageButton.click();
-      await adminAuth.waitForTimeout(1000);
+    await expect(manageButton).toBeVisible({ timeout: 10000 });
+    await manageButton.click();
 
-      const addEntryButton = adminAuth.locator('text=Add Entry');
-      const exists = await addEntryButton.isVisible().catch(() => false);
-      expect(typeof exists).toBe('boolean');
+    // Wait for navigation to scoreboard management page — retry click if router.push fails
+    try {
+      await adminAuth.waitForURL(/\/scoreboard-management/, { timeout: 8000 });
+    } catch {
+      // Client-side router.push can fail silently under load — retry
+      await manageButton.click({ force: true });
+      await adminAuth.waitForURL(/\/scoreboard-management/, { timeout: 10000 });
     }
+    await adminAuth.waitForLoadState('networkidle').catch(() => {});
+
+    const addEntryButton = adminAuth.getByRole('button', { name: 'Add Entry' });
+    await expect(addEntryButton).toBeVisible({ timeout: 15000 });
   });
 });
 
@@ -192,7 +223,7 @@ test.describe('System Admin - Navigation', () => {
   test('@fast @desktop-only admin should see system admin navigation links', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/dashboard');
+    await adminAuth.goto('/dashboard', { waitUntil: 'domcontentloaded' });
     await adminAuth.waitForTimeout(1000);
 
     const settingsButton = adminAuth
@@ -205,10 +236,10 @@ test.describe('System Admin - Navigation', () => {
   test('@full @desktop-only admin should be able to navigate to all admin pages', async ({
     adminAuth,
   }) => {
-    await adminAuth.goto('/system-admin/settings');
+    await safeGoto(adminAuth, '/system-admin/settings');
     await expect(adminAuth).toHaveURL(/\/system-admin\/settings/);
 
-    await adminAuth.goto('/system-admin/invitations');
+    await safeGoto(adminAuth, '/system-admin/invitations');
     await expect(adminAuth).toHaveURL(/\/system-admin\/invitations/);
 
     const errorMessage = adminAuth

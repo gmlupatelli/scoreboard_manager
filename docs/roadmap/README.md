@@ -53,14 +53,14 @@ This document outlines the planned features and implementation phases for transi
 
 | Phase | Name                                                               | Priority  | Status      |
 | ----- | ------------------------------------------------------------------ | --------- | ----------- |
-| 1a    | [License & Public Pages](./phase-1a-license-public-pages.md)       | 🔴 High   | Not Started |
-| 1b    | [LemonSqueezy Integration](./phase-1b-lemonsqueezy-integration.md) | 🔴 High   | Not Started |
-| 1c    | [Supporter/Free Limits](./phase-1c-supporter-free-limits.md)       | 🔴 High   | Not Started |
+| 1a    | [License & Public Pages](./phase-1a-license-public-pages.md)       | 🔴 High   | ✅ Done     |
+| 1b    | [LemonSqueezy Integration](./phase-1b-lemonsqueezy-integration.md) | 🔴 High   | ✅ Done     |
+| 1c    | [Supporter/Free Limits](./phase-1c-supporter-free-limits.md)       | 🔴 High   | ✅ Done     |
 | 1d    | [Supporter Tiers & Recognition](./phase-1d-supporter-tiers.md)     | 🔴 High   | Not Started |
 | 1e    | [Admin Management Pages](./phase-1e-admin-management.md)           | 🔴 High   | Not Started |
 | 2     | [Embed Branding](./phase-2-embed-branding.md)                      | 🔴 High   | Not Started |
 | 3     | [Teams & Collaboration](./phase-3-teams-collaboration.md)          | 🟡 Medium | Not Started |
-| 4     | [Kiosk/TV Mode](./phase-4-kiosk-mode.md)                           | 🟡 Medium | Not Started |
+| 4     | [Kiosk/TV Mode](./phase-4-kiosk-mode.md)                           | � Medium | ✅ Done     |
 | 5     | [Time Machine](./phase-5-time-machine.md)                          | 🟢 Lower  | Not Started |
 
 ## Existing Features (Already Implemented)

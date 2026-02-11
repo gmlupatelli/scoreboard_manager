@@ -40,7 +40,7 @@ test.describe('Mobile Touch Interactions', () => {
   });
 
   test('@fast mobile navigation is accessible', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { timeout: 30000 });
     await page.waitForTimeout(1000);
 
     // Mobile menu button should be visible

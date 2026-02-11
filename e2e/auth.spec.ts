@@ -21,15 +21,28 @@ const safeGoto = async (page: Page, url: string) => {
 test.describe('Authentication Flows', () => {
   // Authorization redirect - viewport-independent
   test('@fast @desktop-only unauthenticated user redirects to login', async ({ page }) => {
+    // Ensure clean context with no stale auth session
+    await page.context().clearCookies();
+    // Navigate to the origin first so localStorage is accessible, then clear it
+    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    await page.evaluate(() => localStorage.clear());
     await safeGoto(page, '/dashboard');
-    await expect(page).toHaveURL(/\/login/);
+    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
   });
 
   test('@fast login page renders correctly', async ({ page }) => {
+    // Clear any stale auth state so the login page doesn't redirect
+    await page.context().clearCookies();
     await safeGoto(page, '/login');
 
+    // Wait for auth loading spinner to disappear (page shows "Loading..." while AuthContext initializes)
+    await page
+      .locator('text=/^Loading\\.\\.\\.$/')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
+
     // Check essential elements
-    await expect(page.locator('input[name="email"]')).toBeVisible();
+    await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
@@ -37,8 +50,13 @@ test.describe('Authentication Flows', () => {
   test('@fast registration page renders correctly', async ({ page }) => {
     await safeGoto(page, '/register');
 
-    // Wait for page to fully load before checking heading
-    await page.waitForLoadState('domcontentloaded');
+    // Wait for the loading spinner to disappear (settings API must complete)
+    await page
+      .locator('text=/^Loading\\.\\.\\.$/')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
+
+    // Wait for page to fully render after settings load
     await expect(page.locator('h1:has-text("Create Account")')).toBeVisible({ timeout: 10000 });
 
     const emailInput = page.locator('input[name="email"]');

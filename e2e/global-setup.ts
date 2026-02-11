@@ -32,25 +32,50 @@ interface TestUser {
 const ADMIN: TestUser = {
   email: process.env.AUTOMATED_TEST_ADMIN_1_EMAIL || 'admin@example.com',
   password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'admin123',
-  name: 'Test Admin',
+  name: process.env.AUTOMATED_TEST_ADMIN_1_DISPLAY_NAME || 'Site Admin',
 };
 
 const JOHN: TestUser = {
   email: process.env.AUTOMATED_TEST_USER_1_EMAIL || 'john@example.com',
   password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'user123',
-  name: 'John Doe',
+  name: process.env.AUTOMATED_TEST_USER_1_DISPLAY_NAME || 'John Doe',
 };
 
 const SARAH: TestUser = {
-  email: process.env.AUTOMATED_TEST_USER_2_EMAIL || 'sarah@example.com',
-  password: process.env.AUTOMATED_TEST_USER_2_PASSWORD || 'sarah456',
-  name: 'Sarah Smith',
+  email: process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'sarah@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_1_PASSWORD || 'sarah456',
+  name: process.env.AUTOMATED_TEST_SUPPORTER_1_DISPLAY_NAME || 'Sarah Smith',
 };
 
 const SUPPORTER: TestUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'supporter@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_1_PASSWORD || 'supporter789',
-  name: 'Supporter User',
+  email: process.env.AUTOMATED_TEST_SUPPORTER_2_EMAIL || 'patron@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_2_PASSWORD || 'supporter789',
+  name: process.env.AUTOMATED_TEST_SUPPORTER_2_DISPLAY_NAME || 'Pat Rohn',
+};
+
+// Additional supporter users for per-project subscription test isolation
+const SUPPORTER_3: TestUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_3_EMAIL || 'patron2@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_3_PASSWORD || 'test123',
+  name: process.env.AUTOMATED_TEST_SUPPORTER_3_DISPLAY_NAME || 'Pat Rohn II',
+};
+
+const SUPPORTER_4: TestUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_4_EMAIL || 'patron3@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_4_PASSWORD || 'test123',
+  name: process.env.AUTOMATED_TEST_SUPPORTER_4_DISPLAY_NAME || 'Pat Rohn III',
+};
+
+const SUPPORTER_5: TestUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_5_EMAIL || 'patron4@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_5_PASSWORD || 'test123',
+  name: process.env.AUTOMATED_TEST_SUPPORTER_5_DISPLAY_NAME || 'Pat Rohn IV',
+};
+
+const SUPPORTER_6: TestUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_6_EMAIL || 'patron5@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_6_PASSWORD || 'test123',
+  name: process.env.AUTOMATED_TEST_SUPPORTER_6_DISPLAY_NAME || 'Pat Rohn V',
 };
 
 async function login(page: Page, user: TestUser) {
@@ -66,32 +91,26 @@ async function enablePublicRegistration(page: Page) {
   try {
     console.log('\n⚙️  Enabling public registration...');
     await page.goto(`${BASE_URL}/system-admin/settings`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(2000);
 
-    // Find the toggle button for public registration
-    const toggleButton = page
-      .locator('button')
-      .filter({
-        has: page.locator('~ div:has-text("Allow Public Registration")'),
-      })
-      .first()
-      .or(
-        page
-          .locator('div:has-text("Allow Public Registration")')
-          .locator('..')
-          .locator('button')
-          .first()
-      );
+    // Wait for settings to finish loading
+    await page
+      .locator('text=/Loading settings/i')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
 
-    await toggleButton.waitFor({ state: 'visible', timeout: 5000 });
+    const publicRegToggle = page.getByRole('switch', {
+      name: /Allow Public Registration/i,
+    });
 
-    // Check if it's already enabled by looking at the button's classes
-    const buttonClasses = await toggleButton.getAttribute('class');
-    const isEnabled = buttonClasses?.includes('bg-primary');
+    await publicRegToggle.waitFor({ state: 'visible', timeout: 10000 });
+    const isOn = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
 
-    if (!isEnabled) {
-      await toggleButton.click();
-      await page.waitForTimeout(1000);
+    if (!isOn) {
+      await publicRegToggle.click();
+      await page
+        .locator('text=/Settings updated successfully/i')
+        .waitFor({ state: 'visible', timeout: 10000 })
+        .catch(() => {});
       console.log('✓ Public registration enabled');
     } else {
       console.log('✓ Public registration already enabled');
@@ -103,10 +122,14 @@ async function enablePublicRegistration(page: Page) {
 }
 
 /**
- * Verify that a test user can log in (data already exists from refresh-test-data).
+ * Verify that a test user can log in and has expected scoreboard data.
  * This checks that the test environment is properly set up.
  */
-async function verifyUserLogin(page: Page, user: TestUser): Promise<boolean> {
+async function verifyUserLogin(
+  page: Page,
+  user: TestUser,
+  expectedMinScoreboards: number = 0
+): Promise<boolean> {
   try {
     await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
     await page.fill('input[name="email"]', user.email);
@@ -115,8 +138,26 @@ async function verifyUserLogin(page: Page, user: TestUser): Promise<boolean> {
     await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 10000 });
 
     // Check that dashboard loads with content
+    await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
-    console.log(`✓ Verified ${user.email} can log in`);
+
+    // Verify scoreboard data if expected
+    if (expectedMinScoreboards > 0) {
+      const cards = page.locator('[data-testid="scoreboard-card"]');
+      const cardCount = await cards.count();
+      if (cardCount < expectedMinScoreboards) {
+        console.log(
+          `⚠️  ${user.email} has ${cardCount} scoreboards, expected at least ${expectedMinScoreboards}. Run: npm run refresh-test-data`
+        );
+      } else {
+        console.log(
+          `✓ Verified ${user.email} can log in (${cardCount} scoreboards)`
+        );
+      }
+    } else {
+      console.log(`✓ Verified ${user.email} can log in`);
+    }
+
     await page.context().clearCookies();
     return true;
   } catch {
@@ -140,12 +181,19 @@ async function globalSetup(_config: FullConfig) {
     await enablePublicRegistration(page);
     await page.context().clearCookies();
 
-    // Step 2: Verify test users can log in
+    // Step 2: Verify test users can log in and have expected data
+    // Expected counts match what refresh-test-data seeds per user
+    // Admin sees ALL scoreboards, regular users see only their own
     // (Test data is seeded by refresh-test-data script, not by global-setup)
-    console.log('\n👤 Verifying test users...');
-    await verifyUserLogin(page, JOHN);
-    await verifyUserLogin(page, SARAH);
-    await verifyUserLogin(page, SUPPORTER);
+    console.log('\n👤 Verifying test users and data...');
+    await verifyUserLogin(page, ADMIN, 12);         // Sees all: 3 john + 2 sarah + 2 patron + 1 admin + 1 patron2 + 1 patron3 + 1 patron4 + 1 patron5
+    await verifyUserLogin(page, JOHN, 3);           // 2 public + 1 locked
+    await verifyUserLogin(page, SARAH, 2);          // 2 scoreboards
+    await verifyUserLogin(page, SUPPORTER, 2);      // 2 scoreboards
+    await verifyUserLogin(page, SUPPORTER_3, 1);    // 1 scoreboard (subscription test isolation)
+    await verifyUserLogin(page, SUPPORTER_4, 1);    // 1 scoreboard (subscription test isolation)
+    await verifyUserLogin(page, SUPPORTER_5, 1);    // 1 scoreboard (kiosk test dedicated user)
+    await verifyUserLogin(page, SUPPORTER_6, 1);    // 1 scoreboard (tier-limits downgrade tests)
 
     console.log('\n✅ Test data setup complete!\n');
   } catch (error) {

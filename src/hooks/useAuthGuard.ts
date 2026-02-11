@@ -100,14 +100,10 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}): UseAuthGuardRes
 
     // Check role if required
     if (requiredRole) {
-      // If profile didn't load, treat as unauthorized
+      // Profile still loading — wait for it instead of redirecting prematurely.
+      // The AuthContext sets loading=false only after loadUserProfile completes,
+      // but there's a brief window where user is set before userProfile.
       if (!userProfile) {
-        hasRedirectedRef.current = true;
-        router.push(unauthorizedRedirectTo);
-        if (isMountedRef.current) {
-          setIsAuthorized(false);
-          setIsChecking(false);
-        }
         return;
       }
 

@@ -1,52 +1,23 @@
 /**
  * Playwright Global Teardown
- * Runs once after all tests complete
- * Calls cleanup API to delete john/sarah test data
+ * Runs once after all tests complete.
+ *
+ * Previously this called /api/test/cleanup to delete test data (scoreboards,
+ * entries, invitations) after every run. This caused persistent flakiness
+ * because the next run's global-setup only *verifies* data — it doesn't
+ * re-seed it. So if the previous teardown cleaned data and no manual
+ * `npm run refresh-test-data` was run before the next test suite,
+ * tests would find empty dashboards and fail.
+ *
+ * The teardown now only logs a summary. Test data is managed exclusively by
+ * `npm run refresh-test-data` which handles both cleanup and re-seeding
+ * in a single atomic operation.
  */
 
-import { loadTestEnv } from './loadTestEnv.js';
-
-loadTestEnv();
-
 async function globalTeardown() {
-  console.log('\n🧹 Running global teardown - cleaning test data...\n');
-
-  const baseUrl = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
-  const apiKey = process.env.TEST_CLEANUP_API_KEY;
-
-  if (!apiKey) {
-    console.warn('⚠️  TEST_CLEANUP_API_KEY not set - skipping cleanup');
-    return;
-  }
-
-  try {
-    const response = await fetch(`${baseUrl}/api/test/cleanup`, {
-      method: 'POST',
-      headers: {
-        'x-cleanup-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ Cleanup failed: ${response.status} ${response.statusText}`);
-      console.error(`   Response: ${errorText}`);
-      return;
-    }
-
-    const result = await response.json();
-
-    console.log('✅ Test data cleaned successfully');
-    console.log(`   Users cleaned: ${result.cleanedUsers?.join(', ') || 'none'}`);
-    console.log(`   Entries deleted: ${result.deletedEntries || 0}`);
-    console.log(`   Scoreboards deleted: ${result.deletedScoreboards || 0}`);
-    console.log(`   Invitations deleted: ${result.deletedInvitations || 0}`);
-    console.log(`   Timestamp: ${result.timestamp || 'N/A'}\n`);
-  } catch (error) {
-    console.error('❌ Error during cleanup:', error);
-    // Don't fail the entire test run if cleanup fails
-  }
+  console.log('\n🏁 Global teardown complete.\n');
+  console.log('   Test data has been preserved for the next run.');
+  console.log('   To reset: npm run refresh-test-data\n');
 }
 
 export default globalTeardown;

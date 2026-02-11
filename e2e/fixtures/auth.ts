@@ -33,14 +33,40 @@ const JOHN: AuthUser = {
   password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'user123',
 };
 
+/** Sarah - Supporter with appreciation tier (admin-gifted) */
 const SARAH: AuthUser = {
-  email: process.env.AUTOMATED_TEST_USER_2_EMAIL || 'sarah@example.com',
-  password: process.env.AUTOMATED_TEST_USER_2_PASSWORD || 'sarah456',
+  email: process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'sarah@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_1_PASSWORD || 'sarah456',
 };
 
+/** Pat Rohn - Supporter with supporter tier (paid subscription) */
 const SUPPORTER: AuthUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'supporter@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_1_PASSWORD || 'supporter789',
+  email: process.env.AUTOMATED_TEST_SUPPORTER_2_EMAIL || 'patron@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_2_PASSWORD || 'supporter789',
+};
+
+/** Pat Rohn II - Supporter for Mobile iPhone 12 subscription tests (avoids cross-project races) */
+const SUPPORTER_3: AuthUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_3_EMAIL || 'patron2@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_3_PASSWORD || 'supporter789',
+};
+
+/** Pat Rohn III - Supporter for Mobile Minimum subscription tests (avoids cross-project races) */
+const SUPPORTER_4: AuthUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_4_EMAIL || 'patron3@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_4_PASSWORD || 'supporter789',
+};
+
+/** Pat Rohn IV - Dedicated kiosk test user (subscription never mutated by subscription tests) */
+const SUPPORTER_5: AuthUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_5_EMAIL || 'patron4@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_5_PASSWORD || 'supporter789',
+};
+
+/** Pat Rohn V - Dedicated tier-limits downgrade test user (avoids races with subscription.spec.ts) */
+const SUPPORTER_6: AuthUser = {
+  email: process.env.AUTOMATED_TEST_SUPPORTER_6_EMAIL || 'patron5@example.com',
+  password: process.env.AUTOMATED_TEST_SUPPORTER_6_PASSWORD || 'supporter789',
 };
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
@@ -72,9 +98,9 @@ async function performLogin(page: Page, user: AuthUser) {
     const passwordInput = page.locator('input[name="password"]');
     const submitButton = page.locator('button[type="submit"]');
 
-    await emailInput.waitFor({ state: 'visible', timeout: 10000 });
-    await passwordInput.waitFor({ state: 'visible', timeout: 10000 });
-    await submitButton.waitFor({ state: 'visible', timeout: 10000 });
+    await emailInput.waitFor({ state: 'visible', timeout: 15000 });
+    await passwordInput.waitFor({ state: 'visible', timeout: 15000 });
+    await submitButton.waitFor({ state: 'visible', timeout: 15000 });
 
     await emailInput.fill(user.email);
     await passwordInput.fill(user.password);
@@ -134,7 +160,7 @@ export const test = base.extend<AuthFixtures>({
   },
 
   /**
-   * Sarah (regular user) authenticated page
+   * Sarah (supporter - appreciation tier) authenticated page
    */
   sarahAuth: async ({ page }, use) => {
     await performLogin(page, SARAH);
@@ -142,10 +168,11 @@ export const test = base.extend<AuthFixtures>({
   },
 
   /**
-   * Supporter (user with subscription) authenticated page
+   * Kiosk-dedicated supporter (SUPPORTER_5) authenticated page.
+   * Uses a separate user whose subscription is never mutated by subscription tests.
    */
   supporterAuth: async ({ page }, use) => {
-    await performLogin(page, SUPPORTER);
+    await performLogin(page, SUPPORTER_5);
     await use(page);
   },
 
@@ -179,4 +206,10 @@ export const TEST_USERS = {
   john: JOHN,
   sarah: SARAH,
   supporter: SUPPORTER,
+  /** Per-project supporter for Mobile iPhone 12 subscription tests */
+  supporter3: SUPPORTER_3,
+  /** Per-project supporter for Mobile Minimum subscription tests */
+  supporter4: SUPPORTER_4,
+  /** Dedicated supporter for tier-limits downgrade tests */
+  supporter6: SUPPORTER_6,
 };

@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [subscriptionTier, setSubscriptionTier] = useState<AppreciationTier | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
-  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const _router = useRouter();
 
   const loadSubscriptionTier = async (userId: string) => {
@@ -108,14 +108,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loadUserProfile(session.user.id);
         loadSubscriptionTier(session.user.id);
       } else {
+        setSubscriptionLoading(false);
         setLoading(false);
       }
     });
 
-    // Listen for auth changes
+    // Listen for auth changes (sign-in, sign-out, token refresh)
+    // Skip INITIAL_SESSION to avoid duplicate profile/subscription loading
+    // which causes a race where loading=false fires before profile is set
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -126,6 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSubscriptionTier(null);
         setSubscriptionStatus(null);
         setSubscriptionEndDate(null);
+        setSubscriptionLoading(false);
         setLoading(false);
       }
     });

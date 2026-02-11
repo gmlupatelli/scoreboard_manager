@@ -31,23 +31,26 @@ MANUAL_TEST_SUPPORTER_<N>_EMAIL / MANUAL_TEST_SUPPORTER_<N>_PASSWORD
 
 ### Default Test Users
 
-| Variable                     | Role            | Purpose                                       |
-| ---------------------------- | --------------- | --------------------------------------------- |
-| `AUTOMATED_TEST_ADMIN_1`     | system_admin    | Admin for E2E tests                            |
-| `AUTOMATED_TEST_USER_1`      | user (free)     | First regular user (seeded data, free tier)    |
-| `AUTOMATED_TEST_USER_2`      | user (free)     | Second regular user (seeded data, free tier)   |
-| `AUTOMATED_TEST_SUPPORTER_1` | user (supporter)| Supporter user (seeded with subscription data) |
+| Variable                     | Role            | Purpose                                                      |
+| ---------------------------- | --------------- | ------------------------------------------------------------ |
+| `AUTOMATED_TEST_ADMIN_1`     | system_admin    | Admin for E2E tests                                          |
+| `AUTOMATED_TEST_USER_1`      | user (free)     | First regular user (seeded data, free tier)                   |
+| `AUTOMATED_TEST_SUPPORTER_1` | user (supporter)| First supporter (appreciation tier, seeded with subscription) |
+| `AUTOMATED_TEST_SUPPORTER_2` | user (supporter)| Second supporter (supporter tier, for subscription tests)     |
 
 ### Adding More Test Users
 
 Simply add more numbered entries to `.env.test`:
 
 ```bash
-AUTOMATED_TEST_USER_3_EMAIL=newuser@example.com
-AUTOMATED_TEST_USER_3_PASSWORD=secure_password
+AUTOMATED_TEST_USER_2_EMAIL=newuser@example.com
+AUTOMATED_TEST_USER_2_PASSWORD=secure_password
+AUTOMATED_TEST_USER_2_DISPLAY_NAME=New User
 
-AUTOMATED_TEST_SUPPORTER_2_EMAIL=another_supporter@example.com
-AUTOMATED_TEST_SUPPORTER_2_PASSWORD=secure_password
+AUTOMATED_TEST_SUPPORTER_3_EMAIL=another_supporter@example.com
+AUTOMATED_TEST_SUPPORTER_3_PASSWORD=secure_password
+AUTOMATED_TEST_SUPPORTER_3_DISPLAY_NAME=Another Supporter
+AUTOMATED_TEST_SUPPORTER_3_TIER=champion
 ```
 
 ## Test Data Management
@@ -64,7 +67,9 @@ This script:
 
 - ✅ Deletes and recreates automated test users (from `AUTOMATED_TEST_*` env vars)
 - ✅ Removes test data for automated users only
-- ✅ Seeds fresh data for the first two regular users (scoreboards + invitations)
+- ✅ Seeds fresh data for the first free user (scoreboards + invitations)
+- ✅ Seeds scoreboards for the first supporter user
+- ✅ Seeds tier-aware subscriptions for all supporter users
 - ✅ **Preserves manual test user data intact**
 - ✅ Uses passwords from `.env.test` (no more standardized passwords)
 

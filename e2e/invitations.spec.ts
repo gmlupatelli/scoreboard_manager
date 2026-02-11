@@ -54,7 +54,13 @@ authTest.describe('User Invitations - Access & Display', () => {
   authTest(
     '@full @desktop-only sarah should have separate invitation list from john',
     async ({ sarahAuth }) => {
-      await sarahAuth.goto('/invitations');
+      try {
+        await sarahAuth.goto('/invitations');
+      } catch {
+        // Retry on net::ERR_ABORTED
+        await sarahAuth.waitForTimeout(500);
+        await sarahAuth.goto('/invitations');
+      }
       await sarahAuth.waitForTimeout(2000);
 
       await expect(sarahAuth).toHaveURL(/\/invitations/);
@@ -102,6 +108,9 @@ authTest.describe('Invitation Form', () => {
 });
 
 test.describe('Invite-Only Mode - Toggle Feature', () => {
+  // Tests in this block are order-dependent: disable → verify-disabled → re-enable → verify-enabled
+  test.describe.configure({ mode: 'serial' });
+
   // Ensure public registration is DISABLED before these tests
   test.beforeAll(async ({ browser }) => {
     const context = await browser.newContext();
@@ -117,28 +126,27 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
 
     // Go to settings and disable public registration
     await page.goto('/system-admin/settings');
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('networkidle');
 
-    const toggleButton = page
-      .locator('button')
-      .filter({
-        has: page.locator('~ div:has-text("Allow Public Registration")'),
-      })
-      .first()
-      .or(
-        page
-          .locator('div:has-text("Allow Public Registration")')
-          .locator('..')
-          .locator('button')
-          .first()
-      );
+    // Wait for settings to finish loading
+    await page
+      .locator('text=/Loading settings/i')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
 
-    const buttonClasses = await toggleButton.getAttribute('class');
-    const isEnabled = buttonClasses?.includes('bg-primary');
+    const publicRegToggle = page.getByRole('switch', {
+      name: /Allow Public Registration/i,
+    });
 
-    if (isEnabled) {
-      await toggleButton.click();
-      await page.waitForTimeout(1000);
+    await publicRegToggle.waitFor({ state: 'visible', timeout: 10000 });
+    const isOn = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+
+    if (isOn) {
+      await publicRegToggle.click();
+      await page
+        .locator('text=/Settings updated successfully/i')
+        .waitFor({ state: 'visible', timeout: 10000 })
+        .catch(() => {});
     }
 
     await context.close();
@@ -149,28 +157,31 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
     '@full @desktop-only admin should disable public registration',
     async ({ adminAuth }) => {
       await adminAuth.goto('/system-admin/settings');
-      await adminAuth.waitForTimeout(1000);
+      await adminAuth.waitForLoadState('networkidle');
 
-      const publicRegToggle = adminAuth
-        .locator('input[type="checkbox"]')
-        .filter({
-          has: adminAuth.locator('~ text=/Public Registration/i'),
-        })
-        .or(adminAuth.locator('label:has-text("Public Registration")').locator('input'))
-        .or(adminAuth.locator('label:has-text("Allow Public Registration")').locator('input'))
-        .first();
+      // Wait for settings to finish loading
+      await adminAuth
+        .locator('text=/Loading settings/i')
+        .waitFor({ state: 'hidden', timeout: 15000 })
+        .catch(() => {});
 
-      const exists = await publicRegToggle.isVisible().catch(() => false);
+      const publicRegToggle = adminAuth.getByRole('switch', {
+        name: /Allow Public Registration/i,
+      });
 
-      if (exists) {
-        const isChecked = await publicRegToggle.isChecked();
-        if (isChecked) {
-          await publicRegToggle.click();
-          await adminAuth.waitForTimeout(2000);
-          const newState = await publicRegToggle.isChecked();
-          expect(newState).toBe(false);
-        }
+      await publicRegToggle.waitFor({ state: 'visible', timeout: 10000 });
+      const isOn = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+      if (isOn) {
+        await publicRegToggle.click();
+        await adminAuth
+          .locator('text=/Settings updated successfully/i')
+          .waitFor({ state: 'visible', timeout: 10000 })
+          .catch(() => {});
       }
+
+      // Verify toggle is now off
+      const finalState = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+      expect(finalState).toBe(false);
     }
   );
 
@@ -181,19 +192,18 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
     await page.goto('/register');
     await page.waitForTimeout(1000);
 
-    const invitationField = page
-      .locator('input[name="invitationCode"]')
-      .or(page.locator('input[placeholder*="invitation code"]'));
-
     const invitationMessage = page
       .locator('text=/invitation.*required/i')
       .or(page.locator('text=/invite.*only/i'));
 
-    const hasInvitationUI =
-      (await invitationField.isVisible().catch(() => false)) ||
-      (await invitationMessage.isVisible().catch(() => false));
+    // Wait for the page to load and settings API to respond
+    const pageHeading = page.locator('text=Create Account');
+    await pageHeading.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(2000);
 
-    expect(typeof hasInvitationUI).toBe('boolean');
+    const hasInvitationUI = await invitationMessage.isVisible().catch(() => false);
+
+    expect(hasInvitationUI).toBeTruthy();
   });
 
   // Admin settings - viewport-independent
@@ -201,28 +211,31 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
     '@full @desktop-only admin should re-enable public registration',
     async ({ adminAuth }) => {
       await adminAuth.goto('/system-admin/settings');
-      await adminAuth.waitForTimeout(1000);
+      await adminAuth.waitForLoadState('networkidle');
 
-      const publicRegToggle = adminAuth
-        .locator('input[type="checkbox"]')
-        .filter({
-          has: adminAuth.locator('~ text=/Public Registration/i'),
-        })
-        .or(adminAuth.locator('label:has-text("Public Registration")').locator('input'))
-        .or(adminAuth.locator('label:has-text("Allow Public Registration")').locator('input'))
-        .first();
+      // Wait for settings to finish loading
+      await adminAuth
+        .locator('text=/Loading settings/i')
+        .waitFor({ state: 'hidden', timeout: 15000 })
+        .catch(() => {});
 
-      const exists = await publicRegToggle.isVisible().catch(() => false);
+      const publicRegToggle = adminAuth.getByRole('switch', {
+        name: /Allow Public Registration/i,
+      });
 
-      if (exists) {
-        const isChecked = await publicRegToggle.isChecked();
-        if (!isChecked) {
-          await publicRegToggle.click();
-          await adminAuth.waitForTimeout(2000);
-          const newState = await publicRegToggle.isChecked();
-          expect(newState).toBe(true);
-        }
+      await publicRegToggle.waitFor({ state: 'visible', timeout: 10000 });
+      const isOn = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+      if (!isOn) {
+        await publicRegToggle.click();
+        await adminAuth
+          .locator('text=/Settings updated successfully/i')
+          .waitFor({ state: 'visible', timeout: 10000 })
+          .catch(() => {});
       }
+
+      // Verify toggle is now on
+      const finalState = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+      expect(finalState).toBe(true);
     }
   );
 
@@ -230,34 +243,61 @@ test.describe('Invite-Only Mode - Toggle Feature', () => {
   test('@fast @desktop-only registration page should allow open registration when enabled', async ({
     page,
   }) => {
-    await page.goto('/register');
-    await page.waitForTimeout(1000);
+    await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle');
+
+    // Wait for the loading spinner to disappear (settings API call)
+    await page
+      .locator('text=/^Loading\.\.\.$/')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
+
+    // Wait for the heading to confirm the page has rendered
+    await expect(page.locator('h1:has-text("Create Account")')).toBeVisible({ timeout: 10000 });
 
     const emailField = page.locator('input[name="email"]').or(page.locator('input[type="email"]'));
     const passwordField = page
       .locator('input[name="password"]')
       .or(page.locator('input[type="password"]'));
 
-    await expect(emailField.first()).toBeVisible();
-    await expect(passwordField.first()).toBeVisible();
+    await expect(emailField.first()).toBeVisible({ timeout: 10000 });
+    await expect(passwordField.first()).toBeVisible({ timeout: 10000 });
   });
 });
 
 authTest.describe('Invite-Only Mode - Enforcement', () => {
   authTest.beforeEach(async ({ adminAuth }) => {
     await adminAuth.goto('/system-admin/settings');
-    await adminAuth.waitForTimeout(1000);
+    await adminAuth.waitForLoadState('networkidle');
 
-    const publicRegToggle = adminAuth
-      .locator('label:has-text("Public Registration")')
-      .locator('input')
-      .or(adminAuth.locator('input[type="checkbox"]').first());
+    // Wait for settings to finish loading
+    await adminAuth
+      .locator('text=/Loading settings/i')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
 
-    if (await publicRegToggle.isVisible()) {
-      const isChecked = await publicRegToggle.isChecked();
-      if (isChecked) {
+    const publicRegToggle = adminAuth.getByRole('switch', {
+      name: /Allow Public Registration/i,
+    });
+
+    await publicRegToggle.waitFor({ state: 'visible', timeout: 10000 });
+    const isOn = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+    if (isOn) {
+      await publicRegToggle.click();
+      // Wait for the API save to complete — confirmed by the success toast
+      await adminAuth
+        .locator('text=/Settings updated successfully/i')
+        .waitFor({ state: 'visible', timeout: 10000 })
+        .catch(() => {});
+      // Double-check the toggle actually flipped to off
+      const isStillOn = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+      if (isStillOn) {
+        // Retry click if toggle didn't flip
         await publicRegToggle.click();
-        await adminAuth.waitForTimeout(2000);
+        await adminAuth
+          .locator('text=/Settings updated successfully/i')
+          .waitFor({ state: 'visible', timeout: 10000 })
+          .catch(() => {});
       }
     }
   });
@@ -266,21 +306,24 @@ authTest.describe('Invite-Only Mode - Enforcement', () => {
   authTest(
     '@full @desktop-only unauthenticated user should see invitation requirement',
     async ({ page }) => {
-      await page.goto('/register');
-      await page.waitForTimeout(1000);
+      await page.goto('/register', { waitUntil: 'domcontentloaded' });
+      await page.waitForLoadState('networkidle');
 
-      const inviteMessage = page.locator(
-        'text=/invite.*only|invitation.*required|registration.*restricted|invite.*registration/i'
+      // When invite-only is active, the register page shows an
+      // "Invite-Only Registration" banner and hides the form fields.
+      // Wait for the page to finish loading settings before checking.
+      const inviteOnlyBanner = page.locator(
+        'text=/invite.only|invitation.*required|registration.*restricted|invite.*registration/i'
       );
-      const inviteField = page.locator('input[name="invitationCode"]');
-      const emailField = page.locator('input[name="email"]');
 
-      const hasInviteUI =
-        (await inviteMessage.isVisible().catch(() => false)) ||
-        (await inviteField.isVisible().catch(() => false));
-      const hasEmailField = await emailField.isVisible().catch(() => false);
+      // Wait for the banner or the page heading to appear (ensures page is loaded)
+      const pageHeading = page.locator('text=Create Account');
+      await pageHeading.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
 
-      expect(hasInviteUI || hasEmailField).toBeTruthy();
+      // Give the settings API response time to arrive and toggle UI
+      await page.waitForTimeout(3000);
+
+      await expect(inviteOnlyBanner.first()).toBeVisible({ timeout: 10000 });
     }
   );
 
@@ -313,19 +356,26 @@ authTest.describe('Invite-Only Mode - Enforcement', () => {
 
   authTest.afterEach(async ({ adminAuth }) => {
     await adminAuth.goto('/system-admin/settings');
-    await adminAuth.waitForTimeout(1000);
+    await adminAuth.waitForLoadState('networkidle');
 
-    const publicRegToggle = adminAuth
-      .locator('label:has-text("Public Registration")')
-      .locator('input')
-      .or(adminAuth.locator('input[type="checkbox"]').first());
+    // Wait for settings to finish loading
+    await adminAuth
+      .locator('text=/Loading settings/i')
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
 
-    if (await publicRegToggle.isVisible()) {
-      const isChecked = await publicRegToggle.isChecked();
-      if (!isChecked) {
-        await publicRegToggle.click();
-        await adminAuth.waitForTimeout(2000);
-      }
+    const publicRegToggle = adminAuth.getByRole('switch', {
+      name: /Allow Public Registration/i,
+    });
+
+    await publicRegToggle.waitFor({ state: 'visible', timeout: 10000 });
+    const isOn = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
+    if (!isOn) {
+      await publicRegToggle.click();
+      await adminAuth
+        .locator('text=/Settings updated successfully/i')
+        .waitFor({ state: 'visible', timeout: 10000 })
+        .catch(() => {});
     }
   });
 });
@@ -336,34 +386,43 @@ authTest.describe('Invite-Only Mode - Settings Persistence', () => {
     '@full @desktop-only setting changes should persist across page reloads',
     async ({ adminAuth }) => {
       await adminAuth.goto('/system-admin/settings');
-      await adminAuth.waitForTimeout(1000);
+      await adminAuth.waitForLoadState('networkidle');
 
-      const publicRegToggle = adminAuth
-        .locator('label:has-text("Public Registration")')
-        .locator('input')
-        .or(adminAuth.locator('input[type="checkbox"]').first());
+      // Wait for settings to finish loading
+      await adminAuth
+        .locator('text=/Loading settings/i')
+        .waitFor({ state: 'hidden', timeout: 15000 })
+        .catch(() => {});
 
-      if (await publicRegToggle.isVisible()) {
-        const initialState = await publicRegToggle.isChecked();
+      const publicRegToggle = adminAuth.getByRole('switch', {
+        name: /Allow Public Registration/i,
+      });
 
-        await publicRegToggle.click();
-        await adminAuth.waitForTimeout(2000);
+      await publicRegToggle.waitFor({ state: 'visible', timeout: 10000 });
+      const initialState = (await publicRegToggle.getAttribute('aria-checked')) === 'true';
 
-        await adminAuth.reload();
-        await adminAuth.waitForTimeout(1000);
+      await publicRegToggle.click();
+      await adminAuth.waitForTimeout(2000);
 
-        const newPublicRegToggle = adminAuth
-          .locator('label:has-text("Public Registration")')
-          .locator('input')
-          .or(adminAuth.locator('input[type="checkbox"]').first());
+      await adminAuth.reload();
+      await adminAuth.waitForLoadState('networkidle');
 
-        const newState = await newPublicRegToggle.isChecked();
-        expect(newState).toBe(!initialState);
+      // Wait for settings to finish loading after reload
+      await adminAuth
+        .locator('text=/Loading settings/i')
+        .waitFor({ state: 'hidden', timeout: 15000 })
+        .catch(() => {});
 
-        // Toggle back
-        await newPublicRegToggle.click();
-        await adminAuth.waitForTimeout(2000);
-      }
+      const reloadedToggle = adminAuth.getByRole('switch', {
+        name: /Allow Public Registration/i,
+      });
+      await reloadedToggle.waitFor({ state: 'visible', timeout: 10000 });
+      const newState = (await reloadedToggle.getAttribute('aria-checked')) === 'true';
+      expect(newState).toBe(!initialState);
+
+      // Toggle back
+      await reloadedToggle.click();
+      await adminAuth.waitForTimeout(2000);
     }
   );
 
@@ -372,9 +431,16 @@ authTest.describe('Invite-Only Mode - Settings Persistence', () => {
     '@full @desktop-only multiple settings can be managed independently',
     async ({ adminAuth }) => {
       await adminAuth.goto('/system-admin/settings');
-      await adminAuth.waitForTimeout(1000);
+      await adminAuth.waitForLoadState('networkidle');
 
-      const allToggles = adminAuth.locator('button.rounded-full');
+      // Wait for settings to finish loading
+      await adminAuth
+        .locator('text=/Loading settings/i')
+        .waitFor({ state: 'hidden', timeout: 15000 })
+        .catch(() => {});
+
+      const allToggles = adminAuth.locator('[role="switch"]');
+      await allToggles.first().waitFor({ state: 'visible', timeout: 10000 });
       const toggleCount = await allToggles.count();
 
       expect(toggleCount).toBeGreaterThanOrEqual(2);
