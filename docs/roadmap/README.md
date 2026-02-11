@@ -71,12 +71,12 @@ The following phases have been successfully implemented and archived:
 
 | Phase | Name                                                       | Priority  | Status      |
 | ----- | ---------------------------------------------------------- | --------- | ----------- |
-| 1     | [Teams & Collaboration](./phase-1-teams-collaboration.md)  | 🟡 Medium | Not Started |
-| 2     | [Time Machine](./phase-2-time-machine.md)                  | 🟢 Lower  | Not Started |
-| 3     | [Supporter Recognition](./phase-3-supporter-recognition.md) | 🔴 High   | Not Started |
-| 4     | [Admin Enhancements](./phase-4-admin-enhancements.md)      | 🟡 Medium | Not Started |
-| 5     | [Dynamic Pricing](./phase-5-dynamic-pricing.md)            | 🟢 Low    | Not Started |
-| 6     | [CSV Export](./phase-6-csv-export.md)                      | 🟡 Medium | Not Started |
+| 1     | [CSV Export](./phase-1-csv-export.md)                      | 🟡 Medium | Not Started |
+| 2     | [Supporter Recognition](./phase-2-supporter-recognition.md) | 🔴 High   | Not Started |
+| 3     | [Admin Enhancements](./phase-3-admin-enhancements.md)      | 🟡 Medium | Not Started |
+| 4     | [Dynamic Pricing](./phase-4-dynamic-pricing.md)            | 🟢 Low    | Not Started |
+| 5     | [Time Machine](./phase-5-time-machine.md)                  | 🟢 Lower  | Not Started |
+| 6     | [Teams & Collaboration](./phase-6-teams-collaboration.md)  | 🟡 Medium | Not Started |
 
 ## Existing Features (Already Implemented)
 
