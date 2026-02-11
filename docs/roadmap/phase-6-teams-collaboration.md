@@ -1,4 +1,4 @@
-# Phase 1: Teams & Collaboration
+# Phase 6: Teams & Collaboration
 
 **Priority:** 🟡 Medium  
 **Dependencies:** Phase 1c (Supporter/Free Limits)  

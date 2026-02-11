@@ -1,4 +1,4 @@
-# Phase 3: Supporter Recognition
+# Phase 2: Supporter Recognition
 
 **Priority:** 🔴 High  
 **Status:** Not Started  

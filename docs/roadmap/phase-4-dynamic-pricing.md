@@ -1,4 +1,4 @@
-# Phase 5: Dynamic Pricing System
+# Phase 4: Dynamic Pricing System
 
 **Priority:** 🟢 Low  
 **Status:** Not Started  
