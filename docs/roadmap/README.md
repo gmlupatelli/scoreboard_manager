@@ -13,30 +13,36 @@ This document outlines the planned features and implementation phases for transi
 ### Payment Provider
 
 - **LemonSqueezy** (Merchant of Record - handles global taxes)
-- **Pay What You Want** model with minimums
+- **Fixed-tier pricing** (4 tiers with monthly/yearly options)
 
 ### Pricing
 
-| Plan    | Minimum  | Notes                           |
-| ------- | -------- | ------------------------------- |
-| Monthly | $5/month | Pay what you want above minimum |
-| Yearly  | $50/year | ~2 months free (17% discount)   |
+| Tier          | Monthly  | Yearly   | Badge |
+| ------------- | -------- | -------- | ----- |
+| Supporter     | $4/mo    | $40/yr   | 🙌     |
+| Champion      | $8/mo    | $80/yr   | 🏆     |
+| Legend        | $23/mo   | $230/yr  | 🌟     |
+| Hall of Famer | $48/mo   | $480/yr  | 👑     |
+
+> **Note:** Yearly plans offer approximately 2 months free (16-17% discount).
 
 ### Appreciation Tiers
 
-| Monthly Amount | Tier          | Badge | Feature Access         |
-| -------------- | ------------- | ----- | ---------------------- |
-| $0             | Free          | -     | Basic features         |
-| $5 - $9        | Supporter     | 🙌    | All Supporter features |
-| $10 - $24      | Champion      | 🏆    | All Supporter features |
-| $25 - $49      | Legend        | 🌟    | All Supporter features |
-| $50+           | Hall of Famer | 👑    | All Supporter features |
+All paying tiers receive the same feature access. The tiers are recognition levels based on contribution amount:
 
-> **Note:** All paying tiers ($5+) receive the same feature access. The appreciation tiers (Supporter, Champion, Legend, Hall of Famer) are recognition levels based on contribution amount, not feature gates.
+| Tier          | Badge | Feature Access         |
+| ------------- | ----- | ---------------------- |
+| Free          | -     | Basic features         |
+| Supporter     | 🙌     | All Supporter features |
+| Champion      | 🏆     | All Supporter features |
+| Legend        | 🌟     | All Supporter features |
+| Hall of Famer | 👑     | All Supporter features |
+
+> **Note:** All paying tiers ($4+) receive the same feature access. The appreciation tiers are recognition levels, not feature gates.
 
 ## Free vs Supporter Comparison
 
-| Feature                    | Free          | Supporter ($5+/mo)          |
+| Feature                    | Free          | Supporter ($4+/mo)          |
 | -------------------------- | ------------- | --------------------------- |
 | Public scoreboards         | 2 max         | Unlimited                   |
 | Private scoreboards        | ❌            | ✅ Unlimited                |
@@ -44,24 +50,33 @@ This document outlines the planned features and implementation phases for transi
 | History snapshots          | 10 max        | 100 max                     |
 | Themes                     | All presets   | All presets + Custom        |
 | "Powered by" badge (embed) | ✅ Shown      | ❌ Hidden                   |
-| "Created by" attribution   | Name only     | Name + Tier Badge           |
+| Supporters page listing    | ❌            | ✅ Optional (can opt-out)   |
 | Kiosk Mode                 | ❌            | ✅                          |
 | Teams & Collaboration      | ❌            | ✅                          |
 | Support                    | GitHub Issues | GitHub Issues + Email (48h) |
 
-## Implementation Phases
+## Completed Phases (Archived)
 
-| Phase | Name                                                               | Priority  | Status      |
-| ----- | ------------------------------------------------------------------ | --------- | ----------- |
-| 1a    | [License & Public Pages](./phase-1a-license-public-pages.md)       | 🔴 High   | ✅ Done     |
-| 1b    | [LemonSqueezy Integration](./phase-1b-lemonsqueezy-integration.md) | 🔴 High   | ✅ Done     |
-| 1c    | [Supporter/Free Limits](./phase-1c-supporter-free-limits.md)       | 🔴 High   | ✅ Done     |
-| 1d    | [Supporter Tiers & Recognition](./phase-1d-supporter-tiers.md)     | 🔴 High   | Not Started |
-| 1e    | [Admin Management Pages](./phase-1e-admin-management.md)           | 🔴 High   | Not Started |
-| 2     | [Embed Branding](./phase-2-embed-branding.md)                      | 🔴 High   | Not Started |
-| 3     | [Teams & Collaboration](./phase-3-teams-collaboration.md)          | 🟡 Medium | Not Started |
-| 4     | [Kiosk/TV Mode](./phase-4-kiosk-mode.md)                           | � Medium | ✅ Done     |
-| 5     | [Time Machine](./phase-5-time-machine.md)                          | 🟢 Lower  | Not Started |
+The following phases have been successfully implemented and archived:
+- ✅ **Phase 1a** - License & Public Pages
+- ✅ **Phase 1b** - LemonSqueezy Integration
+- ✅ **Phase 1c** - Supporter/Free Limits
+- ✅ **Phase 1d** - Supporter Tiers & Recognition (partial - database layer complete)
+- ✅ **Phase 1e** - Admin Management Pages (partial - core features complete)
+- ✅ **Phase 2** - Embed Branding
+- ✅ **Phase 4** - Kiosk/TV Mode (originally)
+- ✅ **Phase 6** - Unit Tests
+
+## Active Implementation Phases
+
+| Phase | Name                                                       | Priority  | Status      |
+| ----- | ---------------------------------------------------------- | --------- | ----------- |
+| 1     | [Teams & Collaboration](./phase-1-teams-collaboration.md)  | 🟡 Medium | Not Started |
+| 2     | [Time Machine](./phase-2-time-machine.md)                  | 🟢 Lower  | Not Started |
+| 3     | [Supporter Recognition](./phase-3-supporter-recognition.md) | 🔴 High   | Not Started |
+| 4     | [Admin Enhancements](./phase-4-admin-enhancements.md)      | 🟡 Medium | Not Started |
+| 5     | [Dynamic Pricing](./phase-5-dynamic-pricing.md)            | 🟢 Low    | Not Started |
+| 6     | [CSV Export](./phase-6-csv-export.md)                      | 🟡 Medium | Not Started |
 
 ## Existing Features (Already Implemented)
 
@@ -79,7 +94,6 @@ These features already exist in the codebase:
 
 These features have been discussed but are not yet planned for implementation:
 
-- Data export (CSV/JSON)
 - Score change notifications
 - PowerPoint slide support (Kiosk Mode)
 - Custom domains
@@ -87,3 +101,4 @@ These features have been discussed but are not yet planned for implementation:
 - API access
 - Webhooks
 - Analytics dashboard
+- JSON export format

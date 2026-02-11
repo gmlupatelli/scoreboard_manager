@@ -2,15 +2,7 @@
 
 These features have been discussed and may be implemented in future phases.
 
-## Data & Export
-
-### CSV/JSON Export
-
-- Export scoreboard data to CSV or JSON
-- Include all entries and metadata
-- Useful for backup or migration
-
-### Score Change Notifications
+## Score Change Notifications
 
 - Email notifications when scores change
 - Configurable thresholds

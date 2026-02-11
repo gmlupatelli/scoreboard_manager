@@ -1,4 +1,4 @@
-# Phase 5: Time Machine (History)
+# Phase 2: Time Machine (History)
 
 **Priority:** 🟢 Lower  
 **Dependencies:** Phase 1c (Supporter/Free Limits)  

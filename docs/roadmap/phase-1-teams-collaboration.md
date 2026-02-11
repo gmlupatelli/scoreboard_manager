@@ -1,4 +1,4 @@
-# Phase 3: Teams & Collaboration
+# Phase 1: Teams & Collaboration
 
 **Priority:** 🟡 Medium  
 **Dependencies:** Phase 1c (Supporter/Free Limits)  
@@ -17,7 +17,7 @@ Implement team functionality allowing Supporters to:
 
 ## Issues
 
-### Issue 3.1: Design Teams Database Schema
+### Issue 1.1: Design Teams Database Schema
 
 **Title:** Create database schema for teams
 
@@ -102,7 +102,7 @@ CREATE POLICY "Team admins can update team"
 
 ---
 
-### Issue 3.2: Create Audit Log Schema and Service
+### Issue 1.2: Create Audit Log Schema and Service
 
 **Title:** Implement audit logging for team scoreboard changes
 
@@ -154,7 +154,7 @@ CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
 ---
 
-### Issue 3.3: Create Team Management UI
+### Issue 1.3: Create Team Management UI
 
 **Title:** Create team management pages
 
@@ -178,7 +178,7 @@ Create UI for managing teams:
 
 ---
 
-### Issue 3.4: Implement Team Invitations
+### Issue 1.4: Implement Team Invitations
 
 **Title:** Implement team invitation system
 
@@ -200,7 +200,7 @@ Allow team admins to invite users to teams:
 
 ---
 
-### Issue 3.5: Implement Scoreboard Team Transfer
+### Issue 1.5: Implement Scoreboard Team Transfer
 
 **Title:** Allow transferring scoreboards to/from teams
 
@@ -230,7 +230,7 @@ Allow users to:
 
 ---
 
-### Issue 3.6: Update Scoreboard Permissions for Teams
+### Issue 1.6: Update Scoreboard Permissions for Teams
 
 **Title:** Update scoreboard RLS policies for team access
 
@@ -253,7 +253,7 @@ Update scoreboard access rules:
 
 ---
 
-### Issue 3.7: Create Audit Log Viewer
+### Issue 1.7: Create Audit Log Viewer
 
 **Title:** Create audit log viewer for team admins
 
