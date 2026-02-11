@@ -17,6 +17,8 @@ interface ScoreboardCardProps {
   onRename: (id: string, newTitle: string) => void;
   onDelete: () => void;
   onNavigate: (id: string) => void;
+  onExport?: (id: string) => void;
+  isExporting?: boolean;
 }
 
 const ScoreboardCard = ({
@@ -33,6 +35,8 @@ const ScoreboardCard = ({
   onRename,
   onDelete,
   onNavigate,
+  onExport,
+  isExporting = false,
 }: ScoreboardCardProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
@@ -101,6 +105,21 @@ const ScoreboardCard = ({
                     >
                       <Icon name="PencilIcon" size={18} className="mr-3" />
                       Rename
+                    </button>
+                  )}
+                  {onExport && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onExport(id);
+                        setShowMenu(false);
+                      }}
+                      disabled={isExporting}
+                      className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:bg-muted hover:text-text-primary transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Export scoreboard to CSV"
+                    >
+                      <Icon name="DocumentArrowDownIcon" size={18} className="mr-3" />
+                      {isExporting ? 'Exporting...' : 'Export CSV'}
                     </button>
                   )}
                   <button

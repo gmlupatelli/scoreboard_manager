@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
+import { supabase } from '@/lib/supabase/client';
 import { useTimeoutRef, useUndoQueue } from '@/hooks';
 import { scoreboardService } from '../../../services/scoreboardService';
 import { limitsService } from '@/services/limitsService';
+import { downloadScoreboardCSV } from '@/utils/downloadExport';
 import {
   Scoreboard,
   ScoreboardEntry,
@@ -87,6 +89,7 @@ const ScoreboardManagementInteractive = () => {
   const [isEmbedSectionExpanded, setIsEmbedSectionExpanded] = useState(false);
   const [isKioskSectionExpanded, setIsKioskSectionExpanded] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [publicUnlockRemaining, setPublicUnlockRemaining] = useState<number | null>(null);
 
   // Execute all pending deletes on unmount (Option A: execute on navigation)
@@ -580,6 +583,31 @@ const ScoreboardManagementInteractive = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const handleExportCSV = async () => {
+    if (!scoreboardId) return;
+    setIsExporting(true);
+    try {
+      const getHeaders = async (): Promise<Record<string, string>> => {
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token;
+        if (!accessToken) return {};
+        return { Authorization: `Bearer ${accessToken}` };
+      };
+      const result = await downloadScoreboardCSV(scoreboardId, getHeaders);
+      if (result.success) {
+        showToast('Scoreboard exported successfully', 'success');
+      } else {
+        showToast(result.error || 'Failed to export scoreboard', 'error');
+      }
+    } catch (_err) {
+      showToast('Failed to export scoreboard', 'error');
+    } finally {
+      if (isMounted()) {
+        setIsExporting(false);
+      }
+    }
+  };
+
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
   const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
@@ -827,6 +855,18 @@ const ScoreboardManagementInteractive = () => {
                   <Icon name="ArrowUpTrayIcon" size={20} />
                   <span className="hidden sm:inline">Import CSV</span>
                   <span className="sr-only sm:hidden">Import CSV</span>
+                </button>
+                <button
+                  onClick={handleExportCSV}
+                  disabled={isExporting}
+                  className="flex items-center space-x-2 px-2 py-2 text-sm sm:px-3 md:px-4 md:text-base rounded-md bg-accent text-accent-foreground hover:opacity-90 transition-smooth duration-150 font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-100"
+                  title="Export scoreboard to CSV"
+                >
+                  <Icon name="DocumentArrowDownIcon" size={20} />
+                  <span className="hidden sm:inline">
+                    {isExporting ? 'Exporting...' : 'Export CSV'}
+                  </span>
+                  <span className="sr-only sm:hidden">Export CSV</span>
                 </button>
                 <button
                   onClick={handleClearAll}

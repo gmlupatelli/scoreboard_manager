@@ -10,6 +10,8 @@ import { subscriptionService } from '../../../services/subscriptionService';
 import { useInfiniteScroll, useUndoQueue } from '../../../hooks';
 import { Scoreboard as ScoreboardModel, ScoreType, TimeFormat } from '../../../types/models';
 import { limitsService } from '@/services/limitsService';
+import { downloadScoreboardCSV } from '@/utils/downloadExport';
+import { supabase } from '@/lib/supabase/client';
 import Header from '@/components/common/Header';
 import UndoToast from '@/components/common/UndoToast';
 import UsageCounterBlock from '@/components/common/UsageCounterBlock';
@@ -70,6 +72,7 @@ const AdminDashboardInteractive = () => {
   const [loadingOwners, setLoadingOwners] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isReactivating, setIsReactivating] = useState(false);
+  const [exportingId, setExportingId] = useState<string | null>(null);
   const [publicUsage, setPublicUsage] = useState<{
     used: number;
     max: number;
@@ -439,6 +442,28 @@ const AdminDashboardInteractive = () => {
     router.push(`/scoreboard-management?id=${id}`);
   };
 
+  const handleExportScoreboard = async (id: string) => {
+    setExportingId(id);
+    try {
+      const getHeaders = async (): Promise<Record<string, string>> => {
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token;
+        if (!accessToken) return {};
+        return { Authorization: `Bearer ${accessToken}` };
+      };
+      const result = await downloadScoreboardCSV(id, getHeaders);
+      if (result.success) {
+        showToast('Scoreboard exported successfully', 'success');
+      } else {
+        showToast(result.error || 'Failed to export scoreboard', 'error');
+      }
+    } catch (_err) {
+      showToast('Failed to export scoreboard', 'error');
+    } finally {
+      setExportingId(null);
+    }
+  };
+
   const totalEntries = scoreboards.reduce(
     (sum, scoreboard) => sum + (scoreboard.entryCount || 0),
     0
@@ -806,6 +831,8 @@ const AdminDashboardInteractive = () => {
                         onRename={handleRenameScoreboard}
                         onDelete={() => handleDeleteScoreboard(scoreboard)}
                         onNavigate={handleNavigateToScoreboard}
+                        onExport={handleExportScoreboard}
+                        isExporting={exportingId === scoreboard.id}
                       />
                     ))}
                   </div>

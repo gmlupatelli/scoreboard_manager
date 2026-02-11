@@ -71,7 +71,7 @@ The following phases have been successfully implemented and archived:
 
 | Phase | Name                                                       | Priority  | Status      |
 | ----- | ---------------------------------------------------------- | --------- | ----------- |
-| 1     | [CSV Export](./phase-1-csv-export.md)                      | 🟡 Medium | Not Started |
+| 1     | [CSV Export](./phase-1-csv-export.md)                      | 🟡 Medium | ✅ Completed |
 | 2     | [Supporter Recognition](./phase-2-supporter-recognition.md) | 🔴 High   | Not Started |
 | 3     | [Admin Enhancements](./phase-3-admin-enhancements.md)      | 🟡 Medium | Not Started |
 | 4     | [Dynamic Pricing](./phase-4-dynamic-pricing.md)            | 🟢 Low    | Not Started |
