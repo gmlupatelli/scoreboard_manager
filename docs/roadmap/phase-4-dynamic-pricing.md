@@ -36,7 +36,7 @@ These values are used across:
 
 ## Implementation Tasks
 
-### Issue 5.1: Create Tier Pricing Table
+### Issue 4.1: Create Tier Pricing Table
 
 **Description**: Create database table to store tier pricing information.
 
@@ -106,7 +106,7 @@ ON CONFLICT (tier, billing_interval) DO NOTHING;
 
 ---
 
-### Issue 5.2: Pricing Service
+### Issue 4.2: Pricing Service
 
 **Description**: Create service to fetch and update tier pricing from database.
 
@@ -161,7 +161,7 @@ const priceCents = data.data.attributes.price; // in cents
 
 ---
 
-### Issue 5.3: Webhook Handler Updates
+### Issue 4.3: Webhook Handler Updates
 
 **Description**: Add webhook event handlers for price changes in LemonSqueezy.
 
@@ -200,7 +200,7 @@ if (tierInfo) {
 
 ---
 
-### Issue 5.4: Manual Sync API Endpoint
+### Issue 4.4: Manual Sync API Endpoint
 
 **Description**: Create admin endpoint to manually trigger price sync from LemonSqueezy.
 
@@ -238,7 +238,7 @@ if (tierInfo) {
 
 ---
 
-### Issue 5.5: Admin UI - Pricing Configuration Section
+### Issue 4.5: Admin UI - Pricing Configuration Section
 
 **Description**: Add pricing configuration section to subscription management page.
 
@@ -287,7 +287,7 @@ if (tierInfo) {
 
 ---
 
-### Issue 5.6: Update Pricing Page
+### Issue 4.6: Update Pricing Page
 
 **Description**: Update public pricing page to fetch prices from database instead of hardcoded values.
 
@@ -307,7 +307,7 @@ if (tierInfo) {
 
 ---
 
-### Issue 5.7: Update Tier Price References
+### Issue 4.7: Update Tier Price References
 
 **Description**: Replace all hardcoded price references with database lookups.
 
@@ -347,7 +347,7 @@ export async function getTierPrice(
 
 ### New Table: tier_pricing
 
-See Issue 5.1 for full schema.
+See Issue 4.1 for full schema.
 
 **Key fields:**
 - `tier` + `billing_interval` (unique constraint)

@@ -27,7 +27,7 @@ Currently, users can import CSV data to bulk-add entries (via CSV Import feature
 
 ## Implementation Tasks
 
-### Issue 6.1: CSV Export API Endpoint
+### Issue 1.1: CSV Export API Endpoint
 
 **Description**: Create API endpoint to generate CSV file for a scoreboard.
 
@@ -110,7 +110,7 @@ const csvContent = lines.join('\n');
 
 ---
 
-### Issue 6.2: Export Button UI
+### Issue 1.2: Export Button UI
 
 **Description**: Add export button to individual scoreboard view page.
 
@@ -193,7 +193,7 @@ const handleExport = async () => {
 
 ---
 
-### Issue 6.3: Export from Scoreboard Management
+### Issue 1.3: Export from Scoreboard Management
 
 **Description**: Add export option to scoreboard management page (dashboard).
 
@@ -228,7 +228,7 @@ const handleExport = async () => {
 
 ---
 
-### Issue 6.4: Access Control
+### Issue 1.4: Access Control
 
 **Description**: Ensure proper access control for CSV exports.
 
@@ -265,7 +265,7 @@ if (!isPublic && !isOwner && !isAdmin) {
 
 ---
 
-### Issue 6.5: Filename Sanitization
+### Issue 1.5: Filename Sanitization
 
 **Description**: Ensure exported filenames are safe and descriptive.
 
@@ -303,7 +303,7 @@ function generateFilename(title: string): string {
 
 ---
 
-### Issue 6.6: Empty Scoreboard Handling
+### Issue 1.6: Empty Scoreboard Handling
 
 **Description**: Handle edge case where scoreboard has no entries.
 

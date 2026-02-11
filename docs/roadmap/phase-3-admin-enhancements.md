@@ -26,7 +26,7 @@ This phase adds a **"Details" button** to each row that opens a comprehensive mo
 
 ## Implementation Tasks
 
-### Issue 4.1: User Details Modal Component
+### Issue 3.1: User Details Modal Component
 
 **Description**: Create a modal component that displays comprehensive user information when admin clicks "Details" button on any user row.
 
@@ -88,7 +88,7 @@ This phase adds a **"Details" button** to each row that opens a comprehensive mo
 
 ---
 
-### Issue 4.2: User Details API Endpoint
+### Issue 3.2: User Details API Endpoint
 
 **Description**: Create API endpoint to fetch comprehensive user details for admin view.
 
@@ -179,7 +179,7 @@ const { data: scoreboards, count } = await supabase
 
 ---
 
-### Issue 4.3: Add "Details" Button to Subscription Table
+### Issue 3.3: Add "Details" Button to Subscription Table
 
 **Description**: Add a "Details" button to each row in the subscription management table.
 
@@ -215,7 +215,7 @@ const { data: scoreboards, count } = await supabase
 
 ---
 
-### Issue 4.4: Pagination Controls in Modal
+### Issue 3.4: Pagination Controls in Modal
 
 **Description**: Add "Load More" buttons for payment history and scoreboards in the modal.
 
@@ -235,7 +235,7 @@ const { data: scoreboards, count } = await supabase
 
 ---
 
-### Issue 4.5: Scoreboard Quick Links
+### Issue 3.5: Scoreboard Quick Links
 
 **Description**: Each scoreboard in the modal should be clickable and open in a new tab.
 

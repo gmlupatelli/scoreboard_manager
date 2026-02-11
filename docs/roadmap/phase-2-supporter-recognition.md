@@ -28,7 +28,7 @@ The distinction:
 
 ## Implementation Tasks
 
-### Issue 3.1: Welcome Modal Component
+### Issue 2.1: Welcome Modal Component
 
 **Description**: Create a modal that appears after successful LemonSqueezy checkout, replacing the current toast notification.
 
@@ -60,7 +60,7 @@ The distinction:
 
 ---
 
-### Issue 3.2: Display Name Validation (Server-Side)
+### Issue 2.2: Display Name Validation (Server-Side)
 
 **Description**: Add profanity filtering and content moderation for supporter display names.
 
@@ -97,7 +97,7 @@ if (displayName && filter.isProfane(displayName)) {
 
 ---
 
-### Issue 3.3: Supporter Preferences API Endpoint
+### Issue 2.3: Supporter Preferences API Endpoint
 
 **Description**: Create API endpoint to update supporter preferences.
 
@@ -131,7 +131,7 @@ if (displayName && filter.isProfane(displayName)) {
 
 ---
 
-### Issue 3.4: Profile Settings - Supporter Section
+### Issue 2.4: Profile Settings - Supporter Section
 
 **Description**: Add supporter preferences section to user profile settings page.
 
@@ -164,7 +164,7 @@ if (displayName && filter.isProfane(displayName)) {
 
 ---
 
-### Issue 3.5: Public Supporters List Page
+### Issue 2.5: Public Supporters List Page
 
 **Description**: Transform `/supporters` page from static content to dynamic list of active supporters.
 
@@ -220,7 +220,7 @@ ORDER BY
 
 ---
 
-### Issue 3.6: Remove Current Toast Notification
+### Issue 2.6: Remove Current Toast Notification
 
 **Description**: Remove the existing toast notification that appears after checkout success.
 
