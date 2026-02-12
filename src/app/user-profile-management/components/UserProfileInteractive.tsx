@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { profileService } from '@/services/profileService';
 import PersonalInfoSection from './PersonalInfoSection';
+import SupporterSection from './SupporterSection';
 import SecuritySection from './SecuritySection';
 import DangerZoneSection from './DangerZoneSection';
 import SubscriptionSection from './SubscriptionSection';
@@ -203,6 +204,9 @@ export default function UserProfileInteractive() {
           onUpdateEmail={handleUpdateEmail}
           onResendVerification={handleResendVerification}
         />
+
+        {/* Supporter Recognition */}
+        <SupporterSection onToast={showToast} />
 
         {/* Security Settings */}
         <SecuritySection onChangePassword={handleChangePassword} />

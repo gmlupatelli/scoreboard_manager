@@ -931,7 +931,7 @@ const ScoreboardManagementInteractive = () => {
                       )}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>

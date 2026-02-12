@@ -244,7 +244,7 @@ const ImportCSVModal = ({
                     Edit CSV
                   </button>
                 </div>
-                <div className="border border-border rounded-md overflow-hidden">
+                <div className="border border-border rounded-lg overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-muted">

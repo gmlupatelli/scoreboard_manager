@@ -18,6 +18,7 @@ import UsageCounterBlock from '@/components/common/UsageCounterBlock';
 import ScoreboardCard from './ScoreboardCard';
 import CreateScoreboardModal from './CreateScoreboardModal';
 import InviteUserModal from './InviteUserModal';
+import WelcomeModal from './WelcomeModal';
 import ToastNotification from './ToastNotification';
 import EmptyState from './EmptyState';
 import StatsCard from './StatsCard';
@@ -71,6 +72,7 @@ const AdminDashboardInteractive = () => {
   const [allOwners, setAllOwners] = useState<Owner[]>([]);
   const [loadingOwners, setLoadingOwners] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [isReactivating, setIsReactivating] = useState(false);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [publicUsage, setPublicUsage] = useState<{
@@ -116,13 +118,6 @@ const AdminDashboardInteractive = () => {
       // Clear the URL param
       router.replace('/dashboard');
 
-      // Show success toast
-      setToast({
-        message: 'Welcome! Your subscription is being activated...',
-        type: 'success',
-        isVisible: true,
-      });
-
       // Refresh subscription with retry logic (webhook may take a moment)
       const refreshWithRetry = async (attempts = 0) => {
         await refreshSubscription();
@@ -130,6 +125,9 @@ const AdminDashboardInteractive = () => {
         // If still no tier after refresh and we haven't exceeded retries, try again
         if (attempts < 3) {
           setTimeout(() => refreshWithRetry(attempts + 1), 2000);
+        } else {
+          // After retries complete, show welcome modal
+          setIsWelcomeModalOpen(true);
         }
       };
 
@@ -902,6 +900,13 @@ const AdminDashboardInteractive = () => {
         onSuccess={() => {
           setToast({ message: 'Invitation sent successfully!', type: 'success', isVisible: true });
         }}
+      />
+
+      <WelcomeModal
+        isOpen={isWelcomeModalOpen}
+        onClose={() => setIsWelcomeModalOpen(false)}
+        tier={subscriptionTier}
+        defaultDisplayName={userProfile?.fullName || ''}
       />
     </div>
   );

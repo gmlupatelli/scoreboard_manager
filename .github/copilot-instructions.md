@@ -704,6 +704,96 @@ return () => {
 - ✅ **Use CSS variables** from `index.css` for theming
 - ✅ **Keep responsive design** with Tailwind breakpoints (sm:, md:, lg:)
 
+### Table Styling Standards
+
+All data tables across the site follow a single standardized pattern based on the scoreboard-management table. **Only** scoreboard display tables (EntryTable, embed, style-preview) use inline styles for user-customizable theming.
+
+#### Standard Data Table Structure
+
+```tsx
+{/* Wrapper — border + rounded + clip overflow */}
+<div className="overflow-x-auto border border-border rounded-lg overflow-hidden">
+  <table className="w-full">
+    {/* Header — muted background, uppercase small labels */}
+    <thead className="bg-muted">
+      <tr>
+        <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+          Column Name
+        </th>
+        {/* For right-aligned columns (e.g. Actions, Receipt): */}
+        <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
+          Actions
+        </th>
+      </tr>
+    </thead>
+
+    {/* Body — white bg, divider lines between rows */}
+    <tbody className="bg-surface divide-y divide-border">
+      <tr className="hover:bg-muted/50 transition-colors">
+        <td className="px-4 py-3 text-text-primary">Primary content</td>
+        <td className="px-4 py-3 text-text-secondary">Secondary content</td>
+        <td className="px-4 py-3 text-right">Right-aligned content</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+```
+
+#### Table Element Reference
+
+| Element | Classes | Notes |
+|---------|---------|-------|
+| **Wrapper div** | `overflow-x-auto border border-border rounded-lg overflow-hidden` | Always wrap tables; use `overflow-hidden` to clip rounded corners |
+| **table** | `w-full` | Never add `text-sm` or color classes on the table itself |
+| **thead** | `bg-muted` | Add `sticky top-0` only for scroll-constrained tables (e.g. max-h containers) |
+| **th** | `px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider` | Right-aligned: replace `text-left` with `text-right` |
+| **tbody** | `bg-surface divide-y divide-border` | Uses `divide-y` — never put `border-b` on individual rows |
+| **tr (body)** | `hover:bg-muted/50 transition-colors` | Hover state for interactive tables; omit for static content if desired |
+| **td** | `px-4 py-3` + per-cell text color | Primary data: `text-text-primary`; secondary data: `text-text-secondary` |
+
+#### Sortable Column Headers
+
+For tables with sortable columns, wrap the header text in a `<button>`:
+
+```tsx
+<th className="px-4 py-3 text-left">
+  <button
+    onClick={() => handleSort('column')}
+    className="flex items-center space-x-1 text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text-primary transition-smooth duration-150"
+  >
+    <span>Column Name</span>
+    {sortBy === 'column' && (
+      <Icon name={sortOrder === 'asc' ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={14} />
+    )}
+  </button>
+</th>
+```
+
+#### Empty State (Inside Table)
+
+```tsx
+<tr>
+  <td colSpan={columnCount} className="px-4 py-12 text-center">
+    <div className="flex flex-col items-center space-y-3">
+      <Icon name="InboxIcon" size={48} className="text-muted-foreground" />
+      <p className="text-sm text-text-secondary">No items found.</p>
+    </div>
+  </td>
+</tr>
+```
+
+#### Rules
+
+- ❌ **Never use `font-semibold`** on `<th>` — always use `font-medium`
+- ❌ **Never use `border-b` on body `<tr>`** — use `divide-y divide-border` on `<tbody>`
+- ❌ **Never use `bg-muted/30`** on header rows — always use `bg-muted`
+- ❌ **Never put `text-sm` on the `<table>` element** — size is controlled per-cell
+- ❌ **Never use `rounded-md`** for table wrappers — always use `rounded-lg`
+- ✅ **Always include `overflow-hidden`** on the wrapper to clip rounded corners
+- ✅ **Padding order**: `px-4 py-3` (horizontal first)
+- ✅ **Cell text colors**: Use `text-text-primary` for key data, `text-text-secondary` for supporting data
+- ✅ **Right-aligned columns** (Actions, Receipt, Amount): Use `text-right` on both `<th>` and `<td>`
+
 ### "Tips" Info Boxes
 
 - ✅ **Use gray theme** for tips and helpful information

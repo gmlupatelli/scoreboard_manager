@@ -404,22 +404,22 @@ export default function SubscriptionSection() {
         {paymentHistory.length === 0 ? (
           <p className="text-text-secondary">No payments recorded yet.</p>
         ) : (
-          <div className="overflow-x-auto border border-border rounded-lg">
-            <table className="w-full text-sm">
-              <thead className="bg-muted text-text-secondary">
+          <div className="overflow-x-auto border border-border rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium">Date</th>
-                  <th className="text-left px-4 py-3 font-medium">Item</th>
-                  <th className="text-left px-4 py-3 font-medium">Amount</th>
-                  <th className="text-left px-4 py-3 font-medium">Status</th>
-                  <th className="text-right px-4 py-3 font-medium">Receipt</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Item</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Amount</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Receipt</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-surface divide-y divide-border">
                 {paymentHistory.map((entry) => (
-                  <tr key={entry.id} className="border-t border-border">
-                    <td className="px-4 py-3 text-text-secondary">{formatDate(entry.createdAt)}</td>
-                    <td className="px-4 py-3">
+                  <tr key={entry.id} className="hover:bg-muted/50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-text-secondary">{formatDate(entry.createdAt)}</td>
+                    <td className="px-4 py-3 text-sm">
                       <p className="text-text-primary">
                         {entry.orderItemProductName || 'Subscription'}
                       </p>
@@ -427,7 +427,7 @@ export default function SubscriptionSection() {
                         <p className="text-xs text-text-secondary">{entry.orderItemVariantName}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-text-primary">
+                    <td className="px-4 py-3 text-sm text-text-primary">
                       {entry.totalCents && entry.currency
                         ? new Intl.NumberFormat('en-US', {
                             style: 'currency',
@@ -435,10 +435,10 @@ export default function SubscriptionSection() {
                           }).format(entry.totalCents / 100)
                         : '—'}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary">
+                    <td className="px-4 py-3 text-sm text-text-secondary">
                       {entry.statusFormatted || entry.status || '—'}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-sm text-right">
                       {entry.receiptUrl ? (
                         <a
                           href={entry.receiptUrl}

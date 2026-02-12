@@ -9,6 +9,7 @@ type BaseButtonProps = {
   icon?: string;
   iconPosition?: 'left' | 'right';
   iconSize?: number;
+  iconClassName?: string;
   children?: ReactNode;
   fullWidth?: boolean;
   disabled?: boolean;
@@ -35,6 +36,7 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       icon,
       iconPosition = 'left',
       iconSize,
+      iconClassName,
       children,
       fullWidth = false,
       className = '',
@@ -80,11 +82,16 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
     const renderIcon = (position: 'left' | 'right') => {
       if (!icon || iconPosition !== position) return null;
 
+      const positionClass = position === 'left' ? 'mr-2' : 'ml-2';
+      const combinedIconClass = iconClassName
+        ? `${positionClass} ${iconClassName}`
+        : positionClass;
+
       return (
         <Icon
           name={icon}
           size={defaultIconSize}
-          className={position === 'left' ? 'mr-2' : 'ml-2'}
+          className={combinedIconClass}
         />
       );
     };

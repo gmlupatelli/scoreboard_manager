@@ -316,7 +316,8 @@ test.describe('Kiosk Mode - Fast Tests', () => {
     const scoreboardId = await getScoreboardId(supporterAuth);
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
+    // Use longer timeout for navigation under parallel load
+    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`, { timeout: 45000 });
     await supporterAuth.waitForLoadState('networkidle');
     await waitForSubscriptionLoaded(supporterAuth);
 

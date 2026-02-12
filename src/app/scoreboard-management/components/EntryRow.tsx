@@ -125,7 +125,7 @@ const EntryRow = ({
 
   if (isEditing) {
     return (
-      <tr className="border-b border-border hover:bg-muted/50 transition-smooth duration-150">
+      <tr className="hover:bg-muted/50 transition-smooth duration-150">
         <td className="px-4 py-3 text-sm font-medium text-text-primary">{entry.rank}</td>
         <td className="px-4 py-3">
           <div>
@@ -175,8 +175,8 @@ const EntryRow = ({
             {scoreError && <p className="text-xs text-destructive mt-1">{scoreError}</p>}
           </div>
         </td>
-        <td className="px-4 py-3">
-          <div className="flex items-center space-x-2">
+        <td className="px-4 py-3 text-right">
+          <div className="flex items-center justify-end space-x-2">
             <button
               type="button"
               onClick={handleSave}
@@ -203,12 +203,12 @@ const EntryRow = ({
   }
 
   return (
-    <tr className="border-b border-border hover:bg-muted/50 transition-smooth duration-150">
+    <tr className="hover:bg-muted/50 transition-smooth duration-150">
       <td className="px-4 py-3 text-sm font-medium text-text-primary">{entry.rank}</td>
       <td className="px-4 py-3 text-sm text-text-primary">{entry.name}</td>
       <td className="px-4 py-3 text-sm font-data text-text-primary">{displayScore}</td>
-      <td className="px-4 py-3">
-        <div className="flex items-center space-x-2">
+      <td className="px-4 py-3 text-right">
+        <div className="flex items-center justify-end space-x-2">
           <button
             type="button"
             onClick={handleStartEdit}

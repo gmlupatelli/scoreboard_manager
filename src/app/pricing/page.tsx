@@ -444,23 +444,23 @@ function PricingContent() {
 
           <div className="bg-card border border-border rounded-lg p-6 mb-12">
             <h2 className="text-2xl font-semibold text-text-primary mb-4">Compare plans</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-text-secondary">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-3 px-4 font-semibold text-text-primary">Feature</th>
-                    <th className="text-left py-3 px-4 font-semibold text-text-primary">Free</th>
-                    <th className="text-left py-3 px-4 font-semibold text-text-primary">
+            <div className="overflow-x-auto border border-border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Feature</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Free</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                       Supporter (All Tiers)
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-surface divide-y divide-border">
                   {comparisonRows.map((row) => (
-                    <tr key={row.feature} className="border-b border-border last:border-0">
-                      <td className="py-3 px-4">{row.feature}</td>
-                      <td className="py-3 px-4">{row.free}</td>
-                      <td className="py-3 px-4">{row.supporter}</td>
+                    <tr key={row.feature} className="hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-text-primary">{row.feature}</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">{row.free}</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">{row.supporter}</td>
                     </tr>
                   ))}
                 </tbody>

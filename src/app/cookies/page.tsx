@@ -69,36 +69,36 @@ export default function CookiePolicyPage() {
                 The cookies used by the hosted service may include the following. Names and
                 durations can vary by environment or updates.
               </p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-text-secondary text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 font-semibold text-text-primary">
+              <div className="overflow-x-auto border border-border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Cookie Name
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-text-primary">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Purpose
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-text-primary">
+                      <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Duration
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr className="border-b border-border">
-                      <td className="py-3 px-4">sb-access-token</td>
-                      <td className="py-3 px-4">Authentication and session management</td>
-                      <td className="py-3 px-4">Session</td>
+                  <tbody className="bg-surface divide-y divide-border">
+                    <tr className="hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-text-primary">sb-access-token</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">Authentication and session management</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">Session</td>
                     </tr>
-                    <tr className="border-b border-border">
-                      <td className="py-3 px-4">sb-refresh-token</td>
-                      <td className="py-3 px-4">Maintain logged-in state</td>
-                      <td className="py-3 px-4">30 days</td>
+                    <tr className="hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-text-primary">sb-refresh-token</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">Maintain logged-in state</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">30 days</td>
                     </tr>
-                    <tr className="border-b border-border">
-                      <td className="py-3 px-4">preferences</td>
-                      <td className="py-3 px-4">Store user preferences</td>
-                      <td className="py-3 px-4">1 year</td>
+                    <tr className="hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 text-sm text-text-primary">preferences</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">Store user preferences</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">1 year</td>
                     </tr>
                   </tbody>
                 </table>

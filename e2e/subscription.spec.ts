@@ -25,6 +25,7 @@ import { test as authTest, expect, TEST_USERS } from './fixtures/auth';
 import {
   seedSubscription,
   removeSubscription,
+  getSubscription,
   SUPPORTER_EMAIL,
   SUPPORTER_3_EMAIL,
   SUPPORTER_4_EMAIL,
@@ -51,16 +52,40 @@ function getProjectSupporter(projectName: string) {
 }
 
 // Helper to set up subscription state before tests
+// Retries to handle cross-file race conditions with supporter-recognition.spec.ts
 const setupSubscriptionState = async (email: string, state: SubscriptionState | 'none') => {
-  if (state === 'none') {
-    const result = await removeSubscription(email);
-    if (!result.success) {
-      console.warn(`removeSubscription(${email}) failed: ${result.error}`);
-    }
-  } else {
-    const result = await seedSubscription(email, state);
-    if (!result.success) {
-      console.warn(`seedSubscription(${email}, ${state}) failed: ${result.error}`);
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY_MS = 500;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    if (state === 'none') {
+      const result = await removeSubscription(email);
+      if (!result.success) {
+        console.warn(`removeSubscription(${email}) attempt ${attempt} failed: ${result.error}`);
+      }
+      // Verify removal
+      const sub = await getSubscription(email);
+      if (!sub) break; // Confirmed removed
+      if (attempt < MAX_RETRIES) {
+        console.warn(`Subscription still exists for ${email} after removal attempt ${attempt}, retrying...`);
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      }
+    } else {
+      const result = await seedSubscription(email, state);
+      if (!result.success) {
+        console.warn(`seedSubscription(${email}, ${state}) attempt ${attempt} failed: ${result.error}`);
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        }
+        continue;
+      }
+      // Verify seeded
+      const sub = await getSubscription(email);
+      if (sub && sub.status === (state === 'cancelled_grace_period' ? 'cancelled' : state)) break;
+      if (attempt < MAX_RETRIES) {
+        console.warn(`Subscription state mismatch for ${email} after seed attempt ${attempt}, retrying...`);
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+      }
     }
   }
 };
@@ -96,16 +121,31 @@ authTest.describe('Supporter Plan - No Subscription', () => {
   });
 
   authTest('@fast shows subscription tiers when not subscribed', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is removed right before page load to prevent race with other spec files
+    await setupSubscriptionState(email, 'none');
     await navigateAfterLogin(page, '/supporter-plan');
 
-    // Should show tier selection cards
-    const supporterTier = page.locator('text=Supporter');
-    const championTier = page.locator('text=Champion');
+    // If the page still shows an active subscription (race condition), remove again and reload
+    const currentPlan = page.locator('h2:has-text("Current Plan")');
+    const chooseATier = page.locator('h3:has-text("Choose a tier")');
+    const hasTierSelector = await chooseATier.isVisible({ timeout: 3000 }).catch(() => false);
 
-    await expect(supporterTier.first()).toBeVisible();
-    await expect(championTier.first()).toBeVisible();
+    if (!hasTierSelector && await currentPlan.isVisible({ timeout: 1000 }).catch(() => false)) {
+      // Race condition: subscription was re-seeded by another spec file — remove again and reload
+      await setupSubscriptionState(email, 'none');
+      await page.reload({ waitUntil: 'networkidle' });
+    }
+
+    // Should show tier selection cards (scope to main content to avoid hidden mobile nav links)
+    const mainContent = page.locator('main');
+    const supporterTier = mainContent.locator('text=Supporter');
+    const championTier = mainContent.locator('text=Champion');
+
+    await expect(supporterTier.first()).toBeVisible({ timeout: 15000 });
+    await expect(championTier.first()).toBeVisible({ timeout: 15000 });
   });
 
   authTest('@fast shows subscription benefits', async ({ page, loginAs }, testInfo) => {
@@ -176,8 +216,11 @@ authTest.describe('Supporter Plan - Active Subscription', () => {
   });
 
   authTest('@fast shows current subscription status', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is active right before navigation to prevent race
+    await setupSubscriptionState(email, 'active');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // The DowngradeNoticeManager may show a "Your plan has ended" modal briefly
@@ -200,8 +243,11 @@ authTest.describe('Supporter Plan - Active Subscription', () => {
   });
 
   authTest('@fast shows current tier', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is active right before navigation to prevent race
+    await setupSubscriptionState(email, 'active');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // Wait for Current Plan card to appear, then check the TierBadge inside it
@@ -213,8 +259,11 @@ authTest.describe('Supporter Plan - Active Subscription', () => {
   });
 
   authTest('@fast shows manage billing button', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is active right before navigation to prevent race
+    await setupSubscriptionState(email, 'active');
     await navigateAfterLogin(page, '/supporter-plan');
 
     const manageBillingButton = page.locator('button:has-text("Manage Billing")');
@@ -222,8 +271,11 @@ authTest.describe('Supporter Plan - Active Subscription', () => {
   });
 
   authTest('@full @desktop-only shows cancel subscription button', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is active right before navigation to prevent race
+    await setupSubscriptionState(email, 'active');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // Wait for subscription to fully load
@@ -235,8 +287,11 @@ authTest.describe('Supporter Plan - Active Subscription', () => {
   authTest(
     '@full @desktop-only cancel button shows confirmation modal',
     async ({ page, loginAs }, testInfo) => {
-      const { user } = getProjectSupporter(testInfo.project.name);
+      const { user, email } = getProjectSupporter(testInfo.project.name);
       await loginAs(user);
+
+      // Ensure subscription is active right before navigation to prevent race
+      await setupSubscriptionState(email, 'active');
       await navigateAfterLogin(page, '/supporter-plan');
 
       // Wait for subscription to fully load
@@ -262,8 +317,11 @@ authTest.describe('Supporter Plan - Active Subscription', () => {
   );
 
   authTest('@full @desktop-only change tier button is visible', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is active right before navigation to prevent race
+    await setupSubscriptionState(email, 'active');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // Wait for subscription to fully load
@@ -289,8 +347,11 @@ authTest.describe('Supporter Plan - Cancelled (Grace Period)', () => {
   });
 
   authTest('@fast shows cancelled status with end date', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is in cancelled_grace_period right before navigation
+    await setupSubscriptionState(email, 'cancelled_grace_period');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // Wait for subscription data to load
@@ -303,8 +364,11 @@ authTest.describe('Supporter Plan - Cancelled (Grace Period)', () => {
   });
 
   authTest('@fast shows reactivate button', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is in cancelled_grace_period right before navigation
+    await setupSubscriptionState(email, 'cancelled_grace_period');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // Wait for subscription to load
@@ -314,7 +378,7 @@ authTest.describe('Supporter Plan - Cancelled (Grace Period)', () => {
   });
 
   authTest('@full @desktop-only reactivate calls resume API', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
 
     // Intercept resume API
@@ -328,6 +392,8 @@ authTest.describe('Supporter Plan - Cancelled (Grace Period)', () => {
       });
     });
 
+    // Ensure subscription is in cancelled_grace_period right before navigation
+    await setupSubscriptionState(email, 'cancelled_grace_period');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // Wait for subscription to load
@@ -341,8 +407,11 @@ authTest.describe('Supporter Plan - Cancelled (Grace Period)', () => {
   });
 
   authTest('@full @desktop-only does not show cancel button', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure subscription is in cancelled_grace_period right before navigation
+    await setupSubscriptionState(email, 'cancelled_grace_period');
     await navigateAfterLogin(page, '/supporter-plan');
 
     const cancelButton = page.locator('button:has-text("Cancel Subscription")');
@@ -366,8 +435,11 @@ authTest.describe('Supporter Plan - Gifted Subscription', () => {
   });
 
   authTest('@fast shows gifted subscription as active', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
+    const { user, email } = getProjectSupporter(testInfo.project.name);
     await loginAs(user);
+
+    // Ensure gifted subscription exists right before navigation
+    await setupSubscriptionState(email, 'gifted');
     await navigateAfterLogin(page, '/supporter-plan');
 
     // Gifted subscriptions should show as active with Current Plan card
@@ -382,8 +454,11 @@ authTest.describe('Supporter Plan - Gifted Subscription', () => {
   authTest(
     '@fast gifted subscription has disabled billing management',
     async ({ page, loginAs }, testInfo) => {
-      const { user } = getProjectSupporter(testInfo.project.name);
+      const { user, email } = getProjectSupporter(testInfo.project.name);
       await loginAs(user);
+
+      // Ensure gifted subscription exists right before navigation
+      await setupSubscriptionState(email, 'gifted');
       await navigateAfterLogin(page, '/supporter-plan');
 
       // Manage Billing button should be visible but disabled for gifted subscriptions

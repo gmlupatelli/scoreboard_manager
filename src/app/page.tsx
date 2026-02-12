@@ -209,11 +209,11 @@ export default async function Home() {
         <section className="relative pt-20 sm:pt-24 md:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-red-600/5 via-orange-600/5 to-amber-600/5" />
           <div className="relative max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary">
-                    <Icon name="SparklesIcon" size={16} className="text-success" />
+                  <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-secondary whitespace-nowrap">
+                    <Icon name="SparklesIcon" size={16} className="text-success flex-shrink-0" />
                     <span>Open Source • AGPL v3</span>
                   </div>
                   <a
@@ -353,7 +353,7 @@ export default async function Home() {
         {/* Why Open Source Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface">
           <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-3xl sm:text-4xl font-bold text-text-primary mb-4">
                   Why <span className="text-primary">Open Source</span>?
@@ -432,7 +432,7 @@ export default async function Home() {
         {/* Benefits Section */}
         <section id="benefits" className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-text-primary mb-6">
                   Why Choose <span className="text-primary">Scoreboard Manager?</span>

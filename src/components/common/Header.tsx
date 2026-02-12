@@ -33,6 +33,75 @@ interface HeaderProps {
   customStyles?: ScoreboardCustomStyles | null;
 }
 
+/**
+ * Navigation item definition
+ */
+interface NavItem {
+  label: string;
+  path: string;
+  icon: string;
+}
+
+/**
+ * User dropdown menu item — extends NavItem with optional visibility & admin-aware paths
+ */
+interface MenuItemLink extends NavItem {
+  type: 'link';
+  /** Only show for this role. Omit to show for all. */
+  role?: 'system_admin' | 'user';
+  /** If set, use this path when user is system_admin */
+  adminPath?: string;
+}
+
+interface MenuItemAction {
+  type: 'action';
+  label: string;
+  icon: string;
+  action: () => void;
+}
+
+type MenuItem = MenuItemLink | MenuItemAction;
+
+// ── Navigation data ──────────────────────────────────────────────
+
+/** Landing-page links shown to unauthenticated visitors (desktop top-bar) */
+const PUBLIC_NAV_ITEMS: NavItem[] = [
+  { label: 'Features', path: '/#features', icon: 'SparklesIcon' },
+  { label: 'Benefits', path: '/#benefits', icon: 'CheckBadgeIcon' },
+  { label: 'Testimonials', path: '/#testimonials', icon: 'ChatBubbleLeftRightIcon' },
+  { label: 'Scoreboards', path: '/public-scoreboard-list', icon: 'TrophyIcon' },
+  { label: 'Pricing', path: '/pricing', icon: 'GiftIcon' },
+  { label: 'Supporters', path: '/supporters', icon: 'HeartIcon' },
+];
+
+/** Mobile-only: includes Home at the top */
+const PUBLIC_MOBILE_NAV_ITEMS: NavItem[] = [
+  { label: 'Home', path: '/', icon: 'HomeIcon' },
+  ...PUBLIC_NAV_ITEMS,
+];
+
+/** Build the user dropdown items (needs handleLogout + role info) */
+const buildUserMenuItems = (
+  isAdmin: boolean,
+  handleLogout: () => void,
+): MenuItem[] => {
+  const items: MenuItem[] = [
+    { type: 'link', label: 'My Boards', path: '/dashboard', icon: 'ClipboardDocumentListIcon' },
+    { type: 'link', label: 'Profile', path: '/user-profile-management', icon: 'UserCircleIcon' },
+    { type: 'link', label: 'Supporter Plan', path: '/supporter-plan', icon: 'GiftIcon', role: 'user' },
+    { type: 'link', label: 'Invitations', path: '/invitations', icon: 'EnvelopeIcon', adminPath: '/system-admin/invitations' },
+    { type: 'link', label: 'Manage Subscriptions', path: '/system-admin/subscriptions', icon: 'CreditCardIcon', role: 'system_admin' },
+    { type: 'link', label: 'System Settings', path: '/system-admin/settings', icon: 'Cog6ToothIcon', role: 'system_admin' },
+    { type: 'action', label: 'Logout', icon: 'ArrowRightOnRectangleIcon', action: handleLogout },
+  ];
+
+  return items.filter((item) => {
+    if (item.type === 'action') return true;
+    if (!item.role) return true;
+    return isAdmin ? item.role === 'system_admin' : item.role === 'user';
+  });
+};
+
 const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -55,13 +124,6 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
       }
     : undefined;
 
-  const _accentStyle = customStyles
-    ? {
-        backgroundColor: customStyles.accentColor,
-        fontFamily: customStyles.fontFamily || 'inherit',
-      }
-    : undefined;
-
   const primaryStyle = customStyles
     ? {
         backgroundColor: customStyles.accentColor,
@@ -73,22 +135,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  interface NavItem {
-    label: string;
-    path: string;
-    icon: string;
-  }
-
-  const publicNavItems: NavItem[] = [];
-
-  const adminNavItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: 'HomeIcon' },
-    { label: 'Manage Scoreboards', path: '/scoreboard-management', icon: 'Cog6ToothIcon' },
-  ];
-
-  const _navItems = isAuthenticated ? adminNavItems : publicNavItems;
-
-  const _isActivePath = (path: string) => pathname === path;
+  const isActivePath = (path: string) => pathname === path;
 
   const handleLogout = async () => {
     setIsUserMenuOpen(false);
@@ -100,8 +147,89 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
     }
   };
 
-  // Display name logic: prefer fullName, fallback to email, then "User"
   const displayName = userProfile?.fullName || user?.email || 'User';
+  const isAdmin = userProfile?.role === 'system_admin';
+  const userMenuItems = buildUserMenuItems(isAdmin, handleLogout);
+
+  // ── Render helpers ─────────────────────────────────────────────
+
+  /** Desktop top-bar nav link */
+  const renderDesktopNavLink = (item: NavItem) => (
+    <Link
+      key={item.path}
+      href={item.path}
+      className={`flex items-center xl:space-x-1.5 px-2 xl:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-smooth duration-150 ${
+        isActivePath(item.path)
+          ? 'text-primary'
+          : 'text-text-secondary hover:opacity-80'
+      }`}
+      style={customStyles ? textStyle : undefined}
+    >
+      <Icon name={item.icon} size={16} className="hidden xl:block flex-shrink-0" />
+      <span>{item.label}</span>
+    </Link>
+  );
+
+  /** Mobile nav link (public or authenticated list) */
+  const renderMobileNavLink = (item: NavItem, onClick: () => void) => (
+    <Link
+      key={item.path}
+      href={item.path}
+      className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-smooth duration-150 ${
+        isActivePath(item.path)
+          ? 'text-primary'
+          : 'text-text-secondary hover:opacity-80'
+      }`}
+      style={customStyles ? textStyle : undefined}
+      onClick={onClick}
+    >
+      <Icon name={item.icon} size={20} />
+      <span>{item.label}</span>
+    </Link>
+  );
+
+  /** User dropdown menu item */
+  const renderMenuItem = (item: MenuItem, isMobile: boolean) => {
+    const iconSize = isMobile ? 20 : 18;
+    const baseClass = isMobile
+      ? 'flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150'
+      : 'flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150';
+
+    if (item.type === 'action') {
+      return (
+        <button
+          key={item.label}
+          onClick={item.action}
+          className={baseClass}
+          style={customStyles ? textStyle : undefined}
+          title={item.label}
+        >
+          <Icon name={item.icon} size={iconSize} className="mr-3" />
+          {item.label}
+        </button>
+      );
+    }
+
+    const href = item.adminPath && isAdmin ? item.adminPath : item.path;
+    const closeMenu = isMobile
+      ? () => setIsMobileMenuOpen(false)
+      : () => setIsUserMenuOpen(false);
+
+    return (
+      <Link
+        key={item.label}
+        href={href}
+        onClick={closeMenu}
+        className={baseClass}
+        style={customStyles ? textStyle : undefined}
+      >
+        <Icon name={item.icon} size={iconSize} className="mr-3" />
+        {item.label}
+      </Link>
+    );
+  };
+
+  // ── JSX ────────────────────────────────────────────────────────
 
   return (
     <header
@@ -110,6 +238,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
     >
       <nav className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 landscape-mobile:h-12">
+          {/* Logo */}
           <div className="flex items-center">
             <Link
               href={isAuthenticated ? '/dashboard' : '/'}
@@ -126,51 +255,12 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center space-x-4">
-            {!isAuthenticated && (
-              <>
-                <Link
-                  href="/#features"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                >
-                  <Icon name="SparklesIcon" size={18} />
-                  <span>Features</span>
-                </Link>
-                <Link
-                  href="/#benefits"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                >
-                  <Icon name="CheckBadgeIcon" size={18} />
-                  <span>Benefits</span>
-                </Link>
-                <Link
-                  href="/#testimonials"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                >
-                  <Icon name="ChatBubbleLeftRightIcon" size={18} />
-                  <span>Testimonials</span>
-                </Link>
-                <Link
-                  href="/public-scoreboard-list"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                >
-                  <Icon name="TrophyIcon" size={18} />
-                  <span>Scoreboards</span>
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                >
-                  <Icon name="GiftIcon" size={18} />
-                  <span>Pricing</span>
-                </Link>
-              </>
-            )}
+          {/* Desktop navigation */}
+          <div className="hidden lg:flex items-center space-x-1 xl:space-x-3">
+            {/* Public nav links */}
+            {!isAuthenticated && PUBLIC_NAV_ITEMS.map(renderDesktopNavLink)}
+
+            {/* Auth buttons or user menu */}
             {isAuthenticated ? (
               <div className="relative">
                 <button
@@ -189,10 +279,8 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   </div>
                   <div className="flex flex-col items-start">
                     <span className="text-sm font-medium">{displayName}</span>
-                    {userProfile?.role !== 'system_admin' && (
-                      <TierBadge tier={subscriptionTier} size="sm" />
-                    )}
-                    {userProfile?.role === 'system_admin' && (
+                    {!isAdmin && <TierBadge tier={subscriptionTier} size="sm" />}
+                    {isAdmin && (
                       <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-700 font-medium text-xs px-2 py-0.5">
                         Admin
                       </span>
@@ -223,79 +311,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                       }
                     >
                       <div className="py-1">
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
-                        >
-                          <Icon name="ClipboardDocumentListIcon" size={18} className="mr-3" />
-                          My Boards
-                        </Link>
-                        <Link
-                          href="/user-profile-management"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
-                        >
-                          <Icon name="UserCircleIcon" size={18} className="mr-3" />
-                          Profile
-                        </Link>
-                        {userProfile?.role !== 'system_admin' && (
-                          <Link
-                            href="/supporter-plan"
-                            onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                            style={customStyles ? textStyle : undefined}
-                          >
-                            <Icon name="GiftIcon" size={18} className="mr-3" />
-                            Supporter Plan
-                          </Link>
-                        )}
-                        <Link
-                          href={
-                            userProfile?.role === 'system_admin'
-                              ? '/system-admin/invitations'
-                              : '/invitations'
-                          }
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
-                        >
-                          <Icon name="EnvelopeIcon" size={18} className="mr-3" />
-                          Invitations
-                        </Link>
-                        {userProfile?.role === 'system_admin' && (
-                          <>
-                            <Link
-                              href="/system-admin/subscriptions"
-                              onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                              style={customStyles ? textStyle : undefined}
-                            >
-                              <Icon name="CreditCardIcon" size={18} className="mr-3" />
-                              Manage Subscriptions
-                            </Link>
-                            <Link
-                              href="/system-admin/settings"
-                              onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                              style={customStyles ? textStyle : undefined}
-                            >
-                              <Icon name="Cog6ToothIcon" size={18} className="mr-3" />
-                              System Settings
-                            </Link>
-                          </>
-                        )}
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center w-full px-4 py-2 text-sm text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                          style={customStyles ? textStyle : undefined}
-                          title="Sign out of your account"
-                        >
-                          <Icon name="ArrowRightOnRectangleIcon" size={18} className="mr-3" />
-                          Logout
-                        </button>
+                        {userMenuItems.map((item) => renderMenuItem(item, false))}
                       </div>
                     </div>
                   </>
@@ -303,12 +319,14 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               </div>
             ) : (
               <>
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 <Button
                   href="/register"
                   variant="outline"
                   size="sm"
                   icon="UserPlusIcon"
                   iconPosition="left"
+                  iconClassName="hidden xl:inline-block"
                   title="Create a free account"
                   style={
                     customStyles
@@ -328,6 +346,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                   size="sm"
                   icon="ArrowRightOnRectangleIcon"
                   iconPosition="left"
+                  iconClassName="hidden xl:inline-block"
                   title="Sign in to your account"
                   style={
                     customStyles
@@ -340,11 +359,13 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                 >
                   Login
                 </Button>
+              </div>
               </>
             )}
           </div>
 
-          <div className="md:hidden flex items-center">
+          {/* Mobile hamburger */}
+          <div className="lg:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="w-11 h-11 p-2 rounded-md text-text-secondary hover:opacity-80 transition-smooth duration-150 min-w-[44px] min-h-[44px]"
@@ -358,67 +379,18 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
           </div>
         </div>
 
+        {/* Mobile menu */}
         {isMobileMenuOpen && (
           <div
-            className="md:hidden border-t border-border"
+            className="lg:hidden border-t border-border"
             style={customStyles ? { borderColor: customStyles.borderColor } : undefined}
           >
+            {/* Public nav links (mobile) */}
             {!isAuthenticated && (
               <div className="px-2 pt-2 pb-3 space-y-1">
-                <Link
-                  href="/"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Icon name="HomeIcon" size={20} />
-                  <span>Home</span>
-                </Link>
-                <Link
-                  href="/#features"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Icon name="SparklesIcon" size={20} />
-                  <span>Features</span>
-                </Link>
-                <Link
-                  href="/#benefits"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Icon name="CheckBadgeIcon" size={20} />
-                  <span>Benefits</span>
-                </Link>
-                <Link
-                  href="/#testimonials"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Icon name="ChatBubbleLeftRightIcon" size={20} />
-                  <span>Testimonials</span>
-                </Link>
-                <Link
-                  href="/public-scoreboard-list"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Icon name="TrophyIcon" size={20} />
-                  <span>Scoreboards</span>
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                  style={customStyles ? textStyle : undefined}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Icon name="GiftIcon" size={20} />
-                  <span>Pricing</span>
-                </Link>
+                {PUBLIC_MOBILE_NAV_ITEMS.map((item) =>
+                  renderMobileNavLink(item, () => setIsMobileMenuOpen(false))
+                )}
               </div>
             )}
 
@@ -428,6 +400,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
             >
               {isAuthenticated ? (
                 <div className="space-y-1">
+                  {/* User info */}
                   <div className="flex items-center px-3 py-2">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center bg-primary"
@@ -444,89 +417,17 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
                       >
                         {displayName}
                       </span>
-                      {userProfile?.role !== 'system_admin' && (
-                        <TierBadge tier={subscriptionTier} size="sm" />
-                      )}
-                      {userProfile?.role === 'system_admin' && (
+                      {!isAdmin && <TierBadge tier={subscriptionTier} size="sm" />}
+                      {isAdmin && (
                         <span className="inline-flex items-center rounded-full bg-purple-100 text-purple-700 font-medium text-xs px-2 py-0.5">
                           Admin
                         </span>
                       )}
                     </div>
                   </div>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
-                  >
-                    <Icon name="ClipboardDocumentListIcon" size={20} className="mr-3" />
-                    My Boards
-                  </Link>
-                  <Link
-                    href="/user-profile-management"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
-                  >
-                    <Icon name="UserCircleIcon" size={20} className="mr-3" />
-                    Profile
-                  </Link>
-                  {userProfile?.role !== 'system_admin' && (
-                    <Link
-                      href="/supporter-plan"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                      style={customStyles ? textStyle : undefined}
-                    >
-                      <Icon name="GiftIcon" size={20} className="mr-3" />
-                      Supporter Plan
-                    </Link>
-                  )}
-                  <Link
-                    href={
-                      userProfile?.role === 'system_admin'
-                        ? '/system-admin/invitations'
-                        : '/invitations'
-                    }
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
-                  >
-                    <Icon name="EnvelopeIcon" size={20} className="mr-3" />
-                    Invitations
-                  </Link>
-                  {userProfile?.role === 'system_admin' && (
-                    <>
-                      <Link
-                        href="/system-admin/subscriptions"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                        style={customStyles ? textStyle : undefined}
-                      >
-                        <Icon name="CreditCardIcon" size={20} className="mr-3" />
-                        Manage Subscriptions
-                      </Link>
-                      <Link
-                        href="/system-admin/settings"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                        style={customStyles ? textStyle : undefined}
-                      >
-                        <Icon name="Cog6ToothIcon" size={20} className="mr-3" />
-                        System Settings
-                      </Link>
-                    </>
-                  )}
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-text-secondary hover:opacity-80 transition-smooth duration-150"
-                    style={customStyles ? textStyle : undefined}
-                    title="Sign out of your account"
-                  >
-                    <Icon name="ArrowRightOnRectangleIcon" size={20} className="mr-3" />
-                    Logout
-                  </button>
+
+                  {/* Menu items */}
+                  {userMenuItems.map((item) => renderMenuItem(item, true))}
                 </div>
               ) : (
                 <div className="space-y-2">

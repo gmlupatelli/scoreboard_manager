@@ -26,6 +26,7 @@ import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
 import TierBadge from '@/components/ui/TierBadge';
 import DowngradeNoticeModal from '@/components/common/DowngradeNoticeModal';
+import SupporterSection from '@/app/user-profile-management/components/SupporterSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscriptionService } from '@/services/subscriptionService';
 import { PaymentHistoryEntry, Subscription } from '@/types/models';
@@ -103,6 +104,16 @@ export default function SupporterPlanInteractive() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showDowngradeNotice, setShowDowngradeNotice] = useState(false);
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+    show: false,
+    message: '',
+    type: 'success',
+  });
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 4000);
+  };
 
   const successState = searchParams.get('subscription');
 
@@ -451,7 +462,7 @@ export default function SupporterPlanInteractive() {
       <Header isAuthenticated={true} />
 
       <main className="flex-1 pt-16">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
             <div>
@@ -860,50 +871,68 @@ export default function SupporterPlanInteractive() {
                 )}
               </div>
 
-              {/* Payment History */}
-              {paymentHistory.length > 0 && (
-                <div className="bg-card border border-border rounded-lg elevation-1 p-6">
-                  <h2 className="text-lg font-semibold text-text-primary mb-4">Payment History</h2>
+              {/* Supporter Recognition */}
+              <SupporterSection onToast={showToast} />
+
+              {/* Billing History */}
+              <div className="bg-card border border-border rounded-lg elevation-1 overflow-hidden">
+                <div className="px-6 pt-6 pb-4">
+                  <h2 className="text-lg font-semibold text-text-primary">Billing History</h2>
+                </div>
+                {paymentHistory.length === 0 ? (
+                  <div className="px-6 pb-6">
+                    <p className="text-text-secondary">No payments recorded yet.</p>
+                  </div>
+                ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border">
-                          <th className="text-left py-2 text-text-secondary font-medium">Date</th>
-                          <th className="text-left py-2 text-text-secondary font-medium">
-                            Description
-                          </th>
-                          <th className="text-right py-2 text-text-secondary font-medium">
-                            Amount
-                          </th>
-                          <th className="text-right py-2 text-text-secondary font-medium">
-                            Receipt
-                          </th>
+                    <table className="w-full">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Date</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Item</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Amount</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Receipt</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="bg-surface divide-y divide-border">
                         {paymentHistory.map((payment) => (
-                          <tr key={payment.id} className="border-b border-border last:border-0">
-                            <td className="py-3 text-text-primary">
+                          <tr key={payment.id} className="hover:bg-muted/50 transition-colors">
+                            <td className="px-4 py-3 text-sm text-text-secondary">
                               {formatDate(payment.createdAt)}
                             </td>
-                            <td className="py-3 text-text-primary">
-                              {payment.orderItemProductName || 'Subscription payment'}
+                            <td className="px-4 py-3 text-sm">
+                              <p className="text-text-primary">
+                                {payment.orderItemProductName || 'Subscription'}
+                              </p>
+                              {payment.orderItemVariantName && (
+                                <p className="text-xs text-text-secondary">
+                                  {payment.orderItemVariantName}
+                                </p>
+                              )}
                             </td>
-                            <td className="py-3 text-text-primary text-right">
-                              {payment.totalCents != null
-                                ? formatCurrency(payment.totalCents)
+                            <td className="px-4 py-3 text-sm text-text-primary">
+                              {payment.totalCents && payment.currency
+                                ? new Intl.NumberFormat('en-US', {
+                                    style: 'currency',
+                                    currency: payment.currency,
+                                  }).format(payment.totalCents / 100)
                                 : '—'}
                             </td>
-                            <td className="py-3 text-right">
+                            <td className="px-4 py-3 text-sm text-text-secondary">
+                              {payment.statusFormatted || payment.status || '—'}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-right">
                               {payment.receiptUrl ? (
                                 <a
                                   href={payment.receiptUrl}
                                   target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline inline-flex items-center gap-1"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 text-primary hover:bg-red-600/10 px-2 py-1 rounded-md transition-colors duration-150"
+                                  title="Open receipt"
                                 >
-                                  <Icon name="DocumentTextIcon" size={14} />
-                                  View
+                                  <Icon name="ArrowTopRightOnSquareIcon" size={14} />
+                                  <span>View</span>
                                 </a>
                               ) : (
                                 <span className="text-text-secondary">—</span>
@@ -914,8 +943,8 @@ export default function SupporterPlanInteractive() {
                       </tbody>
                     </table>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Supporter Benefits */}
               <div className="bg-card border border-border rounded-lg elevation-1 p-6">
@@ -928,7 +957,7 @@ export default function SupporterPlanInteractive() {
                       className="text-success flex-shrink-0 mt-0.5"
                     />
                     <span className="text-text-secondary">
-                      Access to <strong>Kiosk Mode</strong> for full-screen scoreboard displays
+                      Unlimited public & private scoreboards
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
@@ -937,9 +966,7 @@ export default function SupporterPlanInteractive() {
                       size={20}
                       className="text-success flex-shrink-0 mt-0.5"
                     />
-                    <span className="text-text-secondary">
-                      Your name featured on our <strong>Supporters Page</strong> (optional)
-                    </span>
+                    <span className="text-text-secondary">Unlimited entries</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Icon
@@ -948,7 +975,7 @@ export default function SupporterPlanInteractive() {
                       className="text-success flex-shrink-0 mt-0.5"
                     />
                     <span className="text-text-secondary">
-                      Help support the development and maintenance of Scoreboard Manager
+                      100 history snapshots per scoreboard
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
@@ -957,8 +984,42 @@ export default function SupporterPlanInteractive() {
                       size={20}
                       className="text-success flex-shrink-0 mt-0.5"
                     />
+                    <span className="text-text-secondary">Custom themes</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Icon
+                      name="CheckCircleIcon"
+                      size={20}
+                      className="text-success flex-shrink-0 mt-0.5"
+                    />
                     <span className="text-text-secondary">
-                      Priority support and feature requests
+                      No &quot;Powered by&quot; badge on embeds
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Icon
+                      name="CheckCircleIcon"
+                      size={20}
+                      className="text-success flex-shrink-0 mt-0.5"
+                    />
+                    <span className="text-text-secondary">Kiosk / TV Mode</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Icon
+                      name="CheckCircleIcon"
+                      size={20}
+                      className="text-success flex-shrink-0 mt-0.5"
+                    />
+                    <span className="text-text-secondary">Team collaboration</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <Icon
+                      name="CheckCircleIcon"
+                      size={20}
+                      className="text-success flex-shrink-0 mt-0.5"
+                    />
+                    <span className="text-text-secondary">
+                      Priority email support (48h response)
                     </span>
                   </li>
                 </ul>
@@ -967,6 +1028,25 @@ export default function SupporterPlanInteractive() {
           )}
         </div>
       </main>
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+          <div
+            className={`flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
+              toast.type === 'success'
+                ? 'bg-green-500 text-white'
+                : 'bg-red-500 text-white'
+            }`}
+          >
+            <Icon
+              name={toast.type === 'success' ? 'CheckCircleIcon' : 'ExclamationCircleIcon'}
+              size={18}
+            />
+            {toast.message}
+          </div>
+        </div>
+      )}
 
       {/* Cancel Subscription Confirmation Modal */}
       {showCancelConfirm && (

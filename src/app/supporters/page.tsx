@@ -20,6 +20,7 @@ import Link from 'next/link';
 import PublicHeader from '@/components/common/PublicHeader';
 import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
+import SupportersList from './components/SupportersList';
 
 export default function SupportersPage() {
   return (
@@ -77,7 +78,10 @@ export default function SupportersPage() {
             </div>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
+          {/* Dynamic supporters list */}
+          <SupportersList />
+
+          <div className="bg-card border border-border rounded-lg p-6 mt-10">
             <h2 className="text-2xl font-semibold text-text-primary mb-4">Ready to support?</h2>
             <p className="text-text-secondary mb-6">
               All supporter tiers unlock the same hosted features. Choose a tier that works for you

@@ -472,65 +472,65 @@ export default function SystemAdminInvitationsPage() {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto border border-border rounded-lg overflow-hidden">
                   <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/30">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                           Invitee Email
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                           Invited By
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                           Created
                         </th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-text-secondary">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                           Expires
                         </th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-text-secondary">
+                        <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="bg-surface divide-y divide-border">
                       {invitations.map((invitation) => (
                         <tr
                           key={invitation.id}
-                          className="border-b border-border last:border-b-0 hover:bg-muted/20 transition-smooth"
+                          className="hover:bg-muted/50 transition-colors"
                         >
-                          <td className="py-3 px-4 text-sm text-text-primary font-medium">
+                          <td className="px-4 py-3 text-sm text-text-primary font-medium">
                             {invitation.invitee_email}
                           </td>
-                          <td className="py-3 px-4 text-sm text-text-secondary">
+                          <td className="px-4 py-3 text-sm text-text-secondary">
                             {invitation.inviter?.full_name ||
                               invitation.inviter?.email ||
                               'Unknown'}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="px-4 py-3">
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(invitation.status)}`}
                             >
                               {invitation.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm text-text-secondary">
+                          <td className="px-4 py-3 text-sm text-text-secondary">
                             {new Date(invitation.created_at).toLocaleDateString()}
                           </td>
-                          <td className="py-3 px-4 text-sm text-text-secondary">
+                          <td className="px-4 py-3 text-sm text-text-secondary">
                             {new Date(invitation.expires_at).toLocaleDateString()}
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td className="px-4 py-3 text-right">
                             {invitation.status === 'pending' && (
                               <button
                                 onClick={() => handleCancelInvitation(invitation.id)}
-                                className="text-destructive hover:text-destructive/80 text-sm font-medium transition-smooth"
+                                className="p-2 rounded-md text-destructive hover:bg-red-500/10 transition-colors"
                                 title="Cancel this invitation"
                               >
-                                Cancel
+                                <Icon name="NoSymbolIcon" size={18} />
                               </button>
                             )}
                           </td>

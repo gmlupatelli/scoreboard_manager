@@ -457,42 +457,42 @@ export default function SystemAdminSettingsPage() {
                         </div>
 
                         {/* File list */}
-                        <div className="max-h-48 overflow-y-auto border border-border rounded-md">
-                          <table className="w-full text-sm">
+                        <div className="max-h-48 overflow-y-auto border border-border rounded-lg overflow-hidden">
+                          <table className="w-full">
                             <thead className="bg-muted sticky top-0">
                               <tr>
-                                <th className="text-left px-3 py-2 text-text-secondary font-medium">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                                   File Path
                                 </th>
-                                <th className="text-left px-3 py-2 text-text-secondary font-medium">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                                   Type
                                 </th>
-                                <th className="text-right px-3 py-2 text-text-secondary font-medium">
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
                                   Size
                                 </th>
-                                <th className="text-left px-3 py-2 text-text-secondary font-medium">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                                   Uploaded
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-border">
+                            <tbody className="bg-surface divide-y divide-border">
                               {orphanInfo.orphans.map((file) => (
-                                <tr key={file.id} className="hover:bg-muted/50">
+                                <tr key={file.id} className="hover:bg-muted/50 transition-colors">
                                   <td
-                                    className="px-3 py-2 text-text-primary font-mono text-xs truncate max-w-xs"
+                                    className="px-4 py-3 text-text-primary font-mono text-xs truncate max-w-xs"
                                     title={file.storage_path}
                                   >
                                     {file.storage_path}
                                   </td>
-                                  <td className="px-3 py-2 text-text-secondary capitalize">
+                                  <td className="px-4 py-3 text-sm text-text-secondary capitalize">
                                     {file.file_type}
                                   </td>
-                                  <td className="px-3 py-2 text-text-secondary text-right">
+                                  <td className="px-4 py-3 text-sm text-text-secondary text-right">
                                     {file.file_size
                                       ? `${(file.file_size / 1024).toFixed(1)} KB`
                                       : '-'}
                                   </td>
-                                  <td className="px-3 py-2 text-text-secondary">
+                                  <td className="px-4 py-3 text-sm text-text-secondary">
                                     {new Date(file.created_at).toLocaleDateString()}
                                   </td>
                                 </tr>
