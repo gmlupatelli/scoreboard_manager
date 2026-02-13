@@ -114,6 +114,7 @@ export default function WelcomeModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="welcome-modal-title"
+            data-testid="welcome-modal"
           >
             {isSaved ? (
               /* Success state */
@@ -130,6 +131,7 @@ export default function WelcomeModal({
                   <h2
                     id="welcome-modal-title"
                     className="text-2xl font-bold text-text-primary mb-2"
+                    data-testid="welcome-modal-title"
                   >
                     Welcome, Supporter!
                   </h2>
@@ -160,6 +162,7 @@ export default function WelcomeModal({
                       placeholder="Leave blank to use your account name"
                       maxLength={MAX_DISPLAY_NAME_LENGTH}
                       disabled={isSubmitting}
+                      data-testid="welcome-modal-display-name"
                     />
                     <div className="flex justify-between mt-1">
                       <p className="text-xs text-text-secondary">
@@ -210,6 +213,7 @@ export default function WelcomeModal({
                     className="text-sm text-text-secondary hover:text-text-primary transition-colors duration-150 underline-offset-2 hover:underline"
                     disabled={isSubmitting}
                     title="Skip for now and use defaults"
+                    data-testid="welcome-modal-skip"
                   >
                     Skip for now
                   </button>
@@ -219,6 +223,7 @@ export default function WelcomeModal({
                     disabled={isSubmitting}
                     className="px-6 py-2 bg-primary text-white rounded-md font-medium text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary transition-colors duration-150"
                     title="Save preferences and continue to dashboard"
+                    data-testid="welcome-modal-save"
                   >
                     {isSubmitting ? 'Saving...' : 'Continue to Dashboard'}
                   </button>

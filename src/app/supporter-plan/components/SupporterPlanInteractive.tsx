@@ -507,7 +507,7 @@ export default function SupporterPlanInteractive() {
           ) : (
             <div className="space-y-6">
               {/* Current Plan Card */}
-              <div className="bg-card border border-border rounded-lg elevation-1 p-6">
+              <div className="bg-card border border-border rounded-lg elevation-1 p-6" data-testid="current-plan-card">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-text-primary">Current Plan</h2>
                   <TierBadge tier={subscriptionTier} size="md" />
@@ -565,6 +565,7 @@ export default function SupporterPlanInteractive() {
                                 className={`text-xs font-medium px-2 py-0.5 rounded-full ${getStatusBadge(
                                   subscription.status
                                 )}`}
+                                data-testid="subscription-status-badge"
                               >
                                 {subscription.statusFormatted || subscription.status}
                               </span>
@@ -587,6 +588,7 @@ export default function SupporterPlanInteractive() {
                             disabled={isPortalLoading || !subscription.lemonsqueezySubscriptionId}
                             className="px-4 py-2 bg-primary text-white rounded-md font-medium text-sm hover:bg-red-700 transition-colors duration-150 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
                             title="Manage your subscription in customer portal"
+                            data-testid="manage-billing-button"
                           >
                             <Icon name="ArrowTopRightOnSquareIcon" size={16} />
                             <span>{isPortalLoading ? 'Opening...' : 'Manage Billing'}</span>
@@ -661,6 +663,7 @@ export default function SupporterPlanInteractive() {
                                         ? 'border-primary bg-red-600/5'
                                         : 'border-border hover:border-primary/50'
                                     } ${tier.tier === subscription.tier ? 'ring-2 ring-offset-2 ring-green-500/50' : ''}`}
+                                    data-testid="tier-card"
                                   >
                                     <span className="text-2xl block mb-1">{tier.emoji}</span>
                                     <span className="font-medium text-text-primary block">
@@ -809,6 +812,7 @@ export default function SupporterPlanInteractive() {
                                 ? 'border-primary bg-red-600/5'
                                 : 'border-border hover:border-primary/50'
                             }`}
+                            data-testid="tier-card"
                           >
                             <span className="text-2xl block mb-1">{tier.emoji}</span>
                             <span className="font-medium text-text-primary block">
@@ -859,6 +863,7 @@ export default function SupporterPlanInteractive() {
                       disabled={isSubmitting}
                       className="w-full px-4 py-3 bg-primary text-white rounded-md font-medium text-sm hover:bg-red-700 transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
                       title="Subscribe to selected tier"
+                      data-testid="checkout-button"
                     >
                       <Icon name="HeartIcon" size={18} />
                       <span>
@@ -875,7 +880,7 @@ export default function SupporterPlanInteractive() {
               <SupporterSection onToast={showToast} />
 
               {/* Billing History */}
-              <div className="bg-card border border-border rounded-lg elevation-1 overflow-hidden">
+              <div className="bg-card border border-border rounded-lg elevation-1 overflow-hidden" data-testid="billing-history-section">
                 <div className="px-6 pt-6 pb-4">
                   <h2 className="text-lg font-semibold text-text-primary">Billing History</h2>
                 </div>
@@ -1051,7 +1056,7 @@ export default function SupporterPlanInteractive() {
       {/* Cancel Subscription Confirmation Modal */}
       {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-surface rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+          <div className="bg-surface rounded-lg shadow-lg max-w-md w-full mx-4 p-6" data-testid="cancel-subscription-modal">
             <div className="flex items-start gap-3 mb-4">
               <Icon
                 name="ExclamationTriangleIcon"
@@ -1089,6 +1094,7 @@ export default function SupporterPlanInteractive() {
                 onClick={() => setShowCancelConfirm(false)}
                 disabled={isCancelling}
                 className="px-4 py-2 bg-muted text-text-primary rounded-md font-medium text-sm hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-muted transition-colors duration-150"
+                data-testid="keep-subscription-button"
               >
                 Keep Subscription
               </button>
@@ -1096,6 +1102,7 @@ export default function SupporterPlanInteractive() {
                 onClick={handleCancelSubscription}
                 disabled={isCancelling}
                 className="px-4 py-2 bg-destructive text-white rounded-md font-medium text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-destructive transition-colors duration-150 flex items-center gap-2"
+                data-testid="confirm-cancel-button"
               >
                 {isCancelling ? (
                   <>

@@ -268,7 +268,7 @@ export default function SystemAdminSettingsPage() {
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-6 elevation-1">
+          <div className="bg-card border border-border rounded-lg p-6 mb-6 elevation-1" data-testid="registration-settings-card">
             <h2 className="text-xl font-semibold text-text-primary mb-6 flex items-center">
               <Icon name="Cog6ToothIcon" size={24} className="mr-2 text-primary" />
               Registration Settings
@@ -288,6 +288,7 @@ export default function SystemAdminSettingsPage() {
                   role="switch"
                   aria-checked={settings?.allow_public_registration ?? false}
                   aria-label="Allow Public Registration"
+                  data-testid="setting-public-registration"
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     settings?.allow_public_registration ? 'bg-primary' : 'bg-muted'
                   } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -313,6 +314,7 @@ export default function SystemAdminSettingsPage() {
                   role="switch"
                   aria-checked={settings?.require_email_verification ?? false}
                   aria-label="Require Email Verification"
+                  data-testid="setting-email-verification"
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
                     settings?.require_email_verification ? 'bg-primary' : 'bg-muted'
                   } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}

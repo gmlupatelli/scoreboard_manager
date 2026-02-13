@@ -151,6 +151,7 @@ export default function CreateScoreboardModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby="create-scoreboard-title"
+            data-testid="create-scoreboard-modal"
           >
             <div className="flex items-center justify-between mb-6 landscape-mobile:mb-3">
               <h2 id="create-scoreboard-title" className="text-xl font-semibold text-text-primary">
@@ -401,6 +402,7 @@ export default function CreateScoreboardModal({
                   type="submit"
                   disabled={isSubmitting || isLimitReached}
                   className="w-full py-2 px-4 bg-primary text-white rounded-md font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary transition-colors duration-150"
+                  data-testid="create-scoreboard-submit"
                   title={
                     isLimitReached ? 'Public scoreboard limit reached' : 'Create new scoreboard'
                   }

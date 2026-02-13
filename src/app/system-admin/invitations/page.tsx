@@ -351,6 +351,7 @@ export default function SystemAdminInvitationsPage() {
                 onClick={() => setShowInviteModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-smooth duration-150"
                 title="Send invitation to a new user"
+                data-testid="invite-user-button"
               >
                 <Icon name="PlusIcon" size={18} />
                 <span>Invite User</span>
@@ -383,6 +384,7 @@ export default function SystemAdminInvitationsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by invitee email..."
+                  data-testid="invitations-search"
                   className="w-full pl-10 pr-10 py-2 border border-input rounded-md bg-surface text-text-primary placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-smooth duration-150"
                 />
                 {searchQuery && (
@@ -405,6 +407,7 @@ export default function SystemAdminInvitationsPage() {
                   <SearchableSelect
                     id="ownerFilter"
                     ariaLabel="Filter invitations by inviter"
+                    data-testid="invitations-inviter-filter"
                     options={[
                       { value: '', label: `All Inviters (${inviters.length})` },
                       ...inviters.map((inviter) => ({
@@ -428,6 +431,7 @@ export default function SystemAdminInvitationsPage() {
                     id="statusFilter"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
+                    data-testid="invitations-status-filter"
                     className="px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-surface text-text-primary"
                   >
                     <option value="">All Statuses</option>

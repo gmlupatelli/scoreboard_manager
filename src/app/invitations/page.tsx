@@ -189,6 +189,7 @@ export default function InvitationsPage() {
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center space-x-2 px-6 py-3 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition-smooth hover-lift font-medium"
                 title="Send invitation to a new user"
+                data-testid="invite-user-button"
               >
                 <Icon name="UserPlusIcon" size={20} />
                 <span>Invite User</span>

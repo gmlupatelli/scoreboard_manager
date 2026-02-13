@@ -227,13 +227,21 @@ it('should set up channel with correct filter', () => {
 
 ## E2E Testing
 
+### Architecture
+
+- **Single project**: Desktop Chrome only (no mobile viewports — responsive tests removed)
+- **Production build**: Tests run against `npm run build && npm start` for realistic performance
+- **Workers**: 8 local / 2 CI for parallelism
+- **Timeouts**: 20s test / 10s action / 15s navigation / 7s expect
+- **Test users**: 6 pre-seeded accounts (admin, john, sarah, supporter, supporter5, supporter6)
+
 ### Running E2E Tests
 
 ```bash
 # Run all E2E tests
 npm run test:e2e
 
-# Run fast tests only (Desktop Chrome, @fast tag)
+# Run with fast config (same tests, debug-friendly)
 npm run test:e2e:fast
 
 # Run with UI browser
@@ -247,69 +255,110 @@ npm run test:e2e -- e2e/scoreboard.spec.ts
 
 # Run tests matching pattern
 npm run test:e2e -- --grep "real-time"
+
+# Update visual regression baselines
+npx playwright test visual.spec.ts --update-snapshots
 ```
 
 ### Test Organization
 
-Tests are in `e2e/` directory with clear descriptions:
+Tests are in `e2e/` directory (~96 tests across 10 spec files):
 
-- `auth.spec.ts` - Authentication flows
-- `scoreboard.spec.ts` - Scoreboard CRUD, search, ownership, **real-time updates**
-- `invitations.spec.ts` - User invitations
-- `kiosk.spec.ts` - TV/kiosk mode display
-- `admin.spec.ts` - Admin functionality
+- `auth.spec.ts` - Authentication flows, page access, authorization
+- `scoreboard.spec.ts` - Scoreboard CRUD, entries, search, cross-user visibility
+- `invitations.spec.ts` - User invitations, invite-only mode
+- `kiosk.spec.ts` - TV/kiosk mode display, settings, carousel
+- `admin.spec.ts` - Admin functionality, user management
 - `subscription.spec.ts` - Subscription plan display, billing, cancellation, gifted tiers
-- `tier-limits.spec.ts` - Free-tier limit enforcement, supporter unlocks
-- `supporter-recognition.spec.ts` - Welcome modal, supporter preferences, public supporters page
-- `accessibility.spec.ts` - WCAG compliance
-- `responsive.spec.ts` - Mobile/tablet/desktop
-- `loadTestEnv.js` - Test data setup
+- `tier-limits.spec.ts` - Free-tier limit enforcement, supporter unlocks, downgrade flows
+- `supporter-recognition.spec.ts` - Welcome modal, supporter preferences, public supporters
+- `accessibility.spec.ts` - axe-core WCAG scanning, keyboard navigation, focus management
+- `visual.spec.ts` - Visual regression screenshots on key pages
 
-### Test Tagging Strategy
+### Shared Fixtures & Helpers
 
-Tests use tags for selective running:
+All shared code lives in `e2e/fixtures/`:
 
-```typescript
-authTest('@fast scoreboard displays', async ({ johnAuth }) => {
-  // Runs quickly - no image uploads, no full setup
-});
+- **`auth.ts`** — Test user credentials, `loginAs()` function, authenticated page fixtures
+- **`subscriptions.ts`** — DB-level subscription seeding (`seedSubscription`, `removeSubscription`, `getScoreboardIdFromDb`)
+- **`helpers.ts`** — Shared utilities: `safeGoto`, `navigateToDashboard`, `navigateToSubscription`, `setupSubscriptionState`, `teardownSubscription`, `waitForSubscriptionLoaded`, `dismissModal`
 
-authTest('@full @desktop-only create modal', async ({ johnAuth }) => {
-  // Runs on desktop only, takes longer (image uploads, etc)
-});
+### Selector Best Practices
 
-authTest('@no-mobile responsive layout', async ({ user }) => {
-  // Skipped on mobile viewports
-});
-```
-
-**Run by tag:**
-```bash
-npm run test:e2e -- --grep "@fast"
-npm run test:e2e -- --grep "@no-mobile"
-```
-
-### Real-Time Updates Testing
-
-Current E2E tests have weak real-time coverage. The `Real-time Updates` section in `scoreboard.spec.ts` should be enhanced to:
+Tests use `data-testid` attributes for reliable element selection:
 
 ```typescript
-authTest('@full real-time entries sync across browsers', async ({ johnAuth, janeAuth }) => {
-  // Open scoreboard in two browser contexts
-  await johnAuth.goto('/scoreboard/123');
-  await janeAuth.goto('/scoreboard/123');
-  
-  // John adds entry
-  // Jane's page should update WITHOUT reload (verify with subscription listener)
-  
-  // Jane adds entry  
-  // John's page should update (verify with subscription listener)
-});
+// ✅ Good — stable data-testid
+page.locator('[data-testid="scoreboard-card-title"]');
+page.locator('[data-testid="scoreboard-card-manage"]');
+page.locator('[data-testid="cancel-subscription-modal"]');
 
-authTest('@full real-time title changes broadcast', async ({ johnAuth, janeAuth }) => {
-  // John edits title
-  // Jane viewing the public leaderboard sees update in real-time
-});
+// ✅ Good — semantic role queries
+page.getByRole('button', { name: 'Add Entry' });
+page.getByRole('textbox', { name: 'Title' });
+page.getByLabel('Email');
+
+// ❌ Bad — fragile CSS classes
+page.locator('.bg-card.rounded-lg h3');
+page.locator('.bg-surface.rounded-lg.shadow-lg');
+page.locator('button:has-text("Manage Scoreboard")');
+```
+
+**Available data-testid values** (add to React components when writing new tests):
+- `scoreboard-card`, `scoreboard-card-title`, `scoreboard-card-manage`, `scoreboard-card-unlock`
+- `public-scoreboard-card`, `public-scoreboard-card-title`, `public-scoreboard-card-view`
+- `create-scoreboard-modal`, `create-scoreboard-submit`
+- `current-plan-card`, `subscription-status-badge`, `manage-billing-button`, `checkout-button`
+- `cancel-subscription-modal`, `keep-subscription-button`, `confirm-cancel-button`
+- `welcome-modal`, `welcome-modal-skip`, `welcome-modal-save`
+- `downgrade-notice-overlay`, `downgrade-notice-modal`, `downgrade-notice-dismiss`
+- `kiosk-container`, `kiosk-enable-toggle`, `kiosk-slides-list`, `kiosk-slide-item`, `kiosk-save-settings`
+- `setting-public-registration`, `setting-email-verification`
+- `invite-user-button`, `invitations-search`, `invitations-status-filter`
+
+### Wait Strategy
+
+**Zero `waitForTimeout` / `waitForLoadState('networkidle')` calls.** Instead:
+
+```typescript
+// ✅ Wait for specific elements
+await expect(page.locator('[data-testid="scoreboard-card"]').first()).toBeVisible();
+
+// ✅ Wait for navigation
+await page.waitForURL(/\/dashboard/);
+
+// ✅ Wait for element state changes
+await expect(button).toBeEnabled();
+await expect(spinner).toBeHidden();
+
+// ❌ Never use
+await page.waitForTimeout(1000);
+await page.waitForLoadState('networkidle');
+```
+
+### Visual Regression Testing
+
+`visual.spec.ts` captures screenshots of key pages and compares against baselines:
+
+- Login page
+- Public scoreboard list
+- Dashboard (authenticated)
+- Scoreboard management
+- About page
+
+Update baselines: `npx playwright test visual.spec.ts --update-snapshots`
+
+### Accessibility Testing
+
+`accessibility.spec.ts` uses **@axe-core/playwright** for real WCAG compliance scanning:
+
+```typescript
+import AxeBuilder from '@axe-core/playwright';
+
+const results = await new AxeBuilder({ page })
+  .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+  .analyze();
+expect(results.violations).toEqual([]);
 ```
 
 ---
@@ -367,9 +416,11 @@ gh workflow run test-e2e-nightly.yml
 - Test implementation details—test behavior
 - Mock everything—some integration is valuable (e.g., JSON serialization)
 - Skip tests for "probably won't break" code—that's when it does
-- Write brittle e2e tests that rely on exact DOM structure
+- Write brittle e2e tests that rely on exact DOM structure or CSS classes
 - Commit skipped tests (`it.skip`, `describe.skip`)
 - Use real Supabase in unit tests (mock it instead)
+- Use `waitForTimeout` or `waitForLoadState('networkidle')` in E2E tests
+- Use CSS class selectors (`.bg-card`, `.bg-surface`) in E2E tests—use `data-testid`
 
 ### Real-Time Testing Checklist
 
@@ -434,9 +485,12 @@ import { supabase } from '@/lib/supabase/client';
 ## Next Steps
 
 1. ✅ Unit test infrastructure in place
-2. Next: Increase unit test coverage to 70% for critical modules
-3. Then: Enhance E2E tests for real-time subscription verification
-4. Later: Add visual regression testing (Percy / Chromatic)
+2. ✅ E2E overhaul complete (196→96 tests, production build, single project, zero fixed waits)
+3. ✅ Visual regression testing with Playwright screenshots
+4. ✅ Accessibility testing with @axe-core/playwright
+5. ✅ `data-testid` attributes on key components for stable selectors
+6. Next: Increase unit test coverage to 70% for critical modules
+7. Then: Enhance E2E tests for real-time subscription verification
 
 ---
 

@@ -1087,6 +1087,7 @@ export default function KioskSettingsSection({
                       checked={enabled}
                       onChange={(e) => handleToggleEnabled(e.target.checked)}
                       className="sr-only peer"
+                      data-testid="kiosk-enable-toggle"
                     />
                     <div className="w-11 h-6 bg-gray-300 peer-focus:ring-2 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
                   </div>
@@ -1105,6 +1106,7 @@ export default function KioskSettingsSection({
                     readOnly
                     disabled={!enabled}
                     className="flex-1 px-3 py-2 border border-border rounded-md text-sm bg-muted text-text-primary font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                    data-testid="kiosk-url-input"
                   />
                   <button
                     onClick={handlePreviewKiosk}
@@ -1144,6 +1146,7 @@ export default function KioskSettingsSection({
                       setHasChanges(true);
                     }}
                     className="w-full px-3 py-2 bg-background border border-input rounded-md text-text-primary focus:border-primary focus:ring-1 focus:ring-primary"
+                    data-testid="kiosk-slide-duration"
                   />
                   <p className="text-xs text-text-secondary mt-1">Min: 3, Max: 300</p>
                 </div>
@@ -1164,6 +1167,7 @@ export default function KioskSettingsSection({
                       placeholder="Enter 4-6 digit PIN"
                       autoComplete="off"
                       className="w-full px-3 py-2 pr-10 bg-background border border-input rounded-md text-text-primary focus:border-primary focus:ring-1 focus:ring-primary"
+                      data-testid="kiosk-pin-input"
                     />
                     <button
                       type="button"
@@ -1187,6 +1191,7 @@ export default function KioskSettingsSection({
                   disabled={!hasChanges || isSaving}
                   className="px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-red-700 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
                   title="Save kiosk settings"
+                  data-testid="kiosk-save-settings"
                 >
                   {isSaving ? 'Saving...' : 'Save Settings'}
                 </button>
@@ -1299,7 +1304,7 @@ export default function KioskSettingsSection({
                     </p>
                   </div>
                 ) : (
-                  <div className="p-3 bg-muted/30 border border-border rounded-lg">
+                  <div className="p-3 bg-muted/30 border border-border rounded-lg" data-testid="kiosk-slides-list">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                       {slides.map((slide, index) => (
                         <div
@@ -1308,6 +1313,7 @@ export default function KioskSettingsSection({
                           onDragStart={() => handleDragStart(slide.id)}
                           onDragOver={handleDragOver}
                           onDrop={() => handleDrop(slide.id)}
+                          data-testid="kiosk-slide-item"
                           className={`relative group aspect-video bg-muted rounded-lg overflow-hidden border-2 transition-all cursor-move ${
                             draggedSlide === slide.id
                               ? 'border-primary opacity-50'

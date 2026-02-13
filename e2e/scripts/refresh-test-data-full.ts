@@ -255,11 +255,11 @@ const SARAH_SCOREBOARDS = [
   },
 ];
 
-// Test data for seeding - Patron (supporter - supporter tier)
+// Test data for seeding - Morgan Blake (supporter - supporter tier)
 // Needs public scoreboards for kiosk tests (kiosk.spec.ts uses supporterAuth)
-const PATRON_SCOREBOARDS = [
+const MORGAN_SCOREBOARDS = [
   {
-    title: "Patron's Tournament Bracket",
+    title: "Morgan's Tournament Bracket",
     description: 'Public scoreboard used for kiosk mode testing',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
@@ -274,7 +274,7 @@ const PATRON_SCOREBOARDS = [
     ],
   },
   {
-    title: "Patron's Sprint Times",
+    title: "Morgan's Sprint Times",
     description: 'Public time scoreboard for supporter features',
     score_type: 'time' as const,
     sort_order: 'asc' as const,
@@ -606,7 +606,7 @@ async function seedScoreboard(
   scoreboard:
     | (typeof JOHN_SCOREBOARDS)[0]
     | (typeof SARAH_SCOREBOARDS)[0]
-    | (typeof PATRON_SCOREBOARDS)[0]
+    | (typeof MORGAN_SCOREBOARDS)[0]
     | (typeof SITEADMIN_SCOREBOARDS)[0]
     | (typeof JANE_SCOREBOARDS)[0]
 ) {
@@ -954,14 +954,14 @@ async function main() {
         console.log(`  ✓ Seeded active ${supporter1Tier} subscription for ${supporter1Email}`);
       }
 
-      // Second supporter gets PATRON_SCOREBOARDS + subscription
+      // Second supporter gets MORGAN_SCOREBOARDS + subscription
       if (supporterUsers[1] && createdUsers[supporterUsers[1].email]) {
         const supporter2Email = supporterUsers[1].email;
         const supporter2Id = createdUsers[supporter2Email];
         const supporter2Tier = supporterUsers[1].tier || 'supporter';
 
         console.log(`\n  📝 Seeding ${supporter2Email}'s scoreboards...`);
-        for (const scoreboard of PATRON_SCOREBOARDS) {
+        for (const scoreboard of MORGAN_SCOREBOARDS) {
           const result = await seedScoreboard(supabase, supporter2Id, scoreboard);
           console.log(`    ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
         }

@@ -60,12 +60,12 @@ Unit tests focus on pure functions, services, and business logic. Place tests in
 
 ### E2E Tests
 
-Run nightly (2 AM UTC) or manually for full browser/viewport testing:
+Run nightly (2 AM UTC) or manually. Tests run against a production build on Desktop Chrome:
 ```bash
-# Run all E2E tests (takes ~10 minutes)
+# Run all E2E tests (~96 tests, production build)
 npm run test:e2e
 
-# Run only fast tests (@fast tag)
+# Run with fast config (debug-friendly)
 npm run test:e2e:fast
 
 # Interactive UI browser
@@ -73,9 +73,17 @@ npm run test:e2e:ui
 
 # Debug mode (step through)
 npm run test:e2e:debug
+
+# Update visual regression baselines
+npx playwright test visual.spec.ts --update-snapshots
 ```
 
-E2E tests verify user workflows, real-time subscriptions, accessibility, and responsive design.
+E2E tests verify user workflows, accessibility (axe-core WCAG scanning), visual regression, and subscription flows.
+
+**Key rules:**
+- Use `data-testid` attributes for element selection (not CSS classes)
+- Never use `waitForTimeout` or `waitForLoadState('networkidle')`
+- Import shared helpers from `e2e/fixtures/helpers.ts`
 
 ### When to Write Tests
 

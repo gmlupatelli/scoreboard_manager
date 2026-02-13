@@ -24,6 +24,7 @@ interface SearchableSelectProps {
   className?: string;
   id?: string;
   ariaLabel?: string;
+  'data-testid'?: string;
 }
 
 export default function SearchableSelect({
@@ -35,6 +36,7 @@ export default function SearchableSelect({
   className = '',
   id,
   ariaLabel,
+  'data-testid': dataTestId,
 }: SearchableSelectProps) {
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -62,7 +64,7 @@ export default function SearchableSelect({
 
   return (
     <Combobox value={selectedOption} onChange={handleChange} onClose={() => setQuery('')}>
-      <div className={`relative ${className}`}>
+      <div className={`relative ${className}`} data-testid={dataTestId}>
         <div className="relative">
           <ComboboxInput
             ref={inputRef}
