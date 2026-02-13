@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthClient, extractBearerToken } from '@/lib/supabase/apiClient';
-import { getTierPrice } from '@/lib/subscription/tiers';
+import { pricingService } from '@/services/pricingService';
+import { getVariantId } from '@/lib/lemonsqueezy/variantMapping';
 import { Database } from '@/types/database.types';
 
 export const dynamic = 'force-dynamic';
@@ -18,34 +19,7 @@ interface CheckoutRequestBody {
   cancelUrl?: string;
 }
 
-/**
- * Get the appropriate variant ID for a tier and billing interval
- */
-function getVariantId(tier: AppreciationTier, interval: BillingInterval): string | undefined {
-  if (interval === 'monthly') {
-    switch (tier) {
-      case 'supporter':
-        return process.env.LEMONSQUEEZY_MONTHLY_SUPPORTER_VARIANT_ID;
-      case 'champion':
-        return process.env.LEMONSQUEEZY_MONTHLY_CHAMPION_VARIANT_ID;
-      case 'legend':
-        return process.env.LEMONSQUEEZY_MONTHLY_LEGEND_VARIANT_ID;
-      case 'hall_of_famer':
-        return process.env.LEMONSQUEEZY_MONTHLY_HALL_OF_FAMER_VARIANT_ID;
-    }
-  } else {
-    switch (tier) {
-      case 'supporter':
-        return process.env.LEMONSQUEEZY_YEARLY_SUPPORTER_VARIANT_ID;
-      case 'champion':
-        return process.env.LEMONSQUEEZY_YEARLY_CHAMPION_VARIANT_ID;
-      case 'legend':
-        return process.env.LEMONSQUEEZY_YEARLY_LEGEND_VARIANT_ID;
-      case 'hall_of_famer':
-        return process.env.LEMONSQUEEZY_YEARLY_HALL_OF_FAMER_VARIANT_ID;
-    }
-  }
-}
+// getVariantId is now imported from @/lib/lemonsqueezy/variantMapping
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,9 +63,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get fixed price for the tier
-    const priceDollars = getTierPrice(tier, billingInterval);
-    const priceCents = Math.round(priceDollars * 100);
+    // Get fixed price for the tier from DB
+    const { data: priceCentsFromDb } = await pricingService.getPriceCents(tier, billingInterval);
+    const priceCents = priceCentsFromDb ?? 0;
 
     const checkoutPayload = {
       data: {

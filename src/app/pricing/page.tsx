@@ -25,12 +25,8 @@ import Footer from '@/components/common/Footer';
 import Icon from '@/components/ui/AppIcon';
 import Button from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  TIER_PRICES,
-  getTierLabel,
-  getTierPrice,
-  type AppreciationTier,
-} from '@/lib/subscription/tiers';
+import { useDynamicPricing } from '@/hooks';
+import { getTierLabel, type AppreciationTier } from '@/lib/subscription/tiers';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +64,7 @@ const faqs = [
   {
     question: 'How does fixed-tier pricing work?',
     answer:
-      'Choose from four supporter tiers: Supporter ($4/mo), Champion ($8/mo), Legend ($23/mo), or Hall of Famer ($48/mo). All tiers unlock the same features.',
+      'Choose from four supporter tiers — Supporter, Champion, Legend, or Hall of Famer. Each unlocks the same features; higher tiers simply show more appreciation.',
   },
   {
     question: 'Do higher tiers unlock different features?',
@@ -94,6 +90,7 @@ function PricingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, session, loading: authLoading } = useAuth();
+  const { getPrice: getDynamicPrice, tierList } = useDynamicPricing();
   const hasTriggeredCheckout = useRef(false);
 
   // Read billing and tier params from URL (persisted through registration flow)
@@ -111,7 +108,7 @@ function PricingContent() {
   const [autoCheckoutPending, setAutoCheckoutPending] = useState(
     searchParams.get('checkout') === 'true'
   );
-  const supporterPrice = `$${getTierPrice(selectedTier, billingCycle)}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
+  const supporterPrice = `$${getDynamicPrice(selectedTier, billingCycle)}/${billingCycle === 'monthly' ? 'month' : 'year'}`;
 
   // Load LemonSqueezy SDK for overlay checkout
   useEffect(() => {
@@ -365,9 +362,9 @@ function PricingContent() {
 
               {/* Tier Selector */}
               <div className="grid grid-cols-4 gap-2 mb-4">
-                {TIER_PRICES.filter((tier) => tier.tier !== 'appreciation').map((tier) => {
+                {tierList.map((tier) => {
                   const isSelected = selectedTier === tier.tier;
-                  const price = getTierPrice(tier.tier, billingCycle);
+                  const price = getDynamicPrice(tier.tier, billingCycle);
                   return (
                     <button
                       key={tier.tier}
@@ -448,8 +445,12 @@ function PricingContent() {
               <table className="w-full">
                 <thead className="bg-muted">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Feature</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Free</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      Feature
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      Free
+                    </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                       Supporter (All Tiers)
                     </th>

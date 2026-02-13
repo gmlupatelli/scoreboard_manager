@@ -81,17 +81,38 @@ const PUBLIC_MOBILE_NAV_ITEMS: NavItem[] = [
 ];
 
 /** Build the user dropdown items (needs handleLogout + role info) */
-const buildUserMenuItems = (
-  isAdmin: boolean,
-  handleLogout: () => void,
-): MenuItem[] => {
+const buildUserMenuItems = (isAdmin: boolean, handleLogout: () => void): MenuItem[] => {
   const items: MenuItem[] = [
     { type: 'link', label: 'My Boards', path: '/dashboard', icon: 'ClipboardDocumentListIcon' },
     { type: 'link', label: 'Profile', path: '/user-profile-management', icon: 'UserCircleIcon' },
-    { type: 'link', label: 'Supporter Plan', path: '/supporter-plan', icon: 'GiftIcon', role: 'user' },
-    { type: 'link', label: 'Invitations', path: '/invitations', icon: 'EnvelopeIcon', adminPath: '/system-admin/invitations' },
-    { type: 'link', label: 'Manage Subscriptions', path: '/system-admin/subscriptions', icon: 'CreditCardIcon', role: 'system_admin' },
-    { type: 'link', label: 'System Settings', path: '/system-admin/settings', icon: 'Cog6ToothIcon', role: 'system_admin' },
+    {
+      type: 'link',
+      label: 'Supporter Plan',
+      path: '/supporter-plan',
+      icon: 'GiftIcon',
+      role: 'user',
+    },
+    {
+      type: 'link',
+      label: 'Invitations',
+      path: '/invitations',
+      icon: 'EnvelopeIcon',
+      adminPath: '/system-admin/invitations',
+    },
+    {
+      type: 'link',
+      label: 'Manage Subscriptions',
+      path: '/system-admin/subscriptions',
+      icon: 'CreditCardIcon',
+      role: 'system_admin',
+    },
+    {
+      type: 'link',
+      label: 'System Settings',
+      path: '/system-admin/settings',
+      icon: 'Cog6ToothIcon',
+      role: 'system_admin',
+    },
     { type: 'action', label: 'Logout', icon: 'ArrowRightOnRectangleIcon', action: handleLogout },
   ];
 
@@ -159,9 +180,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
       key={item.path}
       href={item.path}
       className={`flex items-center xl:space-x-1.5 px-2 xl:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-smooth duration-150 ${
-        isActivePath(item.path)
-          ? 'text-primary'
-          : 'text-text-secondary hover:opacity-80'
+        isActivePath(item.path) ? 'text-primary' : 'text-text-secondary hover:opacity-80'
       }`}
       style={customStyles ? textStyle : undefined}
     >
@@ -176,9 +195,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
       key={item.path}
       href={item.path}
       className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-smooth duration-150 ${
-        isActivePath(item.path)
-          ? 'text-primary'
-          : 'text-text-secondary hover:opacity-80'
+        isActivePath(item.path) ? 'text-primary' : 'text-text-secondary hover:opacity-80'
       }`}
       style={customStyles ? textStyle : undefined}
       onClick={onClick}
@@ -211,9 +228,7 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
     }
 
     const href = item.adminPath && isAdmin ? item.adminPath : item.path;
-    const closeMenu = isMobile
-      ? () => setIsMobileMenuOpen(false)
-      : () => setIsUserMenuOpen(false);
+    const closeMenu = isMobile ? () => setIsMobileMenuOpen(false) : () => setIsUserMenuOpen(false);
 
     return (
       <Link
@@ -319,47 +334,47 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
               </div>
             ) : (
               <>
-              <div className="flex items-center space-x-2 flex-shrink-0">
-                <Button
-                  href="/register"
-                  variant="outline"
-                  size="sm"
-                  icon="UserPlusIcon"
-                  iconPosition="left"
-                  iconClassName="hidden xl:inline-block"
-                  title="Create a free account"
-                  style={
-                    customStyles
-                      ? {
-                          borderColor: customStyles.borderColor,
-                          color: customStyles.textColor,
-                          fontFamily: customStyles.fontFamily || 'inherit',
-                        }
-                      : undefined
-                  }
-                >
-                  Sign Up
-                </Button>
-                <Button
-                  href="/login"
-                  variant="primary"
-                  size="sm"
-                  icon="ArrowRightOnRectangleIcon"
-                  iconPosition="left"
-                  iconClassName="hidden xl:inline-block"
-                  title="Sign in to your account"
-                  style={
-                    customStyles
-                      ? {
-                          backgroundColor: customStyles.accentColor,
-                          fontFamily: customStyles.fontFamily || 'inherit',
-                        }
-                      : undefined
-                  }
-                >
-                  Login
-                </Button>
-              </div>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <Button
+                    href="/register"
+                    variant="outline"
+                    size="sm"
+                    icon="UserPlusIcon"
+                    iconPosition="left"
+                    iconClassName="hidden xl:inline-block"
+                    title="Create a free account"
+                    style={
+                      customStyles
+                        ? {
+                            borderColor: customStyles.borderColor,
+                            color: customStyles.textColor,
+                            fontFamily: customStyles.fontFamily || 'inherit',
+                          }
+                        : undefined
+                    }
+                  >
+                    Sign Up
+                  </Button>
+                  <Button
+                    href="/login"
+                    variant="primary"
+                    size="sm"
+                    icon="ArrowRightOnRectangleIcon"
+                    iconPosition="left"
+                    iconClassName="hidden xl:inline-block"
+                    title="Sign in to your account"
+                    style={
+                      customStyles
+                        ? {
+                            backgroundColor: customStyles.accentColor,
+                            fontFamily: customStyles.fontFamily || 'inherit',
+                          }
+                        : undefined
+                    }
+                  >
+                    Login
+                  </Button>
+                </div>
               </>
             )}
           </div>

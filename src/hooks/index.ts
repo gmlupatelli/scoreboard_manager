@@ -21,3 +21,6 @@ export { useUndoQueue } from './useUndoQueue';
 
 // Utilities
 export { useTimeoutRef } from './useTimeoutRef';
+
+// Pricing
+export { useDynamicPricing } from './useDynamicPricing';

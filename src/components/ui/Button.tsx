@@ -83,17 +83,9 @@ const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
       if (!icon || iconPosition !== position) return null;
 
       const positionClass = position === 'left' ? 'mr-2' : 'ml-2';
-      const combinedIconClass = iconClassName
-        ? `${positionClass} ${iconClassName}`
-        : positionClass;
+      const combinedIconClass = iconClassName ? `${positionClass} ${iconClassName}` : positionClass;
 
-      return (
-        <Icon
-          name={icon}
-          size={defaultIconSize}
-          className={combinedIconClass}
-        />
-      );
+      return <Icon name={icon} size={defaultIconSize} className={combinedIconClass} />;
     };
 
     const renderContent = () => {

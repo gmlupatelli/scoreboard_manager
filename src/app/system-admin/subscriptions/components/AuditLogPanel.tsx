@@ -98,6 +98,21 @@ export default function AuditLogPanel({ isOpen, onToggle, refreshKey }: AuditLog
           icon: 'ArrowPathIcon',
           color: 'text-green-600 bg-green-100',
         };
+      case 'subscription_payment_failed':
+        return {
+          icon: 'ExclamationTriangleIcon',
+          color: 'text-orange-600 bg-orange-100',
+        };
+      case 'subscription_payment_recovered':
+        return {
+          icon: 'CheckCircleIcon',
+          color: 'text-green-600 bg-green-100',
+        };
+      case 'subscription_payment_refunded':
+        return {
+          icon: 'ArrowUturnLeftIcon',
+          color: 'text-amber-600 bg-amber-100',
+        };
       default:
         return { icon: 'DocumentTextIcon', color: 'text-gray-600 bg-gray-100' };
     }

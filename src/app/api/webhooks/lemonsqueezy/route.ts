@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceRoleClient } from '@/lib/supabase/apiClient';
 import { verifyWebhookSignature } from '@/lib/lemonsqueezy/webhookUtils';
+import { mapVariantToTierAndInterval } from '@/lib/lemonsqueezy/variantMapping';
 import { Database } from '@/types/database.types';
-import { getTierPrice } from '@/lib/subscription/tiers';
+import { pricingService } from '@/services/pricingService';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 type SubscriptionStatus = Database['public']['Enums']['subscription_status'];
-type BillingInterval = Database['public']['Enums']['billing_interval'];
-type AppreciationTier = Database['public']['Enums']['appreciation_tier'];
 
 type LemonSqueezyPayload = {
   meta?: {
@@ -65,45 +64,7 @@ const normalizeStatus = (status: string): SubscriptionStatus => {
   }
 };
 
-/**
- * Map variant ID to tier and billing interval
- * Returns { tier, interval } or null if variant not found
- */
-const mapVariantToTierAndInterval = (
-  variantId: string | null
-): { tier: AppreciationTier; interval: BillingInterval } | null => {
-  if (!variantId) return null;
-
-  // Monthly variants
-  if (variantId === process.env.LEMONSQUEEZY_MONTHLY_SUPPORTER_VARIANT_ID) {
-    return { tier: 'supporter', interval: 'monthly' };
-  }
-  if (variantId === process.env.LEMONSQUEEZY_MONTHLY_CHAMPION_VARIANT_ID) {
-    return { tier: 'champion', interval: 'monthly' };
-  }
-  if (variantId === process.env.LEMONSQUEEZY_MONTHLY_LEGEND_VARIANT_ID) {
-    return { tier: 'legend', interval: 'monthly' };
-  }
-  if (variantId === process.env.LEMONSQUEEZY_MONTHLY_HALL_OF_FAMER_VARIANT_ID) {
-    return { tier: 'hall_of_famer', interval: 'monthly' };
-  }
-
-  // Yearly variants
-  if (variantId === process.env.LEMONSQUEEZY_YEARLY_SUPPORTER_VARIANT_ID) {
-    return { tier: 'supporter', interval: 'yearly' };
-  }
-  if (variantId === process.env.LEMONSQUEEZY_YEARLY_CHAMPION_VARIANT_ID) {
-    return { tier: 'champion', interval: 'yearly' };
-  }
-  if (variantId === process.env.LEMONSQUEEZY_YEARLY_LEGEND_VARIANT_ID) {
-    return { tier: 'legend', interval: 'yearly' };
-  }
-  if (variantId === process.env.LEMONSQUEEZY_YEARLY_HALL_OF_FAMER_VARIANT_ID) {
-    return { tier: 'hall_of_famer', interval: 'yearly' };
-  }
-
-  return null;
-};
+// mapVariantToTierAndInterval is now imported from @/lib/lemonsqueezy/variantMapping
 
 export async function POST(request: NextRequest) {
   try {
@@ -163,6 +124,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // For subscription-invoices, resolve user_id via the related subscription_id
+    if (!resolvedUserId && dataType === 'subscription-invoices') {
+      const attr = attributes as Record<string, unknown>;
+      const lsSubscriptionId = getString(attr.subscription_id);
+      if (lsSubscriptionId) {
+        console.info('[Webhook] Resolving user_id from invoice subscription_id:', lsSubscriptionId);
+        const { data: existingSub } = await serviceClient
+          .from('subscriptions')
+          .select('user_id')
+          .eq('lemonsqueezy_subscription_id', String(lsSubscriptionId))
+          .maybeSingle();
+
+        if (existingSub?.user_id) {
+          resolvedUserId = existingSub.user_id;
+          console.info('[Webhook] Found user_id from subscription for invoice:', resolvedUserId);
+        }
+      }
+    }
+
     if (!resolvedUserId) {
       console.info('[Webhook] Missing user_id in custom_data and no existing subscription found');
       console.info('[Webhook] custom_data:', JSON.stringify(payload.meta?.custom_data));
@@ -204,12 +184,11 @@ export async function POST(request: NextRequest) {
       const itemPrice = getNumber(firstSubscriptionItem?.price);
       const amountCents = itemPrice ?? getNumber(attr.price);
 
-      // Calculate fixed price for the tier/interval (as cents)
-      const fixedPriceDollars = getTierPrice(tier, billingInterval);
-      const fixedPriceCents = fixedPriceDollars * 100;
+      // Get fallback price from DB tier_pricing table
+      const { data: dbPriceCents } = await pricingService.getPriceCents(tier, billingInterval);
 
-      // Use price from webhook if available, otherwise use fixed price
-      const finalAmountCents = amountCents ?? fixedPriceCents;
+      // Use price from webhook if available, otherwise use DB price
+      const finalAmountCents = amountCents ?? dbPriceCents ?? 0;
 
       // Use a single timestamp for both created_at and updated_at to prevent
       // chk_subscriptions_timestamps constraint violation (created_at <= updated_at)
@@ -272,6 +251,17 @@ export async function POST(request: NextRequest) {
       if (deactivateError) {
         console.error('[Webhook] Failed to deactivate gifted subscription:', deactivateError);
         // Non-fatal — the paid subscription is already saved
+      }
+
+      // Auto-sync tier_pricing if LemonSqueezy sent a real price
+      if (amountCents && variantId) {
+        await pricingService.syncPriceIfChanged(
+          serviceClient,
+          tier,
+          billingInterval,
+          amountCents,
+          variantId
+        );
       }
 
       console.info('[Webhook] Subscription upserted successfully');
@@ -344,6 +334,163 @@ export async function POST(request: NextRequest) {
       }
 
       console.info('[Webhook] Order upserted successfully');
+    }
+
+    // ========================================================================
+    // Handle subscription-invoices (payment success/failed/recovered/refunded)
+    // ========================================================================
+    if (dataType === 'subscription-invoices') {
+      const attr = attributes as Record<string, unknown>;
+      const lsSubscriptionId = getString(attr.subscription_id);
+
+      const now = new Date().toISOString();
+
+      const invoiceInsert = {
+        user_id: resolvedUserId,
+        lemonsqueezy_subscription_id: lsSubscriptionId,
+        lemonsqueezy_invoice_id: dataId,
+        lemonsqueezy_store_id: getString(attr.store_id),
+        lemonsqueezy_customer_id: getString(attr.customer_id),
+        billing_reason: getString(attr.billing_reason),
+        invoice_status: getString(attr.status) ?? 'pending',
+        card_brand: getString(attr.card_brand),
+        card_last_four: getString(attr.card_last_four),
+        currency: getString(attr.currency) ?? 'USD',
+        currency_rate: getNumber(attr.currency_rate),
+        subtotal_cents: getNumber(attr.subtotal) ?? 0,
+        discount_total_cents: getNumber(attr.discount_total) ?? 0,
+        tax_cents: getNumber(attr.tax) ?? 0,
+        total_cents: getNumber(attr.total) ?? 0,
+        subtotal_usd_cents: getNumber(attr.subtotal_usd) ?? 0,
+        discount_total_usd_cents: getNumber(attr.discount_total_usd) ?? 0,
+        tax_usd_cents: getNumber(attr.tax_usd) ?? 0,
+        total_usd_cents: getNumber(attr.total_usd) ?? 0,
+        refunded_amount_cents: getNumber(attr.refunded_amount) ?? 0,
+        refunded_amount_usd_cents: getNumber(attr.refunded_amount_usd) ?? 0,
+        invoice_url: getString(getObject(attr.urls)?.invoice_url),
+        test_mode: getBoolean(attr.test_mode) ?? false,
+        created_at: now,
+        updated_at: now,
+      };
+
+      console.info('[Webhook] Upserting subscription invoice:', dataId);
+
+      const { error } = await serviceClient
+        .from('subscription_invoices')
+        .upsert(invoiceInsert as never, {
+          onConflict: 'lemonsqueezy_invoice_id',
+        });
+
+      if (error) {
+        console.error('[Webhook] Subscription invoice upsert error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      // Event-specific payment tracking logic
+      if (eventName === 'subscription_payment_failed') {
+        console.info('[Webhook] Payment failed for subscription:', lsSubscriptionId);
+
+        // Increment payment failure count on associated subscription
+        if (lsSubscriptionId) {
+          const { error: updateError } = await serviceClient.rpc(
+            'increment_payment_failure' as never,
+            {
+              p_ls_subscription_id: lsSubscriptionId,
+            } as never
+          );
+
+          // Fallback: if RPC doesn't exist, update manually
+          if (updateError) {
+            console.info('[Webhook] RPC not available, updating payment failure manually');
+            const { data: sub } = await serviceClient
+              .from('subscriptions')
+              .select('payment_failure_count')
+              .eq('lemonsqueezy_subscription_id', lsSubscriptionId)
+              .maybeSingle();
+
+            await serviceClient
+              .from('subscriptions')
+              .update({
+                payment_failure_count: (sub?.payment_failure_count ?? 0) + 1,
+                last_payment_failed_at: now,
+              } as never)
+              .eq('lemonsqueezy_subscription_id', lsSubscriptionId);
+          }
+
+          // Log to admin audit log
+          await serviceClient.from('admin_audit_log').insert({
+            admin_id: null,
+            action: 'payment_failed',
+            target_user_id: resolvedUserId,
+            details: {
+              event: eventName,
+              subscription_id: lsSubscriptionId,
+              invoice_id: dataId,
+              total_cents: getNumber(attr.total) ?? 0,
+              currency: getString(attr.currency) ?? 'USD',
+            },
+          } as never);
+        }
+      }
+
+      if (
+        eventName === 'subscription_payment_success' ||
+        eventName === 'subscription_payment_recovered'
+      ) {
+        console.info('[Webhook] Payment succeeded for subscription:', lsSubscriptionId);
+
+        // Reset payment failure count on successful payment
+        if (lsSubscriptionId) {
+          await serviceClient
+            .from('subscriptions')
+            .update({
+              payment_failure_count: 0,
+              last_payment_failed_at: null,
+            } as never)
+            .eq('lemonsqueezy_subscription_id', lsSubscriptionId);
+
+          const action =
+            eventName === 'subscription_payment_recovered'
+              ? 'payment_recovered'
+              : 'payment_success';
+
+          // Log to admin audit log
+          await serviceClient.from('admin_audit_log').insert({
+            admin_id: null,
+            action,
+            target_user_id: resolvedUserId,
+            details: {
+              event: eventName,
+              subscription_id: lsSubscriptionId,
+              invoice_id: dataId,
+              total_cents: getNumber(attr.total) ?? 0,
+              currency: getString(attr.currency) ?? 'USD',
+            },
+          } as never);
+        }
+      }
+
+      if (eventName === 'subscription_payment_refunded') {
+        console.info('[Webhook] Payment refunded for subscription:', lsSubscriptionId);
+
+        if (lsSubscriptionId) {
+          // Log to admin audit log
+          await serviceClient.from('admin_audit_log').insert({
+            admin_id: null,
+            action: 'payment_refunded',
+            target_user_id: resolvedUserId,
+            details: {
+              event: eventName,
+              subscription_id: lsSubscriptionId,
+              invoice_id: dataId,
+              refunded_amount_cents: getNumber(attr.refunded_amount) ?? 0,
+              currency: getString(attr.currency) ?? 'USD',
+            },
+          } as never);
+        }
+      }
+
+      console.info('[Webhook] Subscription invoice processed successfully');
     }
 
     console.info('[Webhook] Successfully processed event:', eventName);

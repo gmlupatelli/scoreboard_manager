@@ -101,6 +101,8 @@ export async function GET(request: NextRequest) {
           gifted_expires_at,
           current_period_end,
           lemonsqueezy_subscription_id,
+          payment_failure_count,
+          last_payment_failed_at,
           created_at,
           updated_at
         )
@@ -142,6 +144,8 @@ export async function GET(request: NextRequest) {
         gifted_expires_at: string | null;
         current_period_end: string | null;
         lemonsqueezy_subscription_id: string | null;
+        payment_failure_count: number;
+        last_payment_failed_at: string | null;
         created_at: string;
         updated_at: string;
       }>;
@@ -233,6 +237,8 @@ export async function GET(request: NextRequest) {
                 giftedExpiresAt: syncedSubscription.gifted_expires_at,
                 currentPeriodEnd: syncedSubscription.current_period_end,
                 lemonsqueezySubscriptionId: syncedSubscription.lemonsqueezy_subscription_id,
+                paymentFailureCount: syncedSubscription.payment_failure_count ?? 0,
+                lastPaymentFailedAt: syncedSubscription.last_payment_failed_at,
                 createdAt: syncedSubscription.created_at,
                 updatedAt: syncedSubscription.updated_at,
               }
@@ -254,6 +260,8 @@ export async function GET(request: NextRequest) {
             return sub && sub.status === 'cancelled';
           case 'appreciation':
             return sub && sub.isGifted && sub.tier === 'appreciation';
+          case 'past_due':
+            return sub && (sub.status === 'past_due' || sub.status === 'unpaid');
           case 'free':
             return !sub || (sub.status !== 'active' && sub.status !== 'trialing' && !sub.isGifted);
           default:

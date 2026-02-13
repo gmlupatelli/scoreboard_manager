@@ -268,7 +268,10 @@ export default function SystemAdminSettingsPage() {
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-lg p-6 mb-6 elevation-1" data-testid="registration-settings-card">
+          <div
+            className="bg-card border border-border rounded-lg p-6 mb-6 elevation-1"
+            data-testid="registration-settings-card"
+          >
             <h2 className="text-xl font-semibold text-text-primary mb-6 flex items-center">
               <Icon name="Cog6ToothIcon" size={24} className="mr-2 text-primary" />
               Registration Settings

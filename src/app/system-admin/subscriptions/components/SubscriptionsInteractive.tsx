@@ -12,6 +12,7 @@ import LinkAccountModal from './LinkAccountModal';
 import GiftTierModal from './GiftTierModal';
 import CancelConfirmModal from './CancelConfirmModal';
 import AuditLogPanel from './AuditLogPanel';
+import PricingConfigSection from './PricingConfigSection';
 import { AppreciationTier } from '@/types/models';
 
 interface UserSubscription {
@@ -32,12 +33,14 @@ interface UserSubscription {
     giftedExpiresAt: string | null;
     currentPeriodEnd: string | null;
     lemonsqueezySubscriptionId: string | null;
+    paymentFailureCount: number;
+    lastPaymentFailedAt: string | null;
     createdAt: string;
     updatedAt: string;
   } | null;
 }
 
-type FilterType = 'all' | 'active' | 'cancelled' | 'appreciation' | 'free';
+type FilterType = 'all' | 'active' | 'cancelled' | 'past_due' | 'appreciation' | 'free';
 
 export default function SubscriptionsInteractive() {
   const { isAuthorized, isChecking } = useAuthGuard({ requiredRole: 'system_admin' });
@@ -58,6 +61,7 @@ export default function SubscriptionsInteractive() {
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
+  const [showPricing, setShowPricing] = useState(true);
   const [auditLogRefreshKey, setAuditLogRefreshKey] = useState(0);
 
   // Success/error messages
@@ -202,7 +206,7 @@ export default function SubscriptionsInteractive() {
       active: 'bg-green-100 text-green-700',
       trialing: 'bg-blue-100 text-blue-700',
       cancelled: 'bg-red-100 text-red-700',
-      past_due: 'bg-yellow-100 text-yellow-700',
+      past_due: 'bg-orange-100 text-orange-700',
       paused: 'bg-gray-100 text-gray-600',
       expired: 'bg-gray-100 text-gray-600',
       unpaid: 'bg-red-100 text-red-700',
@@ -211,11 +215,21 @@ export default function SubscriptionsInteractive() {
     const colorClass = statusColors[sub.status] || 'bg-gray-100 text-gray-600';
 
     return (
-      <span
-        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
-      >
-        {sub.statusFormatted || sub.status}
-      </span>
+      <div className="flex items-center gap-1.5">
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
+        >
+          {sub.statusFormatted || sub.status}
+        </span>
+        {sub.paymentFailureCount > 0 && (
+          <span
+            className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700"
+            title={`${sub.paymentFailureCount} payment failure(s)${sub.lastPaymentFailedAt ? ` — last: ${formatDate(sub.lastPaymentFailedAt)}` : ''}`}
+          >
+            {sub.paymentFailureCount}⚠
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -314,6 +328,7 @@ export default function SubscriptionsInteractive() {
                 <option value="all">All Users</option>
                 <option value="active">Active Subscriptions</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="past_due">Payment Issues</option>
                 <option value="appreciation">Appreciation Tier</option>
                 <option value="free">Free Users</option>
               </select>
@@ -607,6 +622,14 @@ export default function SubscriptionsInteractive() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Pricing Configuration Panel */}
+          <div className="mt-6">
+            <PricingConfigSection
+              isOpen={showPricing}
+              onToggle={() => setShowPricing(!showPricing)}
+            />
           </div>
 
           {/* Audit Log Panel */}

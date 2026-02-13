@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
 import { Database } from '@/types/database.types';
-import { getTierPrice } from '@/lib/subscription/tiers';
+import { pricingService } from '@/services/pricingService';
+import { getVariantId } from '@/lib/lemonsqueezy/variantMapping';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -17,34 +18,7 @@ interface UpdateSubscriptionRequestBody {
   billingInterval: BillingInterval;
 }
 
-/**
- * Get the appropriate variant ID for a tier and billing interval
- */
-function getVariantId(tier: AppreciationTier, interval: BillingInterval): string | undefined {
-  if (interval === 'monthly') {
-    switch (tier) {
-      case 'supporter':
-        return process.env.LEMONSQUEEZY_MONTHLY_SUPPORTER_VARIANT_ID;
-      case 'champion':
-        return process.env.LEMONSQUEEZY_MONTHLY_CHAMPION_VARIANT_ID;
-      case 'legend':
-        return process.env.LEMONSQUEEZY_MONTHLY_LEGEND_VARIANT_ID;
-      case 'hall_of_famer':
-        return process.env.LEMONSQUEEZY_MONTHLY_HALL_OF_FAMER_VARIANT_ID;
-    }
-  } else {
-    switch (tier) {
-      case 'supporter':
-        return process.env.LEMONSQUEEZY_YEARLY_SUPPORTER_VARIANT_ID;
-      case 'champion':
-        return process.env.LEMONSQUEEZY_YEARLY_CHAMPION_VARIANT_ID;
-      case 'legend':
-        return process.env.LEMONSQUEEZY_YEARLY_LEGEND_VARIANT_ID;
-      case 'hall_of_famer':
-        return process.env.LEMONSQUEEZY_YEARLY_HALL_OF_FAMER_VARIANT_ID;
-    }
-  }
-}
+// getVariantId is now imported from @/lib/lemonsqueezy/variantMapping
 
 export async function POST(request: NextRequest) {
   try {
@@ -169,7 +143,8 @@ export async function POST(request: NextRequest) {
     const attributes = responseBody?.data?.attributes;
 
     // Update our local database with the new tier information
-    const newPriceCents = getTierPrice(tier, billingInterval) * 100;
+    const { data: newPriceCentsFromDb } = await pricingService.getPriceCents(tier, billingInterval);
+    const newPriceCents = newPriceCentsFromDb ?? 0;
 
     console.info('Updating local database:', {
       subscriptionId,

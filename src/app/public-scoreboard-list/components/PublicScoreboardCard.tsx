@@ -16,10 +16,18 @@ const PublicScoreboardCard = ({ scoreboard }: PublicScoreboardCardProps) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 hover:elevation-1 transition-smooth duration-150 flex flex-col h-full" data-testid="public-scoreboard-card">
+    <div
+      className="bg-card border border-border rounded-lg p-6 hover:elevation-1 transition-smooth duration-150 flex flex-col h-full"
+      data-testid="public-scoreboard-card"
+    >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-text-primary truncate" data-testid="public-scoreboard-card-title">{scoreboard.title}</h3>
+          <h3
+            className="text-lg font-semibold text-text-primary truncate"
+            data-testid="public-scoreboard-card-title"
+          >
+            {scoreboard.title}
+          </h3>
         </div>
       </div>
 

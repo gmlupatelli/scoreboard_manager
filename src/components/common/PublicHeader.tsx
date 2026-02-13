@@ -44,10 +44,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 /** Mobile nav links (includes Home at the top) */
-const MOBILE_NAV_ITEMS: NavItem[] = [
-  { label: 'Home', path: '/', icon: 'HomeIcon' },
-  ...NAV_ITEMS,
-];
+const MOBILE_NAV_ITEMS: NavItem[] = [{ label: 'Home', path: '/', icon: 'HomeIcon' }, ...NAV_ITEMS];
 
 /**
  * Lightweight header for public pages (landing, login, register, etc.)
@@ -101,9 +98,7 @@ export default function PublicHeader() {
                 key={item.path}
                 href={item.path}
                 className={`flex items-center xl:space-x-1.5 px-2 xl:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-smooth duration-150 ${
-                  isActivePath(item.path)
-                    ? 'text-primary'
-                    : 'text-text-secondary hover:opacity-80'
+                  isActivePath(item.path) ? 'text-primary' : 'text-text-secondary hover:opacity-80'
                 }`}
               >
                 <Icon name={item.icon} size={16} className="hidden xl:block flex-shrink-0" />

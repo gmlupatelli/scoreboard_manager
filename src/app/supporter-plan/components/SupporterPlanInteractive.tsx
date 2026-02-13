@@ -28,10 +28,11 @@ import TierBadge from '@/components/ui/TierBadge';
 import DowngradeNoticeModal from '@/components/common/DowngradeNoticeModal';
 import SupporterSection from '@/app/user-profile-management/components/SupporterSection';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDynamicPricing } from '@/hooks';
 import { subscriptionService } from '@/services/subscriptionService';
 import { PaymentHistoryEntry, Subscription } from '@/types/models';
+import { getSubscriptionStatusBadge } from '@/utils/subscriptionUtils';
 import {
-  TIER_PRICES,
   getTierLabel,
   getTierEmoji,
   type AppreciationTier,
@@ -65,27 +66,9 @@ const formatDate = (value?: string | null) => {
   });
 };
 
-const getStatusBadge = (status: Subscription['status']) => {
-  switch (status) {
-    case 'active':
-      return 'bg-green-500/10 text-success';
-    case 'trialing':
-      return 'bg-yellow-500/10 text-warning';
-    case 'past_due':
-    case 'unpaid':
-      return 'bg-yellow-500/10 text-warning';
-    case 'paused':
-      return 'bg-muted text-text-secondary';
-    case 'expired':
-    case 'cancelled':
-      return 'bg-red-500/10 text-destructive';
-    default:
-      return 'bg-muted text-text-secondary';
-  }
-};
-
 export default function SupporterPlanInteractive() {
   const { user, loading: authLoading, subscriptionTier, refreshSubscription } = useAuth();
+  const { getPrice, tierList } = useDynamicPricing();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -104,11 +87,13 @@ export default function SupporterPlanInteractive() {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showDowngradeNotice, setShowDowngradeNotice] = useState(false);
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
-    show: false,
-    message: '',
-    type: 'success',
-  });
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>(
+    {
+      show: false,
+      message: '',
+      type: 'success',
+    }
+  );
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ show: true, message, type });
@@ -507,7 +492,10 @@ export default function SupporterPlanInteractive() {
           ) : (
             <div className="space-y-6">
               {/* Current Plan Card */}
-              <div className="bg-card border border-border rounded-lg elevation-1 p-6" data-testid="current-plan-card">
+              <div
+                className="bg-card border border-border rounded-lg elevation-1 p-6"
+                data-testid="current-plan-card"
+              >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-text-primary">Current Plan</h2>
                   <TierBadge tier={subscriptionTier} size="md" />
@@ -562,7 +550,7 @@ export default function SupporterPlanInteractive() {
                                 {getTierLabel(subscription.tier)}
                               </span>
                               <span
-                                className={`text-xs font-medium px-2 py-0.5 rounded-full ${getStatusBadge(
+                                className={`text-xs font-medium px-2 py-0.5 rounded-full ${getSubscriptionStatusBadge(
                                   subscription.status
                                 )}`}
                                 data-testid="subscription-status-badge"
@@ -653,34 +641,30 @@ export default function SupporterPlanInteractive() {
                               Choose a new tier
                             </h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              {TIER_PRICES.filter((tier) => tier.tier !== 'appreciation').map(
-                                (tier) => (
-                                  <button
-                                    key={tier.tier}
-                                    onClick={() => setSelectedTier(tier.tier)}
-                                    className={`p-4 rounded-lg border-2 text-center transition-all duration-150 ${
-                                      selectedTier === tier.tier
-                                        ? 'border-primary bg-red-600/5'
-                                        : 'border-border hover:border-primary/50'
-                                    } ${tier.tier === subscription.tier ? 'ring-2 ring-offset-2 ring-green-500/50' : ''}`}
-                                    data-testid="tier-card"
-                                  >
-                                    <span className="text-2xl block mb-1">{tier.emoji}</span>
-                                    <span className="font-medium text-text-primary block">
-                                      {tier.label}
-                                    </span>
-                                    <span className="text-sm text-text-secondary">
-                                      ${billingInterval === 'monthly' ? tier.monthly : tier.yearly}/
-                                      {billingInterval === 'monthly' ? 'mo' : 'yr'}
-                                    </span>
-                                    {tier.tier === subscription.tier && (
-                                      <span className="text-xs text-success block mt-1">
-                                        Current
-                                      </span>
-                                    )}
-                                  </button>
-                                )
-                              )}
+                              {tierList.map((tier) => (
+                                <button
+                                  key={tier.tier}
+                                  onClick={() => setSelectedTier(tier.tier)}
+                                  className={`p-4 rounded-lg border-2 text-center transition-all duration-150 ${
+                                    selectedTier === tier.tier
+                                      ? 'border-primary bg-red-600/5'
+                                      : 'border-border hover:border-primary/50'
+                                  } ${tier.tier === subscription.tier ? 'ring-2 ring-offset-2 ring-green-500/50' : ''}`}
+                                  data-testid="tier-card"
+                                >
+                                  <span className="text-2xl block mb-1">{tier.emoji}</span>
+                                  <span className="font-medium text-text-primary block">
+                                    {tier.label}
+                                  </span>
+                                  <span className="text-sm text-text-secondary">
+                                    ${getPrice(tier.tier, billingInterval)}/
+                                    {billingInterval === 'monthly' ? 'mo' : 'yr'}
+                                  </span>
+                                  {tier.tier === subscription.tier && (
+                                    <span className="text-xs text-success block mt-1">Current</span>
+                                  )}
+                                </button>
+                              ))}
                             </div>
                           </div>
 
@@ -803,7 +787,7 @@ export default function SupporterPlanInteractive() {
                     <div>
                       <h3 className="text-sm font-medium text-text-primary mb-3">Choose a tier</h3>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {TIER_PRICES.filter((tier) => tier.tier !== 'appreciation').map((tier) => (
+                        {tierList.map((tier) => (
                           <button
                             key={tier.tier}
                             onClick={() => setSelectedTier(tier.tier)}
@@ -819,7 +803,7 @@ export default function SupporterPlanInteractive() {
                               {tier.label}
                             </span>
                             <span className="text-sm text-text-secondary">
-                              ${billingInterval === 'monthly' ? tier.monthly : tier.yearly}/
+                              ${getPrice(tier.tier, billingInterval)}/
                               {billingInterval === 'monthly' ? 'mo' : 'yr'}
                             </span>
                           </button>
@@ -880,7 +864,10 @@ export default function SupporterPlanInteractive() {
               <SupporterSection onToast={showToast} />
 
               {/* Billing History */}
-              <div className="bg-card border border-border rounded-lg elevation-1 overflow-hidden" data-testid="billing-history-section">
+              <div
+                className="bg-card border border-border rounded-lg elevation-1 overflow-hidden"
+                data-testid="billing-history-section"
+              >
                 <div className="px-6 pt-6 pb-4">
                   <h2 className="text-lg font-semibold text-text-primary">Billing History</h2>
                 </div>
@@ -893,11 +880,21 @@ export default function SupporterPlanInteractive() {
                     <table className="w-full">
                       <thead className="bg-muted">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Date</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Item</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Amount</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
-                          <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Receipt</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Item
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Amount
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
+                            Receipt
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-surface divide-y divide-border">
@@ -1039,9 +1036,7 @@ export default function SupporterPlanInteractive() {
         <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
           <div
             className={`flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
-              toast.type === 'success'
-                ? 'bg-green-500 text-white'
-                : 'bg-red-500 text-white'
+              toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
             }`}
           >
             <Icon
@@ -1056,7 +1051,10 @@ export default function SupporterPlanInteractive() {
       {/* Cancel Subscription Confirmation Modal */}
       {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-surface rounded-lg shadow-lg max-w-md w-full mx-4 p-6" data-testid="cancel-subscription-modal">
+          <div
+            className="bg-surface rounded-lg shadow-lg max-w-md w-full mx-4 p-6"
+            data-testid="cancel-subscription-modal"
+          >
             <div className="flex items-start gap-3 mb-4">
               <Icon
                 name="ExclamationTriangleIcon"

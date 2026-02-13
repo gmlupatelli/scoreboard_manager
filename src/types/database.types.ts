@@ -6,33 +6,50 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: '13.0.5';
   };
-  graphql_public: {
-    Tables: {
-      [_ in never]: never;
-    };
-    Views: {
-      [_ in never]: never;
-    };
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json;
-          operationName?: string;
-          query?: string;
-          variables?: Json;
-        };
-        Returns: Json;
-      };
-    };
-    Enums: {
-      [_ in never]: never;
-    };
-    CompositeTypes: {
-      [_ in never]: never;
-    };
-  };
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string;
+          admin_id: string;
+          created_at: string;
+          details: Json | null;
+          id: string;
+          target_user_id: string | null;
+        };
+        Insert: {
+          action: string;
+          admin_id: string;
+          created_at?: string;
+          details?: Json | null;
+          id?: string;
+          target_user_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          admin_id?: string;
+          created_at?: string;
+          details?: Json | null;
+          id?: string;
+          target_user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'admin_audit_log_admin_id_fkey';
+            columns: ['admin_id'];
+            isOneToOne: false;
+            referencedRelation: 'user_profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'admin_audit_log_target_user_id_fkey';
+            columns: ['target_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'user_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       invitations: {
         Row: {
           accepted_at: string | null;
@@ -461,6 +478,111 @@ export type Database = {
           },
         ];
       };
+      subscription_invoices: {
+        Row: {
+          billing_reason: Database['public']['Enums']['billing_reason'] | null;
+          card_brand: string | null;
+          card_last_four: string | null;
+          created_at: string;
+          currency: string;
+          currency_rate: number | null;
+          discount_total_cents: number;
+          discount_total_usd_cents: number;
+          id: string;
+          invoice_status: string;
+          invoice_url: string | null;
+          lemonsqueezy_customer_id: string | null;
+          lemonsqueezy_invoice_id: string;
+          lemonsqueezy_store_id: string | null;
+          lemonsqueezy_subscription_id: string | null;
+          refunded_amount_cents: number;
+          refunded_amount_usd_cents: number;
+          subscription_id: string | null;
+          subtotal_cents: number;
+          subtotal_usd_cents: number;
+          tax_cents: number;
+          tax_usd_cents: number;
+          test_mode: boolean;
+          total_cents: number;
+          total_usd_cents: number;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          billing_reason?: Database['public']['Enums']['billing_reason'] | null;
+          card_brand?: string | null;
+          card_last_four?: string | null;
+          created_at?: string;
+          currency?: string;
+          currency_rate?: number | null;
+          discount_total_cents?: number;
+          discount_total_usd_cents?: number;
+          id?: string;
+          invoice_status?: string;
+          invoice_url?: string | null;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_invoice_id: string;
+          lemonsqueezy_store_id?: string | null;
+          lemonsqueezy_subscription_id?: string | null;
+          refunded_amount_cents?: number;
+          refunded_amount_usd_cents?: number;
+          subscription_id?: string | null;
+          subtotal_cents?: number;
+          subtotal_usd_cents?: number;
+          tax_cents?: number;
+          tax_usd_cents?: number;
+          test_mode?: boolean;
+          total_cents?: number;
+          total_usd_cents?: number;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          billing_reason?: Database['public']['Enums']['billing_reason'] | null;
+          card_brand?: string | null;
+          card_last_four?: string | null;
+          created_at?: string;
+          currency?: string;
+          currency_rate?: number | null;
+          discount_total_cents?: number;
+          discount_total_usd_cents?: number;
+          id?: string;
+          invoice_status?: string;
+          invoice_url?: string | null;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_invoice_id?: string;
+          lemonsqueezy_store_id?: string | null;
+          lemonsqueezy_subscription_id?: string | null;
+          refunded_amount_cents?: number;
+          refunded_amount_usd_cents?: number;
+          subscription_id?: string | null;
+          subtotal_cents?: number;
+          subtotal_usd_cents?: number;
+          tax_cents?: number;
+          tax_usd_cents?: number;
+          test_mode?: boolean;
+          total_cents?: number;
+          total_usd_cents?: number;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'subscription_invoices_subscription_id_fkey';
+            columns: ['subscription_id'];
+            isOneToOne: false;
+            referencedRelation: 'subscriptions';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'subscription_invoices_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'user_profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       subscriptions: {
         Row: {
           amount_cents: number;
@@ -470,19 +592,21 @@ export type Database = {
           card_last_four: string | null;
           created_at: string;
           currency: string;
-          customer_portal_update_subscription_url: string | null;
-          customer_portal_url: string | null;
           current_period_end: string | null;
           current_period_start: string | null;
+          customer_portal_update_subscription_url: string | null;
+          customer_portal_url: string | null;
           gifted_expires_at: string | null;
           id: string;
           is_gifted: boolean;
+          last_payment_failed_at: string | null;
           lemonsqueezy_customer_id: string | null;
           lemonsqueezy_order_id: string | null;
           lemonsqueezy_order_item_id: string | null;
           lemonsqueezy_product_id: string | null;
           lemonsqueezy_subscription_id: string | null;
           lemonsqueezy_variant_id: string | null;
+          payment_failure_count: number;
           payment_processor: string | null;
           show_created_by: boolean;
           show_on_supporters_page: boolean;
@@ -503,19 +627,21 @@ export type Database = {
           card_last_four?: string | null;
           created_at?: string;
           currency?: string;
-          customer_portal_update_subscription_url?: string | null;
-          customer_portal_url?: string | null;
           current_period_end?: string | null;
           current_period_start?: string | null;
+          customer_portal_update_subscription_url?: string | null;
+          customer_portal_url?: string | null;
           gifted_expires_at?: string | null;
           id?: string;
           is_gifted?: boolean;
+          last_payment_failed_at?: string | null;
           lemonsqueezy_customer_id?: string | null;
           lemonsqueezy_order_id?: string | null;
           lemonsqueezy_order_item_id?: string | null;
           lemonsqueezy_product_id?: string | null;
           lemonsqueezy_subscription_id?: string | null;
           lemonsqueezy_variant_id?: string | null;
+          payment_failure_count?: number;
           payment_processor?: string | null;
           show_created_by?: boolean;
           show_on_supporters_page?: boolean;
@@ -536,19 +662,21 @@ export type Database = {
           card_last_four?: string | null;
           created_at?: string;
           currency?: string;
-          customer_portal_update_subscription_url?: string | null;
-          customer_portal_url?: string | null;
           current_period_end?: string | null;
           current_period_start?: string | null;
+          customer_portal_update_subscription_url?: string | null;
+          customer_portal_url?: string | null;
           gifted_expires_at?: string | null;
           id?: string;
           is_gifted?: boolean;
+          last_payment_failed_at?: string | null;
           lemonsqueezy_customer_id?: string | null;
           lemonsqueezy_order_id?: string | null;
           lemonsqueezy_order_item_id?: string | null;
           lemonsqueezy_product_id?: string | null;
           lemonsqueezy_subscription_id?: string | null;
           lemonsqueezy_variant_id?: string | null;
+          payment_failure_count?: number;
           payment_processor?: string | null;
           show_created_by?: boolean;
           show_on_supporters_page?: boolean;
@@ -591,6 +719,42 @@ export type Database = {
           created_at?: string;
           id?: string;
           require_email_verification?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tier_pricing: {
+        Row: {
+          amount_cents: number;
+          billing_interval: Database['public']['Enums']['billing_interval'];
+          created_at: string;
+          currency: string;
+          id: string;
+          last_synced_at: string;
+          lemonsqueezy_variant_id: string;
+          tier: Database['public']['Enums']['appreciation_tier'];
+          updated_at: string;
+        };
+        Insert: {
+          amount_cents: number;
+          billing_interval: Database['public']['Enums']['billing_interval'];
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          last_synced_at?: string;
+          lemonsqueezy_variant_id?: string;
+          tier: Database['public']['Enums']['appreciation_tier'];
+          updated_at?: string;
+        };
+        Update: {
+          amount_cents?: number;
+          billing_interval?: Database['public']['Enums']['billing_interval'];
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          last_synced_at?: string;
+          lemonsqueezy_variant_id?: string;
+          tier?: Database['public']['Enums']['appreciation_tier'];
           updated_at?: string;
         };
         Relationships: [];
@@ -662,9 +826,10 @@ export type Database = {
       owns_scoreboard: { Args: { scoreboard_uuid: string }; Returns: boolean };
     };
     Enums: {
-      invitation_status: 'pending' | 'accepted' | 'expired' | 'cancelled';
       appreciation_tier: 'supporter' | 'champion' | 'legend' | 'hall_of_famer' | 'appreciation';
       billing_interval: 'monthly' | 'yearly';
+      billing_reason: 'initial' | 'renewal' | 'updated';
+      invitation_status: 'pending' | 'accepted' | 'expired' | 'cancelled';
       kiosk_file_type: 'original' | 'thumbnail';
       scoreboard_visibility: 'public' | 'private';
       slide_type: 'image' | 'scoreboard';
@@ -800,15 +965,24 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
+      appreciation_tier: ['supporter', 'champion', 'legend', 'hall_of_famer', 'appreciation'],
+      billing_interval: ['monthly', 'yearly'],
+      billing_reason: ['initial', 'renewal', 'updated'],
       invitation_status: ['pending', 'accepted', 'expired', 'cancelled'],
       kiosk_file_type: ['original', 'thumbnail'],
       scoreboard_visibility: ['public', 'private'],
       slide_type: ['image', 'scoreboard'],
+      subscription_status: [
+        'active',
+        'cancelled',
+        'past_due',
+        'paused',
+        'expired',
+        'trialing',
+        'unpaid',
+      ],
       user_role: ['system_admin', 'user'],
     },
   },

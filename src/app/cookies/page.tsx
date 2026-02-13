@@ -87,17 +87,23 @@ export default function CookiePolicyPage() {
                   <tbody className="bg-surface divide-y divide-border">
                     <tr className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-sm text-text-primary">sb-access-token</td>
-                      <td className="px-4 py-3 text-sm text-text-secondary">Authentication and session management</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">
+                        Authentication and session management
+                      </td>
                       <td className="px-4 py-3 text-sm text-text-secondary">Session</td>
                     </tr>
                     <tr className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-sm text-text-primary">sb-refresh-token</td>
-                      <td className="px-4 py-3 text-sm text-text-secondary">Maintain logged-in state</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">
+                        Maintain logged-in state
+                      </td>
                       <td className="px-4 py-3 text-sm text-text-secondary">30 days</td>
                     </tr>
                     <tr className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-3 text-sm text-text-primary">preferences</td>
-                      <td className="px-4 py-3 text-sm text-text-secondary">Store user preferences</td>
+                      <td className="px-4 py-3 text-sm text-text-secondary">
+                        Store user preferences
+                      </td>
                       <td className="px-4 py-3 text-sm text-text-secondary">1 year</td>
                     </tr>
                   </tbody>

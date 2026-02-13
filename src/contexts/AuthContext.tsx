@@ -20,6 +20,7 @@ interface AuthContextType {
   subscriptionStatus: string | null;
   subscriptionEndDate: string | null;
   subscriptionLoading: boolean;
+  updatePaymentMethodUrl: string | null;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [subscriptionEndDate, setSubscriptionEndDate] = useState<string | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [updatePaymentMethodUrl, setUpdatePaymentMethodUrl] = useState<string | null>(null);
   const _router = useRouter();
 
   const loadSubscriptionTier = async (userId: string) => {
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // For cancelled subscriptions, use cancelledAt (LemonSqueezy's ends_at)
         // For active subscriptions, use currentPeriodEnd (LemonSqueezy's renews_at)
         setSubscriptionStatus(data.status);
+        setUpdatePaymentMethodUrl(data.updatePaymentMethodUrl || null);
         if (data.status === 'cancelled') {
           setSubscriptionEndDate(data.cancelledAt || null);
         } else {
@@ -70,8 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           // Gifted tier is valid (no expiry or not yet expired)
           setSubscriptionTier(data.tier);
-        } else if (data.status === 'active' || data.status === 'trialing') {
-          // Regular paid subscription
+        } else if (
+          data.status === 'active' ||
+          data.status === 'trialing' ||
+          data.status === 'past_due'
+        ) {
+          // Regular paid subscription — past_due keeps access while LS retries payment
           setSubscriptionTier(data.tier);
         } else if (data.status === 'cancelled' && data.cancelledAt) {
           // Cancelled but still within grace period (before ends_at)
@@ -89,11 +96,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSubscriptionTier(null);
         setSubscriptionStatus(null);
         setSubscriptionEndDate(null);
+        setUpdatePaymentMethodUrl(null);
       }
     } catch (_error) {
       setSubscriptionTier(null);
       setSubscriptionStatus(null);
       setSubscriptionEndDate(null);
+      setUpdatePaymentMethodUrl(null);
     } finally {
       setSubscriptionLoading(false);
     }
@@ -131,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSubscriptionTier(null);
         setSubscriptionStatus(null);
         setSubscriptionEndDate(null);
+        setUpdatePaymentMethodUrl(null);
         setSubscriptionLoading(false);
         setLoading(false);
       }
@@ -241,6 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         subscriptionStatus,
         subscriptionEndDate,
         subscriptionLoading,
+        updatePaymentMethodUrl,
         signIn,
         signUp,
         signOut,

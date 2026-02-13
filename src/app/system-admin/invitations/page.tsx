@@ -502,10 +502,7 @@ export default function SystemAdminInvitationsPage() {
                     </thead>
                     <tbody className="bg-surface divide-y divide-border">
                       {invitations.map((invitation) => (
-                        <tr
-                          key={invitation.id}
-                          className="hover:bg-muted/50 transition-colors"
-                        >
+                        <tr key={invitation.id} className="hover:bg-muted/50 transition-colors">
                           <td className="px-4 py-3 text-sm text-text-primary font-medium">
                             {invitation.invitee_email}
                           </td>

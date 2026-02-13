@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthClient, getServiceRoleClient, extractBearerToken } from '@/lib/supabase/apiClient';
-import {
-  getTierPrice,
-  type AppreciationTier,
-  type BillingInterval,
-} from '@/lib/subscription/tiers';
+import { type AppreciationTier, type BillingInterval } from '@/lib/subscription/tiers';
+import { pricingService } from '@/services/pricingService';
+import { mapVariantToTierAndInterval } from '@/lib/lemonsqueezy/variantMapping';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -146,49 +144,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // 9. Map LemonSqueezy variant to tier using environment variables
+    // 9. Map LemonSqueezy variant to tier using shared variant mapping
     const variantId = lsAttributes.variant_id?.toString();
 
     const mapVariantToTierInfo = (
       vid: string | undefined
     ): { tier: AppreciationTier; billingInterval: BillingInterval } => {
       if (!vid) return { tier: 'supporter', billingInterval: 'monthly' };
-
-      // Monthly variants
-      if (vid === process.env.LEMONSQUEEZY_MONTHLY_SUPPORTER_VARIANT_ID) {
-        return { tier: 'supporter', billingInterval: 'monthly' };
-      }
-      if (vid === process.env.LEMONSQUEEZY_MONTHLY_CHAMPION_VARIANT_ID) {
-        return { tier: 'champion', billingInterval: 'monthly' };
-      }
-      if (vid === process.env.LEMONSQUEEZY_MONTHLY_LEGEND_VARIANT_ID) {
-        return { tier: 'legend', billingInterval: 'monthly' };
-      }
-      if (vid === process.env.LEMONSQUEEZY_MONTHLY_HALL_OF_FAMER_VARIANT_ID) {
-        return { tier: 'hall_of_famer', billingInterval: 'monthly' };
-      }
-
-      // Yearly variants
-      if (vid === process.env.LEMONSQUEEZY_YEARLY_SUPPORTER_VARIANT_ID) {
-        return { tier: 'supporter', billingInterval: 'yearly' };
-      }
-      if (vid === process.env.LEMONSQUEEZY_YEARLY_CHAMPION_VARIANT_ID) {
-        return { tier: 'champion', billingInterval: 'yearly' };
-      }
-      if (vid === process.env.LEMONSQUEEZY_YEARLY_LEGEND_VARIANT_ID) {
-        return { tier: 'legend', billingInterval: 'yearly' };
-      }
-      if (vid === process.env.LEMONSQUEEZY_YEARLY_HALL_OF_FAMER_VARIANT_ID) {
-        return { tier: 'hall_of_famer', billingInterval: 'yearly' };
-      }
-
-      return { tier: 'supporter', billingInterval: 'monthly' };
+      const result = mapVariantToTierAndInterval(vid);
+      if (!result) return { tier: 'supporter', billingInterval: 'monthly' };
+      return { tier: result.tier, billingInterval: result.interval };
     };
 
     const { tier, billingInterval } = mapVariantToTierInfo(variantId);
 
     // 10. Upsert subscription record
     const now = new Date().toISOString();
+
+    // Calculate amount: prefer LemonSqueezy price, fall back to DB tier_pricing
+    const lsLinkPrice = lsAttributes.first_subscription_item?.price as number | undefined;
+    let linkAmountCents = lsLinkPrice;
+    if (!linkAmountCents) {
+      const { data: dbPriceCents } = await pricingService.getPriceCents(tier, billingInterval);
+      linkAmountCents = dbPriceCents ?? 0;
+    }
 
     const subscriptionData = {
       user_id: userId,
@@ -200,9 +179,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       status: lsAttributes.status,
       status_formatted: lsAttributes.status_formatted,
       billing_interval: billingInterval,
-      // Use price from LemonSqueezy if available, otherwise calculate from tier
-      amount_cents:
-        lsAttributes.first_subscription_item?.price || getTierPrice(tier, billingInterval) * 100,
+      // Use price from LemonSqueezy if available, otherwise from DB
+      amount_cents: linkAmountCents,
       currency: lsAttributes.first_subscription_item?.currency || 'USD',
       tier,
       card_brand: lsAttributes.card_brand,

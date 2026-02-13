@@ -221,7 +221,7 @@ describe('subscriptionService', () => {
       expect(result.data).toBe(false);
     });
 
-    it('should return false for past_due subscription', async () => {
+    it('should return true for past_due subscription (grace period)', async () => {
       const mockSubscription = {
         id: 'sub_123',
         user_id: 'user_123',
@@ -241,7 +241,7 @@ describe('subscriptionService', () => {
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
       expect(result.error).toBeNull();
-      expect(result.data).toBe(false);
+      expect(result.data).toBe(true);
     });
 
     it('should return false when no subscription exists', async () => {

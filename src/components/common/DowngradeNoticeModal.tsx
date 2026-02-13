@@ -25,8 +25,14 @@ export default function DowngradeNoticeModal({
       : 'Your account is now on the Free plan. We locked all scoreboards to keep your data safe. Public boards can be unlocked up to your free limit. Private boards remain locked.';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" data-testid="downgrade-notice-overlay">
-      <div className="bg-surface rounded-lg shadow-lg max-w-md w-full mx-4 p-6" data-testid="downgrade-notice-modal">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      data-testid="downgrade-notice-overlay"
+    >
+      <div
+        className="bg-surface rounded-lg shadow-lg max-w-md w-full mx-4 p-6"
+        data-testid="downgrade-notice-modal"
+      >
         <div className="flex items-start gap-3 mb-4">
           <Icon name="LockClosedIcon" size={24} className="text-warning flex-shrink-0" />
           <div>

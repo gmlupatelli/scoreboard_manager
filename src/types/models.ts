@@ -110,6 +110,8 @@ export interface Subscription {
   currentPeriodStart?: string | null;
   currentPeriodEnd?: string | null;
   cancelledAt?: string | null;
+  paymentFailureCount: number;
+  lastPaymentFailedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -134,6 +136,39 @@ export interface PaymentHistoryEntry {
   orderItemVariantName?: string | null;
   orderItemQuantity?: number | null;
   orderItemPriceCents?: number | null;
+}
+
+export type InvoiceStatus = 'pending' | 'paid' | 'void' | 'refunded' | 'partial_refund';
+export type BillingReason = 'initial' | 'renewal' | 'updated';
+
+export interface SubscriptionInvoice {
+  id: string;
+  userId: string;
+  subscriptionId?: string | null;
+  lemonsqueezySubscriptionId?: string | null;
+  lemonsqueezyInvoiceId: string;
+  lemonsqueezyStoreId?: string | null;
+  lemonsqueezyCustomerId?: string | null;
+  billingReason?: BillingReason | null;
+  invoiceStatus: InvoiceStatus;
+  cardBrand?: string | null;
+  cardLastFour?: string | null;
+  currency: string;
+  currencyRate?: number | null;
+  subtotalCents: number;
+  discountTotalCents: number;
+  taxCents: number;
+  totalCents: number;
+  subtotalUsdCents: number;
+  discountTotalUsdCents: number;
+  taxUsdCents: number;
+  totalUsdCents: number;
+  refundedAmountCents: number;
+  refundedAmountUsdCents: number;
+  invoiceUrl?: string | null;
+  testMode: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============================================================================

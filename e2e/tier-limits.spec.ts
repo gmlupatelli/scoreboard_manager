@@ -174,12 +174,6 @@ test.describe('Supporter Benefits', () => {
 test.describe('Downgrade Flow', () => {
   test.describe.configure({ mode: 'serial' });
 
-  test.beforeAll(async () => {
-    await seedSubscription(SUPPORTER_6_EMAIL, 'expired');
-    await lockAllScoreboards(SUPPORTER_6_EMAIL);
-    await clearDowngradeNotice(SUPPORTER_6_EMAIL);
-  });
-
   test.afterAll(async () => {
     await removeSubscription(SUPPORTER_6_EMAIL);
     await unlockAllScoreboards(SUPPORTER_6_EMAIL);
@@ -187,6 +181,11 @@ test.describe('Downgrade Flow', () => {
   });
 
   test('should show downgrade notice modal on first login after expiry', async ({ page, loginAs }) => {
+    // Seed expired subscription and clear notice before login to avoid state drift
+    await seedSubscription(SUPPORTER_6_EMAIL, 'expired');
+    await lockAllScoreboards(SUPPORTER_6_EMAIL);
+    await clearDowngradeNotice(SUPPORTER_6_EMAIL);
+
     await loginAs(TEST_USERS.supporter6);
 
     // The DowngradeNoticeManager shows the modal when subscriptionStatus === 'expired'
@@ -196,7 +195,8 @@ test.describe('Downgrade Flow', () => {
   });
 
   test('should explain what happens during downgrade', async ({ page, loginAs }) => {
-    // Ensure notice hasn't been marked seen yet
+    // Re-seed expired subscription to guard against state drift between serial tests
+    await seedSubscription(SUPPORTER_6_EMAIL, 'expired');
     await clearDowngradeNotice(SUPPORTER_6_EMAIL);
 
     await loginAs(TEST_USERS.supporter6);
@@ -216,7 +216,8 @@ test.describe('Downgrade Flow', () => {
   });
 
   test('should allow dismissing the downgrade notice', async ({ page, loginAs }) => {
-    // Ensure the modal will appear
+    // Re-seed expired subscription to guard against state drift between serial tests
+    await seedSubscription(SUPPORTER_6_EMAIL, 'expired');
     await clearDowngradeNotice(SUPPORTER_6_EMAIL);
 
     await loginAs(TEST_USERS.supporter6);
@@ -233,7 +234,8 @@ test.describe('Downgrade Flow', () => {
   });
 
   test('should show locked scoreboards on dashboard', async ({ page, loginAs }) => {
-    // Mark notice as seen so it doesn't block dashboard interactions
+    // Re-seed expired subscription and lock scoreboards explicitly
+    await seedSubscription(SUPPORTER_6_EMAIL, 'expired');
     await markDowngradeNoticeSeen(SUPPORTER_6_EMAIL);
     await lockAllScoreboards(SUPPORTER_6_EMAIL);
 
@@ -257,7 +259,8 @@ test.describe('Downgrade Flow', () => {
   });
 
   test('should prevent editing locked scoreboards', async ({ page, loginAs }) => {
-    // Ensure boards are still locked and modal won't block
+    // Re-seed expired subscription and lock scoreboards explicitly
+    await seedSubscription(SUPPORTER_6_EMAIL, 'expired');
     await markDowngradeNoticeSeen(SUPPORTER_6_EMAIL);
     await lockAllScoreboards(SUPPORTER_6_EMAIL);
 

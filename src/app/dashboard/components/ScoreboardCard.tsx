@@ -58,7 +58,10 @@ const ScoreboardCard = ({
       <div className="relative bg-card p-6 hover-lift flex flex-col h-full">
         {isLocked && (
           <div className="mb-3">
-            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-700" data-testid="scoreboard-card-locked-badge">
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-700"
+              data-testid="scoreboard-card-locked-badge"
+            >
               <Icon name="LockClosedIcon" size={14} />
               Read-only
             </span>
@@ -77,7 +80,12 @@ const ScoreboardCard = ({
               autoFocus
             />
           ) : (
-            <h3 className="text-lg font-semibold text-text-primary flex-1" data-testid="scoreboard-card-title">{title}</h3>
+            <h3
+              className="text-lg font-semibold text-text-primary flex-1"
+              data-testid="scoreboard-card-title"
+            >
+              {title}
+            </h3>
           )}
 
           <div className="relative">

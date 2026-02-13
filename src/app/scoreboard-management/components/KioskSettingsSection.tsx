@@ -1304,7 +1304,10 @@ export default function KioskSettingsSection({
                     </p>
                   </div>
                 ) : (
-                  <div className="p-3 bg-muted/30 border border-border rounded-lg" data-testid="kiosk-slides-list">
+                  <div
+                    className="p-3 bg-muted/30 border border-border rounded-lg"
+                    data-testid="kiosk-slides-list"
+                  >
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                       {slides.map((slide, index) => (
                         <div

@@ -5,14 +5,13 @@ import Script from 'next/script';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Icon from '@/components/ui/AppIcon';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDynamicPricing } from '@/hooks';
 import { subscriptionService } from '@/services/subscriptionService';
 import { PaymentHistoryEntry, Subscription } from '@/types/models';
+import { getSubscriptionStatusBadge } from '@/utils/subscriptionUtils';
 import {
-  TIER_PRICES,
   getTierLabel,
   getTierEmoji,
-  getTierPrice,
-  getMonthlyEquivalent,
   type AppreciationTier,
   type BillingInterval,
 } from '@/lib/subscription/tiers';
@@ -44,27 +43,9 @@ const formatDate = (value?: string | null) => {
   });
 };
 
-const getStatusBadge = (status: Subscription['status']) => {
-  switch (status) {
-    case 'active':
-      return 'bg-green-500/10 text-success';
-    case 'trialing':
-      return 'bg-yellow-500/10 text-warning';
-    case 'past_due':
-    case 'unpaid':
-      return 'bg-yellow-500/10 text-warning';
-    case 'paused':
-      return 'bg-muted text-text-secondary';
-    case 'expired':
-    case 'cancelled':
-      return 'bg-red-500/10 text-destructive';
-    default:
-      return 'bg-muted text-text-secondary';
-  }
-};
-
 export default function SubscriptionSection() {
   const { user, refreshSubscription: _refreshSubscription } = useAuth();
+  const { getPrice: getDynamicPrice, getMonthlyEquivalent, tierList } = useDynamicPricing();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -244,7 +225,7 @@ export default function SubscriptionSection() {
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-semibold text-text-primary">Current Plan</h3>
                 <span
-                  className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusBadge(
+                  className={`text-xs font-medium px-2 py-1 rounded-full ${getSubscriptionStatusBadge(
                     subscription.status
                   )}`}
                 >
@@ -318,49 +299,47 @@ export default function SubscriptionSection() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {TIER_PRICES.filter((tierPrice) => tierPrice.tier !== 'appreciation').map(
-              (tierPrice) => {
-                const price = getTierPrice(tierPrice.tier, billingInterval);
-                const monthlyEquiv =
-                  billingInterval === 'yearly' ? getMonthlyEquivalent(tierPrice.tier) : null;
-                const isSelected = selectedTier === tierPrice.tier;
+            {tierList.map((tierPrice) => {
+              const price = getDynamicPrice(tierPrice.tier, billingInterval);
+              const monthlyEquiv =
+                billingInterval === 'yearly' ? getMonthlyEquivalent(tierPrice.tier) : null;
+              const isSelected = selectedTier === tierPrice.tier;
 
-                return (
-                  <button
-                    key={tierPrice.tier}
-                    onClick={() => setSelectedTier(tierPrice.tier)}
-                    className={`border rounded-lg p-4 text-center transition-all duration-150 ${
-                      isSelected
-                        ? 'border-primary bg-red-600/5 shadow-md'
-                        : 'border-border hover:border-primary/50 hover:shadow-sm'
-                    }`}
-                    title={`Select ${tierPrice.label} tier`}
-                  >
-                    <div className="text-3xl mb-2">{tierPrice.emoji}</div>
-                    <p className="font-semibold text-text-primary mb-1">{tierPrice.label}</p>
-                    <p className="text-2xl font-bold text-primary mb-1">
-                      {formatCurrency(price * 100)}
-                    </p>
-                    <p className="text-xs text-text-secondary">
-                      per {billingInterval === 'monthly' ? 'month' : 'year'}
-                    </p>
-                    {monthlyEquiv && (
-                      <p className="text-xs text-text-secondary mt-1">= ${monthlyEquiv}/mo</p>
-                    )}
-                    {isSelected && (
-                      <div className="mt-3">
-                        <Icon
-                          name="CheckCircleIcon"
-                          size={20}
-                          className="text-primary mx-auto"
-                          variant="solid"
-                        />
-                      </div>
-                    )}
-                  </button>
-                );
-              }
-            )}
+              return (
+                <button
+                  key={tierPrice.tier}
+                  onClick={() => setSelectedTier(tierPrice.tier)}
+                  className={`border rounded-lg p-4 text-center transition-all duration-150 ${
+                    isSelected
+                      ? 'border-primary bg-red-600/5 shadow-md'
+                      : 'border-border hover:border-primary/50 hover:shadow-sm'
+                  }`}
+                  title={`Select ${tierPrice.label} tier`}
+                >
+                  <div className="text-3xl mb-2">{tierPrice.emoji}</div>
+                  <p className="font-semibold text-text-primary mb-1">{tierPrice.label}</p>
+                  <p className="text-2xl font-bold text-primary mb-1">
+                    {formatCurrency(price * 100)}
+                  </p>
+                  <p className="text-xs text-text-secondary">
+                    per {billingInterval === 'monthly' ? 'month' : 'year'}
+                  </p>
+                  {monthlyEquiv && (
+                    <p className="text-xs text-text-secondary mt-1">= ${monthlyEquiv}/mo</p>
+                  )}
+                  {isSelected && (
+                    <div className="mt-3">
+                      <Icon
+                        name="CheckCircleIcon"
+                        size={20}
+                        className="text-primary mx-auto"
+                        variant="solid"
+                      />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -392,7 +371,7 @@ export default function SubscriptionSection() {
               {isSubmitting
                 ? 'Starting...'
                 : `Subscribe to ${getTierLabel(selectedTier)} (${formatCurrency(
-                    getTierPrice(selectedTier, billingInterval) * 100
+                    getDynamicPrice(selectedTier, billingInterval) * 100
                   )}/${billingInterval === 'monthly' ? 'mo' : 'yr'})`}
             </span>
           </button>
@@ -408,17 +387,29 @@ export default function SubscriptionSection() {
             <table className="w-full">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Item</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Amount</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Receipt</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    Item
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    Receipt
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-surface divide-y divide-border">
                 {paymentHistory.map((entry) => (
                   <tr key={entry.id} className="hover:bg-muted/50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-text-secondary">{formatDate(entry.createdAt)}</td>
+                    <td className="px-4 py-3 text-sm text-text-secondary">
+                      {formatDate(entry.createdAt)}
+                    </td>
                     <td className="px-4 py-3 text-sm">
                       <p className="text-text-primary">
                         {entry.orderItemProductName || 'Subscription'}

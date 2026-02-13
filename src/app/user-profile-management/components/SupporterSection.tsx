@@ -27,7 +27,7 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
 
   // Original values for cancel
   const [originalDisplayName, setOriginalDisplayName] = useState('');
-  const [originalShowOnSupportersPage, setOriginalShowOnSupportersPage] = useState(true);
+  const [_originalShowOnSupportersPage, setOriginalShowOnSupportersPage] = useState(true);
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -154,7 +154,12 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
       }
 
       setOriginalShowOnSupportersPage(checked);
-      onToast(checked ? 'You are now visible on the supporters page' : 'You are now hidden from the supporters page', 'success');
+      onToast(
+        checked
+          ? 'You are now visible on the supporters page'
+          : 'You are now hidden from the supporters page',
+        'success'
+      );
 
       // Refresh subscription data
       if (user?.id) {
@@ -203,7 +208,8 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
                 autoFocus
               />
               <p className="text-xs text-text-secondary">
-                This name will appear on the public supporters page ({displayName.length}/{MAX_DISPLAY_NAME_LENGTH})
+                This name will appear on the public supporters page ({displayName.length}/
+                {MAX_DISPLAY_NAME_LENGTH})
               </p>
               <div className="flex gap-3">
                 <button
@@ -244,7 +250,9 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
 
         {/* Show on supporters page - always interactive */}
         <div>
-          <label className={`flex items-center justify-between cursor-pointer ${isTogglingVisibility ? 'opacity-70 pointer-events-none' : ''}`}>
+          <label
+            className={`flex items-center justify-between cursor-pointer ${isTogglingVisibility ? 'opacity-70 pointer-events-none' : ''}`}
+          >
             <span className="text-text-primary">
               {showOnSupportersPage ? 'Visible on supporters page' : 'Hidden from supporters page'}
             </span>

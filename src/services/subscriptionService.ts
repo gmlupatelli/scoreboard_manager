@@ -50,7 +50,7 @@ interface UpdateSubscriptionResponse {
   };
 }
 
-const ACTIVE_STATUSES: Subscription['status'][] = ['active', 'trialing'];
+const ACTIVE_STATUSES: Subscription['status'][] = ['active', 'trialing', 'past_due'];
 
 const rowToSubscription = (row: SubscriptionRow): Subscription => ({
   id: row.id,
@@ -76,6 +76,8 @@ const rowToSubscription = (row: SubscriptionRow): Subscription => ({
   currentPeriodStart: row.current_period_start,
   currentPeriodEnd: row.current_period_end,
   cancelledAt: row.cancelled_at,
+  paymentFailureCount: row.payment_failure_count ?? 0,
+  lastPaymentFailedAt: row.last_payment_failed_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });

@@ -16,8 +16,9 @@ export interface TierPrice {
 }
 
 /**
- * Fixed-tier pricing structure
- * All prices in USD
+ * Fixed-tier pricing structure (DEPRECATED - use pricingService or useDynamicPricing hook).
+ * Dollar amounts here are seed values only. The source of truth is the tier_pricing DB table.
+ * @deprecated Use pricingService (server) or useDynamicPricing hook (client) instead.
  */
 export const TIER_PRICES: TierPrice[] = [
   {
@@ -58,7 +59,8 @@ export const TIER_PRICES: TierPrice[] = [
 ];
 
 /**
- * Get price for a tier and billing interval
+ * Get price for a tier and billing interval (DEPRECATED).
+ * @deprecated Use pricingService.getPrice() or pricingService.getPriceCents() instead.
  */
 export const getTierPrice = (tier: AppreciationTier, interval: BillingInterval): number => {
   const tierPrice = TIER_PRICES.find((t) => t.tier === tier);
@@ -90,7 +92,8 @@ export const getTierEmoji = (tier: AppreciationTier): string => {
 };
 
 /**
- * Calculate monthly equivalent for yearly subscriptions
+ * Calculate monthly equivalent for yearly subscriptions (DEPRECATED).
+ * @deprecated Use useDynamicPricing().getMonthlyEquivalent() instead.
  */
 export const getMonthlyEquivalent = (tier: AppreciationTier): number => {
   const tierPrice = TIER_PRICES.find((t) => t.tier === tier);
