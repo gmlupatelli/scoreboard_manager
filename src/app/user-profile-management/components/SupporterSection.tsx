@@ -54,8 +54,8 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
     }
   }, [user?.id]);
 
-  // Don't render if not a supporter
-  if (!subscriptionTier) {
+  // Don't render if not a supporter or on appreciation tier
+  if (!subscriptionTier || subscriptionTier === 'appreciation') {
     return null;
   }
 
