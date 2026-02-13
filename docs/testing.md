@@ -258,6 +258,9 @@ Tests are in `e2e/` directory with clear descriptions:
 - `invitations.spec.ts` - User invitations
 - `kiosk.spec.ts` - TV/kiosk mode display
 - `admin.spec.ts` - Admin functionality
+- `subscription.spec.ts` - Subscription plan display, billing, cancellation, gifted tiers
+- `tier-limits.spec.ts` - Free-tier limit enforcement, supporter unlocks
+- `supporter-recognition.spec.ts` - Welcome modal, supporter preferences, public supporters page
 - `accessibility.spec.ts` - WCAG compliance
 - `responsive.spec.ts` - Mobile/tablet/desktop
 - `loadTestEnv.js` - Test data setup

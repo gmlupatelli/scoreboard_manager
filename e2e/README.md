@@ -365,6 +365,36 @@ This eliminates redundant viewport-specific runs while maintaining coverage wher
 - ✅ Reduced motion support
 - ✅ RTL direction support
 
+### Subscription Tests (`e2e/subscription.spec.ts`)
+
+- ✅ Supporter plan page displays current tier
+- ✅ Pricing page shows tier comparison
+- ✅ Billing interval toggle (monthly ↔ yearly)
+- ✅ Subscription cancellation flow
+- ✅ Grace period display for cancelled plans
+- ✅ Gifted tier display and behavior
+- ✅ Admin subscription management panel
+
+### Tier Limits Tests (`e2e/tier-limits.spec.ts`)
+
+- ✅ Free tier: 2 public scoreboard limit enforced
+- ✅ Free tier: 0 private scoreboards enforced
+- ✅ Free tier: 50 entries per scoreboard limit
+- ✅ Supporter tier: unlimited scoreboards
+- ✅ Supporter tier: unlimited entries
+- ✅ Scoreboard locking when over limits
+- ✅ Usage counter display on dashboard
+
+### Supporter Recognition Tests (`e2e/supporter-recognition.spec.ts`)
+
+- ✅ Welcome modal appears after checkout redirect
+- ✅ Welcome modal collects display name and opt-in preference
+- ✅ Supporter section visible on profile page
+- ✅ Display name editing with profanity filter
+- ✅ Opt-out toggle removes user from supporters page
+- ✅ Public supporters page grouped by tier
+- ✅ TierBadge displays correct emoji and label
+
 ## CI/CD Integration
 
 Tests are configured to run in CI environments with:

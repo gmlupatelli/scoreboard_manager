@@ -10,83 +10,166 @@ Scoreboard Manager is open source under the GNU Affero General Public License v3
 
 ## Project Status
 
-- **Current State**: Fully configured and running on Replit
-- **Last Updated**: January 15, 2026
+- **Current State**: Production on Netlify, dev on Replit
+- **Last Updated**: February 12, 2026
 - **Framework**: Next.js 14.2.0 with React 18.2.0
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with SSR support
+- **Payments**: LemonSqueezy (Merchant of Record)
+- **Testing**: Jest (unit) + Playwright (E2E)
 
 ## Recent Changes
+
+### February 2026 - Supporter Recognition & Welcome Modal (Phase 2)
+
+- **Welcome Modal** (`WelcomeModal.tsx`) replaces the plain toast after LemonSqueezy checkout
+  - Displays tier badge and "Welcome, Supporter!" greeting
+  - Collects display name and "Show me on supporters page" toggle
+  - FocusTrap for accessibility, auto-closes 1.5 s after save
+  - Retry logic: polls subscription state up to 3 times (7 s) before showing modal
+- **Supporter Section on profile page** (`SupporterSection.tsx`)
+  - Shows current tier badge, editable display name, visibility toggle
+  - Edit/Save pattern — toggle fires immediately, name requires explicit save
+  - Only renders when user has an active subscription tier
+- **Public Supporters page** (`/supporters`)
+  - Dynamic list grouped by tier (Hall of Famer → Legend → Champion → Supporter)
+  - Fetches from `GET /api/public/supporters` (no auth required)
+  - `SupportersList.tsx` client component with responsive grid layout
+- **Supporter Preferences API** (`PATCH /api/user/supporter-preferences`)
+  - Profanity filter via `bad-words` package
+  - Validates display name length (max 50 chars) and content
+  - Updates `subscriptions.supporter_display_name` and `show_on_supporters_page`
+- **Supporter utilities** (`supporterUtils.ts`)
+  - Display-name resolution: `supporter_display_name` → `full_name` → email prefix
+  - Tier metadata helpers (label, emoji, sort order)
+- **TierBadge component** (`components/ui/TierBadge.tsx`) — reusable tier emoji + label badge
+
+### February 2026 - Header Refactor & Table Consistency Audit
+
+- **Header.tsx & PublicHeader.tsx** refactored to data-driven navigation
+  - Nav items defined as constants, rendered via shared helpers
+  - Breakpoint changed from `md` to `lg` for mobile menu trigger
+  - Active-path highlighting on nav links
+- **Button component** (`Button.tsx`) — added `iconClassName` prop for responsive icon visibility
+- **Table styling standardized** across all admin and management pages
+  - Consistent `bg-muted` thead, `divide-y divide-border` tbody, `px-4 py-3` cell padding
+  - All tables follow the pattern documented in copilot-instructions.md
+
+### February 2026 - CSV Export (Phase 1)
+
+- **Export API** (`GET /api/scoreboards/[id]/export`) returns downloadable CSV
+  - Includes scoreboard metadata header + all entries
+  - Filename: `scoreboard-[title]-[date].csv` with sanitized title
+  - Proper CSV escaping for commas, quotes, and newlines
+- **Client-side utilities**: `csvExport.ts` (generation) + `downloadExport.ts` (browser download trigger)
+- **Export button** added to scoreboard management toolbar
+- **Unit tests** for CSV generation edge cases
+
+### January 2026 - LemonSqueezy Subscription Integration
+
+- **Full subscription lifecycle** via LemonSqueezy as Merchant of Record
+  - Checkout flow (`/api/lemonsqueezy/checkout`) with variant-based tier selection
+  - Webhook handler (`/api/webhooks/lemonsqueezy`) for subscription events
+    - Handles: `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_payment_success/failed`
+  - Customer portal (`/api/lemonsqueezy/portal`) for self-service billing
+  - Cancel (`/api/lemonsqueezy/cancel-subscription`) and resume (`/api/lemonsqueezy/resume-subscription`) flows
+  - Plan changes (`/api/lemonsqueezy/update-subscription`) with proration
+- **Pricing page** (`/pricing`) with 4-tier comparison (Supporter / Champion / Legend / Hall of Famer)
+- **Supporter Plan page** (`/supporter-plan`) with `SupporterPlanInteractive.tsx`
+  - Current plan display, upgrade/downgrade, billing interval switch (monthly ↔ yearly)
+  - Grace period handling for cancelled subscriptions
+- **Subscription Section** on profile page (`SubscriptionSection.tsx`)
+  - Shows current tier, billing status, next payment date, management links
+- **Downgrade Notice system** (`DowngradeNoticeManager.tsx` + `DowngradeNoticeModal.tsx`)
+  - Alerts users when they exceed free-tier limits after subscription ends
+- **Usage Counter Block** (`UsageCounterBlock.tsx`) for dashboard usage meters
+- **Database**: `subscriptions` table with 4 new migrations
+  - `20260204000000_lemonsqueezy_subscriptions.sql`
+  - `20260207000000_admin_subscription_management.sql`
+  - `20260208000000_phase1c_limits_fields.sql`
+  - `20260208100000_fix_amount_check_gifted.sql`
+
+### January 2026 - Subscription Limits & Admin Management (Phase 1c)
+
+- **Limits enforcement** via `limitsService.ts`
+  - Free: 2 public scoreboards, 0 private, 50 entries/scoreboard
+  - Supporter ($4+/mo): unlimited scoreboards, unlimited entries
+  - Scoreboard locking when over limits (lock-all API route)
+- **Admin Subscription Management** (`/system-admin/subscriptions`)
+  - View all user subscriptions with search and filtering
+  - Gift tiers to users (`GiftTierModal.tsx`)
+  - Link external LemonSqueezy accounts (`LinkAccountModal.tsx`)
+  - Cancel / refetch subscriptions
+  - Audit log panel (`AuditLogPanel.tsx`) for tracking admin actions
+- **Subscription service** (`subscriptionService.ts`) — 650+ lines of subscription CRUD and helpers
+- **Tier configuration** (`lib/subscription/tiers.ts`) with limits per tier
+
+### January 2026 - Unit Test Infrastructure
+
+- **Jest + TypeScript setup** with jsdom environment
+  - `jest.config.js`, `src/test-setup.ts`, `tsconfig.json` module resolution
+  - Supabase mock (`src/__mocks__/supabase.ts`), LemonSqueezy mock (`src/__mocks__/lemonsqueezy.ts`)
+  - Router/navigation mocks auto-loaded via test setup
+- **Existing test suites:**
+  - `timeUtils.test.ts`, `stylePresets.test.ts`, `localStorage.test.ts`, `csvExport.test.ts`, `supporterUtils.test.ts`
+  - `scoreboardService.test.ts` (including real-time subscription setup)
+  - `subscriptionService.test.ts`, `limitsService.test.ts`
+  - `useTimeoutRef.test.ts`, `webhookUtils.test.ts`
+- **Coverage targets**: 90% utils, 70% services, 60% hooks, 50% global minimum
+
+### January 2026 - AGPL v3 License & Public Pages (Phase 1a)
+
+- **License**: GNU Affero General Public License v3 (`LICENSE`)
+- **Public pages**: About, Contact, Support, Privacy, Terms, Cookies
+- **Footer component** (`Footer.tsx`) with site-wide links
+- **Contributing guide** (`CONTRIBUTING.md`)
+- **Auth check API** (`/api/auth/check-email`) for registration flow
+
+### January 2026 - E2E Test Stabilization & CI/CD
+
+- **240+ passing E2E tests** across 3 viewports (Desktop Chrome, Mobile iPhone 12, Mobile Minimum)
+- **Viewport-specific tags**: `@desktop-only` and `@no-mobile` reduce redundant mobile runs (~51% reduction)
+- **Self-healing patterns**: tests re-seed subscription state before assertions to handle parallel spec interference
+- **New E2E spec files**: `subscription.spec.ts`, `tier-limits.spec.ts`, `supporter-recognition.spec.ts`
+- **Subscription fixtures** (`e2e/fixtures/subscriptions.ts`) — helpers for seeding/removing subscription state
+- **CI workflows**:
+  - `test-unit.yml` — runs Jest on every PR
+  - `test-e2e-nightly.yml` — full Playwright suite daily at 2 AM UTC
+  - `test-e2e-pr.yml` — E2E preview checks on PRs
+  - `test-e2e-weekly.yml` — weekly full regression
+- **Dependabot** switched to alerts-only mode with weekly audit workflow (`dependency-check.yml`)
 
 ### January 15, 2026 - PDF Upload Support for Kiosk Slides
 
 - **PDF to image conversion** for kiosk slide uploads
-  - Upload PDF files (up to 50MB, max 50 pages) which are automatically converted to slide images
-  - Client-side processing using `pdfjs-dist` library - no server-side dependencies required
-  - Each PDF page is rendered at 2x scale for crisp display on TV screens
-  - Uses CDN-hosted pdf.js worker for optimal performance
+  - Client-side processing using `pdfjs-dist` — no server-side dependencies required
+  - Each PDF page rendered at 2x scale for crisp TV display
 - **Unified upload progress UI** for both PDF and image uploads
-  - Real-time progress feedback during file processing
-  - Blue progress bar during upload, green checkmark on success, red indicator on error
-  - Progress displays current page/total pages for PDFs or upload status for images
-- **Bug fix**: Enabled badge now visible immediately when kiosk section is collapsed
-  - Previously required expanding the section to see the enabled status
 - **New utility**: `src/utils/pdfToImages.ts` with `convertPdfToImages()` and `isPdfFile()` functions
-- **Dependency added**: `pdfjs-dist@4.10.38`
 
 ### January 15, 2026 - Migration Baseline Update
 
 - **Consolidated all migrations** into single executable baseline (`20260115000000_baseline.sql`)
 - Archived 12 previous migrations to `docs/migrations-archive/`
-- Baseline now includes everything needed to replicate database from scratch:
-  - All extensions, ENUM types, tables, constraints, and indexes
-  - RLS helper functions with fixed search_path (security best practice)
-  - All RLS policies for all tables
-  - Storage bucket and policies for kiosk slides
-  - Realtime publication configuration
-  - Table and column documentation (COMMENT statements)
-- Created **Manual Setup Guide** (`docs/supabase-manual-setup.md`) for items that can't be in migrations:
-  - Auth trigger for syncing users to profiles
-  - Initial system settings row
-  - First admin user promotion
-  - Email template configuration
+- Created **Manual Setup Guide** (`docs/supabase-manual-setup.md`) for items that can't be in migrations
 
 ### January 2026 - Kiosk/TV Mode
 
 - **Full-screen kiosk display mode** optimized for TV screens and public displays
-  - Dedicated `/kiosk/[id]` route with immersive full-screen experience
-  - Auto-rotating carousel with configurable slide duration (3-300 seconds)
+  - Dedicated `/kiosk/[id]` route with auto-rotating carousel (3-300 seconds)
   - Support for multiple content types: scoreboard displays and uploaded images
-  - Smooth CSS transitions between slides with fade/slide animations
-- **Kiosk management interface** integrated into scoreboard management
-  - Enable/disable kiosk mode per scoreboard
-  - Configure slide duration and scoreboard position in carousel
-  - Add/remove/reorder slides with drag-and-drop
-  - Upload custom images (PNG, JPG, WebP) up to 10MB each
-  - Upload PDF files (up to 50MB, max 50 pages) - auto-converted to slide images
   - Optional PIN protection for private scoreboards
-- **Keyboard controls for kiosk view**:
-  - `Space` - Play/pause carousel
-  - `←`/`→` - Navigate between slides
-  - `F` - Toggle fullscreen mode
-  - `Escape` - Exit fullscreen
+- **Kiosk management interface** integrated into scoreboard management
+- **Keyboard controls**: `Space` (play/pause), `←`/`→` (navigate), `F` (fullscreen), `Escape` (exit)
 - **Database schema**: New `kiosk_configs` and `kiosk_slides` tables with RLS policies
 - **E2E tests** for kiosk functionality in `e2e/kiosk.spec.ts`
 
 ### January 2026 - Race Condition Fixes & Custom Hooks
 
 - **Created three new reusable hooks** to eliminate race conditions:
-  - `useAuthGuard`: Centralized auth guard with role-based access, prevents redirect loops
-  - `useAbortableFetch`: AbortController wrapper that auto-cancels on unmount
-  - `useTimeoutRef`: Safe setTimeout with auto-cleanup and mount state tracking
-- **Fixed 11 race condition issues** across the codebase:
-  - Eliminated arbitrary 500ms timeout patterns in favor of proper auth state checks
-  - Added mount state tracking to prevent state updates after unmount
-  - Replaced raw `setTimeout` calls with `setTimeoutSafe` for proper cleanup
-  - Fixed Supabase client recreation issues by using shared client instances
-  - Added `isMounted()` checks in async callbacks
-- **Removed unused imports** and cleaned up dependency arrays
-- **Added hook unit tests** for `useAuthGuard`, `useAbortableFetch`, and `useTimeoutRef`
+  - `useAuthGuard`, `useAbortableFetch`, `useTimeoutRef`
+- **Fixed 11 race condition issues** across the codebase
+- **Added hook unit tests** for all three new hooks
 
 ### January 11, 2026 - Mobile Optimization & E2E Testing
 
@@ -283,7 +366,7 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 6. Real-time score updates without screen flashing
 7. Server-side search across all scoreboards
 8. Owner filtering for admin users
-9. CSV import for scoreboard entries
+9. CSV import and **CSV export** for scoreboard entries
 10. User invitation system with email notifications
 11. Invite-only registration mode (controllable by system admin)
 12. Flexible score types: number or time-based scoreboards
@@ -292,6 +375,12 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 15. Embeddable scoreboards via `/embed/[id]` with custom styling
 16. Advanced style customization with 21+ properties including alternate row text color
 17. RGBA/transparency support in all color pickers with alpha slider
+18. **LemonSqueezy subscription integration** with 4 appreciation tiers
+19. **Supporter recognition**: public supporters page, display name customization, opt-out
+20. **Welcome modal** for new supporters with preference collection
+21. **Free-tier limits**: 2 public scoreboards, 50 entries each; supporters get unlimited
+22. **Admin subscription management**: gift tiers, link accounts, audit log
+23. **Pricing page** with monthly/yearly toggle and tier comparison
 
 ## Environment Configuration
 
@@ -303,6 +392,22 @@ Located in `src/hooks/` with barrel export from `@/hooks`:
 - `SUPABASE_PROJECT_REF`: Project reference ID for Supabase CLI migrations
 - `SUPABASE_ACCESS_TOKEN`: Personal access token for Supabase CLI (production migrations only)
 - `SUPABASE_DB_PASSWORD`: Database password for Supabase CLI (production migrations only)
+
+### LemonSqueezy Environment Variables
+
+- `LEMONSQUEEZY_API_KEY`: LemonSqueezy API key (server-side only)
+- `LEMONSQUEEZY_STORE_ID`: LemonSqueezy store ID
+- `LEMONSQUEEZY_WEBHOOK_SECRET`: Webhook signing secret for verifying events
+- `LEMONSQUEEZY_MONTHLY_SUPPORTER_VARIANT_ID`: Variant ID for monthly Supporter tier ($4/mo)
+- `LEMONSQUEEZY_MONTHLY_CHAMPION_VARIANT_ID`: Variant ID for monthly Champion tier ($8/mo)
+- `LEMONSQUEEZY_MONTHLY_LEGEND_VARIANT_ID`: Variant ID for monthly Legend tier ($23/mo)
+- `LEMONSQUEEZY_MONTHLY_HALL_OF_FAMER_VARIANT_ID`: Variant ID for monthly Hall of Famer tier ($48/mo)
+- `LEMONSQUEEZY_YEARLY_SUPPORTER_VARIANT_ID`: Variant ID for yearly Supporter tier ($40/yr)
+- `LEMONSQUEEZY_YEARLY_CHAMPION_VARIANT_ID`: Variant ID for yearly Champion tier ($80/yr)
+- `LEMONSQUEEZY_YEARLY_LEGEND_VARIANT_ID`: Variant ID for yearly Legend tier ($230/yr)
+- `LEMONSQUEEZY_YEARLY_HALL_OF_FAMER_VARIANT_ID`: Variant ID for yearly Hall of Famer tier ($480/yr)
+
+> See [docs/lemonsqueezy-setup.md](docs/lemonsqueezy-setup.md) for detailed setup instructions.
 
 **Environment loading order (tests):** Playwright and E2E tooling load `.env.local` first, then apply `.env.test` overrides. Keep Supabase credentials in `.env.local`; use `.env.test` for test users, cleanup key, and test-only overrides.
 
@@ -335,23 +440,32 @@ The application runs automatically via the configured workflow:
 - `npm run lint:fix` - Fix ESLint issues
 - `npm run format` - Format code with Prettier
 - `npm run type-check` - TypeScript type checking
+- `npm run test:unit` - Run Jest unit tests with coverage
+- `npm run test:unit:watch` - Run Jest unit tests in watch mode
 - `npm run test:e2e` - Run Playwright E2E tests
 - `npm run test:e2e:fast` - Run Playwright E2E @fast suite on Desktop Chrome (fast config)
 - `npm run test:e2e:ui` - Run Playwright tests in UI mode
 - `npm run test:e2e:debug` - Run Playwright tests in debug mode
+- `npm run refresh-test-data` - Reset automated test users and seed fresh data
+- `npm run refresh-test-data:full` - Full reset of all test users (including manual)
 
 ## Testing
 
+### Unit Testing with Jest
+
+```bash
+# Run all unit tests with coverage
+npm run test:unit
+
+# Watch mode
+npm run test:unit:watch
+```
+
+See [docs/testing.md](docs/testing.md) for the full unit testing guide (mocking strategy, coverage targets, test patterns).
+
 ### E2E Testing with Playwright
 
-The application includes comprehensive end-to-end tests using Playwright.
-
-> **📖 Full Testing Documentation**: See [e2e/README.md](e2e/README.md) for comprehensive testing guide including:
->
-> - Manual testing checklist (320px viewport)
-> - CI/CD integration details
-> - Debugging tips and troubleshooting
-> - Known limitations and contributing guidelines
+> **📖 Full Testing Documentation**: See [e2e/README.md](e2e/README.md) and [docs/testing.md](docs/testing.md) for comprehensive testing guides.
 
 **Setup:**
 
@@ -366,7 +480,7 @@ sudo npx playwright install-deps
 **Running Tests:**
 
 ```bash
-# All tests
+# All tests (3 viewports)
 npm run test:e2e
 
 # Fast @fast suite (Desktop Chrome via fast config)
@@ -379,34 +493,38 @@ npm run test:e2e:ui
 npm run test:e2e:debug
 
 # Specific test file
-npx playwright test e2e/mobile.spec.ts
+npx playwright test e2e/scoreboard.spec.ts
 
 # Specific browser/device
 npx playwright test --project="Desktop Chrome"
-npx playwright test --project="Mobile iPhone SE"
 ```
 
-**Test Coverage:**
+**E2E Test Suites:**
 
-- **Mobile Tests** (`e2e/mobile.spec.ts`): Touch targets (44x44px), landscape orientation, 320px viewport
-- **Desktop Tests** (`e2e/desktop.spec.ts`): Auth flows, CRUD operations, keyboard navigation, real-time updates
-- **Accessibility Tests** (`e2e/accessibility.spec.ts`): WCAG compliance, ARIA labels, screen readers, focus management
+| Suite | File | Coverage |
+|-------|------|----------|
+| Authentication | `auth.spec.ts` | Login, registration, protected routes, form validation |
+| Scoreboards | `scoreboard.spec.ts` | CRUD, search, ownership, keyboard navigation |
+| Admin | `admin.spec.ts` | Dashboard oversight, settings, invitations, cross-user access |
+| Invitations | `invitations.spec.ts` | Invite flow, validation, invite-only mode |
+| Kiosk | `kiosk.spec.ts` | TV mode, carousel, PIN protection, slides |
+| Subscriptions | `subscription.spec.ts` | Plan display, billing, cancellation, gifted tiers |
+| Tier Limits | `tier-limits.spec.ts` | Free-tier enforcement, supporter unlocks |
+| Supporter Recognition | `supporter-recognition.spec.ts` | Welcome modal, preferences, public page |
+| Responsive | `responsive.spec.ts` | Touch targets, landscape, minimum viewport |
+| Accessibility | `accessibility.spec.ts` | WCAG, ARIA, focus management, screen readers |
 
 **Test Devices:**
 
-- Desktop: Chrome (1920x1080), Firefox (1920x1080), Safari (1920x1080)
-- Tablet: iPad Pro (1024x768)
-- Mobile: iPhone 12 (390x844), iPhone SE (375x667), Minimum (320x568), Landscape (844x390), Android Pixel 5 (393x851)
-
-**Documentation:**
-
-- Full testing guide: `e2e/README.md`
-- Manual testing checklist: `docs/mobile-testing-checklist.md`
+| Project | Viewport | Description |
+|---------|----------|-------------|
+| Desktop Chrome | 1920×1080 | Primary desktop browser |
+| Mobile iPhone 12 | 390×844 | Standard mobile |
+| Mobile Minimum | 320×568 | Smallest supported viewport |
 
 ## License
 
 Scoreboard Manager is licensed under the GNU Affero General Public License v3. See [LICENSE](LICENSE).
-- Mobile optimization summary: `docs/mobile-optimization-summary.md`
 
 ## Deployment
 
@@ -441,98 +559,123 @@ The application can also run on Replit:
 
 ```
 ├── src/
-│   ├── app/                          # Next.js App Router pages
-│   │   ├── about/                    # About page
-│   │   ├── admin/seed/               # Admin seed data tool
-│   │   ├── auth/callback/            # Auth callback route
-│   │   ├── contact/                  # Contact page
-│   │   ├── cookies/                  # Cookie policy
-│   │   ├── dashboard/                # User/Admin dashboard
-│   │   │   └── components/           # Dashboard components
-│   │   ├── embed/[id]/               # Embedded scoreboard view
-│   │   ├── forgot-password/          # Password reset request
-│   │   ├── individual-scoreboard-view/  # Single scoreboard display
-│   │   │   └── components/           # Scoreboard view components
-│   │   ├── invitations/              # User invitations
-│   │   │   └── components/           # Invitation cards
-│   │   ├── login/                    # Login page
-│   │   ├── privacy/                  # Privacy policy
-│   │   ├── public-scoreboard-list/   # Public scoreboard browsing
-│   │   │   └── components/           # Public list components
-│   │   ├── register/                 # Registration page
-│   │   ├── reset-password/           # Password reset
-│   │   ├── scoreboard-management/    # Scoreboard editing
-│   │   │   └── components/           # Management components
-│   │   ├── support/                  # Support page
-│   │   ├── system-admin/             # System admin page
-│   │   │   ├── invitations/          # Invitations management
-│   │   │   └── settings/             # System settings
-│   │   ├── terms/                    # Terms of service
-│   │   ├── user-profile-management/  # User profile settings
-│   │   │   └── components/           # Profile components
-│   │   ├── layout.tsx                # Root layout
-│   │   ├── not-found.tsx             # 404 page
-│   │   ├── page.tsx                  # Home page
-│   │   └── providers.tsx             # Context providers
+│   ├── app/                              # Next.js App Router pages
+│   │   ├── about/                        # About page
+│   │   ├── accept-invite/                # Invitation acceptance
+│   │   ├── api/
+│   │   │   ├── admin/subscriptions/      # Admin subscription management endpoints
+│   │   │   ├── auth/check-email/         # Email availability check
+│   │   │   ├── embed/[scoreboardId]/     # Embed data endpoint
+│   │   │   ├── invitations/              # Invitation CRUD
+│   │   │   ├── kiosk/[scoreboardId]/     # Kiosk data & slide management
+│   │   │   ├── lemonsqueezy/             # Checkout, portal, cancel, resume, update
+│   │   │   ├── public/supporters/        # Public supporters list (no auth)
+│   │   │   ├── scoreboards/[id]/         # Scoreboard CRUD, entries, export, unlock
+│   │   │   ├── user/supporter-preferences/ # Supporter display preferences
+│   │   │   └── webhooks/lemonsqueezy/    # LemonSqueezy webhook handler
+│   │   ├── contact/                      # Contact page
+│   │   ├── cookies/                      # Cookie policy
+│   │   ├── dashboard/                    # User/Admin dashboard
+│   │   │   └── components/               # Dashboard components + WelcomeModal
+│   │   ├── embed/[id]/                   # Embedded scoreboard view
+│   │   ├── individual-scoreboard-view/   # Single scoreboard display
+│   │   ├── invitations/                  # User invitations
+│   │   ├── kiosk/[id]/                   # Kiosk/TV display
+│   │   ├── login/                        # Login page
+│   │   ├── pricing/                      # Pricing page with tier comparison
+│   │   ├── privacy/                      # Privacy policy
+│   │   ├── public-scoreboard-list/       # Public scoreboard browsing
+│   │   ├── register/                     # Registration page
+│   │   ├── scoreboard-management/        # Scoreboard editing & management
+│   │   ├── support/                      # Support page
+│   │   ├── supporter-plan/               # Supporter plan management (upgrade/downgrade)
+│   │   ├── supporters/                   # Public supporters recognition page
+│   │   ├── system-admin/                 # System admin pages
+│   │   │   ├── invitations/              # Admin invitation management
+│   │   │   ├── settings/                 # System settings
+│   │   │   └── subscriptions/            # Admin subscription management
+│   │   ├── terms/                        # Terms of service
+│   │   └── user-profile-management/      # User profile settings
+│   │       └── components/               # Profile, Subscription, Supporter sections
 │   ├── components/
-│   │   ├── common/                   # Shared components
-│   │   │   ├── AuthStatusIndicator.tsx
-│   │   │   ├── ErrorBoundary.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── Header.tsx
-│   │   │   ├── SearchInterface.tsx
-│   │   │   ├── UndoToast.tsx         # Undo toast component
-│   │   │   └── UndoToastContainer.tsx
-│   │   └── ui/                       # UI primitives
-│   │       ├── AppIcon.tsx
-│   │       ├── AppImage.tsx
-│   │       ├── ColorPicker.tsx       # RGBA color picker
-│   │       ├── Logo.tsx
-│   │       └── SearchableSelect.tsx
+│   │   ├── common/                       # Shared components
+│   │   │   ├── DowngradeNoticeManager.tsx # Downgrade limit notification
+│   │   │   ├── DowngradeNoticeModal.tsx  # Downgrade warning modal
+│   │   │   ├── Footer.tsx               # Site-wide footer
+│   │   │   ├── Header.tsx               # Authenticated header (data-driven nav)
+│   │   │   ├── PublicHeader.tsx          # Public header (data-driven nav)
+│   │   │   ├── SearchInterface.tsx      # Reusable search input
+│   │   │   ├── UndoToast.tsx            # Undo toast component
+│   │   │   └── UsageCounterBlock.tsx    # Dashboard usage meter
+│   │   └── ui/                          # UI primitives
+│   │       ├── AppIcon.tsx              # Centralized Heroicons wrapper
+│   │       ├── Button.tsx               # Button with iconClassName prop
+│   │       ├── ColorPicker.tsx          # RGBA color picker
+│   │       ├── Logo.tsx                 # Brand logo
+│   │       ├── SearchableSelect.tsx     # Searchable dropdown
+│   │       └── TierBadge.tsx            # Tier emoji + label badge
 │   ├── contexts/
-│   │   └── AuthContext.tsx           # Authentication context
-│   ├── hooks/
-│   │   ├── useInfiniteScroll.ts      # Infinite scroll hook
-│   │   └── useUndoQueue.ts           # Undo queue management
+│   │   └── AuthContext.tsx              # Auth context with subscription state
+│   ├── hooks/                           # Custom hooks (see table above)
 │   ├── lib/
-│   │   └── supabase/
-│   │       ├── client.ts             # Browser Supabase client
-│   │       └── server.tsx            # Server Supabase client
+│   │   ├── lemonsqueezy/               # LemonSqueezy webhook utilities
+│   │   ├── subscription/               # Tier config and limits definitions
+│   │   └── supabase/                   # Supabase clients + API helpers
 │   ├── services/
-│   │   ├── profileService.ts         # User profile API
-│   │   └── scoreboardService.ts      # Scoreboard API
+│   │   ├── limitsService.ts            # Free/supporter limit enforcement
+│   │   ├── profileService.ts           # User profile API
+│   │   ├── scoreboardService.ts        # Scoreboard API + real-time
+│   │   └── subscriptionService.ts      # Subscription lifecycle management
 │   ├── styles/
-│   │   ├── index.css
-│   │   └── tailwind.css
+│   │   ├── index.css                   # CSS variables and theme
+│   │   └── tailwind.css                # Custom Tailwind utilities
 │   ├── types/
-│   │   ├── database.types.ts         # Supabase types
-│   │   └── models.ts                 # App models
+│   │   ├── database.types.ts           # Supabase generated types
+│   │   └── models.ts                   # Application models
 │   └── utils/
-│       ├── localStorage.ts           # Local storage utils
-│       ├── stylePresets.ts           # Style presets
-│       └── timeUtils.ts              # Time formatting utils
-├── e2e/                              # Playwright E2E tests
-│   ├── accessibility.spec.ts         # Accessibility tests
-│   ├── desktop.spec.ts               # Desktop tests
-│   ├── mobile.spec.ts                # Mobile tests
-│   └── README.md                     # Testing guide
-├── docs/                             # Documentation
-│   ├── supabase-manual-setup.md      # Post-migration setup guide
-│   ├── supabase-email-templates.md   # Email template customization
+│       ├── csvExport.ts                # CSV generation for export
+│       ├── downloadExport.ts           # Browser download trigger
+│       ├── localStorage.ts             # Local storage helpers
+│       ├── pdfToImages.ts              # PDF-to-image conversion
+│       ├── stylePresets.ts             # Scoreboard style presets
+│       ├── supporterUtils.ts           # Display name resolution, tier metadata
+│       └── timeUtils.ts               # Time format parsing/display
+├── e2e/                                # Playwright E2E tests
+│   ├── auth.spec.ts                    # Authentication tests
+│   ├── scoreboard.spec.ts             # Scoreboard CRUD tests
+│   ├── admin.spec.ts                  # Admin functionality tests
+│   ├── invitations.spec.ts            # Invitation flow tests
+│   ├── kiosk.spec.ts                  # Kiosk/TV mode tests
+│   ├── subscription.spec.ts           # Subscription plan tests
+│   ├── tier-limits.spec.ts            # Free-tier limit tests
+│   ├── supporter-recognition.spec.ts  # Supporter recognition tests
+│   ├── responsive.spec.ts            # Mobile/tablet/desktop tests
+│   ├── accessibility.spec.ts         # WCAG compliance tests
+│   ├── fixtures/                      # Auth/subscription test helpers
+│   ├── scripts/                       # Test data seeding scripts
+│   └── README.md                      # E2E testing guide
+├── docs/                              # Documentation
+│   ├── lemonsqueezy-setup.md          # LemonSqueezy configuration guide
+│   ├── netlify-setup.md               # Netlify deployment guide
+│   ├── supabase-manual-setup.md       # Post-migration setup guide
+│   ├── supabase-email-templates.md    # Email template customization
 │   ├── realtime-setup.md             # Realtime configuration
-│   ├── dependency-upgrade-policy.md  # Dependency management
-│   ├── mobile-optimization-summary.md
-│   ├── mobile-testing-checklist.md
-│   ├── JWT_MIGRATION_CHECKLIST.md
+│   ├── dependency-upgrade-policy.md   # Dependency management
+│   ├── testing.md                     # Unit + E2E testing strategy
+│   ├── roadmap/                       # Feature roadmap
 │   └── migrations-archive/           # Archived database migrations
-├── public/                           # Static assets
-├── supabase/                         # Database migrations
+├── supabase/
+│   └── migrations/                   # Active database migrations
+├── .github/
+│   ├── workflows/                    # CI/CD (unit, E2E nightly/weekly/PR)
+│   ├── dependabot.yml               # Dependency alerts
+│   ├── copilot-instructions.md      # AI coding assistant context
+│   └── GIT_WORKFLOW.md              # Branch strategy guide
 ├── middleware.ts                     # Next.js auth middleware
-├── next.config.mjs                   # Next.js configuration
-├── playwright.config.ts              # Playwright configuration
-├── tailwind.config.js                # Tailwind configuration
-├── tsconfig.json                     # TypeScript configuration
-└── package.json                      # Dependencies
+├── jest.config.js                   # Jest configuration
+├── playwright.config.ts             # Playwright full config
+├── playwright.config.fast.ts        # Playwright fast config
+└── package.json                     # Dependencies
 ```
 
 ## Database Schema
@@ -542,6 +685,8 @@ The Supabase database includes:
 - `user_profiles` - User profile information with roles (synced from auth.users via trigger)
 - `scoreboards` - Scoreboard metadata with owner references, visibility, score_type, sort_order, time_format
 - `scoreboard_entries` - Individual scoreboard entries (score stored as number/milliseconds)
+- `subscriptions` - LemonSqueezy subscription state per user (tier, status, billing dates, supporter preferences)
+- `admin_audit_log` - Tracks admin actions (gift tier, cancel, link account, etc.)
 - `kiosk_configs` - Kiosk mode settings per scoreboard (duration, position, PIN protection)
 - `kiosk_slides` - Custom slides for kiosk carousel (images, scoreboard positions)
 - `kiosk_file_registry` - Tracks uploaded files for orphan detection and cleanup

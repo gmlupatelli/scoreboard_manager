@@ -1,7 +1,8 @@
 # Phase 2: Supporter Recognition
 
 **Priority:** 🔴 High  
-**Status:** Not Started  
+**Status:** ✅ Completed  
+**Completed:** February 2026  
 **Estimated Effort:** Medium (1-2 weeks)
 
 ## Overview
@@ -309,6 +310,30 @@ No database migration required - fields already exist.
 - [ ] Should we show total number of supporters at top of page?
 - [ ] Should we add supporter testimonials/messages?
 - [ ] Should we allow supporters to add a personal website/social link?
+
+## Implementation Notes
+
+All tasks from Issues 2.1–2.4 have been completed and deployed:
+
+- **Welcome Modal** (`src/app/dashboard/components/WelcomeModal.tsx`)
+  - FocusTrap-based modal with retry polling (up to 3 attempts, 7 s apart)
+  - Triggered by `?subscription=success` query parameter on dashboard
+  - Collects display name + opt-in toggle, saves via supporter-preferences API
+- **Supporter Preferences API** (`src/app/api/user/supporter-preferences/route.ts`)
+  - PATCH endpoint with `bad-words` profanity filter and 50-char name limit
+  - Updates `subscriptions.supporter_display_name` and `show_on_supporters_page`
+- **Profile Supporter Section** (`src/app/user-profile-management/components/SupporterSection.tsx`)
+  - Edit/Save pattern for display name; immediate toggle for visibility
+  - Only renders when user has active subscription tier
+- **Public Supporters Page** (`src/app/supporters/`)
+  - `SupportersList.tsx` client component consuming `GET /api/public/supporters`
+  - Grouped by tier with emoji badges (Hall of Famer → Legend → Champion → Supporter)
+- **Supporter Utilities** (`src/utils/supporterUtils.ts`)
+  - Display-name resolution chain: `supporter_display_name` → `full_name` → email prefix
+  - Tier metadata helpers (`getTierLabel`, `getTierEmoji`, `getTierSortOrder`)
+- **TierBadge component** (`src/components/ui/TierBadge.tsx`)
+- **E2E tests** in `e2e/supporter-recognition.spec.ts`
+- **Unit tests** for `supporterUtils.ts`
 
 ## Related Issues
 
