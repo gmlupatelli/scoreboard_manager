@@ -167,12 +167,6 @@ const AUTOMATED_TEST_USER_EMAILS = AUTOMATED_TEST_USERS.map((u) => u.email);
 const MANUAL_TEST_USER_EMAILS = getManualTestUserEmails();
 const ALL_TEST_USER_EMAILS = [...AUTOMATED_TEST_USER_EMAILS, ...MANUAL_TEST_USER_EMAILS];
 
-// Invitations for invitation testing (sent by john)
-const JOHN_INVITATIONS = [
-  { invitee_email: 'testinvite1@fake.test' },
-  { invitee_email: 'testinvite2@fake.test' },
-];
-
 // Test data for seeding - John (free user)
 const JOHN_SCOREBOARDS = [
   {
@@ -271,11 +265,11 @@ const SARAH_SCOREBOARDS = [
   },
 ];
 
-// Test data for seeding - Patron (supporter - supporter tier)
+// Test data for seeding - Morgan Blake (supporter - supporter tier)
 // Needs public scoreboards for kiosk tests (kiosk.spec.ts uses supporterAuth)
-const PATRON_SCOREBOARDS = [
+const MORGAN_SCOREBOARDS = [
   {
-    title: "Patron's Tournament Bracket",
+    title: "Morgan's Tournament Bracket",
     description: 'Public scoreboard used for kiosk mode testing',
     score_type: 'number' as const,
     sort_order: 'desc' as const,
@@ -290,7 +284,7 @@ const PATRON_SCOREBOARDS = [
     ],
   },
   {
-    title: "Patron's Sprint Times",
+    title: "Morgan's Sprint Times",
     description: 'Public time scoreboard for supporter features',
     score_type: 'time' as const,
     sort_order: 'asc' as const,
@@ -307,8 +301,7 @@ const PATRON_SCOREBOARDS = [
 
 // Test data for seeding - Additional supporter users (SUPPORTER_3 and SUPPORTER_4)
 // These users exist to avoid cross-project race conditions in subscription tests.
-// Each Playwright project (Desktop Chrome, Mobile iPhone 12, Mobile Minimum)
-// uses its own supporter user so subscription state mutations don't interfere.
+// Each spec file uses its own supporter user so subscription state mutations don't interfere.
 const EXTRA_SUPPORTER_SCOREBOARDS = [
   {
     title: "Supporter's Scoreboard",
@@ -322,6 +315,29 @@ const EXTRA_SUPPORTER_SCOREBOARDS = [
       { name: 'Player C', score: 900 },
     ],
   },
+];
+
+// Generic scoreboards for free users (USER_2 through USER_6)
+// Each spec file needs at least one scoreboard so dashboard tests can interact with data
+const GENERIC_FREE_USER_SCOREBOARDS = [
+  {
+    title: 'Test Scoreboard',
+    description: 'Public scoreboard for E2E testing',
+    score_type: 'number' as const,
+    sort_order: 'desc' as const,
+    visibility: 'public' as const,
+    entries: [
+      { name: 'Entry Alpha', score: 1000 },
+      { name: 'Entry Bravo', score: 800 },
+      { name: 'Entry Charlie', score: 600 },
+    ],
+  },
+];
+
+// Invitations for invitation testing (sent by USER_3 in invitations.spec.ts)
+const USER_3_INVITATIONS = [
+  { invitee_email: 'testinvite1@fake.test' },
+  { invitee_email: 'testinvite2@fake.test' },
 ];
 
 function getServiceRoleClient() {
@@ -597,10 +613,11 @@ async function seedScoreboard(
   scoreboard:
     | (typeof JOHN_SCOREBOARDS)[0]
     | (typeof SARAH_SCOREBOARDS)[0]
-    | (typeof PATRON_SCOREBOARDS)[0]
+    | (typeof MORGAN_SCOREBOARDS)[0]
     | typeof JOHN_LOCKED_SCOREBOARD
     | (typeof ADMIN_SCOREBOARDS)[0]
     | (typeof EXTRA_SUPPORTER_SCOREBOARDS)[0]
+    | (typeof GENERIC_FREE_USER_SCOREBOARDS)[0]
 ) {
   // Insert scoreboard with generated UUID
   const scoreboardId = randomUUID();
@@ -651,7 +668,7 @@ async function seedScoreboard(
 async function seedInvitations(
   supabase: SupabaseServiceClient,
   userId: string,
-  invitations: typeof JOHN_INVITATIONS
+  invitations: typeof USER_3_INVITATIONS
 ) {
   const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -882,41 +899,52 @@ async function main() {
 
     console.log('\n✅ Automated users created successfully\n');
 
-    // Step 4: Seed John's scoreboards (free-tier user)
+    // Step 4: Seed free users' scoreboards and invitations
     const freeUsers = AUTOMATED_TEST_USERS.filter((u) => u.role === 'user' && !u.isSupporter);
-    const johnUser = freeUsers[0];
 
-    if (johnUser && createdUsers[johnUser.email]) {
-      console.log(`📝 Seeding ${johnUser.email}'s scoreboards...`);
-      const johnId = createdUsers[johnUser.email];
+    for (let i = 0; i < freeUsers.length; i++) {
+      const freeUser = freeUsers[i];
+      if (!freeUser || !createdUsers[freeUser.email]) continue;
 
-      for (const scoreboard of JOHN_SCOREBOARDS) {
-        const result = await seedScoreboard(supabase, johnId, scoreboard);
-        console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
-      }
+      const userId = createdUsers[freeUser.email];
 
-      // Seed locked scoreboard (simulates post-downgrade state for tier-limits tests)
-      const lockedResult = await seedScoreboard(supabase, johnId, JOHN_LOCKED_SCOREBOARD);
-      console.log(
-        `  ✓ Created "${JOHN_LOCKED_SCOREBOARD.title}" with ${lockedResult.entriesCount} entries`
-      );
+      if (i === 0) {
+        // USER_1 (john) — primary scoreboard spec user, gets dedicated scoreboards
+        console.log(`\n📝 Seeding ${freeUser.email}'s scoreboards (scoreboard spec)...`);
+        for (const scoreboard of JOHN_SCOREBOARDS) {
+          const result = await seedScoreboard(supabase, userId, scoreboard);
+          console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+        }
 
-      // Mark the locked scoreboard as is_locked: true
-      const { error: lockError } = await supabase
-        .from('scoreboards')
-        .update({ is_locked: true } as never)
-        .eq('id', lockedResult.scoreboardId);
-
-      if (lockError) {
-        console.warn(`  ⚠️  Failed to lock scoreboard: ${lockError.message}`);
+        // Seed locked scoreboard for scoreboard management tests
+        const lockedResult = await seedScoreboard(supabase, userId, JOHN_LOCKED_SCOREBOARD);
+        console.log(
+          `  ✓ Created "${JOHN_LOCKED_SCOREBOARD.title}" with ${lockedResult.entriesCount} entries`
+        );
+        const { error: lockError } = await supabase
+          .from('scoreboards')
+          .update({ is_locked: true } as never)
+          .eq('id', lockedResult.scoreboardId);
+        if (lockError) {
+          console.warn(`  ⚠️  Failed to lock scoreboard: ${lockError.message}`);
+        } else {
+          console.log(`  🔒 Locked "${JOHN_LOCKED_SCOREBOARD.title}" for read-only mode testing`);
+        }
       } else {
-        console.log(`  🔒 Locked "${JOHN_LOCKED_SCOREBOARD.title}" for read-only mode testing`);
+        // USER_2-7 — give each generic scoreboards so their dashboard has data
+        console.log(`\n📝 Seeding ${freeUser.email}'s scoreboards (generic)...`);
+        for (const scoreboard of GENERIC_FREE_USER_SCOREBOARDS) {
+          const result = await seedScoreboard(supabase, userId, scoreboard);
+          console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+        }
       }
 
-      // Seed John's invitations (for invitation testing)
-      console.log(`\n📧 Seeding ${johnUser.email}'s invitations...`);
-      const invitationsCount = await seedInvitations(supabase, johnId, JOHN_INVITATIONS);
-      console.log(`  ✓ Created ${invitationsCount} invitations for invitation testing`);
+      // USER_3 gets invitations (for invitations.spec.ts)
+      if (i === 2) {
+        console.log(`\n📧 Seeding ${freeUser.email}'s invitations...`);
+        const invitationsCount = await seedInvitations(supabase, userId, USER_3_INVITATIONS);
+        console.log(`  ✓ Created ${invitationsCount} invitations for invitation testing`);
+      }
     }
 
     // Step 5: Seed supporter users' scoreboards and subscriptions
@@ -941,14 +969,14 @@ async function main() {
         console.log(`  ✓ Seeded active ${supporter1Tier} subscription for ${supporter1Email}`);
       }
 
-      // Second supporter gets PATRON_SCOREBOARDS + subscription
+      // Second supporter gets MORGAN_SCOREBOARDS + subscription
       if (supporterUsers[1] && createdUsers[supporterUsers[1].email]) {
         const supporter2Email = supporterUsers[1].email;
         const supporter2Id = createdUsers[supporter2Email];
         const supporter2Tier = supporterUsers[1].tier || 'supporter';
 
         console.log(`\n  📝 Seeding ${supporter2Email}'s scoreboards...`);
-        for (const scoreboard of PATRON_SCOREBOARDS) {
+        for (const scoreboard of MORGAN_SCOREBOARDS) {
           const result = await seedScoreboard(supabase, supporter2Id, scoreboard);
           console.log(`    ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
         }
@@ -977,17 +1005,29 @@ async function main() {
       }
     }
 
-    // Step 6: Seed admin user's scoreboards
+    // Step 6: Seed admin users' scoreboards
     const adminUsers = AUTOMATED_TEST_USERS.filter((u) => u.role === 'system_admin');
-    const adminUser = adminUsers[0];
 
-    if (adminUser && createdUsers[adminUser.email]) {
-      console.log(`\n📝 Seeding ${adminUser.email}'s scoreboards...`);
+    for (let i = 0; i < adminUsers.length; i++) {
+      const adminUser = adminUsers[i];
+      if (!adminUser || !createdUsers[adminUser.email]) continue;
+
       const adminId = createdUsers[adminUser.email];
 
-      for (const scoreboard of ADMIN_SCOREBOARDS) {
-        const result = await seedScoreboard(supabase, adminId, scoreboard);
-        console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+      if (i === 0) {
+        // ADMIN_1 gets dedicated admin scoreboards
+        console.log(`\n📝 Seeding ${adminUser.email}'s scoreboards (admin spec)...`);
+        for (const scoreboard of ADMIN_SCOREBOARDS) {
+          const result = await seedScoreboard(supabase, adminId, scoreboard);
+          console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+        }
+      } else {
+        // ADMIN_2-4 get generic scoreboards
+        console.log(`\n📝 Seeding ${adminUser.email}'s scoreboards (generic)...`);
+        for (const scoreboard of GENERIC_FREE_USER_SCOREBOARDS) {
+          const result = await seedScoreboard(supabase, adminId, scoreboard);
+          console.log(`  ✓ Created "${scoreboard.title}" with ${result.entriesCount} entries`);
+        }
       }
     }
 

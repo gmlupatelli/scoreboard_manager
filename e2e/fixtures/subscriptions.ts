@@ -4,7 +4,7 @@
  * Provides helpers to seed and manage subscription data for testing.
  * These fixtures create database records with various subscription states.
  *
- * Note: The patron@example.com user must exist in the database first.
+ * Note: The morgan@example.com user must exist in the database first.
  * Run the test user setup before using these fixtures.
  */
 
@@ -409,23 +409,63 @@ export const cleanupTestSubscription = async (userEmail: string) => {
 };
 
 // =============================================================================
-// EXPORT TEST USER EMAIL
+// EXPORT TEST USER EMAILS (indexed by account number)
 // =============================================================================
 
-export const SUPPORTER_EMAIL =
-  process.env.AUTOMATED_TEST_SUPPORTER_2_EMAIL || 'patron@example.com';
-
-export const SARAH_SUPPORTER_EMAIL =
+/** Supporter 1 (Sarah) — auth.spec.ts, appreciation tier */
+export const SUPPORTER_1_EMAIL =
   process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'sarah@example.com';
 
-/** Per-project supporter email for Mobile iPhone 12 (avoids cross-project subscription races) */
+/** Supporter 2 (Morgan) — subscription.spec.ts, supporter tier */
+export const SUPPORTER_2_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_2_EMAIL || 'morgan@example.com';
+
+/** Supporter 3 — supporter-recognition.spec.ts */
 export const SUPPORTER_3_EMAIL =
-  process.env.AUTOMATED_TEST_SUPPORTER_3_EMAIL || 'patron2@example.com';
+  process.env.AUTOMATED_TEST_SUPPORTER_3_EMAIL || 'supporter-recog@example.com';
 
-/** Per-project supporter email for Mobile Minimum (avoids cross-project subscription races) */
-export const SUPPORTER_4_EMAIL =
-  process.env.AUTOMATED_TEST_SUPPORTER_4_EMAIL || 'patron3@example.com';
+/** Supporter 5 (Taylor) — kiosk.spec.ts, subscription never mutated */
+export const SUPPORTER_5_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_5_EMAIL || 'taylor@example.com';
 
-/** Dedicated supporter email for tier-limits downgrade tests (avoids races with subscription.spec.ts) */
+/** Supporter 6 (Riley) — tier-limits.spec.ts, downgrade tests */
 export const SUPPORTER_6_EMAIL =
-  process.env.AUTOMATED_TEST_SUPPORTER_6_EMAIL || 'patron5@example.com';
+  process.env.AUTOMATED_TEST_SUPPORTER_6_EMAIL || 'riley@example.com';
+
+/** Supporter 7 — invitations.spec.ts, invitation status checks */
+export const SUPPORTER_7_EMAIL =
+  process.env.AUTOMATED_TEST_SUPPORTER_7_EMAIL || 'supporter-invite@example.com';
+
+// Legacy aliases — kept for backward compat during migration
+/** @deprecated Use SUPPORTER_2_EMAIL */
+export const SUPPORTER_EMAIL = SUPPORTER_2_EMAIL;
+/** @deprecated Use SUPPORTER_1_EMAIL */
+export const SARAH_SUPPORTER_EMAIL = SUPPORTER_1_EMAIL;
+
+// =============================================================================
+// SCOREBOARD HELPERS
+// =============================================================================
+
+/**
+ * Get a scoreboard ID directly from the database for a given user email.
+ * Avoids slow UI navigation (the old getScoreboardId helper opened 4 pages).
+ */
+export const getScoreboardIdFromDb = async (
+  userEmail: string
+): Promise<string | null> => {
+  const client = getServiceClient();
+
+  const userId = await getUserIdByEmail(userEmail);
+  if (!userId) return null;
+
+  const { data, error } = await client
+    .from('scoreboards')
+    .select('id')
+    .eq('owner_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return data.id;
+};

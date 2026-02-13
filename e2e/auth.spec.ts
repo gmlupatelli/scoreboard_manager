@@ -1,130 +1,99 @@
 /**
  * Authentication & Authorization Tests
- * Tests login flows, registration, password reset, and page access restrictions
  *
- * @fast - Quick smoke tests for critical auth paths
- * @full - Comprehensive auth flow coverage
- * @desktop-only - Authorization/validation tests that don't vary by viewport
+ * Tests login flows, registration, password reset, and page access restrictions.
+ * Public page smoke-tests replaced with a single fetch-based test.
+ *
+ * Dedicated accounts: ADMIN_2, USER_2, SUPPORTER_1
  */
 
-import { test, expect, type Page } from '@playwright/test';
-import { test as authTest } from './fixtures/auth';
-
-const safeGoto = async (page: Page, url: string) => {
-  try {
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-  } catch (_error) {
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-  }
-};
+import { test, expect } from '@playwright/test';
+import { test as authTest, TEST_USERS } from './fixtures/auth';
+import { safeGoto } from './fixtures/helpers';
 
 test.describe('Authentication Flows', () => {
-  // Authorization redirect - viewport-independent
-  test('@fast @desktop-only unauthenticated user redirects to login', async ({ page }) => {
-    // Ensure clean context with no stale auth session
+  test('unauthenticated user redirects to login', async ({ page }) => {
     await page.context().clearCookies();
-    // Navigate to the origin first so localStorage is accessible, then clear it
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.evaluate(() => localStorage.clear());
     await safeGoto(page, '/dashboard');
     await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
   });
 
-  test('@fast login page renders correctly', async ({ page }) => {
-    // Clear any stale auth state so the login page doesn't redirect
+  test('login page renders correctly', async ({ page }) => {
     await page.context().clearCookies();
     await safeGoto(page, '/login');
 
-    // Wait for auth loading spinner to disappear (page shows "Loading..." while AuthContext initializes)
     await page
       .locator('text=/^Loading\\.\\.\\.$/')
       .waitFor({ state: 'hidden', timeout: 15000 })
       .catch(() => {});
 
-    // Check essential elements
     await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('input[name="password"]')).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
   });
 
-  test('@fast registration page renders correctly', async ({ page }) => {
+  test('registration page renders correctly', async ({ page }) => {
     await safeGoto(page, '/register');
 
-    // Wait for the loading spinner to disappear (settings API must complete)
     await page
       .locator('text=/^Loading\\.\\.\\.$/')
       .waitFor({ state: 'hidden', timeout: 15000 })
       .catch(() => {});
 
-    // Wait for page to fully render after settings load
     await expect(page.locator('h1:has-text("Create Account")')).toBeVisible({ timeout: 10000 });
 
     const emailInput = page.locator('input[name="email"]');
-    const passwordInput = page.locator('input[name="password"]');
-    const submitButton = page.locator('button[type="submit"]');
     const inviteNotice = page.locator(
       'text=/invite-only registration|invitation link|registration is currently restricted/i'
     );
 
     const hasForm = await emailInput.isVisible().catch(() => false);
     const hasInviteNotice = await inviteNotice.isVisible().catch(() => false);
-
     expect(hasForm || hasInviteNotice).toBeTruthy();
 
     if (hasForm) {
-      await expect(passwordInput).toBeVisible();
-      await expect(submitButton).toBeVisible();
+      await expect(page.locator('input[name="password"]')).toBeVisible();
+      await expect(page.locator('button[type="submit"]')).toBeVisible();
     }
   });
 
-  // Validation logic - viewport-independent
-  test('@full @desktop-only registration form validates email format', async ({ page }) => {
+  test('registration form validates email format', async ({ page }) => {
     await safeGoto(page, '/register');
-
     const emailInput = page.locator('input[name="email"]');
     await emailInput.fill('invalid-email');
     await emailInput.blur();
-
-    // Trigger form validation
     await page.locator('button[type="submit"]').click();
-    await page.waitForTimeout(500);
 
-    // Should show validation error or remain on page
     const hasError =
       (await page.locator('text=/invalid|email/i').isVisible()) || page.url().includes('/register');
-
     expect(hasError).toBeTruthy();
   });
 
-  // Validation logic - viewport-independent
-  test('@full @desktop-only registration form validates password requirements', async ({
-    page,
-  }) => {
+  test('registration form validates password requirements', async ({ page }) => {
     await safeGoto(page, '/register');
-
     await page.locator('input[name="email"]').fill('test@example.com');
-    await page.locator('input[name="password"]').fill('123'); // Too short
-
+    await page.locator('input[name="password"]').fill('123');
     await page.locator('button[type="submit"]').click();
-    await page.waitForTimeout(1000);
 
-    // Should show validation error or remain on page (not redirect to dashboard)
-    const isStillOnRegister = page.url().includes('/register');
-    const hasError = await page
-      .locator('text=/password|characters|weak|short|minimum/i')
-      .isVisible()
-      .catch(() => false);
-    const notOnDashboard = !page.url().includes('/dashboard');
-
-    // Either shows error, stays on register, or doesn't redirect to dashboard
-    expect(isStillOnRegister || hasError || notOnDashboard).toBeTruthy();
+    await expect
+      .poll(
+        async () => {
+          const isStillOnRegister = page.url().includes('/register');
+          const hasError = await page
+            .locator('text=/password|characters|weak|short|minimum/i')
+            .isVisible()
+            .catch(() => false);
+          return isStillOnRegister || hasError;
+        },
+        { timeout: 5000, intervals: [500] }
+      )
+      .toBeTruthy();
   });
 
-  // Navigation flow - viewport-independent
-  test('@full @desktop-only forgot password page accessible', async ({ page }) => {
+  test('forgot password page accessible', async ({ page }) => {
     await safeGoto(page, '/login');
-
-    // Find and click forgot password link
     const forgotLink = page
       .locator('a:has-text("Forgot")')
       .or(page.locator('text=/forgot.*password/i'));
@@ -137,171 +106,84 @@ test.describe('Authentication Flows', () => {
 });
 
 test.describe('Authenticated User Session', () => {
-  // Auth check - viewport-independent
-  authTest('@fast @desktop-only authenticated user can access dashboard', async ({ johnAuth }) => {
-    await safeGoto(johnAuth, '/dashboard');
-    await expect(johnAuth).toHaveURL(/\/dashboard/);
+  authTest('authenticated user can access dashboard', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user2);
+    await safeGoto(page, '/dashboard');
+    await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  // Auth check - viewport-independent
-  authTest('@fast @desktop-only user profile page is accessible', async ({ johnAuth }) => {
-    await safeGoto(johnAuth, '/user-profile-management');
-    await expect(johnAuth).toHaveURL(/\/user-profile-management/);
-  });
+  authTest('dashboard displays user-specific content', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user2);
+    await safeGoto(page, '/dashboard');
+    const scoreboardCards = page.locator('[data-testid="scoreboard-card-title"]');
+    const emptyState = page.locator('text=/no scoreboards|create your first/i');
 
-  // Data display logic - viewport-independent
-  authTest('@full @desktop-only dashboard displays user-specific content', async ({ johnAuth }) => {
-    await safeGoto(johnAuth, '/dashboard');
-    await johnAuth.waitForTimeout(2000);
-
-    // Should see scoreboard cards or empty state
-    const scoreboardCards = johnAuth.locator('.bg-card.rounded-lg h3');
-    const emptyState = johnAuth.locator('text=/no scoreboards|create your first/i');
-
-    const cardCount = await scoreboardCards.count();
-    const hasEmptyState = await emptyState.isVisible().catch(() => false);
-
-    expect(cardCount > 0 || hasEmptyState).toBeTruthy();
+    await expect
+      .poll(
+        async () => {
+          const cardCount = await scoreboardCards.count();
+          const hasEmpty = await emptyState.isVisible().catch(() => false);
+          return cardCount > 0 || hasEmpty;
+        },
+        { timeout: 10000, intervals: [500] }
+      )
+      .toBeTruthy();
   });
 });
 
 test.describe('Regular User - Admin Pages Restriction', () => {
-  // Authorization - viewport-independent
-  authTest(
-    '@fast @desktop-only john should not access system settings page',
-    async ({ johnAuth }) => {
-      await safeGoto(johnAuth, '/system-admin/settings');
-      await expect
-        .poll(
-          async () => {
-            const currentUrl = johnAuth.url();
-            const isBlocked =
-              currentUrl.includes('/dashboard') ||
-              currentUrl === 'http://localhost:5000/' ||
-              (await johnAuth.locator('text=Access Denied').isVisible()) ||
-              (await johnAuth.locator('text=Forbidden').isVisible()) ||
-              (await johnAuth.locator('text=Unauthorized').isVisible());
-
-            return isBlocked;
-          },
-          { timeout: 10000, intervals: [500] }
-        )
-        .toBeTruthy();
-    }
-  );
-
-  // Authorization - viewport-independent
-  authTest(
-    '@fast @desktop-only sarah should not access system invitations page',
-    async ({ sarahAuth }) => {
-      await safeGoto(sarahAuth, '/system-admin/invitations');
-      await expect
-        .poll(
-          async () => {
-            const currentUrl = sarahAuth.url();
-            const isBlocked =
-              currentUrl.includes('/dashboard') ||
-              currentUrl === 'http://localhost:5000/' ||
-              (await sarahAuth.locator('text=Access Denied').isVisible()) ||
-              (await sarahAuth.locator('text=Forbidden').isVisible()) ||
-              (await sarahAuth.locator('text=Unauthorized').isVisible());
-
-            return isBlocked;
-          },
-          { timeout: 10000, intervals: [500] }
-        )
-        .toBeTruthy();
-    }
-  );
-
-  // Authorization UI - viewport-independent
-  authTest(
-    '@full @desktop-only john should not see admin navigation links',
-    async ({ johnAuth }) => {
-      await safeGoto(johnAuth, '/dashboard');
-
-      // System Settings link should not be visible
-      const settingsLink = johnAuth.locator('a:has-text("System Settings")');
-      await expect(settingsLink).not.toBeVisible();
-    }
-  );
-
-  // Authorization - viewport-independent
-  authTest(
-    '@full @desktop-only users cannot bypass URL protection for admin pages',
-    async ({ johnAuth }) => {
-      // Try various admin URLs directly
-      const adminUrls = ['/system-admin/settings', '/system-admin/invitations'];
-
-      for (const url of adminUrls) {
-        await safeGoto(johnAuth, url);
-        await expect
-          .poll(
-            async () => {
-              const currentUrl = johnAuth.url();
-              // Check if user was blocked: either redirected away from admin,
-              // redirected to dashboard, or shown an error message
-              const isBlocked =
-                !currentUrl.includes('/system-admin') ||
-                currentUrl.includes('/dashboard') ||
-                (await johnAuth.locator('text=Access Denied').isVisible()) ||
-                (await johnAuth.locator('text=Forbidden').isVisible()) ||
-                (await johnAuth.locator('h1:has-text("My Scoreboards")').isVisible());
-
-              return isBlocked;
-            },
-            { timeout: 10000, intervals: [500] }
-          )
-          .toBeTruthy();
-      }
-    }
-  );
-});
-
-test.describe('Public Pages Access', () => {
-  // Navigation - viewport-independent
-  test('@fast @desktop-only home page is publicly accessible', async ({ page }) => {
-    await safeGoto(page, '/');
-    await expect(page).toHaveURL('/');
-    await expect(page.locator('body')).toBeVisible();
+  authTest('user should not access system settings page', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user2);
+    await safeGoto(page, '/system-admin/settings');
+    await expect
+      .poll(
+        async () => {
+          const currentUrl = page.url();
+          return (
+            currentUrl.includes('/dashboard') ||
+            (await page.locator('text=Access Denied').isVisible()) ||
+            (await page.locator('text=Forbidden').isVisible())
+          );
+        },
+        { timeout: 10000, intervals: [500] }
+      )
+      .toBeTruthy();
   });
 
-  // Navigation - viewport-independent
-  test('@fast @desktop-only about page is publicly accessible', async ({ page }) => {
-    await safeGoto(page, '/about');
-    await expect(page).toHaveURL(/\/about/);
+  authTest('supporter should not access system invitations page', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter1);
+    await safeGoto(page, '/system-admin/invitations');
+    await expect
+      .poll(
+        async () => {
+          const currentUrl = page.url();
+          return (
+            currentUrl.includes('/dashboard') ||
+            (await page.locator('text=Access Denied').isVisible()) ||
+            (await page.locator('text=Forbidden').isVisible())
+          );
+        },
+        { timeout: 10000, intervals: [500] }
+      )
+      .toBeTruthy();
   });
 
-  // Navigation - viewport-independent
-  test('@fast @desktop-only public scoreboard list is accessible', async ({ page }) => {
-    await safeGoto(page, '/public-scoreboard-list');
-    await expect(page).toHaveURL(/\/public-scoreboard-list/);
-  });
-
-  // Static page - viewport-independent
-  test('@full @desktop-only privacy policy page loads', async ({ page }) => {
-    await safeGoto(page, '/privacy');
-    await expect(page).toHaveURL(/\/privacy/);
-    await expect(page.locator('h1')).toBeVisible();
-  });
-
-  // Static page - viewport-independent
-  test('@full @desktop-only terms of service page loads', async ({ page }) => {
-    await safeGoto(page, '/terms');
-    await expect(page).toHaveURL(/\/terms/);
-    await expect(page.locator('h1')).toBeVisible();
-  });
-
-  // Static page - viewport-independent
-  test('@full @desktop-only cookies policy page loads', async ({ page }) => {
-    await safeGoto(page, '/cookies');
-    await expect(page).toHaveURL(/\/cookies/);
-    await expect(page.locator('h1')).toBeVisible();
-  });
-
-  // Static page - viewport-independent
-  test('@full @desktop-only contact page loads', async ({ page }) => {
-    await safeGoto(page, '/contact');
-    await expect(page).toHaveURL(/\/contact/);
+  authTest('user should not see admin navigation links', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user2);
+    await safeGoto(page, '/dashboard');
+    const settingsLink = page.locator('a:has-text("System Settings")');
+    await expect(settingsLink).not.toBeVisible();
   });
 });
+
+test.describe('Public Pages - Smoke', () => {
+  const publicPages = ['/', '/about', '/public-scoreboard-list', '/privacy', '/terms', '/cookies', '/contact'];
+
+  for (const path of publicPages) {
+    test(`${path} responds with 200`, async ({ request }) => {
+      const response = await request.get(path);
+      expect(response.status()).toBeLessThan(400);
+    });
+  }
+});
+

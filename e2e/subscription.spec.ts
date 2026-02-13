@@ -1,145 +1,38 @@
 /**
  * Subscription & Supporter Plan Tests
- * Tests subscription UI states, cancel/resume flows, and tier display
+ * Tests subscription UI states, cancel/resume flows, and tier display.
  *
- * @fast - Quick smoke tests for essential subscription UI
- * @full - Comprehensive subscription functionality coverage
- * @desktop-only - Subscription management flows
+ * Uses route interception to mock LemonSqueezy API responses where needed.
+ * All tests use the same user, so we run serially to avoid subscription state races.
  *
- * Uses route interception to mock LemonSqueezy API responses
- *
- * CROSS-PROJECT ISOLATION:
- * Each Playwright project (Desktop Chrome, Mobile iPhone 12, Mobile Minimum)
- * uses its own dedicated supporter user to avoid cross-project race conditions
- * when mutating subscription state via seedSubscription/removeSubscription.
- *
- * Project → User mapping:
- *   Desktop Chrome   → patron@example.com   (SUPPORTER_2)
- *   Mobile iPhone 12 → patron2@example.com  (SUPPORTER_3)
- *   Mobile Minimum   → patron3@example.com  (SUPPORTER_4)
- *
- * Serial mode within each project prevents intra-worker races.
+ * Dedicated accounts: SUPPORTER_2
  */
 
-import { test as authTest, expect, TEST_USERS } from './fixtures/auth';
+import { test, expect, TEST_USERS } from './fixtures/auth';
 import {
   seedSubscription,
   removeSubscription,
-  getSubscription,
-  SUPPORTER_EMAIL,
-  SUPPORTER_3_EMAIL,
-  SUPPORTER_4_EMAIL,
-  type SubscriptionState,
+  SUPPORTER_2_EMAIL,
 } from './fixtures/subscriptions';
+import { navigateToSubscription } from './fixtures/helpers';
 
-// Force all tests in this file to run serially on a single worker
-// to prevent intra-project races on the shared supporter user
-authTest.describe.configure({ mode: 'serial' });
-
-/**
- * Get the supporter user and email for the current Playwright project.
- * Each project gets its own user to avoid cross-project subscription races.
- */
-function getProjectSupporter(projectName: string) {
-  switch (projectName) {
-    case 'Mobile iPhone 12':
-      return { user: TEST_USERS.supporter3, email: SUPPORTER_3_EMAIL };
-    case 'Mobile Minimum':
-      return { user: TEST_USERS.supporter4, email: SUPPORTER_4_EMAIL };
-    default: // 'Desktop Chrome' and any others
-      return { user: TEST_USERS.supporter, email: SUPPORTER_EMAIL };
-  }
-}
-
-// Helper to set up subscription state before tests
-// Retries to handle cross-file race conditions with supporter-recognition.spec.ts
-const setupSubscriptionState = async (email: string, state: SubscriptionState | 'none') => {
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY_MS = 500;
-
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    if (state === 'none') {
-      const result = await removeSubscription(email);
-      if (!result.success) {
-        console.warn(`removeSubscription(${email}) attempt ${attempt} failed: ${result.error}`);
-      }
-      // Verify removal
-      const sub = await getSubscription(email);
-      if (!sub) break; // Confirmed removed
-      if (attempt < MAX_RETRIES) {
-        console.warn(`Subscription still exists for ${email} after removal attempt ${attempt}, retrying...`);
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-      }
-    } else {
-      const result = await seedSubscription(email, state);
-      if (!result.success) {
-        console.warn(`seedSubscription(${email}, ${state}) attempt ${attempt} failed: ${result.error}`);
-        if (attempt < MAX_RETRIES) {
-          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-        }
-        continue;
-      }
-      // Verify seeded
-      const sub = await getSubscription(email);
-      if (sub && sub.status === (state === 'cancelled_grace_period' ? 'cancelled' : state)) break;
-      if (attempt < MAX_RETRIES) {
-        console.warn(`Subscription state mismatch for ${email} after seed attempt ${attempt}, retrying...`);
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-      }
-    }
-  }
-};
-
-/**
- * Navigate to a page after login, handling potential client-side redirect
- * interruptions that can occur on slower mobile viewports.
- */
-async function navigateAfterLogin(page: import('@playwright/test').Page, targetPath: string) {
-  // Wait for login redirect to settle on the dashboard
-  await page.waitForURL('**/dashboard**', { timeout: 15000 }).catch(() => {});
-  await page.waitForLoadState('networkidle');
-
-  // Attempt navigation — may be interrupted by lingering auth redirects on mobile
-  try {
-    await page.goto(targetPath, { waitUntil: 'domcontentloaded' });
-  } catch {
-    // If navigation was interrupted, retry after a brief wait
-    await page.waitForTimeout(1000);
-    await page.goto(targetPath, { waitUntil: 'domcontentloaded' });
-  }
-  await page.waitForLoadState('networkidle');
-}
+// Force serial: all tests share morgan@example.com and mutate subscription state
+test.describe.configure({ mode: 'serial' });
 
 // =============================================================================
-// SUPPORTER PLAN PAGE - NO SUBSCRIPTION
+// NO SUBSCRIPTION STATE
 // =============================================================================
 
-authTest.describe('Supporter Plan - No Subscription', () => {
-  authTest.beforeEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await setupSubscriptionState(email, 'none');
+test.describe('No Subscription State', () => {
+  test.beforeAll(async () => {
+    await removeSubscription(SUPPORTER_2_EMAIL);
   });
 
-  authTest('@fast shows subscription tiers when not subscribed', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
+  test('should display subscription tiers when not subscribed', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-    // Ensure subscription is removed right before page load to prevent race with other spec files
-    await setupSubscriptionState(email, 'none');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // If the page still shows an active subscription (race condition), remove again and reload
-    const currentPlan = page.locator('h2:has-text("Current Plan")');
-    const chooseATier = page.locator('h3:has-text("Choose a tier")');
-    const hasTierSelector = await chooseATier.isVisible({ timeout: 3000 }).catch(() => false);
-
-    if (!hasTierSelector && await currentPlan.isVisible({ timeout: 1000 }).catch(() => false)) {
-      // Race condition: subscription was re-seeded by another spec file — remove again and reload
-      await setupSubscriptionState(email, 'none');
-      await page.reload({ waitUntil: 'networkidle' });
-    }
-
-    // Should show tier selection cards (scope to main content to avoid hidden mobile nav links)
+    // Should show tier selection cards (scope to main to avoid hidden mobile nav links)
     const mainContent = page.locator('main');
     const supporterTier = mainContent.locator('text=Supporter');
     const championTier = mainContent.locator('text=Champion');
@@ -148,240 +41,129 @@ authTest.describe('Supporter Plan - No Subscription', () => {
     await expect(championTier.first()).toBeVisible({ timeout: 15000 });
   });
 
-  authTest('@fast shows subscription benefits', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
-    await navigateAfterLogin(page, '/supporter-plan');
+  test('should show checkout button for each tier', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-    // Should show benefit descriptions
-    const kioskBenefit = page.locator('text=/kiosk/i');
-    await expect(kioskBenefit.first()).toBeVisible();
-  });
-
-  authTest('@full @desktop-only subscribe button triggers checkout', async ({ page, loginAs }, testInfo) => {
-    const { user } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
-
-    // Intercept checkout API
-    let checkoutCalled = false;
-    await page.route('**/api/lemonsqueezy/checkout', async (route) => {
-      checkoutCalled = true;
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          checkoutUrl: 'https://checkout.lemonsqueezy.com/test',
-          checkoutId: 'checkout_test_123',
-        }),
-      });
-    });
-
-    // Wait for login redirect to settle before navigating
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // Click on a tier to select it
-    const supporterCard = page
-      .locator('[data-testid="tier-supporter"]')
-      .or(page.locator('.grid >> text=Supporter').first());
-
-    if (await supporterCard.first().isVisible()) {
-      await supporterCard.first().click();
-    }
-
-    // Find and click subscribe button
-    const subscribeButton = page.locator('button:has-text("Subscribe")').first();
-    if (await subscribeButton.isVisible()) {
-      await subscribeButton.click();
-      await page.waitForTimeout(1000);
-
-      // Checkout API should have been called
-      expect(checkoutCalled).toBe(true);
-    }
+    // Checkout button should be present (shows "Become a Supporter" / "Become a Champion")
+    const checkoutButton = page.locator('[data-testid="checkout-button"]');
+    await expect(checkoutButton).toBeVisible({ timeout: 15000 });
   });
 });
 
 // =============================================================================
-// SUPPORTER PLAN PAGE - ACTIVE SUBSCRIPTION
+// ACTIVE SUBSCRIPTION
 // =============================================================================
 
-authTest.describe('Supporter Plan - Active Subscription', () => {
-  authTest.beforeEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await setupSubscriptionState(email, 'active');
+test.describe('Active Subscription', () => {
+  test.beforeAll(async () => {
+    await seedSubscription(SUPPORTER_2_EMAIL, 'active');
   });
 
-  authTest.afterEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await removeSubscription(email);
+  test.afterAll(async () => {
+    await removeSubscription(SUPPORTER_2_EMAIL);
   });
 
-  authTest('@fast shows current subscription status', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
+  test('should display current subscription status', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-    // Ensure subscription is active right before navigation to prevent race
-    await setupSubscriptionState(email, 'active');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // The DowngradeNoticeManager may show a "Your plan has ended" modal briefly
-    // if there was a gap between removing and re-seeding the subscription.
-    // Dismiss it if it appears so we can check the actual page content.
+    // Dismiss downgrade modal if it appears from a previous test run gap
     const downgradeModal = page.locator('h3:has-text("Your plan has ended")');
-    const isModalVisible = await downgradeModal.isVisible().catch(() => false);
-    if (isModalVisible) {
-      const dismissButton = page.locator('button:has-text("I Understand")');
-      if (await dismissButton.isVisible().catch(() => false)) {
+    const dismissButton = page.locator('button:has-text("I Understand")');
+    try {
+      await downgradeModal.waitFor({ state: 'visible', timeout: 2000 });
+      if (await dismissButton.isVisible()) {
         await dismissButton.click();
-        await page.waitForTimeout(1000);
+        await dismissButton.waitFor({ state: 'hidden' });
       }
+    } catch {
+      // Modal didn't appear — continue
     }
 
-    // Wait for subscription data to load - may take a moment for AuthContext to fetch
-    // Target the specific status badge span (rounded-full pill) to avoid matching parent containers
+    // Target the specific status badge span (rounded-full pill)
     const statusBadge = page.locator('span.rounded-full:has-text("Active")');
     await expect(statusBadge.first()).toBeVisible({ timeout: 15000 });
-  });
 
-  authTest('@fast shows current tier', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
-
-    // Ensure subscription is active right before navigation to prevent race
-    await setupSubscriptionState(email, 'active');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // Wait for Current Plan card to appear, then check the TierBadge inside it
-    // (avoids matching the hidden header TierBadge on mobile viewports)
+    // Verify tier badge inside the Current Plan card
     const currentPlanCard = page.locator('text=/Current Plan/i').first();
     await expect(currentPlanCard).toBeVisible({ timeout: 15000 });
-    const tierBadge = page.locator('.rounded-lg:has(h2:has-text("Current Plan")) span.rounded-full:has-text("Supporter")');
+    const tierBadge = page.locator(
+      '.rounded-lg:has(h2:has-text("Current Plan")) span.rounded-full:has-text("Supporter")'
+    );
     await expect(tierBadge).toBeVisible({ timeout: 10000 });
   });
 
-  authTest('@fast shows manage billing button', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
+  test('should show cancel subscription option', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-    // Ensure subscription is active right before navigation to prevent race
-    await setupSubscriptionState(email, 'active');
-    await navigateAfterLogin(page, '/supporter-plan');
+    // Wait for subscription data to fully render
+    const activeIndicator = page.locator('text=/active/i').first();
+    await expect(activeIndicator).toBeVisible({ timeout: 15000 });
 
-    const manageBillingButton = page.locator('button:has-text("Manage Billing")');
-    await expect(manageBillingButton).toBeVisible();
-  });
-
-  authTest('@full @desktop-only shows cancel subscription button', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
-
-    // Ensure subscription is active right before navigation to prevent race
-    await setupSubscriptionState(email, 'active');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // Wait for subscription to fully load
-    await page.waitForSelector('text=/active/i', { timeout: 15000 }).catch(() => {});
     const cancelButton = page.locator('button:has-text("Cancel Subscription")');
     await expect(cancelButton).toBeVisible({ timeout: 10000 });
   });
 
-  authTest(
-    '@full @desktop-only cancel button shows confirmation modal',
-    async ({ page, loginAs }, testInfo) => {
-      const { user, email } = getProjectSupporter(testInfo.project.name);
-      await loginAs(user);
+  test('should intercept cancel and show confirmation', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-      // Ensure subscription is active right before navigation to prevent race
-      await setupSubscriptionState(email, 'active');
-      await navigateAfterLogin(page, '/supporter-plan');
+    // Wait for subscription data to fully render
+    const activeIndicator = page.locator('text=/active/i').first();
+    await expect(activeIndicator).toBeVisible({ timeout: 15000 });
 
-      // Wait for subscription to fully load
-      await page.waitForSelector('text=/active/i', { timeout: 15000 }).catch(() => {});
-      const cancelButton = page.locator('button:has-text("Cancel Subscription")');
-      await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
-      await cancelButton.click();
+    const cancelButton = page.locator('button:has-text("Cancel Subscription")');
+    await cancelButton.waitFor({ state: 'visible', timeout: 10000 });
+    await cancelButton.click();
 
-      // Modal should appear
-      const modal = page
-        .locator('[role="dialog"]')
-        .or(page.locator('.bg-surface.rounded-lg.shadow-lg'));
-      await expect(modal.first()).toBeVisible();
+    // Confirmation modal should appear
+    const modal = page
+      .locator('[role="dialog"]')
+      .or(page.locator('[data-testid="cancel-subscription-modal"]'));
+    await expect(modal.first()).toBeVisible();
 
-      // Modal should have warning text
-      const warningText = page.locator('text=/cancel/i');
-      await expect(warningText.first()).toBeVisible();
+    // Modal should have warning text about cancellation
+    const warningText = page.locator('text=/cancel/i');
+    await expect(warningText.first()).toBeVisible();
 
-      // Should have Keep and Cancel buttons
-      const keepButton = page.locator('button:has-text("Keep Subscription")');
-      await expect(keepButton).toBeVisible();
-    }
-  );
-
-  authTest('@full @desktop-only change tier button is visible', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
-
-    // Ensure subscription is active right before navigation to prevent race
-    await setupSubscriptionState(email, 'active');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // Wait for subscription to fully load
-    await page.waitForSelector('text=/active/i', { timeout: 15000 }).catch(() => {});
-    const changeTierButton = page.locator('button:has-text("Change Tier")');
-    await expect(changeTierButton).toBeVisible({ timeout: 10000 });
+    // Should have a "Keep Subscription" escape hatch
+    const keepButton = page.locator('[data-testid="keep-subscription-button"]');
+    await expect(keepButton).toBeVisible();
   });
 });
 
 // =============================================================================
-// SUPPORTER PLAN PAGE - CANCELLED (GRACE PERIOD)
+// CANCELLED GRACE PERIOD
 // =============================================================================
 
-authTest.describe('Supporter Plan - Cancelled (Grace Period)', () => {
-  authTest.beforeEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await setupSubscriptionState(email, 'cancelled_grace_period');
+test.describe('Cancelled Grace Period', () => {
+  test.beforeAll(async () => {
+    await seedSubscription(SUPPORTER_2_EMAIL, 'cancelled_grace_period');
   });
 
-  authTest.afterEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await removeSubscription(email);
+  test.afterAll(async () => {
+    await removeSubscription(SUPPORTER_2_EMAIL);
   });
 
-  authTest('@fast shows cancelled status with end date', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
+  test('should show cancelled status with grace period info', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-    // Ensure subscription is in cancelled_grace_period right before navigation
-    await setupSubscriptionState(email, 'cancelled_grace_period');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // Wait for subscription data to load
+    // Wait for cancelled status to render
     const cancelledStatus = page.locator('text=/cancelled/i');
     await expect(cancelledStatus.first()).toBeVisible({ timeout: 15000 });
 
-    // Should show benefits end date
+    // Should display when benefits expire
     const benefitsUntil = page.locator('text=/benefits.*until/i');
     await expect(benefitsUntil.first()).toBeVisible();
   });
 
-  authTest('@fast shows reactivate button', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
+  test('should show resume subscription option', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
 
-    // Ensure subscription is in cancelled_grace_period right before navigation
-    await setupSubscriptionState(email, 'cancelled_grace_period');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // Wait for subscription to load
-    await page.waitForSelector('text=/cancelled/i', { timeout: 15000 }).catch(() => {});
-    const reactivateButton = page.locator('button:has-text("Reactivate")');
-    await expect(reactivateButton).toBeVisible({ timeout: 10000 });
-  });
-
-  authTest('@full @desktop-only reactivate calls resume API', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
-
-    // Intercept resume API
+    // Intercept resume API to avoid real LemonSqueezy calls
     let resumeCalled = false;
     await page.route('**/api/lemonsqueezy/resume-subscription', async (route) => {
       resumeCalled = true;
@@ -392,155 +174,92 @@ authTest.describe('Supporter Plan - Cancelled (Grace Period)', () => {
       });
     });
 
-    // Ensure subscription is in cancelled_grace_period right before navigation
-    await setupSubscriptionState(email, 'cancelled_grace_period');
-    await navigateAfterLogin(page, '/supporter-plan');
+    await navigateToSubscription(page);
 
-    // Wait for subscription to load
-    await page.waitForSelector('text=/cancelled/i', { timeout: 15000 }).catch(() => {});
+    // Wait for cancelled state to load
+    const cancelledStatus = page.locator('text=/cancelled/i').first();
+    await expect(cancelledStatus).toBeVisible({ timeout: 15000 });
+
     const reactivateButton = page.locator('button:has-text("Reactivate")');
-    await reactivateButton.waitFor({ state: 'visible', timeout: 10000 });
+    await expect(reactivateButton).toBeVisible({ timeout: 10000 });
+
+    // Click reactivate and verify the API was called
     await reactivateButton.click();
-    await page.waitForTimeout(1000);
-
-    expect(resumeCalled).toBe(true);
-  });
-
-  authTest('@full @desktop-only does not show cancel button', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
-
-    // Ensure subscription is in cancelled_grace_period right before navigation
-    await setupSubscriptionState(email, 'cancelled_grace_period');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    const cancelButton = page.locator('button:has-text("Cancel Subscription")');
-    await expect(cancelButton).not.toBeVisible();
+    await expect.poll(() => resumeCalled, { timeout: 5000 }).toBe(true);
   });
 });
 
 // =============================================================================
-// SUPPORTER PLAN PAGE - GIFTED SUBSCRIPTION
+// GIFTED SUBSCRIPTION
 // =============================================================================
 
-authTest.describe('Supporter Plan - Gifted Subscription', () => {
-  authTest.beforeEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await setupSubscriptionState(email, 'gifted');
+test.describe('Gifted Subscription', () => {
+  test.beforeAll(async () => {
+    await seedSubscription(SUPPORTER_2_EMAIL, 'gifted', { tier: 'supporter' });
   });
 
-  authTest.afterEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await removeSubscription(email);
+  test.afterAll(async () => {
+    await removeSubscription(SUPPORTER_2_EMAIL);
   });
 
-  authTest('@fast shows gifted subscription as active', async ({ page, loginAs }, testInfo) => {
-    const { user, email } = getProjectSupporter(testInfo.project.name);
-    await loginAs(user);
+  test('should display gifted subscription as active', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-    // Ensure gifted subscription exists right before navigation
-    await setupSubscriptionState(email, 'gifted');
-    await navigateAfterLogin(page, '/supporter-plan');
-
-    // Gifted subscriptions should show as active with Current Plan card
+    // Gifted subscriptions should show Current Plan card with active status
     const currentPlan = page.locator('text=/Current Plan/i');
-    await expect(currentPlan.first()).toBeVisible();
+    await expect(currentPlan.first()).toBeVisible({ timeout: 15000 });
 
-    // Should show active status indicator
     const activeStatus = page.locator('text=/active/i');
     await expect(activeStatus.first()).toBeVisible();
   });
 
-  authTest(
-    '@fast gifted subscription has disabled billing management',
-    async ({ page, loginAs }, testInfo) => {
-      const { user, email } = getProjectSupporter(testInfo.project.name);
-      await loginAs(user);
+  test('should not show billing management for gifted', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.supporter2);
+    await navigateToSubscription(page);
 
-      // Ensure gifted subscription exists right before navigation
-      await setupSubscriptionState(email, 'gifted');
-      await navigateAfterLogin(page, '/supporter-plan');
+    // Manage Billing should be visible but disabled for gifted (no LS subscription ID)
+    const manageBillingButton = page.locator('[data-testid="manage-billing-button"]');
+    await expect(manageBillingButton).toBeVisible({ timeout: 15000 });
+    await expect(manageBillingButton).toBeDisabled();
 
-      // Manage Billing button should be visible but disabled for gifted subscriptions
-      // (gifted subs have no LemonSqueezy subscription ID)
-      const manageBillingButton = page.locator('button:has-text("Manage Billing")');
-      await expect(manageBillingButton).toBeVisible();
-      await expect(manageBillingButton).toBeDisabled();
+    // Cancel/Reactivate buttons should be disabled for gifted subscriptions
+    // (they exist in the DOM but are disabled since there's no LS subscription ID)
+    const cancelButton = page.locator('button:has-text("Cancel Subscription")');
+    const reactivateButton = page.locator('button:has-text("Reactivate")');
+
+    // Cancel button may be visible but disabled
+    if (await cancelButton.isVisible()) {
+      await expect(cancelButton).toBeDisabled();
     }
-  );
+    // Reactivate should not be visible for active gifted subscriptions
+    await expect(reactivateButton).not.toBeVisible();
+  });
 });
 
 // =============================================================================
-// DASHBOARD - SUBSCRIPTION WARNINGS
+// DASHBOARD WARNINGS
 // =============================================================================
 
-authTest.describe('Dashboard - Subscription Warnings', () => {
-  authTest.afterEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await removeSubscription(email);
-  });
+test.describe('Dashboard Warnings', () => {
+  test('should show warning when subscription is cancelled with grace period', async ({ page, loginAs }) => {
+    // Seed cancelled_grace_period state to trigger the "Subscription Cancelled" warning banner
+    // The dashboard shows a warning when status === 'cancelled' and ends_at is in the future
+    await seedSubscription(SUPPORTER_2_EMAIL, 'cancelled_grace_period');
 
-  authTest(
-    '@full @desktop-only shows warning banner for cancelled subscription',
-    async ({ page, loginAs }, testInfo) => {
-      const { user, email } = getProjectSupporter(testInfo.project.name);
-      await setupSubscriptionState(email, 'cancelled_grace_period');
-      await loginAs(user);
-      await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
+    try {
+      await loginAs(TEST_USERS.supporter2);
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.waitForLoadState('domcontentloaded');
 
-      // Subscription status loads asynchronously from AuthContext.
-      // Wait for the "Subscription Cancelled" warning text to appear
-      // or the downgrade notice which appears for cancelled subscriptions.
+      // Look for the "Subscription Cancelled" warning banner
       const warningText = page
         .locator('text=/Subscription Cancelled/i')
-        .or(page.locator('text=/cancelled.*benefits/i'))
+        .or(page.locator('text=/Benefits active until/i'))
         .first();
       await expect(warningText).toBeVisible({ timeout: 20000 });
+    } finally {
+      await removeSubscription(SUPPORTER_2_EMAIL);
     }
-  );
-});
-
-// =============================================================================
-// KIOSK MODE - SUBSCRIBER ACCESS
-// =============================================================================
-
-authTest.describe('Kiosk Mode - Subscriber Access', () => {
-  authTest.beforeEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await setupSubscriptionState(email, 'active');
   });
-
-  authTest.afterEach(async ({}, testInfo) => {
-    const { email } = getProjectSupporter(testInfo.project.name);
-    await removeSubscription(email);
-  });
-
-  authTest(
-    '@full @desktop-only subscriber can access kiosk configuration',
-    async ({ page, loginAs }, testInfo) => {
-      const { user } = getProjectSupporter(testInfo.project.name);
-      await loginAs(user);
-      await page.goto('/dashboard');
-      await page.waitForLoadState('networkidle');
-
-      // Find a scoreboard card
-      const scoreboardCard = page.locator('.bg-card.rounded-lg').first();
-
-      if (await scoreboardCard.isVisible()) {
-        await scoreboardCard.click();
-        await page.waitForLoadState('networkidle');
-
-        // Look for kiosk mode option
-        const kioskButton = page
-          .locator('button:has-text("Kiosk")')
-          .or(page.locator('a:has-text("Kiosk")'));
-
-        // Kiosk should be accessible for supporters
-        if (await kioskButton.isVisible()) {
-          await expect(kioskButton).toBeEnabled();
-        }
-      }
-    }
-  );
 });

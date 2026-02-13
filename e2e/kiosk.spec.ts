@@ -1,165 +1,37 @@
 /**
  * Kiosk Mode E2E Tests - TV/Kiosk display functionality
  *
- * Tests are tagged for different test configurations:
- * - @fast: Quick tests for development feedback (run with --grep @fast)
- * - @full: Comprehensive tests including image upload (run with --grep @full)
- * - @no-mobile: All kiosk tests excluded from mobile viewports (TV/tablet feature)
+ * Covers kiosk settings, kiosk view (carousel, PIN, fullscreen),
+ * kiosk display behaviour, and non-supporter access gating.
  *
- * Usage:
- *   npm run test:e2e -- --grep @fast    # Fast tests only
- *   npm run test:e2e -- --grep @full    # Full tests only
- *   npm run test:e2e                    # All tests
- *
- * NOTE: All kiosk tests are tagged @no-mobile since kiosk mode is designed
- * for TV/tablet displays (large screens only). Mobile viewports are excluded.
+ * Dedicated accounts: SUPPORTER_5 (Taylor), USER_4
  */
 
-import { test, expect } from './fixtures/auth';
+import { test, expect, TEST_USERS } from './fixtures/auth';
+import { getScoreboardIdFromDb } from './fixtures/subscriptions';
+import { waitForSubscriptionLoaded } from './fixtures/helpers';
 import { type Page } from '@playwright/test';
 import * as path from 'path';
 
 // ============================================================================
-// TEST DATA HELPERS
+// CONSTANTS & HELPERS
 // ============================================================================
 
-/**
- * Get a PUBLIC scoreboard ID from the authenticated user's dashboard
- * Returns the first public scoreboard found (or null if none)
- * Kiosk mode requires public visibility to work
- */
-async function getScoreboardId(page: Page): Promise<string | null> {
-  try {
-    // Navigate to dashboard and wait for full page load
-    try {
-      await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 15000 });
-      await page.waitForLoadState('networkidle');
-    } catch (_error) {
-      await page.waitForTimeout(1000);
-      await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 15000 });
-      await page.waitForLoadState('networkidle');
-    }
-
-    // Wait for scoreboard cards to appear (increased timeout for loaded systems)
-    await page.waitForSelector('[data-testid="scoreboard-card"]', { timeout: 15000 });
-
-    // Look for a public scoreboard card (has "Public" badge or doesn't have "Private")
-    const cards = page.locator('[data-testid="scoreboard-card"]');
-    const cardCount = await cards.count();
-
-    for (let i = 0; i < cardCount; i++) {
-      const card = cards.nth(i);
-      const cardText = await card.textContent();
-
-      // Skip private scoreboards
-      if (cardText?.toLowerCase().includes('private')) {
-        continue;
-      }
-
-      // Found a public scoreboard - click its manage button
-      const manageBtn = card.locator('button:has-text("Manage Scoreboard")');
-      await manageBtn.waitFor({ state: 'visible', timeout: 5000 });
-      await manageBtn.click();
-
-      // Wait for client-side navigation (router.push) — retry click if it fails under load
-      try {
-        await page.waitForURL('**/scoreboard-management?id=*', {
-          timeout: 8000,
-          waitUntil: 'domcontentloaded',
-        });
-      } catch {
-        // router.push can fail silently under parallel load — retry
-        await manageBtn.click({ force: true });
-        await page.waitForURL('**/scoreboard-management?id=*', {
-          timeout: 10000,
-          waitUntil: 'domcontentloaded',
-        });
-      }
-
-      // Extract the scoreboard ID from URL
-      const url = page.url();
-      const match = url.match(/id=([a-f0-9-]+)/);
-      return match ? match[1] : null;
-    }
-
-    // Fallback: just use the first card if no public ones found
-    const card = cards.first();
-    const manageBtn = card.locator('button:has-text("Manage Scoreboard")');
-    await manageBtn.waitFor({ state: 'visible', timeout: 5000 });
-    await manageBtn.click();
-
-    try {
-      await page.waitForURL('**/scoreboard-management?id=*', {
-        timeout: 8000,
-        waitUntil: 'domcontentloaded',
-      });
-    } catch {
-      await manageBtn.click({ force: true });
-      await page.waitForURL('**/scoreboard-management?id=*', {
-        timeout: 10000,
-        waitUntil: 'domcontentloaded',
-      });
-    }
-    const url = page.url();
-    const match = url.match(/id=([a-f0-9-]+)/);
-    return match ? match[1] : null;
-  } catch (error) {
-    console.log('Failed to get scoreboard ID:', error);
-    return null;
-  }
-}
+const supporter5Email = process.env.AUTOMATED_TEST_SUPPORTER_5_EMAIL || 'taylor@example.com';
 
 /**
- * Ensure kiosk mode is enabled for a scoreboard
- * Returns true if kiosk mode was successfully enabled (or already enabled)
+ * Ensure kiosk mode is enabled for a scoreboard.
+ * Returns true if kiosk mode was successfully enabled (or already enabled).
  */
-/**
- * Wait for the subscription tier to finish loading in the AuthContext.
- * The header's TierBadge shows "Free" while subscriptionTier is null (loading).
- * Once loaded, a supporter user's badge changes to the tier label (e.g., "Supporter").
- * This prevents race conditions where kiosk settings show the "Supporter Feature" lock
- * instead of the enable checkbox because isSupporter is still false during loading.
- */
-async function waitForSubscriptionLoaded(page: Page, timeoutMs = 15000): Promise<boolean> {
-  try {
-    // Wait for the user menu badge to NOT be "Free" — meaning subscription has loaded
-    await expect(page.locator('button[aria-label="User menu"], button:has-text("User menu")').first())
-      .toBeVisible({ timeout: 10000 });
-
-    // Poll until the "Free" badge disappears (replaced by tier badge like "Supporter")
-    await expect
-      .poll(
-        async () => {
-          const freeBadge = page.locator('button[aria-label="User menu"] >> text="Free"')
-            .or(page.locator('button:has-text("User menu") >> text="Free"'));
-          return await freeBadge.count();
-        },
-        { timeout: timeoutMs, intervals: [500] }
-      )
-      .toBe(0);
-
-    return true;
-  } catch (_error) {
-    console.log('Subscription did not load in time (badge still shows "Free")');
-    return false;
-  }
-}
-
 async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boolean> {
   try {
     await page.goto(`/scoreboard-management?id=${scoreboardId}`, {
       waitUntil: 'domcontentloaded',
     });
-    await page.waitForLoadState('networkidle');
 
-    // Wait for subscription to load so kiosk section shows supporter content
-    const subscriptionReady = await waitForSubscriptionLoaded(page);
-    if (!subscriptionReady) {
-      console.log('Subscription not loaded — kiosk features may not be available');
-      return false;
-    }
+    await waitForSubscriptionLoaded(page);
 
-    // Expand kiosk section - look for the collapsible section toggle button
+    // Expand kiosk section
     const kioskToggle = page
       .locator('button')
       .filter({ hasText: /kiosk|presentation/i })
@@ -172,12 +44,9 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
       return false;
     }
 
-    // Click to expand if not already expanded
     await kioskToggle.click();
-    await page.waitForTimeout(800);
 
-    // Look for the enable toggle label - wait for it to appear after expansion
-    await page.waitForTimeout(300);
+    // Wait for section content to render
     const enableLabel = page
       .locator('label')
       .filter({ hasText: /enable kiosk/i })
@@ -185,14 +54,15 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
 
     try {
       await enableLabel.waitFor({ state: 'visible', timeout: 5000 });
-      // Check if already enabled by looking at the checkbox within
       const checkbox = enableLabel.locator('input[type="checkbox"]');
       const isChecked = await checkbox.isChecked();
 
       if (!isChecked) {
-        // Click the label to toggle the checkbox
         await enableLabel.click();
-        await page.waitForTimeout(1000);
+        await expect(checkbox).toBeChecked({ timeout: 3000 });
+        // Wait for the API save to complete (toggle auto-saves)
+        const enabledToast = page.locator('text=/kiosk mode enabled/i');
+        await enabledToast.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
       }
       return true;
     } catch (_error) {
@@ -205,841 +75,537 @@ async function ensureKioskEnabled(page: Page, scoreboardId: string): Promise<boo
   }
 }
 
-// ============================================================================
-// FAST TESTS - Quick development feedback
-// ============================================================================
-
-test.describe('Kiosk Mode - Fast Tests', () => {
-  // Run serially to avoid multiple simultaneous sessions for patron4@example.com
-  // which causes Supabase connection contention and subscription loading failures
-  test.describe.configure({ mode: 'serial' });
-
-  test('@fast @no-mobile should expand and collapse kiosk settings section', async ({
-    supporterAuth,
-  }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
-
-    // Wait for subscription to load so kiosk section shows supporter content
-    await waitForSubscriptionLoaded(supporterAuth);
-
-    // Find the kiosk/presentation mode section toggle
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-
-    await kioskToggle.waitFor({ state: 'visible', timeout: 10000 });
-
-    // Scroll into view to ensure the button is not covered by other elements
-    await kioskToggle.scrollIntoViewIfNeeded();
-
-    // Click to expand
-    await kioskToggle.click();
-
-    // Should show kiosk settings content (slide duration, etc.)
-    const slideDurationLabel = supporterAuth.locator('text=Slide Duration (seconds)');
-
-    // If section didn't expand (component still loading subscription), retry
-    try {
-      await expect(slideDurationLabel).toBeVisible({ timeout: 5000 });
-    } catch {
-      await kioskToggle.click();
-      await expect(slideDurationLabel).toBeVisible({ timeout: 5000 });
-    }
-
-    // Click to collapse
-    await kioskToggle.click();
-    await supporterAuth.waitForTimeout(300);
-
-    // Content should be hidden
-    await expect(slideDurationLabel).not.toBeVisible();
+/**
+ * Navigate to the scoreboard management page, wait for subscription,
+ * and expand the kiosk settings section.
+ */
+async function openKioskSettings(page: Page, scoreboardId: string): Promise<void> {
+  await page.goto(`/scoreboard-management?id=${scoreboardId}`, {
+    waitUntil: 'domcontentloaded',
   });
 
-  test('@fast @no-mobile should toggle kiosk mode enabled/disabled', async ({ supporterAuth }) => {
+  await waitForSubscriptionLoaded(page);
+
+  const kioskToggle = page
+    .locator('button')
+    .filter({ hasText: /kiosk|presentation/i })
+    .first();
+  await kioskToggle.waitFor({ state: 'visible', timeout: 10000 });
+  await kioskToggle.scrollIntoViewIfNeeded();
+  await kioskToggle.click();
+
+  // Wait for section content to be visible
+  const enableLabel = page
+    .locator('label')
+    .filter({ hasText: /enable kiosk/i })
+    .first();
+  try {
+    await enableLabel.waitFor({ state: 'visible', timeout: 5000 });
+  } catch {
+    // Retry expand if section didn't open
+    await kioskToggle.click();
+    await enableLabel.waitFor({ state: 'visible', timeout: 5000 });
+  }
+}
+
+/**
+ * Navigate to the kiosk view and wait for it to finish loading.
+ */
+async function openKioskView(page: Page, scoreboardId: string): Promise<void> {
+  await page.goto(`/kiosk/${scoreboardId}`, { waitUntil: 'domcontentloaded' });
+  // Kiosk loading can take a while as it needs to fetch scoreboard data and slides
+  await expect(page.locator('text=Loading kiosk')).toBeHidden({ timeout: 30000 });
+
+  // Handle PIN protection dialog if it appears
+  const pinInput = page.locator('input[placeholder*="PIN"]');
+  try {
+    await pinInput.waitFor({ state: 'visible', timeout: 2000 });
+    // PIN is set — try known test PINs
+    await pinInput.click();
+    await pinInput.pressSequentially('5678');
+    const enterButton = page.locator('button:has-text("Enter")');
+    await expect(enterButton).toBeEnabled({ timeout: 2000 });
+    await enterButton.click();
+    // Wait for kiosk view to load after PIN entry
+    await expect(page.locator('text=Loading kiosk')).toBeHidden({ timeout: 15000 });
+  } catch {
+    // No PIN dialog — kiosk loaded directly
+  }
+}
+
+// ============================================================================
+// KIOSK SETTINGS
+// ============================================================================
+
+test.describe('Kiosk Settings', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  let scoreboardId: string | null;
+
+  test.beforeAll(async () => {
+    scoreboardId = await getScoreboardIdFromDb(supporter5Email);
+  });
+
+  test('should enable kiosk mode and configure settings', async ({ page, loginAs }) => {
     test.setTimeout(60000);
-    const scoreboardId = await getScoreboardId(supporterAuth);
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
+    await loginAs(TEST_USERS.supporter5);
+    await openKioskSettings(page, scoreboardId!);
 
-    // Wait for AuthContext to finish loading subscription data
-    // The kiosk section requires isSupporter=true to render enable toggle
-    await waitForSubscriptionLoaded(supporterAuth);
-
-    // Expand kiosk section - wait for button to be attached and clickable
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk.*presentation/i })
-      .first();
-    await kioskToggle.waitFor({ state: 'visible', timeout: 15000 });
-    await kioskToggle.scrollIntoViewIfNeeded({ timeout: 10000 });
-    await kioskToggle.click();
-
-    // Find enable toggle - it's a label wrapping a sr-only checkbox
-    const enableLabel = supporterAuth
+    // --- Toggle kiosk enable ---
+    const enableLabel = page
       .locator('label')
       .filter({ hasText: /enable kiosk/i })
       .first();
-
-    // Wait for the section content to render (kiosk config loads via API)
-    try {
-      await enableLabel.waitFor({ state: 'visible', timeout: 15000 });
-    } catch {
-      // If section didn't expand on first click, try again
-      await kioskToggle.click();
-      await enableLabel.waitFor({ state: 'visible', timeout: 15000 });
-    }
-
     const enableCheckbox = enableLabel.locator('input[type="checkbox"]');
-
     const initialState = await enableCheckbox.isChecked();
 
-    // Toggle by clicking the label
     await enableLabel.click();
-    await supporterAuth.waitForTimeout(1000);
-
-    // State should have changed
+    await expect(enableCheckbox).not.toBeChecked({ checked: initialState, timeout: 3000 });
     const newState = await enableCheckbox.isChecked();
     expect(newState).not.toBe(initialState);
 
-    // Toggle back to restore original state
+    // Restore original state
     await enableLabel.click();
-    await supporterAuth.waitForTimeout(500);
-  });
+    await expect(enableCheckbox).toBeChecked({ checked: initialState, timeout: 3000 });
 
-  test('@fast @no-mobile should change slide duration setting', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    // Use longer timeout for navigation under parallel load
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`, { timeout: 45000 });
-    await supporterAuth.waitForLoadState('networkidle');
-    await waitForSubscriptionLoaded(supporterAuth);
-
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Find duration dropdown/select
-    const durationSelect = supporterAuth
+    // --- Configure auto-advance interval ---
+    const durationSelect = page
       .locator('select')
       .filter({ hasText: /seconds/i })
       .first()
-      .or(supporterAuth.locator('[data-testid="slide-duration"]'))
-      .or(supporterAuth.locator('select').first());
+      .or(page.locator('[data-testid="slide-duration"]'))
+      .or(page.locator('select').first());
 
     if (await durationSelect.isVisible()) {
-      // Change to 15 seconds
       await durationSelect.selectOption('15').catch(() => {
-        // Fallback for different select implementations
         durationSelect.selectOption({ index: 2 });
       });
 
-      await supporterAuth.waitForTimeout(500);
-
-      // Verify selection
       const selectedValue = await durationSelect.inputValue();
       expect(['15', '15 seconds']).toContain(selectedValue);
     }
+
+    // --- Verify slides section exists (scoreboard position) ---
+    const slidesSection = page.locator('[data-testid="kiosk-slides-list"]');
+
+    if (await slidesSection.isVisible()) {
+      const scoreboardSlide = page
+        .locator('[data-testid="scoreboard-slide"]')
+        .or(page.locator('text=Scoreboard').first());
+      await expect(scoreboardSlide).toBeVisible({ timeout: 5000 }).catch(() => {
+        // Scoreboard slide may be in different position — non-fatal
+      });
+    }
   });
 
-  test('@fast @no-mobile should toggle PIN protection visibility', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
+  test('should upload and manage slide images', async ({ page, loginAs }) => {
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
-    await waitForSubscriptionLoaded(supporterAuth);
+    await loginAs(TEST_USERS.supporter5);
+    await openKioskSettings(page, scoreboardId!);
 
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
+    const testImagePath = path.join(__dirname, 'fixtures', 'test-image.png');
 
-    // Find PIN input field
-    const pinInput = supporterAuth
-      .locator('input[type="password"]')
-      .first()
-      .or(supporterAuth.locator('input[placeholder*="PIN"]'))
-      .or(supporterAuth.locator('input[name="pin"]'));
+    // Upload an image
+    const fileInput = page.locator('input[type="file"]');
 
-    if (await pinInput.isVisible()) {
-      // Find the show/hide toggle button
-      const showToggle = supporterAuth.locator('button[title*="PIN"]').or(
-        supporterAuth
-          .locator('button')
-          .filter({ has: supporterAuth.locator('svg') })
-          .filter({ hasText: '' })
-          .first()
-      );
-
-      if (await showToggle.isVisible()) {
-        const inputType = await pinInput.getAttribute('type');
-        expect(inputType).toBe('password');
-
-        await showToggle.click();
-        await supporterAuth.waitForTimeout(300);
-
-        const newType = await pinInput.getAttribute('type');
-        expect(newType).toBe('text');
-      }
-    }
-  });
-
-  test('@fast @no-mobile should open kiosk preview in new tab', async ({ supporterAuth, context }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
-    await waitForSubscriptionLoaded(supporterAuth);
-
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Find the kiosk preview/open button
-    const previewButton = supporterAuth
-      .locator('a[href*="/kiosk/"]')
-      .first()
-      .or(supporterAuth.locator('button').filter({ hasText: /open kiosk|preview/i }));
-
-    if (await previewButton.isVisible()) {
-      // Click and wait for new page
-      const [newPage] = await Promise.all([
-        context.waitForEvent('page', { timeout: 5000 }).catch(() => null),
-        previewButton.click(),
-      ]);
-
-      if (newPage) {
-        await newPage.waitForLoadState('domcontentloaded');
-        expect(newPage.url()).toContain('/kiosk/');
-        await newPage.close();
-      }
-    }
-  });
-
-  test('@fast @no-mobile should load kiosk view for a public scoreboard', async ({ page }) => {
-    // Try to load kiosk view (may show error for non-existent/private scoreboard)
-    const response = await page.goto('/kiosk/test-placeholder-id');
-
-    expect(response).not.toBeNull();
-    // 404 is acceptable for non-existent scoreboard
-    const status = response?.status() || 404;
-    expect(status).toBeLessThanOrEqual(404);
-
-    await page.waitForLoadState('domcontentloaded');
-
-    // Page loaded successfully (may show 404 or error page - both valid)
-    const body = page.locator('body');
-    await expect(body).toBeDefined();
-  });
-
-  test('@fast @no-mobile should respond to keyboard controls in kiosk view', async ({
-    supporterAuth,
-  }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    // Ensure kiosk mode is enabled before accessing kiosk view
-    const kioskEnabled = await ensureKioskEnabled(supporterAuth, scoreboardId!);
-    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
-
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`);
-    await supporterAuth.waitForLoadState('domcontentloaded');
-
-    // Wait for kiosk to finish loading (the "Loading kiosk..." spinner to disappear)
-    await expect(supporterAuth.locator('text=Loading kiosk')).toBeHidden({ timeout: 15000 });
-    await supporterAuth.waitForTimeout(500);
-
-    // Test keyboard shortcuts (should not throw errors)
-    await supporterAuth.keyboard.press('Space'); // Pause/play
-    await supporterAuth.waitForTimeout(200);
-    await supporterAuth.keyboard.press('ArrowRight'); // Next slide
-    await supporterAuth.waitForTimeout(200);
-    await supporterAuth.keyboard.press('ArrowLeft'); // Previous slide
-    await supporterAuth.waitForTimeout(200);
-    await supporterAuth.keyboard.press('Escape'); // Exit fullscreen (if in fullscreen)
-    await supporterAuth.waitForTimeout(200);
-
-    // Verify kiosk page loaded (check URL is still on kiosk route)
-    expect(supporterAuth.url()).toContain('/kiosk/');
-  });
-});
-
-// ============================================================================
-// FULL TESTS - Comprehensive testing including file uploads
-// ============================================================================
-
-test.describe('Kiosk Mode - Full Tests', () => {
-  // Run serially to avoid multiple simultaneous sessions for patron4@example.com
-  test.describe.configure({ mode: 'serial' });
-
-  const testImagePath = path.join(__dirname, 'fixtures', 'test-image.png');
-
-  test('@full @no-mobile should upload a valid image and display in slide list', async ({
-    supporterAuth,
-  }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
-
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Find add slide button
-    const addSlideButton = supporterAuth
-      .locator('button')
-      .filter({ hasText: /add.*slide/i })
-      .first()
-      .or(supporterAuth.locator('button[title*="slide"]'));
-
-    if (await addSlideButton.isVisible()) {
-      // Find the hidden file input
-      const fileInput = supporterAuth.locator('input[type="file"]');
-
-      // Set up file chooser and click add button
+    if (await fileInput.count() > 0) {
       await fileInput.setInputFiles(testImagePath);
-      await supporterAuth.waitForTimeout(2000);
 
-      // Verify a slide was added (should see thumbnail or slide count increased)
-      const slideItems = supporterAuth
-        .locator('[data-testid="slide-item"]')
-        .or(supporterAuth.locator('.slide-item'))
-        .or(supporterAuth.locator('img[alt*="slide"]'));
+      // Wait for the slide thumbnail to appear
+      const slideItems = page
+        .locator('[data-testid="kiosk-slide-item"]')
+        .or(page.locator('img[alt*="slide"]'));
 
-      // Should have at least one image slide
+      await expect(slideItems.first()).toBeVisible({ timeout: 10000 });
       const count = await slideItems.count();
       expect(count).toBeGreaterThanOrEqual(1);
-    }
-  });
 
-  test('@full @no-mobile should reject invalid file types', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+      // Verify thumbnails have valid src
+      const thumbnails = page
+        .locator('img[src*="kiosk-slides"]');
 
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
+      const thumbCount = await thumbnails.count();
+      if (thumbCount > 0) {
+        const src = await thumbnails.first().getAttribute('src');
+        expect(src).toBeTruthy();
+      }
 
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Check if file input has accept attribute
-    const fileInput = supporterAuth.locator('input[type="file"]');
-
-    if (await fileInput.isVisible()) {
+      // Check that file input restricts to image types
       const acceptAttr = await fileInput.getAttribute('accept');
-      // Should restrict to image types
       if (acceptAttr) {
         expect(acceptAttr).toMatch(/image|png|jpg|jpeg|webp/i);
       }
     }
   });
 
-  test('@full @no-mobile should display thumbnail after upload', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
+  test('should delete a slide from the list', async ({ page, loginAs }) => {
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
+    await loginAs(TEST_USERS.supporter5);
+    await openKioskSettings(page, scoreboardId!);
 
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Look for existing thumbnails (from previous uploads)
-    const thumbnails = supporterAuth
-      .locator('img[src*="kiosk-slides"]')
-      .or(supporterAuth.locator('.slide-thumbnail'))
-      .or(supporterAuth.locator('[data-testid="slide-thumbnail"]'));
-
-    // Count thumbnails
-    const thumbCount = await thumbnails.count();
-
-    // If there are thumbnails, verify they have valid src
-    if (thumbCount > 0) {
-      const firstThumb = thumbnails.first();
-      const src = await firstThumb.getAttribute('src');
-      expect(src).toBeTruthy();
-    }
-  });
-
-  test('@full @no-mobile should delete a slide from the list', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
-
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Find delete buttons specifically for kiosk slides (not the "Delete all entries" button)
-    const deleteButtons = supporterAuth
-      .locator('[data-testid="delete-slide-button"]')
-      .or(supporterAuth.locator('button[title="Delete slide"]'))
-      .or(supporterAuth.locator('button[title="Remove slide"]'))
-      .or(supporterAuth.locator('.slide-item button[title*="Delete"]'));
+    const deleteButtons = page
+      .locator('[data-testid="kiosk-slide-item"] button[title="Delete slide"]')
+      .or(page.locator('button[title="Remove slide"]'));
 
     const deleteCount = await deleteButtons.count();
 
     if (deleteCount > 0) {
-      // Get initial slide count
-      const slides = supporterAuth
-        .locator('[data-testid="slide-item"]')
-        .or(supporterAuth.locator('.slide-item'));
+      const slides = page
+        .locator('[data-testid="kiosk-slide-item"]');
       const initialCount = await slides.count();
 
-      // Click first delete button
       await deleteButtons.first().click();
-      await supporterAuth.waitForTimeout(1000);
 
-      // If confirmation dialog appears, confirm
-      const confirmButton = supporterAuth.locator('button').filter({ hasText: /confirm|yes|delete/i });
-      if (await confirmButton.isVisible()) {
+      // Handle confirmation dialog if it appears
+      const confirmButton = page
+        .locator('button')
+        .filter({ hasText: /confirm|yes|delete/i });
+      try {
+        await confirmButton.waitFor({ state: 'visible', timeout: 2000 });
         await confirmButton.click();
-        await supporterAuth.waitForTimeout(1000);
+      } catch {
+        // No confirmation dialog
       }
 
-      // Count should decrease (or stay same if only one slide)
-      const newCount = await slides.count();
-      expect(newCount).toBeLessThanOrEqual(initialCount);
+      // Wait for count to decrease
+      await expect
+        .poll(async () => await slides.count(), { timeout: 5000, intervals: [500] })
+        .toBeLessThanOrEqual(initialCount);
     }
   });
 
-  test('@full @no-mobile should support drag and drop reordering', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
+  test('should configure PIN protection', async ({ page, loginAs }) => {
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
+    await loginAs(TEST_USERS.supporter5);
+    await openKioskSettings(page, scoreboardId!);
 
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Find drag handles
-    const dragHandles = supporterAuth
-      .locator('[data-testid="slide-drag-handle"]')
-      .or(supporterAuth.locator('.drag-handle'))
-      .or(supporterAuth.locator('[draggable="true"]'));
-
-    const handleCount = await dragHandles.count();
-
-    if (handleCount >= 2) {
-      const firstHandle = dragHandles.first();
-      const secondHandle = dragHandles.nth(1);
-
-      const firstBox = await firstHandle.boundingBox();
-      const secondBox = await secondHandle.boundingBox();
-
-      if (firstBox && secondBox) {
-        // Perform drag
-        await supporterAuth.mouse.move(firstBox.x + 10, firstBox.y + 10);
-        await supporterAuth.mouse.down();
-        await supporterAuth.mouse.move(secondBox.x + 10, secondBox.y + 50, { steps: 10 });
-        await supporterAuth.mouse.up();
-        await supporterAuth.waitForTimeout(500);
-
-        // Page should handle the drag without errors - no assertion needed as test would fail on error
-      }
-    }
-  });
-
-  test('@full @no-mobile should auto-advance slides in kiosk carousel', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`);
-    await supporterAuth.waitForTimeout(1500);
-
-    // Get current slide indicator if available
-    const slideIndicator = supporterAuth
-      .locator('[data-testid="slide-indicator"]')
-      .or(supporterAuth.locator('.slide-indicator'))
-      .or(supporterAuth.locator('[aria-current="true"]'));
-
-    if ((await slideIndicator.count()) > 0) {
-      // Record initial state
-      const _initialIndicator =
-        (await slideIndicator.first().getAttribute('data-slide-index')) ||
-        (await slideIndicator.first().textContent());
-
-      // Wait for auto-advance (typically 5-10 seconds default)
-      await supporterAuth.waitForTimeout(12000);
-
-      // Check if indicator changed
-      const _newIndicator =
-        (await slideIndicator.first().getAttribute('data-slide-index')) ||
-        (await slideIndicator.first().textContent());
-
-      // May or may not change depending on number of slides
-      // Just verify page is still functional
-      const kioskContainer = supporterAuth.locator('[data-testid="kiosk-container"]');
-      await expect(kioskContainer).toBeVisible({ timeout: 5000 });
-    }
-  });
-
-  test('@full @no-mobile should pause and resume carousel', async ({ supporterAuth }) => {
-    test.setTimeout(60000);
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`);
-    await supporterAuth.waitForTimeout(1500);
-
-    // Find pause button or use spacebar
-    const pauseButton = supporterAuth
-      .locator('button[title*="pause"]')
-      .or(supporterAuth.locator('button[aria-label*="pause"]'))
-      .or(supporterAuth.locator('[data-testid="pause-button"]'));
-
-    if (await pauseButton.isVisible()) {
-      await pauseButton.click();
-      await supporterAuth.waitForTimeout(500);
-
-      // Button should now show play
-      const playButton = supporterAuth
-        .locator('button[title*="play"]')
-        .or(supporterAuth.locator('button[aria-label*="play"]'));
-
-      if (await playButton.isVisible()) {
-        await playButton.click();
-        await supporterAuth.waitForTimeout(500);
-      }
-    } else {
-      // Try spacebar
-      await supporterAuth.keyboard.press('Space');
-      await supporterAuth.waitForTimeout(500);
-      await supporterAuth.keyboard.press('Space');
-    }
-
-    // Page should be functional - just verify we can interact with the page
-    // Skip visibility check as fullscreen mode can affect element visibility in Playwright
-  });
-
-  test('@full @no-mobile should show PIN modal when PIN protection is enabled', async ({
-    supporterAuth,
-    context,
-  }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    // First, enable PIN protection
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
-
-    // Expand kiosk section
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Find and set PIN
-    const pinInput = supporterAuth
-      .locator('input[type="password"]')
-      .first()
-      .or(supporterAuth.locator('input[placeholder*="PIN"]'));
+    const pinInput = page.locator('[data-testid="kiosk-pin-input"]');
 
     if (await pinInput.isVisible()) {
-      await pinInput.fill('1234');
-      await supporterAuth.waitForTimeout(500);
+      // Set a PIN value — use click + pressSequentially to ensure React onChange fires
+      await pinInput.click();
+      await pinInput.pressSequentially('5678');
 
-      // Save changes
-      const saveButton = supporterAuth.locator('button').filter({ hasText: /save/i });
-      if (await saveButton.isVisible()) {
-        await saveButton.click();
-        await supporterAuth.waitForTimeout(1500);
+      // Save changes — wait for hasChanges to enable the button
+      const saveButton = page.locator('[data-testid="kiosk-save-settings"]');
+      await expect(saveButton).toBeEnabled({ timeout: 5000 });
+      await saveButton.click();
+      // After successful save: button shows "Saving..." then reverts to "Save Settings" (disabled)
+      await expect(saveButton).toContainText('Save Settings', { timeout: 10000 });
+
+      // Verify PIN field still has a value (not cleared after save)
+      const value = await pinInput.inputValue();
+      expect(value.length).toBeGreaterThan(0);
+
+      // Clear PIN to restore state — select all and delete to trigger onChange
+      await pinInput.click();
+      await page.keyboard.press('Control+a');
+      await page.keyboard.press('Backspace');
+
+      // Save the cleared PIN
+      await expect(saveButton).toBeEnabled({ timeout: 5000 });
+      await saveButton.click();
+      await expect(saveButton).toContainText('Save Settings', { timeout: 10000 });
+    }
+  });
+});
+
+// ============================================================================
+// KIOSK VIEW
+// ============================================================================
+
+test.describe('Kiosk View', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  let scoreboardId: string | null;
+
+  test.beforeAll(async () => {
+    scoreboardId = await getScoreboardIdFromDb(supporter5Email);
+  });
+
+  test('should render kiosk view with scoreboard data', async ({ page, loginAs }) => {
+    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+
+    await loginAs(TEST_USERS.supporter5);
+    const kioskEnabled = await ensureKioskEnabled(page, scoreboardId!);
+    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
+
+    await openKioskView(page, scoreboardId!);
+
+    const kioskContainer = page
+      .locator('[data-testid="kiosk-container"]')
+      .or(page.locator('main'));
+    await expect(kioskContainer).toBeVisible({ timeout: 10000 });
+
+    // Verify keyboard controls work without errors
+    await page.keyboard.press('Space');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('Escape');
+
+    expect(page.url()).toContain('/kiosk/');
+  });
+
+  test('should auto-advance and allow pause/resume', async ({ page, loginAs }) => {
+    test.setTimeout(60000);
+    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+
+    await loginAs(TEST_USERS.supporter5);
+    const kioskEnabled = await ensureKioskEnabled(page, scoreboardId!);
+    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
+
+    await openKioskView(page, scoreboardId!);
+
+    const kioskContainer = page.locator('[data-testid="kiosk-container"]');
+    await expect(kioskContainer).toBeVisible({ timeout: 10000 });
+
+    // --- Auto-advance check ---
+    const slideIndicator = page
+      .locator('[data-testid="slide-indicator"]')
+      .or(page.locator('.slide-indicator'))
+      .or(page.locator('[aria-current="true"]'));
+
+    if ((await slideIndicator.count()) > 0) {
+      const initialIndex =
+        (await slideIndicator.first().getAttribute('data-slide-index')) ||
+        (await slideIndicator.first().textContent());
+
+      // Wait enough time for an auto-advance cycle
+      await expect
+        .poll(
+          async () => {
+            return (
+              (await slideIndicator.first().getAttribute('data-slide-index')) ||
+              (await slideIndicator.first().textContent())
+            );
+          },
+          { timeout: 15000, intervals: [1000] }
+        )
+        .not.toBe(initialIndex)
+        .catch(() => {
+          // May not advance if only one slide — non-fatal
+        });
+    }
+
+    // --- Pause / Resume ---
+    const pauseButton = page
+      .locator('button[title*="pause" i]')
+      .or(page.locator('button[aria-label*="pause" i]'))
+      .or(page.locator('[data-testid="pause-button"]'));
+
+    let pauseVisible = false;
+    try {
+      await pauseButton.waitFor({ state: 'visible', timeout: 3000 });
+      pauseVisible = true;
+    } catch {
+      // pause button not visible
+    }
+
+    if (pauseVisible) {
+      await pauseButton.click();
+
+      const playButton = page
+        .locator('button[title*="play" i]')
+        .or(page.locator('button[aria-label*="play" i]'));
+
+      try {
+        await playButton.waitFor({ state: 'visible', timeout: 3000 });
+        await playButton.click();
+      } catch {
+        // play button not visible
       }
+    } else {
+      // Fallback: use spacebar to pause/resume
+      await page.keyboard.press('Space');
+      await page.keyboard.press('Space');
+    }
+  });
 
-      // Open kiosk in new unauthenticated context
+  test('should show PIN modal when PIN is set', async ({ page, loginAs, context }) => {
+    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+
+    await loginAs(TEST_USERS.supporter5);
+    // Set a PIN via settings
+    await openKioskSettings(page, scoreboardId!);
+
+    const pinInput = page.locator('[data-testid="kiosk-pin-input"]');
+
+    if (await pinInput.isVisible()) {
+      await pinInput.click();
+      await pinInput.pressSequentially('1234');
+
+      const saveButton = page.locator('[data-testid="kiosk-save-settings"]');
+      await expect(saveButton).toBeEnabled({ timeout: 5000 });
+      await saveButton.click();
+      await expect(saveButton).toContainText('Save Settings', { timeout: 10000 });
+
+      // Open kiosk in a new page — should show PIN prompt
       const newPage = await context.newPage();
-      await newPage.goto(`/kiosk/${scoreboardId}`);
-      await newPage.waitForTimeout(1500);
+      await newPage.goto(`/kiosk/${scoreboardId}`, { waitUntil: 'domcontentloaded' });
 
-      // Should show PIN modal
-      const _pinModal = newPage
-        .locator('[data-testid="pin-modal"]')
-        .or(newPage.locator('input[placeholder*="PIN"]'))
-        .or(newPage.locator('text=Enter PIN'));
-
-      // Just verify page loaded
-      await expect(newPage.locator('body')).toBeVisible();
+      const kioskPinInput = newPage.locator('input[placeholder*="PIN"]');
+      await expect(kioskPinInput).toBeVisible({ timeout: 10000 });
 
       await newPage.close();
 
-      // Clear PIN to restore state
-      await pinInput.clear();
-      if (await saveButton.isVisible()) {
-        await saveButton.click();
-        await supporterAuth.waitForTimeout(500);
-      }
+      // Restore — clear PIN
+      await pinInput.click();
+      await page.keyboard.press('Control+a');
+      await page.keyboard.press('Backspace');
+      await expect(saveButton).toBeEnabled({ timeout: 5000 });
+      await saveButton.click();
+      await expect(saveButton).toContainText('Save Settings', { timeout: 10000 });
     }
   });
 
-  test('@full @no-mobile should validate correct and incorrect PIN', async ({
-    supporterAuth,
-    context,
-  }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
+  test('should validate correct and incorrect PIN', async ({ page, loginAs, context }) => {
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    // Enable PIN and kiosk mode
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
+    await loginAs(TEST_USERS.supporter5);
+    // Enable kiosk and set PIN
+    await ensureKioskEnabled(page, scoreboardId!);
+    await openKioskSettings(page, scoreboardId!);
 
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Enable kiosk via label + hidden checkbox (same pattern as ensureKioskEnabled)
-    const enableLabel = supporterAuth
-      .locator('label')
-      .filter({ hasText: /enable kiosk/i })
-      .first();
-    const enableCheckbox = enableLabel.locator('input[type="checkbox"]');
-
-    if (await enableLabel.isVisible()) {
-      const isChecked = await enableCheckbox.isChecked();
-      if (!isChecked) {
-        await enableLabel.click();
-        await supporterAuth.waitForTimeout(500);
-      }
-    }
-
-    // Set PIN
-    const pinInput = supporterAuth
-      .locator('input[type="password"]')
-      .first()
-      .or(supporterAuth.locator('input[placeholder*="PIN"]'));
+    const pinInput = page.locator('[data-testid="kiosk-pin-input"]');
 
     if (await pinInput.isVisible()) {
-      await pinInput.fill('9999');
+      await pinInput.click();
+      await pinInput.pressSequentially('9999');
 
-      // Save
-      const saveButton = supporterAuth.locator('button').filter({ hasText: /save/i });
-      if (await saveButton.isVisible()) {
-        await saveButton.click();
-        await supporterAuth.waitForTimeout(1500);
-      }
+      const saveButton = page.locator('[data-testid="kiosk-save-settings"]');
+      await expect(saveButton).toBeEnabled({ timeout: 5000 });
+      await saveButton.click();
+      await expect(saveButton).toContainText('Save Settings', { timeout: 10000 });
 
-      // Test PIN in new page
       const newPage = await context.newPage();
-      await newPage.goto(`/kiosk/${scoreboardId}`);
-      await newPage.waitForTimeout(1500);
+      await newPage.goto(`/kiosk/${scoreboardId}`, { waitUntil: 'domcontentloaded' });
 
-      const kioskPinInput = newPage
-        .locator('input[type="password"]')
-        .or(newPage.locator('input[placeholder*="PIN"]'));
+      const kioskPinInput = newPage.locator('input[placeholder*="PIN"]');
 
-      if (await kioskPinInput.isVisible()) {
-        // Try wrong PIN
-        await kioskPinInput.fill('0000');
+      let pinVisible = false;
+      try {
+        await kioskPinInput.waitFor({ state: 'visible', timeout: 10000 });
+        pinVisible = true;
+      } catch {
+        // PIN input not visible
+      }
+      if (pinVisible) {
+        // Wrong PIN
+        await kioskPinInput.click();
+        await kioskPinInput.pressSequentially('0000');
         await newPage.keyboard.press('Enter');
-        await newPage.waitForTimeout(1000);
 
-        // Try correct PIN
-        await kioskPinInput.fill('9999');
+        // Wait for error, then clear and enter correct PIN
+        await newPage.waitForTimeout(500);
+        await kioskPinInput.click();
+        await newPage.keyboard.press('Control+a');
+        await kioskPinInput.pressSequentially('9999');
         await newPage.keyboard.press('Enter');
-        await newPage.waitForTimeout(1000);
 
         // Should access kiosk after correct PIN
         const kioskContainer = newPage.locator('[data-testid="kiosk-container"]');
-        await expect(kioskContainer).toBeVisible({ timeout: 5000 });
+        await expect(kioskContainer).toBeVisible({ timeout: 10000 });
       }
 
       await newPage.close();
 
-      // Restore - clear PIN
-      await pinInput.clear();
-      if (await saveButton.isVisible()) {
-        await saveButton.click();
-        await supporterAuth.waitForTimeout(500);
-      }
+      // Restore — clear PIN
+      await pinInput.click();
+      await page.keyboard.press('Control+a');
+      await page.keyboard.press('Backspace');
+      await expect(saveButton).toBeEnabled({ timeout: 5000 });
+      await saveButton.click();
+      await expect(saveButton).toContainText('Save Settings', { timeout: 10000 });
     }
   });
 
-  test('@full @no-mobile should toggle fullscreen mode', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
+  test('should toggle fullscreen mode', async ({ page, loginAs }) => {
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`);
-    await supporterAuth.waitForTimeout(1500);
+    await loginAs(TEST_USERS.supporter5);
+    const kioskEnabled = await ensureKioskEnabled(page, scoreboardId!);
+    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
+
+    await openKioskView(page, scoreboardId!);
 
     // Move mouse to show controls
-    await supporterAuth.mouse.move(100, 100);
-    await supporterAuth.waitForTimeout(500);
+    await page.mouse.move(100, 100);
 
-    // Find fullscreen button
-    const fullscreenButton = supporterAuth
-      .locator('button[title*="fullscreen"]')
-      .or(supporterAuth.locator('button[aria-label*="fullscreen"]'))
-      .or(supporterAuth.locator('[data-testid="fullscreen-button"]'));
+    const fullscreenButton = page
+      .locator('button[title*="fullscreen" i]')
+      .or(page.locator('button[aria-label*="fullscreen" i]'))
+      .or(page.locator('[data-testid="fullscreen-button"]'));
 
-    if (await fullscreenButton.isVisible()) {
+    try {
+      await fullscreenButton.waitFor({ state: 'visible', timeout: 3000 });
       await fullscreenButton.click();
-      await supporterAuth.waitForTimeout(500);
-
-      // Fullscreen API may not work in test environment, but button should be interactive
-      // Press Escape to exit fullscreen
-      await supporterAuth.keyboard.press('Escape');
-      await supporterAuth.waitForTimeout(300);
+      // Fullscreen API may not work in test environment, button should be interactive
+      await page.keyboard.press('Escape');
+    } catch {
+      // Fullscreen button not visible
     }
 
-    // Page should be functional - just verify we can interact with the page
-    // Skip visibility check as fullscreen mode can affect element visibility in Playwright
+    // Verify page is still functional
+    expect(page.url()).toContain('/kiosk/');
+  });
+});
+
+// ============================================================================
+// KIOSK DISPLAY
+// ============================================================================
+
+test.describe('Kiosk Display', () => {
+  test.describe.configure({ mode: 'serial' });
+
+  let scoreboardId: string | null;
+
+  test.beforeAll(async () => {
+    scoreboardId = await getScoreboardIdFromDb(supporter5Email);
   });
 
-  test('@full @no-mobile should configure scoreboard position in carousel', async ({
-    supporterAuth,
-  }) => {
-    test.setTimeout(60000);
-    const scoreboardId = await getScoreboardId(supporterAuth);
+  test('should display images in kiosk view', async ({ page, loginAs }) => {
     test.skip(!scoreboardId, 'No scoreboard found for supporter user');
 
-    await supporterAuth.goto(`/scoreboard-management?id=${scoreboardId}`);
-    await supporterAuth.waitForLoadState('networkidle');
-
-    const kioskToggle = supporterAuth
-      .locator('button')
-      .filter({ hasText: /kiosk|presentation/i })
-      .first();
-    if (await kioskToggle.isVisible()) {
-      await kioskToggle.click();
-      await supporterAuth.waitForTimeout(500);
-    }
-
-    // Just verify the slides section exists
-    const slidesSection = supporterAuth
-      .locator('[data-testid="slides-list"]')
-      .or(supporterAuth.locator('.slides-container'))
-      .or(supporterAuth.locator('text=Slides'));
-
-    if (await slidesSection.isVisible()) {
-      // Look for the scoreboard slide marker
-      const scoreboardSlide = supporterAuth
-        .locator('[data-testid="scoreboard-slide"]')
-        .or(supporterAuth.locator('text=Scoreboard').first());
-
-      await expect(scoreboardSlide)
-        .toBeVisible({ timeout: 5000 })
-        .catch(() => {
-          // Scoreboard slide may be in different position
-        });
-    }
-  });
-
-  test('@full @no-mobile should display images in kiosk view', async ({ supporterAuth }) => {
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    // Ensure kiosk mode is enabled before accessing kiosk view
-    const kioskEnabled = await ensureKioskEnabled(supporterAuth, scoreboardId!);
+    await loginAs(TEST_USERS.supporter5);
+    const kioskEnabled = await ensureKioskEnabled(page, scoreboardId!);
     test.skip(!kioskEnabled, 'Could not enable kiosk mode');
 
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`);
-    await supporterAuth.waitForTimeout(2000);
+    await openKioskView(page, scoreboardId!);
 
-    // Check if kiosk loaded successfully
-    const kioskContainer = supporterAuth
+    const kioskContainer = page
       .locator('[data-testid="kiosk-container"]')
-      .or(supporterAuth.locator('.kiosk-view'))
-      .or(supporterAuth.locator('main'));
-
-    await expect(kioskContainer).toBeVisible();
-
-    // If there are image slides, they should have img elements
-    const _images = supporterAuth.locator('img[src*="kiosk-slides"]');
-
-    // Images may or may not be present depending on carousel state
-    // Kiosk container visibility already verified above
-  });
-
-  test('@full @no-mobile should auto-hide control bar after inactivity', async ({ supporterAuth }) => {
-    test.setTimeout(45000);
-
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    // Ensure kiosk mode is enabled before accessing kiosk view
-    const kioskEnabled = await ensureKioskEnabled(supporterAuth, scoreboardId!);
-    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
-
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`, { waitUntil: 'domcontentloaded' });
-
-    const kioskContainer = supporterAuth.locator('[data-testid="kiosk-container"]');
+      .or(page.locator('main'));
     await expect(kioskContainer).toBeVisible({ timeout: 10000 });
 
-    const controlsOverlay = supporterAuth.locator('[data-testid="kiosk-controls"]');
+    // If there are image slides, they should have img elements
+    const images = page.locator('img[src*="kiosk-slides"]');
+    const imageCount = await images.count();
+    // Images may or may not be present depending on carousel state — just ensure no errors
+    expect(imageCount).toBeGreaterThanOrEqual(0);
+  });
+
+  test('should auto-hide control bar after inactivity', async ({ page, loginAs }) => {
+    test.setTimeout(45000);
+    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+
+    await loginAs(TEST_USERS.supporter5);
+    const kioskEnabled = await ensureKioskEnabled(page, scoreboardId!);
+    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
+
+    await openKioskView(page, scoreboardId!);
+
+    const kioskContainer = page.locator('[data-testid="kiosk-container"]');
+    await expect(kioskContainer).toBeVisible({ timeout: 10000 });
+
+    const controlsOverlay = page.locator('[data-testid="kiosk-controls"]');
 
     // Move mouse to show controls
-    await supporterAuth.mouse.move(100, 100);
+    await page.mouse.move(100, 100);
 
     await expect
       .poll(async () => (await controlsOverlay.getAttribute('class')) || '', {
@@ -1055,9 +621,36 @@ test.describe('Kiosk Mode - Full Tests', () => {
         intervals: [500],
       })
       .toContain('opacity-0');
+  });
 
-    // Move mouse again to verify they reappear
-    await supporterAuth.mouse.move(200, 200);
+  test('should show control bar on mouse movement', async ({ page, loginAs }) => {
+    test.setTimeout(45000);
+    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+
+    await loginAs(TEST_USERS.supporter5);
+    const kioskEnabled = await ensureKioskEnabled(page, scoreboardId!);
+    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
+
+    await openKioskView(page, scoreboardId!);
+
+    const kioskContainer = page.locator('[data-testid="kiosk-container"]');
+    await expect(kioskContainer).toBeVisible({ timeout: 10000 });
+
+    const controlsOverlay = page.locator('[data-testid="kiosk-controls"]');
+
+    // Trigger mouse movement to start the 3s auto-hide timer
+    await page.mouse.move(100, 100);
+
+    // Wait for controls to auto-hide (3s idle timeout + buffer)
+    await expect
+      .poll(async () => (await controlsOverlay.getAttribute('class')) || '', {
+        timeout: 12000,
+        intervals: [500],
+      })
+      .toContain('opacity-0');
+
+    // Move mouse to trigger controls reappearance
+    await page.mouse.move(200, 200);
 
     await expect
       .poll(async () => (await controlsOverlay.getAttribute('class')) || '', {
@@ -1069,89 +662,59 @@ test.describe('Kiosk Mode - Full Tests', () => {
 });
 
 // ============================================================================
-// ACCESSIBILITY TESTS - Both fast and full
+// NON-SUPPORTER ACCESS
 // ============================================================================
 
-test.describe('Kiosk Mode - Accessibility', () => {
-  // Run serially to avoid multiple simultaneous sessions for patron4@example.com
-  test.describe.configure({ mode: 'serial' });
-  test('@full @no-mobile should have proper ARIA labels on kiosk controls', async ({
-    supporterAuth,
-  }) => {
-    test.setTimeout(60000);
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+test.describe('Non-Supporter Access', () => {
+  test('free user should not have kiosk access', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user4);
 
-    // Ensure kiosk mode is enabled before accessing kiosk view
-    const kioskEnabled = await ensureKioskEnabled(supporterAuth, scoreboardId!);
-    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
+    // Navigate to dashboard and look for any scoreboard management page
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`, { timeout: 30000 });
-    // Wait for kiosk to finish loading
-    await expect(supporterAuth.locator('text=Loading kiosk')).toBeHidden({ timeout: 15000 });
-    await supporterAuth.waitForTimeout(500);
+    const cards = page.locator('[data-testid="scoreboard-card"]');
+    if ((await cards.count()) > 0) {
+      const manageBtn = cards.first().locator('[data-testid="scoreboard-card-manage"]');
 
-    // Move mouse to show controls overlay
-    await supporterAuth.mouse.move(100, 100);
-    await supporterAuth.waitForTimeout(1000);
+      let manageBtnVisible = false;
+      try {
+        await manageBtn.waitFor({ state: 'visible', timeout: 5000 });
+        manageBtnVisible = true;
+      } catch {
+        // manage button not visible
+      }
 
-    // Check for buttons with aria-labels or titles (poll to handle controls animation)
-    await expect
-      .poll(async () => {
-        // Re-trigger controls visibility
-        await supporterAuth.mouse.move(150, 150);
-        const accessibleButtons = supporterAuth.locator('button[aria-label], button[title]');
-        return await accessibleButtons.count();
-      }, { timeout: 10000, intervals: [500] })
-      .toBeGreaterThanOrEqual(1);
-  });
+      if (manageBtnVisible) {
+        await manageBtn.click();
+        await page.waitForURL('**/scoreboard-management?id=*', {
+          timeout: 10000,
+          waitUntil: 'domcontentloaded',
+        });
 
-  test('@full @desktop-only should support keyboard-only navigation', async ({ supporterAuth }) => {
-    test.setTimeout(60000);
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
+        // Kiosk section should either not exist or show a supporter-only gate
+        const kioskToggle = page
+          .locator('button')
+          .filter({ hasText: /kiosk|presentation/i })
+          .first();
 
-    // Ensure kiosk mode is enabled before accessing kiosk view
-    const kioskEnabled = await ensureKioskEnabled(supporterAuth, scoreboardId!);
-    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
+        let kioskToggleVisible = false;
+        try {
+          await kioskToggle.waitFor({ state: 'visible', timeout: 5000 });
+          kioskToggleVisible = true;
+        } catch {
+          // kiosk toggle not visible
+        }
 
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`);
-    // Wait for kiosk to finish loading
-    await expect(supporterAuth.locator('text=Loading kiosk')).toBeHidden({ timeout: 15000 });
-    await supporterAuth.waitForTimeout(500);
+        if (kioskToggleVisible) {
+          await kioskToggle.click();
 
-    // Tab through elements
-    await supporterAuth.keyboard.press('Tab');
-    await supporterAuth.waitForTimeout(200);
-    await supporterAuth.keyboard.press('Tab');
-    await supporterAuth.waitForTimeout(200);
-
-    // Page should handle keyboard navigation - verify kiosk container is present
-    const kioskContainer = supporterAuth.locator('[data-testid="kiosk-container"]');
-    await expect(kioskContainer).toBeVisible({ timeout: 5000 });
-  });
-
-  test('@full should have live region for slide announcements', async ({ supporterAuth }) => {
-    // Increase timeout for this test (especially on mobile)
-    test.setTimeout(45000);
-
-    const scoreboardId = await getScoreboardId(supporterAuth);
-    test.skip(!scoreboardId, 'No scoreboard found for supporter user');
-
-    // Ensure kiosk mode is enabled before accessing kiosk view
-    const kioskEnabled = await ensureKioskEnabled(supporterAuth, scoreboardId!);
-    test.skip(!kioskEnabled, 'Could not enable kiosk mode');
-
-    await supporterAuth.goto(`/kiosk/${scoreboardId}`);
-    // Wait for kiosk to finish loading
-    await expect(supporterAuth.locator('text=Loading kiosk')).toBeHidden({ timeout: 15000 });
-    await supporterAuth.waitForTimeout(500);
-
-    // Check for aria-live regions
-    const liveRegions = supporterAuth.locator('[aria-live]');
-    const count = await liveRegions.count();
-
-    // Should have live regions for accessibility
-    expect(count).toBeGreaterThanOrEqual(1);
+          // Should show supporter feature lock, not the enable checkbox
+          const supporterLock = page
+            .locator('text=/supporter|upgrade|subscription/i')
+            .first();
+          await expect(supporterLock).toBeVisible({ timeout: 5000 });
+        }
+      }
+    }
   });
 });

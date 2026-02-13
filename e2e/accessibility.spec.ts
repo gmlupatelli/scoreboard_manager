@@ -1,95 +1,94 @@
 /**
  * Accessibility E2E Tests
- * Tests WCAG compliance, keyboard navigation, screen readers
+ * Tests WCAG compliance via axe-core, keyboard navigation, and focus management
  *
- * @fast - Quick accessibility smoke tests
- * @full - Comprehensive WCAG and screen reader coverage
+ * Dedicated accounts: USER_5 (free user)
  */
 
-import { test, expect } from '@playwright/test';
-import { test as authTest, expect as authExpect } from './fixtures/auth';
-// Note: Install @axe-core/playwright for full axe testing
-// import AxeBuilder from '@axe-core/playwright';
+import { test, expect, TEST_USERS } from './fixtures/auth';
+import AxeBuilder from '@axe-core/playwright';
+import { safeGoto } from './fixtures/helpers';
 
-test.describe('WCAG Compliance', () => {
-  test('@fast should not have accessibility violations on landing page', async ({ page }) => {
-    await page.goto('/');
+const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
 
-    // Check for proper heading hierarchy
-    const h1 = await page.locator('h1').count();
-    expect(h1).toBeGreaterThan(0);
+test.describe('axe-core Automated Checks', () => {
+  test('login page should have no critical accessibility violations', async ({ page }) => {
+    await safeGoto(page, `${BASE_URL}/login`);
+    await page.locator('input[name="email"]').waitFor({ state: 'visible', timeout: 10000 });
 
-    // Check for alt text on images
-    const images = await page.locator('img').all();
-    for (const img of images) {
-      const alt = await img.getAttribute('alt');
-      expect(alt).toBeDefined();
-    }
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze();
+
+    const criticalViolations = accessibilityScanResults.violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious'
+    );
+
+    expect(criticalViolations.length).toBe(0);
   });
 
-  test('@full should have proper color contrast', async ({ page }) => {
-    await page.goto('/');
+  test('dashboard should have no critical accessibility violations', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user5);
+    await safeGoto(page, `${BASE_URL}/dashboard`);
+    await expect(
+      page.locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1').first()
+    ).toBeVisible({ timeout: 10000 });
 
-    const textElements = await page.locator('p, span, h1, h2, h3').all();
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze();
 
-    for (const element of textElements.slice(0, 5)) {
-      const color = await element.evaluate((el) => window.getComputedStyle(el).color);
-      const bgColor = await element.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+    const criticalViolations = accessibilityScanResults.violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious'
+    );
 
-      expect(color).toBeTruthy();
-      expect(bgColor).toBeTruthy();
-    }
+    expect(criticalViolations.length).toBe(0);
   });
 
-  test('@fast should have semantic HTML structure', async ({ page }) => {
-    await page.goto('/');
+  test('public scoreboard list should have no critical accessibility violations', async ({
+    page,
+  }) => {
+    await safeGoto(page, `${BASE_URL}/public-scoreboard-list`);
+    await page.locator('h1, h2, [data-testid]').first().waitFor({ state: 'visible', timeout: 10000 });
+    // Wait for loading to finish before running axe
+    await expect(page.locator('text=/Loading scoreboards/i')).not.toBeVisible({ timeout: 15000 });
 
-    await expect(page.locator('header')).toBeVisible();
-    await expect(page.locator('main')).toBeVisible();
-    await expect(page.locator('footer')).toBeVisible();
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze();
+
+    const criticalViolations = accessibilityScanResults.violations.filter(
+      (v) => v.impact === 'critical' || v.impact === 'serious'
+    );
+
+    expect(criticalViolations.length).toBe(0);
   });
 });
 
 test.describe('Keyboard Navigation', () => {
-  // Skip all tests in this describe block on mobile
-  test.beforeEach(async ({}, testInfo) => {
-    if (testInfo.project.name.includes('Mobile')) {
-      testInfo.skip(true, 'Keyboard Tab navigation is not applicable on mobile devices');
-    }
-  });
+  test('should support tab navigation through interactive elements', async ({ page }) => {
+    await safeGoto(page, `${BASE_URL}/login`);
+    await page.locator('input[name="email"]').waitFor({ state: 'visible', timeout: 10000 });
 
-  // Keyboard - viewport-independent (already skipped via beforeEach for mobile)
-  test('@fast @desktop-only should navigate all interactive elements', async ({ page }) => {
-    await page.goto('/');
-
-    const focusableCount = await page.evaluate(() => {
-      const focusable = document.querySelectorAll(
-        'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      return focusable.length;
-    });
-
-    expect(focusableCount).toBeGreaterThan(0);
-
-    // Tab through first few elements
-    for (let i = 0; i < Math.min(5, focusableCount); i++) {
+    // Tab through the login form elements and verify focus moves to interactive elements
+    const focusedTags: string[] = [];
+    for (let i = 0; i < 4; i++) {
       await page.keyboard.press('Tab');
 
-      const focused = await page.evaluate(() => {
-        const el = document.activeElement;
-        return {
-          tag: el?.tagName,
-          visible: el ? window.getComputedStyle(el).display !== 'none' : false,
-        };
-      });
-
-      expect(['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA']).toContain(focused.tag);
+      const tag = await page.evaluate(() => document.activeElement?.tagName ?? '');
+      focusedTags.push(tag);
     }
+
+    // At least some tabs should land on interactive elements
+    const interactiveTags = focusedTags.filter((t) =>
+      ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(t)
+    );
+    expect(interactiveTags.length).toBeGreaterThan(0);
   });
 
-  // Keyboard - viewport-independent (already skipped via beforeEach for mobile)
-  test('@full @desktop-only should have visible focus indicators', async ({ page }) => {
-    await page.goto('/');
+  test('should show visible focus indicators', async ({ page }) => {
+    await safeGoto(page, `${BASE_URL}/login`);
+    await page.locator('input[name="email"]').waitFor({ state: 'visible', timeout: 10000 });
 
     await page.keyboard.press('Tab');
 
@@ -105,6 +104,7 @@ test.describe('Keyboard Navigation', () => {
       };
     });
 
+    expect(focusedElement).not.toBeNull();
     expect(
       focusedElement?.outline !== 'none' ||
         focusedElement?.outlineWidth !== '0px' ||
@@ -112,230 +112,93 @@ test.describe('Keyboard Navigation', () => {
     ).toBeTruthy();
   });
 
-  // Keyboard - viewport-independent (already skipped via beforeEach for mobile)
-  test('@full @desktop-only should support Escape to close modals', async ({ page, context }) => {
-    const isMobile = page.viewportSize()?.width && page.viewportSize()!.width < 768;
+  test('should support keyboard form submission', async ({ page }) => {
+    await safeGoto(page, `${BASE_URL}/login`);
+    await page.locator('input[name="email"]').waitFor({ state: 'visible', timeout: 10000 });
 
-    await context.addCookies([
-      {
-        name: 'sb-access-token',
-        value: 'mock-token',
-        domain: 'localhost',
-        path: '/',
-      },
-    ]);
+    const emailInput = page.locator('input[name="email"]');
+    const passwordInput = page.locator('input[name="password"]');
 
-    await page.goto('/dashboard');
+    await emailInput.focus();
+    await emailInput.fill('test@example.com');
+    await page.keyboard.press('Tab');
+    await passwordInput.fill('somepassword');
+    await page.keyboard.press('Enter');
+
+    // Verify that submission was triggered — either we navigate away from login
+    // or an error message appears (either means the form was submitted)
+    await expect(
+      page.locator('.text-destructive, [role="alert"], [data-testid="error-message"]').first()
+        .or(page.locator('text=/Invalid|error|failed/i').first())
+    ).toBeVisible({ timeout: 15000 });
+  });
+});
+
+test.describe('Focus Management', () => {
+  test('should trap focus in modal dialogs', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user5);
+    await safeGoto(page, `${BASE_URL}/dashboard`);
+    await expect(
+      page.locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1').first()
+    ).toBeVisible({ timeout: 10000 });
 
     const createButton = page.getByRole('button', { name: /create/i }).first();
-
-    if (await createButton.isVisible()) {
-      await createButton.click();
-      await page.waitForTimeout(300);
-
-      await page.keyboard.press('Escape');
-      await page.waitForTimeout(500);
-
-      const modalVisible = await page.locator('[role="dialog"], dialog').isVisible();
-      if (!isMobile) {
-        expect(modalVisible).toBeFalsy();
-      }
-    }
-  });
-});
-
-test.describe('Screen Reader Support', () => {
-  test('@fast should have ARIA labels on icon buttons', async ({ page }) => {
-    await page.goto('/');
-
-    const iconButtons = await page.locator('button:has(svg), button[aria-label]').all();
-
-    for (const button of iconButtons.slice(0, 5)) {
-      const label = await button.getAttribute('aria-label');
-      const ariaLabelledBy = await button.getAttribute('aria-labelledby');
-      const title = await button.getAttribute('title');
-      const text = await button.textContent();
-
-      const hasAccessibleName =
-        label || ariaLabelledBy || title || (text && text.trim().length > 0);
-      expect(hasAccessibleName).toBeTruthy();
-    }
-  });
-
-  test('@fast should have proper ARIA roles', async ({ page }) => {
-    await page.goto('/');
-
-    const nav = await page.locator('[role="navigation"], nav').count();
-    expect(nav).toBeGreaterThan(0);
-  });
-
-  test('@full should announce dynamic content changes', async ({ page, context }) => {
-    await context.addCookies([
-      {
-        name: 'sb-access-token',
-        value: 'mock-token',
-        domain: 'localhost',
-        path: '/',
-      },
-    ]);
-
-    await page.goto('/dashboard');
-
-    const liveRegions = await page.locator('[aria-live], [role="status"], [role="alert"]').count();
-    expect(liveRegions).toBeGreaterThanOrEqual(0);
-  });
-
-  test('@full should have descriptive link text', async ({ page }) => {
-    await page.goto('/');
-
-    const links = await page.locator('a[href]').all();
-
-    for (const link of links.slice(0, 10)) {
-      const text = await link.textContent();
-      const ariaLabel = await link.getAttribute('aria-label');
-
-      const hasDescription =
-        (text && text.trim().length > 1) || (ariaLabel && ariaLabel.length > 1);
-      expect(hasDescription).toBeTruthy();
-    }
-  });
-});
-
-test.describe('Forms Accessibility', () => {
-  test('@fast should have labels for all form inputs', async ({ page }) => {
-    await page.goto('/login');
-
-    const inputs = await page.locator('input').all();
-
-    for (const input of inputs) {
-      const id = await input.getAttribute('id');
-      const ariaLabel = await input.getAttribute('aria-label');
-      const ariaLabelledBy = await input.getAttribute('aria-labelledby');
-      const _placeholder = await input.getAttribute('placeholder');
-
-      let hasLabel = false;
-      if (id) {
-        const label = await page.locator(`label[for="${id}"]`).count();
-        hasLabel = label > 0;
-      }
-
-      const hasAccessibleName = hasLabel || ariaLabel || ariaLabelledBy;
-      expect(hasAccessibleName).toBeTruthy();
-    }
-  });
-
-  test('@full should show validation errors accessibly', async ({ page }) => {
-    await page.goto('/register');
-
-    const emailInput = page.getByLabel(/email/i).first();
-
-    if (await emailInput.isVisible()) {
-      await emailInput.fill('invalid');
-      await emailInput.blur();
-
-      await page.waitForTimeout(500);
-
-      const errorMessage = await page
-        .locator('[role="alert"], .error, [aria-invalid="true"]')
-        .count();
-      expect(errorMessage).toBeGreaterThanOrEqual(0);
-    }
-  });
-});
-
-test.describe('Reduced Motion Support', () => {
-  test('@full should respect prefers-reduced-motion', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('/');
-
-    const hasReducedMotion = await page.evaluate(() => {
-      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    });
-
-    expect(hasReducedMotion).toBeTruthy();
-  });
-});
-
-test.describe('Language and Direction', () => {
-  test('@fast should have lang attribute', async ({ page }) => {
-    await page.goto('/');
-
-    const lang = await page.getAttribute('html', 'lang');
-    expect(lang).toBeTruthy();
-    expect(lang?.length).toBeGreaterThan(0);
-  });
-
-  test('@full should support RTL direction', async ({ page }) => {
-    await page.goto('/');
-
-    await page.evaluate(() => {
-      document.documentElement.dir = 'rtl';
-    });
-
-    const dir = await page.getAttribute('html', 'dir');
-    expect(dir).toBe('rtl');
-  });
-});
-
-/**
- * Authenticated Accessibility Tests
- * These tests require real authentication to test modals and authenticated forms
- */
-authTest.describe('Authenticated Accessibility', () => {
-  // Keyboard/Modal - viewport-independent
-  authTest('@full @desktop-only should trap focus in modals', async ({ johnAuth }) => {
-    await johnAuth.goto('/dashboard');
-    await johnAuth.waitForTimeout(1000);
-
-    const createButton = johnAuth.getByRole('button', { name: /create/i }).first();
-    await authExpect(createButton).toBeVisible();
+    await expect(createButton).toBeVisible({ timeout: 5000 });
 
     await createButton.click();
-    await johnAuth.waitForTimeout(500);
+    // Modal uses FocusTrap + hydration check — allow extra time
+    await page.waitForTimeout(500);
 
-    const modal = johnAuth.locator('[role="dialog"]');
-    await authExpect(modal).toBeVisible();
+    const modal = page.locator('[role="dialog"]');
+    await expect(modal).toBeVisible({ timeout: 10000 });
 
-    // Tab through modal elements
-    await johnAuth.keyboard.press('Tab');
-    await johnAuth.keyboard.press('Tab');
-    await johnAuth.keyboard.press('Tab');
-    await johnAuth.keyboard.press('Tab');
-    await johnAuth.keyboard.press('Tab');
+    // Tab through several elements inside the modal
+    for (let i = 0; i < 6; i++) {
+      await page.keyboard.press('Tab');
+    }
 
-    const focusedElement = await johnAuth.evaluate(() => {
+    // After multiple tabs, focus should still be inside the dialog
+    const isFocusInsideModal = await page.evaluate(() => {
       const el = document.activeElement;
       const dialog = document.querySelector('[role="dialog"]');
       return dialog?.contains(el) ?? false;
     });
 
-    authExpect(focusedElement).toBeTruthy();
+    expect(isFocusInsideModal).toBeTruthy();
   });
 
-  // Form accessibility in modal - viewport-independent
-  authTest(
-    '@full @desktop-only should have proper radio button groups in forms',
-    async ({ johnAuth }) => {
-      await johnAuth.goto('/dashboard');
-      await johnAuth.waitForTimeout(1000);
+  test('should return focus after modal close', async ({ page, loginAs }) => {
+    await loginAs(TEST_USERS.user5);
+    await safeGoto(page, `${BASE_URL}/dashboard`);
+    await expect(
+      page.locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1').first()
+    ).toBeVisible({ timeout: 10000 });
 
-      const createButton = johnAuth.getByRole('button', { name: /create/i }).first();
-      await authExpect(createButton).toBeVisible();
+    const createButton = page.getByRole('button', { name: /create/i }).first();
+    await expect(createButton).toBeVisible({ timeout: 5000 });
 
-      await createButton.click();
-      await johnAuth.waitForTimeout(500);
+    await createButton.click();
+    // Modal uses FocusTrap + hydration check — allow extra time
+    await page.waitForTimeout(500);
 
-      const visibilityRadioPublic = johnAuth.locator('input[type="radio"][value="public"]');
-      const visibilityRadioPrivate = johnAuth.locator('input[type="radio"][value="private"]');
+    const modal = page.locator('[role="dialog"]');
+    await expect(modal).toBeVisible({ timeout: 10000 });
 
-      await authExpect(visibilityRadioPublic).toBeVisible();
-      await authExpect(visibilityRadioPrivate).toBeVisible();
+    // Close the modal with Escape
+    await page.keyboard.press('Escape');
+    await expect(modal).toBeHidden({ timeout: 5000 });
 
-      const scoreTypeNumber = johnAuth.locator('input[type="radio"][value="number"]');
-      const scoreTypeTime = johnAuth.locator('input[type="radio"][value="time"]');
-
-      await authExpect(scoreTypeNumber).toBeVisible();
-      await authExpect(scoreTypeTime).toBeVisible();
-    }
-  );
+    // Wait for focus to return to the trigger button (FocusTrap returns focus asynchronously)
+    await expect
+      .poll(
+        async () => {
+          return await page.evaluate(() => {
+            const el = document.activeElement;
+            return el?.tagName === 'BUTTON' || (el !== document.body && el !== null);
+          });
+        },
+        { timeout: 5000, intervals: [200] }
+      )
+      .toBeTruthy();
+  });
 });

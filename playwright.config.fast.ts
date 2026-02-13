@@ -9,33 +9,43 @@ const isLocalhost = baseURL.includes('localhost') || baseURL.includes('127.0.0.1
 
 /**
  * Fast Playwright configuration for rapid development/debugging
- * Only runs Desktop Chrome for quick feedback
+ * File-level parallel with dedicated user accounts per spec.
+ * system-settings runs first, then all other specs in parallel.
  */
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: 0, // No retries for faster feedback
-  workers: 2, // Reduce concurrency for auth stability
-  reporter: 'list', // Simpler reporter
-  timeout: 30000,
+  retries: 0,
+  workers: 4,
+  reporter: 'list',
+  timeout: 20000,
 
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',
 
   use: {
     baseURL,
-    trace: 'off', // Disable trace for speed
+    trace: 'off',
     screenshot: 'only-on-failure',
-    video: 'off', // Disable video for speed
+    video: 'off',
     actionTimeout: 10000,
     navigationTimeout: 15000,
   },
 
   projects: [
-    // Only Desktop Chrome for fast iteration
+    {
+      name: 'system-settings',
+      testMatch: /system-settings\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1920, height: 1080 },
+      },
+    },
     {
       name: 'Desktop Chrome',
+      dependencies: ['system-settings'],
+      testIgnore: /system-settings\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
@@ -45,16 +55,12 @@ export default defineConfig({
 
   webServer: isLocalhost
     ? {
-        command: 'npm run dev',
+        command: 'npm run build && npm run start',
         url: 'http://localhost:5000',
         reuseExistingServer: !process.env.CI,
-        timeout: 60000,
+        timeout: 120000,
         stdout: 'ignore',
         stderr: 'pipe',
-        env: {
-          ...process.env,
-          NEXT_DISABLE_FAST_REFRESH: 'true',
-        },
       }
     : undefined,
 });

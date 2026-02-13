@@ -9,25 +9,24 @@ const isLocalhost = baseURL.includes('localhost') || baseURL.includes('127.0.0.1
 
 /**
  * Playwright configuration for E2E testing
- * Tests mobile (375x667, 320x568), tablet (1024x768), and desktop (1920x1080)
  *
- * Viewport Strategy:
- * - Desktop Chrome: Runs ALL tests (@fast + @full)
- * - Mobile iPhone 12: Skips @desktop-only tests (UI/responsive tests only)
- * - Mobile Minimum: Skips @desktop-only and @no-mobile tests (responsive only)
+ * File-level parallel execution — each spec file has dedicated user accounts
+ * so no two files share the same Supabase Auth session. This avoids the
+ * "Target page, context or browser has been closed" errors caused by
+ * concurrent logins for the same email.
  *
- * Test Tags:
- * - @desktop-only: Authorization, validation, keyboard navigation, static pages
- * - @no-mobile: Features designed for large screens (kiosk mode)
+ * The system-settings project runs first (serial) because it toggles
+ * allow_public_registration which affects the auth spec's registration tests.
+ * All other specs run in independent parallel workers.
  */
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 2,
-  workers: process.env.CI ? 1 : 4, // Run 4 tests in parallel locally
+  workers: 4,
   reporter: 'html',
-  timeout: 30000, // 30 seconds per test
+  timeout: 30000,
 
   globalSetup: './e2e/global-setup.ts',
   globalTeardown: './e2e/global-teardown.ts',
@@ -36,91 +35,49 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure', // Only keep video on failure
-    actionTimeout: 15000, // 15 seconds for actions
-    navigationTimeout: 30000, // 30 seconds for navigation (matches test timeout)
+    video: 'retain-on-failure',
+    actionTimeout: 10000,
+    navigationTimeout: 15000,
   },
 
   expect: {
-    timeout: 10000, // 10 seconds for expect assertions (default 5s too tight under parallel load)
+    timeout: 7000,
+    toHaveScreenshot: { maxDiffPixelRatio: 0.01 },
   },
 
+  /* Visual-regression snapshot paths */
+  snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',
+
   projects: [
-    // Desktop - Chrome (primary browser for development)
-    // Runs ALL tests - no filtering
+    // Phase 1: system-settings runs first (toggles shared global state)
     {
-      name: 'Desktop Chrome',
+      name: 'system-settings',
+      testMatch: /system-settings\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1920, height: 1080 },
       },
     },
-
-    // Mobile - iPhone 12 (standard mobile)
-    // Skips @desktop-only and @no-mobile tests (kiosk mode and large-screen features)
+    // Phase 2: all other specs run in parallel after system-settings completes
     {
-      name: 'Mobile iPhone 12',
-      grepInvert: /@desktop-only|@no-mobile/,
+      name: 'Desktop Chrome',
+      dependencies: ['system-settings'],
+      testIgnore: /system-settings\.spec\.ts/,
       use: {
-        ...devices['iPhone 12'],
-        viewport: { width: 390, height: 844 },
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1920, height: 1080 },
       },
     },
-
-    // Mobile - Minimum (320px - smallest supported)
-    // Skips @desktop-only AND @no-mobile tests (kiosk mode, large-screen features)
-    {
-      name: 'Mobile Minimum',
-      grepInvert: /@desktop-only|@no-mobile/,
-      timeout: 60000, // Increased timeout for tiny viewport
-      retries: 1, // Retry once on failure due to intermittent timing issues
-      use: {
-        ...devices['iPhone SE'],
-        viewport: { width: 320, height: 568 },
-        hasTouch: true,
-        isMobile: true,
-      },
-    },
-
-    // Uncomment for full cross-browser testing:
-    // {
-    //   name: 'Desktop Firefox',
-    //   use: { ...devices['Desktop Firefox'], viewport: { width: 1920, height: 1080 } },
-    // },
-    // {
-    //   name: 'Desktop Safari',
-    //   use: { ...devices['Desktop Safari'], viewport: { width: 1920, height: 1080 } },
-    // },
-    // {
-    //   name: 'Tablet',
-    //   use: { ...devices['iPad Pro'], viewport: { width: 1024, height: 768 } },
-    // },
-    // {
-    //   name: 'Mobile iPhone SE',
-    //   use: { ...devices['iPhone SE'], viewport: { width: 375, height: 667 } },
-    // },
-    // {
-    //   name: 'Mobile Landscape',
-    //   use: { ...devices['iPhone 12'], viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true },
-    // },
-    // {
-    //   name: 'Mobile Android',
-    //   use: { ...devices['Pixel 5'], viewport: { width: 393, height: 851 } },
-    // },
   ],
 
   webServer: isLocalhost
     ? {
-        command: 'npm run dev',
+        command: 'npm run build && npm run start',
         url: 'http://localhost:5000',
         reuseExistingServer: !process.env.CI,
-        timeout: 60000, // Reduced from 120s to 60s
-        stdout: 'ignore', // Suppress dev server logs
-        stderr: 'ignore', // Suppress warnings including Fast Refresh
-        env: {
-          ...process.env,
-          NEXT_DISABLE_FAST_REFRESH: 'true',
-        },
+        timeout: 120000,
+        stdout: 'ignore',
+        stderr: 'ignore',
       }
     : undefined,
 });

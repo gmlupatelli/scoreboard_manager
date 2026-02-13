@@ -5,19 +5,23 @@
  * Verifies test environment is ready (users exist, settings configured).
  * Test data is seeded by refresh-test-data script, not by global-setup.
  *
- * Credentials load from .env.local (Supabase) with .env.test overrides:
- *   AUTOMATED_TEST_ADMIN_<N>_EMAIL / AUTOMATED_TEST_ADMIN_<N>_PASSWORD
- *   AUTOMATED_TEST_USER_<N>_EMAIL / AUTOMATED_TEST_USER_<N>_PASSWORD
- *   AUTOMATED_TEST_SUPPORTER_<N>_EMAIL / AUTOMATED_TEST_SUPPORTER_<N>_PASSWORD
+ * User verification uses the Supabase Auth API directly instead of
+ * launching a browser for each user — cuts setup time from ~55s to ~3s.
+ *
+ * All 17 test accounts are verified:
+ *   ADMIN_1-4, USER_1-7, SUPPORTER_1-3 + SUPPORTER_5-7
  */
 
 import { chromium, type FullConfig, type Page } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 import { loadTestEnv } from './loadTestEnv.js';
 
 // Load .env.local first, then .env.test overrides for Playwright
 loadTestEnv();
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY!;
 
 interface TestUser {
   email: string;
@@ -25,58 +29,45 @@ interface TestUser {
   name: string;
 }
 
-/**
- * Get test user credentials from environment variables
- * Falls back to defaults if not configured (for backwards compatibility)
- */
-const ADMIN: TestUser = {
-  email: process.env.AUTOMATED_TEST_ADMIN_1_EMAIL || 'admin@example.com',
-  password: process.env.AUTOMATED_TEST_ADMIN_1_PASSWORD || 'admin123',
-  name: process.env.AUTOMATED_TEST_ADMIN_1_DISPLAY_NAME || 'Site Admin',
-};
+// ---------------------------------------------------------------------------
+// Helper to build a TestUser from environment variables
+// ---------------------------------------------------------------------------
+function buildTestUser(
+  role: 'ADMIN' | 'USER' | 'SUPPORTER',
+  n: number,
+  fallbackEmail: string,
+  fallbackPassword: string,
+  fallbackName: string,
+): TestUser {
+  return {
+    email: process.env[`AUTOMATED_TEST_${role}_${n}_EMAIL`] || fallbackEmail,
+    password: process.env[`AUTOMATED_TEST_${role}_${n}_PASSWORD`] || fallbackPassword,
+    name: process.env[`AUTOMATED_TEST_${role}_${n}_DISPLAY_NAME`] || fallbackName,
+  };
+}
 
-const JOHN: TestUser = {
-  email: process.env.AUTOMATED_TEST_USER_1_EMAIL || 'john@example.com',
-  password: process.env.AUTOMATED_TEST_USER_1_PASSWORD || 'user123',
-  name: process.env.AUTOMATED_TEST_USER_1_DISPLAY_NAME || 'John Doe',
-};
+// Admins
+const ADMIN_1 = buildTestUser('ADMIN', 1, 'admin@example.com', 'test123', 'Site Admin');
+const ADMIN_2 = buildTestUser('ADMIN', 2, 'admin2@example.com', 'test123', 'Admin Two');
+const ADMIN_3 = buildTestUser('ADMIN', 3, 'admin3@example.com', 'test123', 'Admin Three');
+const ADMIN_4 = buildTestUser('ADMIN', 4, 'admin4@example.com', 'test123', 'Admin Four');
 
-const SARAH: TestUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_1_EMAIL || 'sarah@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_1_PASSWORD || 'sarah456',
-  name: process.env.AUTOMATED_TEST_SUPPORTER_1_DISPLAY_NAME || 'Sarah Smith',
-};
+// Regular users
+const USER_1 = buildTestUser('USER', 1, 'john@example.com', 'test123', 'John Doe');
+const USER_2 = buildTestUser('USER', 2, 'user2@example.com', 'test123', 'User Two');
+const USER_3 = buildTestUser('USER', 3, 'user3@example.com', 'test123', 'User Three');
+const USER_4 = buildTestUser('USER', 4, 'user4@example.com', 'test123', 'User Four');
+const USER_5 = buildTestUser('USER', 5, 'user5@example.com', 'test123', 'User Five');
+const USER_6 = buildTestUser('USER', 6, 'user6@example.com', 'test123', 'User Six');
+const USER_7 = buildTestUser('USER', 7, 'user7@example.com', 'test123', 'User Seven');
 
-const SUPPORTER: TestUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_2_EMAIL || 'patron@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_2_PASSWORD || 'supporter789',
-  name: process.env.AUTOMATED_TEST_SUPPORTER_2_DISPLAY_NAME || 'Pat Rohn',
-};
-
-// Additional supporter users for per-project subscription test isolation
-const SUPPORTER_3: TestUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_3_EMAIL || 'patron2@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_3_PASSWORD || 'test123',
-  name: process.env.AUTOMATED_TEST_SUPPORTER_3_DISPLAY_NAME || 'Pat Rohn II',
-};
-
-const SUPPORTER_4: TestUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_4_EMAIL || 'patron3@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_4_PASSWORD || 'test123',
-  name: process.env.AUTOMATED_TEST_SUPPORTER_4_DISPLAY_NAME || 'Pat Rohn III',
-};
-
-const SUPPORTER_5: TestUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_5_EMAIL || 'patron4@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_5_PASSWORD || 'test123',
-  name: process.env.AUTOMATED_TEST_SUPPORTER_5_DISPLAY_NAME || 'Pat Rohn IV',
-};
-
-const SUPPORTER_6: TestUser = {
-  email: process.env.AUTOMATED_TEST_SUPPORTER_6_EMAIL || 'patron5@example.com',
-  password: process.env.AUTOMATED_TEST_SUPPORTER_6_PASSWORD || 'test123',
-  name: process.env.AUTOMATED_TEST_SUPPORTER_6_DISPLAY_NAME || 'Pat Rohn V',
-};
+// Supporters
+const SUPPORTER_1 = buildTestUser('SUPPORTER', 1, 'sarah@example.com', 'test123', 'Sarah Smith');
+const SUPPORTER_2 = buildTestUser('SUPPORTER', 2, 'morgan@example.com', 'test123', 'Morgan Blake');
+const SUPPORTER_3 = buildTestUser('SUPPORTER', 3, 'supporter3@example.com', 'test123', 'Supporter Three');
+const SUPPORTER_5 = buildTestUser('SUPPORTER', 5, 'taylor@example.com', 'test123', 'Taylor Chen');
+const SUPPORTER_6 = buildTestUser('SUPPORTER', 6, 'riley@example.com', 'test123', 'Riley Brooks');
+const SUPPORTER_7 = buildTestUser('SUPPORTER', 7, 'supporter7@example.com', 'test123', 'Supporter Seven');
 
 async function login(page: Page, user: TestUser) {
   await page.goto(`${BASE_URL}/login`);
@@ -90,9 +81,8 @@ async function login(page: Page, user: TestUser) {
 async function enablePublicRegistration(page: Page) {
   try {
     console.log('\n⚙️  Enabling public registration...');
-    await page.goto(`${BASE_URL}/system-admin/settings`, { waitUntil: 'networkidle' });
+    await page.goto(`${BASE_URL}/system-admin/settings`);
 
-    // Wait for settings to finish loading
     await page
       .locator('text=/Loading settings/i')
       .waitFor({ state: 'hidden', timeout: 15000 })
@@ -122,47 +112,26 @@ async function enablePublicRegistration(page: Page) {
 }
 
 /**
- * Verify that a test user can log in and has expected scoreboard data.
- * This checks that the test environment is properly set up.
+ * Verify that a test user exists via the Supabase Auth API (no browser needed).
+ * This is ~10x faster than the previous browser-based verification.
  */
-async function verifyUserLogin(
-  page: Page,
-  user: TestUser,
-  expectedMinScoreboards: number = 0
-): Promise<boolean> {
+async function verifyUserViaApi(user: TestUser): Promise<boolean> {
   try {
-    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
-    await page.fill('input[name="email"]', user.email);
-    await page.fill('input[name="password"]', user.password);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(`${BASE_URL}/dashboard`, { timeout: 10000 });
+    const client = createClient(supabaseUrl, supabaseServiceKey);
+    const { error } = await client.auth.signInWithPassword({
+      email: user.email,
+      password: user.password,
+    });
 
-    // Check that dashboard loads with content
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    // Verify scoreboard data if expected
-    if (expectedMinScoreboards > 0) {
-      const cards = page.locator('[data-testid="scoreboard-card"]');
-      const cardCount = await cards.count();
-      if (cardCount < expectedMinScoreboards) {
-        console.log(
-          `⚠️  ${user.email} has ${cardCount} scoreboards, expected at least ${expectedMinScoreboards}. Run: npm run refresh-test-data`
-        );
-      } else {
-        console.log(
-          `✓ Verified ${user.email} can log in (${cardCount} scoreboards)`
-        );
-      }
-    } else {
-      console.log(`✓ Verified ${user.email} can log in`);
+    if (error) {
+      console.log(`⚠️  ${user.email} API login failed: ${error.message}`);
+      return false;
     }
 
-    await page.context().clearCookies();
+    console.log(`✓ Verified ${user.email} via API`);
     return true;
   } catch {
-    console.log(`⚠️  ${user.email} login failed - user may not exist yet`);
-    await page.context().clearCookies();
+    console.log(`⚠️  ${user.email} API verification error`);
     return false;
   }
 }
@@ -170,38 +139,38 @@ async function verifyUserLogin(
 async function globalSetup(_config: FullConfig) {
   console.log('\n🌱 Starting test data setup...\n');
 
+  // Step 1: Log in as admin via browser to enable public registration
+  // (This is the only step that requires a browser)
   const browser = await chromium.launch();
   const context = await browser.newContext();
   const page = await context.newPage();
 
   try {
-    // Step 1: Log in as admin and ensure public registration is enabled
-    console.log('\n🔑 Logging in as admin...');
-    await login(page, ADMIN);
+    console.log('🔑 Logging in as admin...');
+    await login(page, ADMIN_1);
     await enablePublicRegistration(page);
-    await page.context().clearCookies();
-
-    // Step 2: Verify test users can log in and have expected data
-    // Expected counts match what refresh-test-data seeds per user
-    // Admin sees ALL scoreboards, regular users see only their own
-    // (Test data is seeded by refresh-test-data script, not by global-setup)
-    console.log('\n👤 Verifying test users and data...');
-    await verifyUserLogin(page, ADMIN, 12);         // Sees all: 3 john + 2 sarah + 2 patron + 1 admin + 1 patron2 + 1 patron3 + 1 patron4 + 1 patron5
-    await verifyUserLogin(page, JOHN, 3);           // 2 public + 1 locked
-    await verifyUserLogin(page, SARAH, 2);          // 2 scoreboards
-    await verifyUserLogin(page, SUPPORTER, 2);      // 2 scoreboards
-    await verifyUserLogin(page, SUPPORTER_3, 1);    // 1 scoreboard (subscription test isolation)
-    await verifyUserLogin(page, SUPPORTER_4, 1);    // 1 scoreboard (subscription test isolation)
-    await verifyUserLogin(page, SUPPORTER_5, 1);    // 1 scoreboard (kiosk test dedicated user)
-    await verifyUserLogin(page, SUPPORTER_6, 1);    // 1 scoreboard (tier-limits downgrade tests)
-
-    console.log('\n✅ Test data setup complete!\n');
   } catch (error) {
-    console.error('\n❌ Test data setup failed:', error);
-    // Don't fail the test run if verification fails - data might already exist
-    console.log('⚠️  Continuing with existing data...\n');
+    console.error('❌ Admin login/settings failed:', error);
   } finally {
     await browser.close();
+  }
+
+  // Step 2: Verify all 17 test users via Supabase Auth API (fast, no browser)
+  console.log('\n👤 Verifying test users via API...');
+  const users = [
+    ADMIN_1, ADMIN_2, ADMIN_3, ADMIN_4,
+    USER_1, USER_2, USER_3, USER_4, USER_5, USER_6, USER_7,
+    SUPPORTER_1, SUPPORTER_2, SUPPORTER_3, SUPPORTER_5, SUPPORTER_6, SUPPORTER_7,
+  ];
+
+  const results = await Promise.all(users.map(verifyUserViaApi));
+  const passedCount = results.filter(Boolean).length;
+  const allPassed = results.every(Boolean);
+
+  if (allPassed) {
+    console.log(`\n✅ All ${users.length} test users verified!\n`);
+  } else {
+    console.log(`\n⚠️  ${passedCount}/${users.length} users verified. Some users could not be verified. Continuing with existing data...\n`);
   }
 }
 
