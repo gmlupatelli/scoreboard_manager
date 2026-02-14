@@ -108,6 +108,15 @@ export default function Footer({ customStyles = null }: FooterProps) {
               </li>
               <li>
                 <Link
+                  href="/supporters"
+                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
+                  style={customStyles ? { color: customStyles.textColor } : undefined}
+                >
+                  Supporters
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/login"
                   className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
                   style={customStyles ? { color: customStyles.textColor } : undefined}
@@ -162,15 +171,6 @@ export default function Footer({ customStyles = null }: FooterProps) {
                   style={customStyles ? { color: customStyles.textColor } : undefined}
                 >
                   Support
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/supporters"
-                  className="block py-2 hover:opacity-80 transition-opacity text-text-secondary"
-                  style={customStyles ? { color: customStyles.textColor } : undefined}
-                >
-                  Supporters
                 </Link>
               </li>
               <li>
