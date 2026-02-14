@@ -32,6 +32,7 @@ export async function GET() {
     const client = getServiceRoleClient() || getAnonClient();
 
     // Query user_profiles joined with subscriptions
+    // Exclude system_admin users from the public supporters list
     const { data, error } = await client
       .from('user_profiles')
       .select(
@@ -45,6 +46,7 @@ export async function GET() {
         )
       `
       )
+      .neq('role', 'system_admin')
       .in('subscriptions.status', ['active', 'trialing'])
       .eq('subscriptions.show_on_supporters_page', true)
       .not('subscriptions.tier', 'is', null)

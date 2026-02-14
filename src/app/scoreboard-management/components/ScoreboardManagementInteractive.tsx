@@ -41,8 +41,8 @@ const ScoreboardManagementInteractive = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const scoreboardId = searchParams.get('id');
-  const { user, userProfile, loading: authLoading, subscriptionTier } = useAuth();
-  const isFreeUser = !subscriptionTier;
+  const { user, userProfile, loading: authLoading, subscriptionTier, isEffectiveSupporter } = useAuth();
+  const isFreeUser = !isEffectiveSupporter;
   const { set: setTimeoutSafe, isMounted } = useTimeoutRef();
   const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
   const pendingDeletesRef = useRef<
@@ -794,7 +794,7 @@ const ScoreboardManagementInteractive = () => {
           scoreboardId={scoreboard.id}
           isExpanded={isStyleSectionExpanded}
           onToggleExpanded={setIsStyleSectionExpanded}
-          isSupporter={Boolean(subscriptionTier)}
+          isSupporter={isEffectiveSupporter}
           isReadOnly={isReadOnly}
         />
 
@@ -803,7 +803,7 @@ const ScoreboardManagementInteractive = () => {
           scoreboardTitle={scoreboard.title}
           isExpanded={isEmbedSectionExpanded}
           onToggleExpanded={setIsEmbedSectionExpanded}
-          isSupporter={Boolean(subscriptionTier)}
+          isSupporter={isEffectiveSupporter}
         />
 
         <KioskSettingsSection

@@ -97,8 +97,19 @@ describe('subscriptionService', () => {
       eq: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data, error }),
       maybeSingle: jest.fn().mockResolvedValue({ data, error }),
     });
+
+    // Helper: mock user_profiles returning non-admin, then subscriptions returning given data
+    const setupNonAdminWithSubscription = (subData: unknown, subError: unknown = null) => {
+      const profileChain = createMockQueryChain({ role: 'user' });
+      const subscriptionChain = createMockQueryChain(subData, subError);
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'user_profiles') return profileChain;
+        return subscriptionChain;
+      });
+    };
 
     it('should return true for active subscription', async () => {
       const mockSubscription = {
@@ -115,7 +126,7 @@ describe('subscriptionService', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockFrom.mockReturnValue(createMockQueryChain(mockSubscription));
+      setupNonAdminWithSubscription(mockSubscription);
 
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
@@ -138,7 +149,7 @@ describe('subscriptionService', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockFrom.mockReturnValue(createMockQueryChain(mockSubscription));
+      setupNonAdminWithSubscription(mockSubscription);
 
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
@@ -164,7 +175,7 @@ describe('subscriptionService', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockFrom.mockReturnValue(createMockQueryChain(mockSubscription));
+      setupNonAdminWithSubscription(mockSubscription);
 
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
@@ -190,7 +201,7 @@ describe('subscriptionService', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockFrom.mockReturnValue(createMockQueryChain(mockSubscription));
+      setupNonAdminWithSubscription(mockSubscription);
 
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
@@ -213,7 +224,7 @@ describe('subscriptionService', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockFrom.mockReturnValue(createMockQueryChain(mockSubscription));
+      setupNonAdminWithSubscription(mockSubscription);
 
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
@@ -236,7 +247,7 @@ describe('subscriptionService', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockFrom.mockReturnValue(createMockQueryChain(mockSubscription));
+      setupNonAdminWithSubscription(mockSubscription);
 
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
@@ -245,12 +256,25 @@ describe('subscriptionService', () => {
     });
 
     it('should return false when no subscription exists', async () => {
-      mockFrom.mockReturnValue(createMockQueryChain(null));
+      setupNonAdminWithSubscription(null);
 
       const result = await subscriptionService.hasActiveSubscription('user_123');
 
       expect(result.error).toBeNull();
       expect(result.data).toBe(false);
+    });
+
+    it('should return true for system_admin without subscription', async () => {
+      const profileChain = createMockQueryChain({ role: 'system_admin' });
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'user_profiles') return profileChain;
+        return createMockQueryChain(null);
+      });
+
+      const result = await subscriptionService.hasActiveSubscription('admin_123');
+
+      expect(result.error).toBeNull();
+      expect(result.data).toBe(true);
     });
   });
 
@@ -264,6 +288,7 @@ describe('subscriptionService', () => {
       eq: jest.fn().mockReturnThis(),
       order: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
+      single: jest.fn().mockResolvedValue({ data, error }),
       maybeSingle: jest.fn().mockResolvedValue({ data, error }),
     });
 
@@ -282,7 +307,12 @@ describe('subscriptionService', () => {
         updated_at: new Date().toISOString(),
       };
 
-      mockFrom.mockReturnValue(createMockQueryChain(mockSubscription));
+      const profileChain = createMockQueryChain({ role: 'user' });
+      const subscriptionChain = createMockQueryChain(mockSubscription);
+      mockFrom.mockImplementation((table: string) => {
+        if (table === 'user_profiles') return profileChain;
+        return subscriptionChain;
+      });
 
       const result = await subscriptionService.isSupporter('user_123');
 

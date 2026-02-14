@@ -46,8 +46,8 @@ export default function KioskSettingsSection({
   onShowToast,
 }: KioskSettingsSectionProps) {
   const { getAuthHeaders } = useAuthGuard();
-  const { subscriptionTier } = useAuth();
-  const isSupporter = Boolean(subscriptionTier);
+  const { isEffectiveSupporter } = useAuth();
+  const isSupporter = isEffectiveSupporter;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // LocalStorage key for caching slide order (handles read replica lag)

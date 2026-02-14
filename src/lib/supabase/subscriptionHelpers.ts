@@ -28,12 +28,24 @@ export const isSupporterSubscription = (subscription: {
 };
 
 /**
- * Query the subscriptions table and return whether the user is an active supporter
+ * Query the subscriptions table and return whether the user is an active supporter.
+ * System admins always count as supporters for access control purposes.
  */
 export const getSupporterStatus = async (
   client: SupabaseClient<Database>,
   userId: string
 ): Promise<boolean> => {
+  // System admins get supporter-level access without needing a subscription
+  const { data: profile } = await client
+    .from('user_profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  if (profile?.role === 'system_admin') {
+    return true;
+  }
+
   const { data: subscription } = await client
     .from('subscriptions')
     .select('status, cancelled_at, is_gifted, gifted_expires_at')

@@ -52,6 +52,7 @@ const AdminDashboardInteractive = () => {
     subscriptionStatus,
     subscriptionEndDate,
     refreshSubscription,
+    isEffectiveSupporter,
   } = useAuth();
   const { isAuthorized, isChecking } = useAuthGuard();
   const { toasts, addUndoAction, executeUndo, removeToast } = useUndoQueue();
@@ -172,7 +173,7 @@ const AdminDashboardInteractive = () => {
   const loadPublicUsage = useCallback(async () => {
     if (!user?.id) return;
 
-    if (subscriptionTier) {
+    if (isEffectiveSupporter) {
       setPublicUsage(null);
       return;
     }
@@ -188,7 +189,7 @@ const AdminDashboardInteractive = () => {
     const used = Math.max(max - remainingValue, 0);
 
     setPublicUsage({ used, max, remaining: remainingValue });
-  }, [user?.id, subscriptionTier]);
+  }, [user?.id, isEffectiveSupporter]);
 
   useEffect(() => {
     void loadPublicUsage();
@@ -627,7 +628,7 @@ const AdminDashboardInteractive = () => {
                     <Icon name="UserPlusIcon" size={20} />
                     <span className="hidden sm:inline">Invite</span>
                   </button>
-                  {(!subscriptionTier || subscriptionTier === 'appreciation') &&
+                  {(!isEffectiveSupporter || subscriptionTier === 'appreciation') &&
                     !isCancelledButActive && (
                       <Link
                         href="/supporter-plan"
@@ -693,7 +694,7 @@ const AdminDashboardInteractive = () => {
             />
           </div>
 
-          {!subscriptionTier && publicUsage && (
+          {!isEffectiveSupporter && publicUsage && (
             <div className="mb-6">
               <UsageCounterBlock
                 label="public scoreboards"
@@ -814,9 +815,9 @@ const AdminDashboardInteractive = () => {
                         createdAt={new Date(scoreboard.createdAt).toLocaleDateString()}
                         ownerName={isAdmin ? scoreboard.owner?.fullName : undefined}
                         visibility={scoreboard.visibility}
-                        isLocked={!subscriptionTier && scoreboard.isLocked}
+                        isLocked={!isEffectiveSupporter && scoreboard.isLocked}
                         canUnlock={
-                          !subscriptionTier &&
+                          !isEffectiveSupporter &&
                           scoreboard.visibility === 'public' &&
                           scoreboard.isLocked &&
                           (publicUsage?.remaining || 0) > 0
@@ -868,7 +869,7 @@ const AdminDashboardInteractive = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateScoreboard}
-        isSupporter={Boolean(subscriptionTier)}
+        isSupporter={isEffectiveSupporter}
         publicUsage={publicUsage}
       />
 

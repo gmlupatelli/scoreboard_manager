@@ -186,8 +186,20 @@ export const subscriptionService = {
   /**
    * Check if user has an active subscription
    * Includes cancelled subscriptions that are still within their grace period (before ends_at)
+   * System admins are always considered as having an active subscription
    */
   async hasActiveSubscription(userId: string) {
+    // System admins get supporter-level access without needing a subscription
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+
+    if (profile?.role === 'system_admin') {
+      return { data: true, error: null };
+    }
+
     const { data, error } = await this.getSubscription(userId);
 
     if (error) {

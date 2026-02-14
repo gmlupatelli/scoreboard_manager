@@ -21,6 +21,7 @@ interface AuthContextType {
   subscriptionEndDate: string | null;
   subscriptionLoading: boolean;
   updatePaymentMethodUrl: string | null;
+  isEffectiveSupporter: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
@@ -240,6 +241,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return userProfile?.role === 'system_admin';
   };
 
+  const isEffectiveSupporter = Boolean(subscriptionTier) || userProfile?.role === 'system_admin';
+
   return (
     <AuthContext.Provider
       value={{
@@ -252,6 +255,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         subscriptionEndDate,
         subscriptionLoading,
         updatePaymentMethodUrl,
+        isEffectiveSupporter,
         signIn,
         signUp,
         signOut,
