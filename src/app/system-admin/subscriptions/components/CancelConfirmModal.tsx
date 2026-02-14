@@ -4,30 +4,7 @@ import { useState } from 'react';
 import { subscriptionService } from '@/services/subscriptionService';
 import Icon from '@/components/ui/AppIcon';
 import { getTierDetails } from '@/lib/subscription/tiers';
-import { AppreciationTier } from '@/types/models';
-
-interface UserSubscription {
-  id: string;
-  email: string;
-  fullName: string | null;
-  role: string;
-  createdAt: string;
-  subscription: {
-    id: string;
-    status: string;
-    statusFormatted: string | null;
-    tier: AppreciationTier;
-    billingInterval: string;
-    amountCents: number;
-    currency: string;
-    isGifted: boolean;
-    giftedExpiresAt: string | null;
-    currentPeriodEnd: string | null;
-    lemonsqueezySubscriptionId: string | null;
-    createdAt: string;
-    updatedAt: string;
-  } | null;
-}
+import { UserSubscription } from '../types';
 
 interface CancelConfirmModalProps {
   user: UserSubscription;

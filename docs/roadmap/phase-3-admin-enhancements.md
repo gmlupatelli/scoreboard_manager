@@ -1,7 +1,7 @@
 # Phase 3: Admin Enhancements
 
 **Priority:** 🟡 Medium  
-**Status:** Not Started  
+**Status:** ✅ Complete  
 **Estimated Effort:** Small (3-5 days)
 
 ## Overview
@@ -24,240 +24,82 @@ The current subscription management page (`/system-admin/subscriptions`) shows:
 
 This phase adds a **"Details" button** to each row that opens a comprehensive modal with deeper user information.
 
-## Implementation Tasks
+## Implementation Summary
 
-### Issue 3.1: User Details Modal Component
+### Files Created
 
-**Description**: Create a modal component that displays comprehensive user information when admin clicks "Details" button on any user row.
+| File | Purpose |
+|------|---------|
+| `src/app/system-admin/subscriptions/types.ts` | Shared types for `UserSubscription`, `FilterType`, and all user details API response types |
+| `src/app/api/admin/users/[userId]/details/route.ts` | Admin-only API endpoint returning comprehensive user data |
+| `src/app/system-admin/subscriptions/components/UserDetailsModal.tsx` | Tabbed modal component with Profile, Payments, Scoreboards, Activity tabs |
 
-**Location:** `src/app/system-admin/subscriptions/components/UserDetailsModal.tsx`
+### Files Modified
 
-**Acceptance Criteria:**
-- [ ] Center modal, max-width 800px
-- [ ] Opens when admin clicks "Details" button in subscription table row
-- [ ] Displays user information in organized sections
-- [ ] Closes via X button, Escape key, or clicking backdrop
-- [ ] Responsive design (scrollable on mobile)
-- [ ] Loading state while fetching details
-
-**Modal Sections:**
-
-1. **Header**
-   - User's full name (or email if name not set)
-   - Tier badge if active supporter
-   - Role badge (system_admin or user)
-   - Close button (X)
-
-2. **Profile Information**
-   - Email address
-   - Full name
-   - Account created date
-   - Last login (if available from auth metadata)
-   - Email verification status
-
-3. **Subscription History** (Paginated)
-   - Last 10 payment transactions by default
-   - Each entry shows:
-     - Date
-     - Amount (formatted with currency)
-     - Status (with colored badge)
-     - Receipt link (if available)
-   - "Load More" button if more than 10 payments
-   - Empty state: "No payment history"
-
-4. **Scoreboard Activity**
-   - Total scoreboard count
-   - List of scoreboards (max 10 initially):
-     - Scoreboard title
-     - Visibility (public/private)
-     - Entry count
-     - "View" link → opens in new tab
-   - "Show All" button if more than 10 scoreboards
-   - Empty state: "No scoreboards created"
-
-**Technical Notes:**
-- Use existing modal styling patterns
-- Fetch data from new API endpoint
-- Cache fetched data in parent component to avoid re-fetching
-- Show loading spinner while fetching
-
-**UI/UX:**
-- Tabs for different sections (Profile, Payments, Scoreboards)?
-- Or single scrollable modal with sections?
-- **Recommendation**: Single scrollable modal (simpler UX)
+| File | Change |
+|------|--------|
+| `src/app/system-admin/subscriptions/components/SubscriptionsInteractive.tsx` | Imports shared types, adds Details button (first action), renders `UserDetailsModal` |
+| `src/app/system-admin/subscriptions/components/CancelConfirmModal.tsx` | Imports `UserSubscription` from shared types instead of defining locally |
+| `src/app/system-admin/subscriptions/components/GiftTierModal.tsx` | Imports `UserSubscription` from shared types instead of defining locally |
+| `src/app/system-admin/subscriptions/components/LinkAccountModal.tsx` | Imports `UserSubscription` from shared types instead of defining locally |
+| `src/services/subscriptionService.ts` | Added `getUserDetailsAdmin()` method with section-based fetching |
 
 ---
 
-### Issue 3.2: User Details API Endpoint
+### Shared Types (`types.ts`)
 
-**Description**: Create API endpoint to fetch comprehensive user details for admin view.
-
-**File:** `src/app/api/admin/users/[userId]/details/route.ts`
-
-**Endpoint:** `GET /api/admin/users/[userId]/details?paymentsPage=1&scoreboardsPage=1`
-
-**Response:**
-```typescript
-{
-  user: {
-    id: string;
-    email: string;
-    fullName: string | null;
-    role: 'system_admin' | 'user';
-    createdAt: string;
-    emailVerified: boolean;
-    lastSignInAt: string | null;
-  };
-  subscription: {
-    // Full subscription object (if exists)
-  } | null;
-  paymentHistory: {
-    payments: PaymentHistoryEntry[];
-    pagination: {
-      page: number;
-      perPage: number;
-      total: number;
-      hasMore: boolean;
-    };
-  };
-  scoreboards: {
-    scoreboards: Array<{
-      id: string;
-      title: string;
-      visibility: 'public' | 'private';
-      entryCount: number;
-      createdAt: string;
-    }>;
-    pagination: {
-      page: number;
-      perPage: number;
-      total: number;
-      hasMore: boolean;
-    };
-  };
-}
-```
-
-**Acceptance Criteria:**
-- [ ] Endpoint requires system_admin authentication
-- [ ] Returns 401 if not authenticated or not admin
-- [ ] Returns 404 if user not found
-- [ ] Payment history paginated (10 per page)
-- [ ] Scoreboards paginated (10 per page)
-- [ ] Query params: `paymentsPage` and `scoreboardsPage` (default: 1)
-- [ ] Efficient queries (use joins, avoid N+1)
-
-**Technical Notes:**
-- Use `getAuthClient()` and verify admin role
-- Fetch from multiple tables:
-  - `user_profiles` (user info)
-  - `subscriptions` (subscription info)
-  - `payment_history` (payment transactions)
-  - `scoreboards` with entry count
-- Order payment history by created_at DESC
-- Order scoreboards by created_at DESC
-- Use Supabase `.count()` for pagination totals
-
-**Query Example:**
-```typescript
-// Payment history
-const { data: payments, count } = await supabase
-  .from('payment_history')
-  .select('*', { count: 'exact' })
-  .eq('user_id', userId)
-  .order('created_at', { ascending: false })
-  .range((page - 1) * 10, page * 10 - 1);
-
-// Scoreboards with entry count
-const { data: scoreboards, count } = await supabase
-  .from('scoreboards')
-  .select('id, title, visibility, created_at, scoreboard_entries(count)', { count: 'exact' })
-  .eq('owner_id', userId)
-  .order('created_at', { ascending: false })
-  .range((page - 1) * 10, page * 10 - 1);
-```
+Extracted `UserSubscription` and `FilterType` from `SubscriptionsInteractive.tsx` to eliminate duplication across 4 component files. Added API response types:
+- `UserDetailsResponse` — top-level response shape
+- `UserDetailsProfile` — profile with auth metadata (emailVerified, lastSignInAt)
+- `UserDetailsSubscription` — subscription with card info (cardBrand, cardLastFour)
+- `ScoreboardSummary` — scoreboard with entry count
+- `AuditLogEntry` — audit log with admin info
+- `PaginationMeta` — shared pagination shape
 
 ---
 
-### Issue 3.3: Add "Details" Button to Subscription Table
+### API Endpoint
 
-**Description**: Add a "Details" button to each row in the subscription management table.
+**`GET /api/admin/users/[userId]/details`**
 
-**File:** `src/app/system-admin/subscriptions/components/SubscriptionsInteractive.tsx`
+Auth: Bearer token + `system_admin` role verification.
 
-**Acceptance Criteria:**
-- [ ] "Details" button added to each user row in the table
-- [ ] Button positioned before existing action buttons (Link, Gift, Cancel, Refetch)
-- [ ] Clicking opens UserDetailsModal
-- [ ] Modal receives selected user data as prop
-- [ ] Button styled consistently with existing buttons
-- [ ] Tooltip: "View user details"
+**Query params:**
+- `section` — `'all'` (default) | `'payments'` | `'scoreboards'` | `'auditLog'` — controls what data is returned
+- `paymentsPage` / `scoreboardsPage` / `auditLogPage` — pagination (default: 1, 10 per page)
 
-**Technical Notes:**
-- Add state: `const [showDetailsModal, setShowDetailsModal] = useState(false)`
-- Add state: `const [selectedUserForDetails, setSelectedUserForDetails] = useState<UserSubscription | null>(null)`
-- Button click sets both states and opens modal
-- Modal fetches additional details via API
+When `section=all` (initial load), the endpoint fetches profile + auth metadata + subscription in parallel, then fetches payments + scoreboards + audit log in a second parallel batch. When a specific section is given (for "Load More"), only that section is fetched — avoiding unnecessary DB queries.
 
-**UI:**
-```tsx
-<button
-  onClick={() => {
-    setSelectedUserForDetails(user);
-    setShowDetailsModal(true);
-  }}
-  className="text-blue-600 hover:bg-blue-600/10 px-3 py-1.5 rounded-md text-sm transition-colors duration-150"
-  title="View user details"
->
-  Details
-</button>
-```
+**Data sources:**
+- `user_profiles` — profile info
+- `supabase.auth.admin.getUserById()` — email_confirmed_at, last_sign_in_at
+- `subscriptions` — latest subscription with card info
+- `payment_history` — paginated, ordered by created_at DESC
+- `scoreboards` with `scoreboard_entries(count)` — paginated
+- `admin_audit_log` filtered by `target_user_id` — paginated, with admin email/name join
 
 ---
 
-### Issue 3.4: Pagination Controls in Modal
+### Tabbed Modal Component
 
-**Description**: Add "Load More" buttons for payment history and scoreboards in the modal.
+**Layout:** Fixed overlay (`z-[1100]`), 800px max-width, `max-h-[90vh]` with flex column layout:
+- **Header** (fixed): user name/email, role badge, tier badge, close button
+- **Tab bar** (fixed): Profile, Payments, Scoreboards, Activity — with icons, responsive (icons only on mobile)
+- **Content** (scrollable): renders active tab panel
 
-**Acceptance Criteria:**
-- [ ] Payment history section has "Load More" button if `hasMore = true`
-- [ ] Scoreboards section has "Load More" button if `hasMore = true`
-- [ ] Clicking loads next page and appends to existing data
-- [ ] Loading state shown while fetching next page
-- [ ] Button disabled while loading
-- [ ] If no more data, button disappears
+**Tabs:**
+1. **Profile** — account info grid (email, name, role, created, last sign-in, email verified) + subscription summary (status, tier, billing, card info)
+2. **Payments** — data table (date, product, amount, status badge, receipt link) + Load More
+3. **Scoreboards** — data table (title as link → new tab, visibility badge, entry count, created) + Load More
+4. **Activity** — data table (date, action label, admin email, details summary) + Load More
 
-**Technical Notes:**
-- Track pages separately: `paymentsPage`, `scoreboardsPage`
-- Fetch next page and append results
-- Update pagination state
-- Show loading spinner inside button: "Loading..."
+**Keyboard:** Escape key closes modal. Backdrop click closes modal.
 
 ---
 
-### Issue 3.5: Scoreboard Quick Links
+### Details Button
 
-**Description**: Each scoreboard in the modal should be clickable and open in a new tab.
-
-**Acceptance Criteria:**
-- [ ] Scoreboard title is a link
-- [ ] Links open in new tab (target="_blank")
-- [ ] Links point to individual scoreboard view: `/individual-scoreboard-view?id=[scoreboardId]`
-- [ ] Hover state shows it's clickable
-- [ ] Icon indicates external link
-
-**UI:**
-```tsx
-<a
-  href={`/individual-scoreboard-view?id=${scoreboard.id}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="text-primary hover:underline flex items-center gap-1"
->
-  {scoreboard.title}
-  <Icon name="ArrowTopRightOnSquareIcon" size={14} />
-</a>
-```
+Added as the **first action button** in each subscription table row (before Link, Refetch, Gift, Cancel). Uses `InformationCircleIcon` at size 18 with blue hover state, matching the existing button pattern. Tooltip: "View user details".
 
 ---
 
@@ -269,61 +111,14 @@ No new tables or migrations required. Uses existing tables:
 - `payment_history`
 - `scoreboards`
 - `scoreboard_entries` (for count)
+- `admin_audit_log` (filtered by `target_user_id`, column + index already exist)
 
-## API Endpoints
+## Resolved Open Questions
 
-### New Endpoints
-
-1. **GET /api/admin/users/[userId]/details**
-   - Auth: system_admin required
-   - Query params: `paymentsPage` (default: 1), `scoreboardsPage` (default: 1)
-   - Returns: Complete user details with paginated history
-
-## Testing Requirements
-
-### Unit Tests
-- [ ] Details API endpoint (auth, pagination, data transformation)
-- [ ] Modal component rendering with mock data
-
-### Integration Tests
-- [ ] API returns correct data for different users
-- [ ] Pagination works correctly
-- [ ] Admin-only access enforced
-
-### E2E Tests
-- [ ] Admin can open user details modal
-- [ ] Modal displays correct user information
-- [ ] Payment history pagination works
-- [ ] Scoreboard links open correctly
-- [ ] Modal closes properly
-
-## Dependencies
-
-None - uses existing packages and patterns.
-
-## Migration Plan
-
-No database changes required.
-
-## Rollout Plan
-
-1. **Phase 1**: Create API endpoint and test
-2. **Phase 2**: Build modal component
-3. **Phase 3**: Integrate modal into subscription page
-4. **Phase 4**: Add pagination and polish UX
-
-## Success Metrics
-
-- Admins use "Details" button to investigate user issues
-- Reduces need for direct database queries
-- Improves admin efficiency for user support
-
-## Open Questions
-
-- [ ] Should we include user's audit log entries in the modal?
-- [ ] Should we show user's invitation history (invitee/inviter)?
-- [ ] Should we add export functionality (CSV) for payment history?
-- [ ] Should we show user's locked scoreboards count?
+- **Audit log entries**: ✅ Included — Activity tab shows admin actions targeting this user
+- **Invitation history**: Not included — can be added in a future iteration
+- **CSV export for payment history**: Not included — future enhancement
+- **Locked scoreboards count**: Not included — visible indirectly via scoreboard list
 
 ## Related Issues
 

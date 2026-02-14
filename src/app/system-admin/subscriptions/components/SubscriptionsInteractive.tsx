@@ -13,34 +13,8 @@ import GiftTierModal from './GiftTierModal';
 import CancelConfirmModal from './CancelConfirmModal';
 import AuditLogPanel from './AuditLogPanel';
 import PricingConfigSection from './PricingConfigSection';
-import { AppreciationTier } from '@/types/models';
-
-interface UserSubscription {
-  id: string;
-  email: string;
-  fullName: string | null;
-  role: string;
-  createdAt: string;
-  subscription: {
-    id: string;
-    status: string;
-    statusFormatted: string | null;
-    tier: AppreciationTier;
-    billingInterval: string;
-    amountCents: number;
-    currency: string;
-    isGifted: boolean;
-    giftedExpiresAt: string | null;
-    currentPeriodEnd: string | null;
-    lemonsqueezySubscriptionId: string | null;
-    paymentFailureCount: number;
-    lastPaymentFailedAt: string | null;
-    createdAt: string;
-    updatedAt: string;
-  } | null;
-}
-
-type FilterType = 'all' | 'active' | 'cancelled' | 'past_due' | 'appreciation' | 'free';
+import UserDetailsModal from './UserDetailsModal';
+import { UserSubscription, FilterType } from '../types';
 
 export default function SubscriptionsInteractive() {
   const { isAuthorized, isChecking } = useAuthGuard({ requiredRole: 'system_admin' });
@@ -60,6 +34,7 @@ export default function SubscriptionsInteractive() {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showPricing, setShowPricing] = useState(true);
   const [auditLogRefreshKey, setAuditLogRefreshKey] = useState(0);
@@ -442,6 +417,18 @@ export default function SubscriptionsInteractive() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex items-center justify-end space-x-2">
+                            {/* View user details */}
+                            <button
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowDetailsModal(true);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                              title="View user details"
+                            >
+                              <Icon name="InformationCircleIcon" size={18} />
+                            </button>
+
                             {/* Link subscription - always available */}
                             <button
                               onClick={() => {
@@ -676,6 +663,16 @@ export default function SubscriptionsInteractive() {
             setSelectedUser(null);
           }}
           onSuccess={handleCancelSuccess}
+        />
+      )}
+
+      {showDetailsModal && selectedUser && (
+        <UserDetailsModal
+          user={selectedUser}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedUser(null);
+          }}
         />
       )}
     </div>

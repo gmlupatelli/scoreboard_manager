@@ -3,12 +3,7 @@
 import { useState } from 'react';
 import { subscriptionService } from '@/services/subscriptionService';
 import Icon from '@/components/ui/AppIcon';
-
-interface UserSubscription {
-  id: string;
-  email: string;
-  fullName: string | null;
-}
+import { UserSubscription } from '../types';
 
 interface GiftTierModalProps {
   user: UserSubscription;

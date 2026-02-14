@@ -649,4 +649,46 @@ export const subscriptionService = {
       return { data: null, error: 'Failed to refetch subscription.' };
     }
   },
+
+  /**
+   * [Admin] Get comprehensive user details (profile, payments, scoreboards, audit log)
+   */
+  async getUserDetailsAdmin(
+    userId: string,
+    options?: {
+      section?: 'all' | 'payments' | 'scoreboards' | 'auditLog';
+      paymentsPage?: number;
+      scoreboardsPage?: number;
+      auditLogPage?: number;
+    }
+  ) {
+    try {
+      const headers = await getAuthHeaders();
+      const params = new URLSearchParams();
+
+      if (options?.section) params.set('section', options.section);
+      if (options?.paymentsPage) params.set('paymentsPage', options.paymentsPage.toString());
+      if (options?.scoreboardsPage)
+        params.set('scoreboardsPage', options.scoreboardsPage.toString());
+      if (options?.auditLogPage) params.set('auditLogPage', options.auditLogPage.toString());
+
+      const queryString = params.toString();
+      const url = `/api/admin/users/${userId}/details${queryString ? `?${queryString}` : ''}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json()) as { error?: string };
+        return { data: null, error: errorBody.error || 'Failed to fetch user details.' };
+      }
+
+      const data = await response.json();
+      return { data, error: null };
+    } catch (_error) {
+      return { data: null, error: 'Failed to fetch user details.' };
+    }
+  },
 };
