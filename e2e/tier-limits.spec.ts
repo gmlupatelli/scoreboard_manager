@@ -173,6 +173,7 @@ test.describe('Supporter Benefits', () => {
   test('should have higher entry limit for supporters', async ({ page, loginAs }) => {
     await loginAs(TEST_USERS.supporter6);
     await safeGoto(page, '/dashboard');
+    await dismissDowngradeModal(page);
 
     // Navigate to scoreboard management
     const manageButton = page.locator('[data-testid="scoreboard-card-manage"]').first();
