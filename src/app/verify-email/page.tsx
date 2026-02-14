@@ -75,7 +75,7 @@ function VerifyEmailContent() {
       }, 2000);
     };
 
-    verifyEmail();
+    void verifyEmail();
   }, [searchParams, router]);
 
   return (

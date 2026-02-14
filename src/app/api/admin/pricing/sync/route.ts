@@ -180,12 +180,15 @@ export async function POST(request: NextRequest) {
         syncedCount,
         skippedCount,
         changesCount: diffs.length,
-        priceChanges: diffs.length > 0 ? diffs.map((d) => ({
-          tier: d.tier,
-          interval: d.interval,
-          from: d.oldAmountCents,
-          to: d.newAmountCents,
-        })) : undefined,
+        priceChanges:
+          diffs.length > 0
+            ? diffs.map((d) => ({
+                tier: d.tier,
+                interval: d.interval,
+                from: d.oldAmountCents,
+                to: d.newAmountCents,
+              }))
+            : undefined,
         errors: errors.length > 0 ? errors : undefined,
       },
     });

@@ -49,7 +49,10 @@ test.describe('axe-core Automated Checks', () => {
     page,
   }) => {
     await safeGoto(page, `${BASE_URL}/public-scoreboard-list`);
-    await page.locator('h1, h2, [data-testid]').first().waitFor({ state: 'visible', timeout: 10000 });
+    await page
+      .locator('h1, h2, [data-testid]')
+      .first()
+      .waitFor({ state: 'visible', timeout: 10000 });
     // Wait for loading to finish before running axe
     await expect(page.locator('text=/Loading scoreboards/i')).not.toBeVisible({ timeout: 15000 });
 
@@ -128,7 +131,9 @@ test.describe('Keyboard Navigation', () => {
     // Verify that submission was triggered — either we navigate away from login
     // or an error message appears (either means the form was submitted)
     await expect(
-      page.locator('.text-destructive, [role="alert"], [data-testid="error-message"]').first()
+      page
+        .locator('.text-destructive, [role="alert"], [data-testid="error-message"]')
+        .first()
         .or(page.locator('text=/Invalid|error|failed/i').first())
     ).toBeVisible({ timeout: 15000 });
   });

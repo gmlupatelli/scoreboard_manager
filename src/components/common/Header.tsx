@@ -158,13 +158,14 @@ const Header = ({ isAuthenticated = false, onLogout, customStyles = null }: Head
 
   const isActivePath = (path: string) => pathname === path;
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     setIsUserMenuOpen(false);
     if (onLogout) {
       onLogout();
     } else {
-      await signOut();
-      router.push('/');
+      void signOut().then(() => {
+        router.push('/');
+      });
     }
   };
 

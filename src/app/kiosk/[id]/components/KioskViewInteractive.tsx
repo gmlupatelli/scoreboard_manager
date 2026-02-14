@@ -147,14 +147,14 @@ export default function KioskViewInteractive() {
     }
 
     refreshDebounceRef.current = setTimeout(() => {
-      fetchEntries();
+      void fetchEntries();
     }, 2000); // Debounce rapid changes to 2 seconds
   }, [fetchEntries]);
 
   // Initial load: fetch static data and initial entries
   useEffect(() => {
-    fetchStaticData();
-    fetchEntries();
+    void fetchStaticData();
+    void fetchEntries();
   }, [fetchStaticData, fetchEntries]);
 
   // Refresh static data only when signed URLs expire (80% of expiry time)
@@ -165,7 +165,7 @@ export default function KioskViewInteractive() {
     const refreshInterval = expirySeconds * 0.8 * 1000;
 
     const intervalId = setInterval(() => {
-      fetchStaticData();
+      void fetchStaticData();
     }, refreshInterval);
 
     return () => clearInterval(intervalId);
@@ -183,21 +183,25 @@ export default function KioskViewInteractive() {
     const currentSlide = slides[currentSlideIndex];
     const duration = (currentSlide?.duration ?? 10) * 1000;
 
-    slideTimeoutRef.current = setTimeout(async () => {
+    slideTimeoutRef.current = setTimeout(() => {
       // Check if next slide is a scoreboard - if so, fetch fresh entries first
       const nextIndex = (currentSlideIndex + 1) % slides.length;
       const nextSlide = slides[nextIndex];
 
+      const advance = () => {
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
+          setIsTransitioning(false);
+        }, 500); // Transition duration
+      };
+
       if (nextSlide?.type === 'scoreboard') {
         // Fetch fresh entries before showing scoreboard
-        await fetchEntries();
+        void fetchEntries().then(advance);
+      } else {
+        advance();
       }
-
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
-        setIsTransitioning(false);
-      }, 500); // Transition duration
     }, duration);
 
     return () => {
@@ -229,7 +233,7 @@ export default function KioskViewInteractive() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [scoreboardId, debouncedRefreshEntries]);
 
@@ -266,7 +270,7 @@ export default function KioskViewInteractive() {
       switch (e.key) {
         case 'Escape':
           if (document.fullscreenElement) {
-            document.exitFullscreen();
+            void document.exitFullscreen();
             setIsFullscreen(false);
           }
           break;
@@ -284,7 +288,7 @@ export default function KioskViewInteractive() {
           break;
         case 'f':
         case 'F':
-          toggleFullscreen();
+          void toggleFullscreen();
           break;
       }
     };

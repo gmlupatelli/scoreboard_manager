@@ -134,7 +134,7 @@ export default function PersonalInfoSection({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && fullName.trim() && !savingName) {
                     e.preventDefault();
-                    handleSaveName();
+                    void handleSaveName();
                   } else if (e.key === 'Escape') {
                     handleCancelName();
                   }
@@ -193,7 +193,7 @@ export default function PersonalInfoSection({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && email.trim() && !savingEmail) {
                     e.preventDefault();
-                    handleSaveEmail();
+                    void handleSaveEmail();
                   } else if (e.key === 'Escape') {
                     handleCancelEmail();
                   }

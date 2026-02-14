@@ -5,7 +5,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 export interface UndoAction {
   id: string;
   message: string;
-  undo: () => Promise<void>;
+  undo: () => void | Promise<void>;
   timestamp: number;
 }
 

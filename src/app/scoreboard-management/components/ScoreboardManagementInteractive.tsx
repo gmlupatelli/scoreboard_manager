@@ -96,14 +96,10 @@ const ScoreboardManagementInteractive = () => {
   useEffect(() => {
     const pendingDeletes = pendingDeletesRef.current;
     return () => {
-      pendingDeletes.forEach(async ({ entry, timerId }) => {
+      pendingDeletes.forEach(({ entry, timerId }) => {
         clearTimeout(timerId);
-        try {
-          if (scoreboardId) {
-            await scoreboardService.deleteEntry(scoreboardId, entry.id);
-          }
-        } catch {
-          // Silent failure on unmount
+        if (scoreboardId) {
+          void scoreboardService.deleteEntry(scoreboardId, entry.id);
         }
       });
       pendingDeletes.clear();
@@ -143,7 +139,7 @@ const ScoreboardManagementInteractive = () => {
   }, [user?.id, isFreeUser]);
 
   useEffect(() => {
-    loadPublicUnlockRemaining();
+    void loadPublicUnlockRemaining();
   }, [loadPublicUnlockRemaining, scoreboard?.isLocked, entries.length]);
 
   const recalculateRanks = useCallback(
@@ -242,7 +238,7 @@ const ScoreboardManagementInteractive = () => {
   useEffect(() => {
     if (user && userProfile && scoreboardId && !hasLoadedRef.current) {
       hasLoadedRef.current = true;
-      loadScoreboardData();
+      void loadScoreboardData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, userProfile, scoreboardId]);
@@ -446,20 +442,20 @@ const ScoreboardManagementInteractive = () => {
     setEntries((prev) => prev.filter((e) => e.id !== id));
 
     // Set up delayed API delete (5 seconds)
-    const timerId = setTimeout(async () => {
+    const timerId = setTimeout(() => {
       pendingDeletesRef.current.delete(deleteId);
-      try {
-        const { error } = await scoreboardService.deleteEntry(scoreboard.id, id);
-        if (error) {
-          // Restore on error
+      void scoreboardService
+        .deleteEntry(scoreboard.id, id)
+        .then(({ error }) => {
+          if (error) {
+            setEntries((prev) => [...prev, entryToDelete]);
+            showToast('Failed to delete entry', 'error');
+          }
+        })
+        .catch(() => {
           setEntries((prev) => [...prev, entryToDelete]);
           showToast('Failed to delete entry', 'error');
-        }
-      } catch {
-        // Restore on error
-        setEntries((prev) => [...prev, entryToDelete]);
-        showToast('Failed to delete entry', 'error');
-      }
+        });
     }, 5000);
 
     // Track pending delete
@@ -470,7 +466,7 @@ const ScoreboardManagementInteractive = () => {
       id: deleteId,
       message: `Deleted "${entryToDelete.name}"`,
       timestamp: Date.now(),
-      undo: async () => {
+      undo: () => {
         // Cancel the pending delete
         const pending = pendingDeletesRef.current.get(deleteId);
         if (pending) {
@@ -526,28 +522,33 @@ const ScoreboardManagementInteractive = () => {
       title: 'Clear All Entries',
       message:
         'Are you sure you want to delete all entries? This action cannot be undone and will remove all participant data from this scoreboard.',
-      onConfirm: async () => {
+      onConfirm: () => {
         setConfirmModal((prev) => ({
           ...prev,
           isProcessing: true,
           processingText: 'Clearing all entries...',
         }));
-        try {
-          const { error } = await scoreboardService.deleteAllEntries(scoreboard.id);
-          if (error) throw error;
-
-          setEntries([]);
-          showToast('All entries cleared successfully', 'success');
-        } catch (_err) {
-          showToast('Failed to clear all entries', 'error');
-        } finally {
-          setConfirmModal((prev) => ({
-            ...prev,
-            isOpen: false,
-            isProcessing: false,
-            processingText: '',
-          }));
-        }
+        void scoreboardService
+          .deleteAllEntries(scoreboard.id)
+          .then(({ error }) => {
+            if (error) {
+              showToast('Failed to clear all entries', 'error');
+            } else {
+              setEntries([]);
+              showToast('All entries cleared successfully', 'success');
+            }
+          })
+          .catch(() => {
+            showToast('Failed to clear all entries', 'error');
+          })
+          .finally(() => {
+            setConfirmModal((prev) => ({
+              ...prev,
+              isOpen: false,
+              isProcessing: false,
+              processingText: '',
+            }));
+          });
       },
     });
   };

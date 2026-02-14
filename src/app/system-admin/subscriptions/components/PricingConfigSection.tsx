@@ -49,7 +49,7 @@ export default function PricingConfigSection({ isOpen, onToggle }: PricingConfig
     setError(null);
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const response = await fetch('/api/admin/pricing', { headers });
       if (!response.ok) {
         const body = (await response.json()) as { error?: string };
@@ -67,7 +67,7 @@ export default function PricingConfigSection({ isOpen, onToggle }: PricingConfig
 
   useEffect(() => {
     if (isOpen) {
-      loadPrices();
+      void loadPrices();
     }
   }, [isOpen, loadPrices]);
 
@@ -77,7 +77,7 @@ export default function PricingConfigSection({ isOpen, onToggle }: PricingConfig
     setSyncResult(null);
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const response = await fetch('/api/admin/pricing/sync', {
         method: 'POST',
         headers,

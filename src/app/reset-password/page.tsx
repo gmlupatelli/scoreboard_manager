@@ -33,7 +33,7 @@ export default function ResetPasswordPage() {
         }
       }
     };
-    checkSession();
+    void checkSession();
   }, [isMounted]);
 
   const handleSubmit = async (e: React.FormEvent) => {

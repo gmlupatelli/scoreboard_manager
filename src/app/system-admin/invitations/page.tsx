@@ -68,7 +68,7 @@ export default function SystemAdminInvitationsPage() {
   const fetchInviters = useCallback(async () => {
     setLoadingInviters(true);
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await execute(
         '/api/invitations/inviters',
         {
@@ -98,7 +98,7 @@ export default function SystemAdminInvitationsPage() {
       setError('');
 
       try {
-        const authHeaders = await getAuthHeaders();
+        const authHeaders = getAuthHeaders();
         const params = new URLSearchParams({
           paginated: 'true',
           page: page.toString(),
@@ -146,7 +146,7 @@ export default function SystemAdminInvitationsPage() {
 
   useEffect(() => {
     if (isAuthorized) {
-      fetchInviters();
+      void fetchInviters();
     }
   }, [isAuthorized, fetchInviters]);
 
@@ -169,19 +169,19 @@ export default function SystemAdminInvitationsPage() {
   useEffect(() => {
     if (isAuthorized) {
       setCurrentPage(1);
-      fetchInvitations(1);
+      void fetchInvitations(1);
     }
   }, [debouncedSearch, statusFilter, ownerFilter, isAuthorized, fetchInvitations]);
 
   useEffect(() => {
     if (isAuthorized && currentPage > 1) {
-      fetchInvitations(currentPage);
+      void fetchInvitations(currentPage);
     }
   }, [currentPage, isAuthorized, fetchInvitations]);
 
   const handleCancelInvitation = async (invitationId: string) => {
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await execute(
         `/api/invitations/${invitationId}`,
         {
@@ -229,7 +229,7 @@ export default function SystemAdminInvitationsPage() {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      fetchInvitations(page);
+      void fetchInvitations(page);
     }
   };
 
@@ -561,8 +561,8 @@ export default function SystemAdminInvitationsPage() {
         onSuccess={() => {
           setSuccess('Invitation sent successfully');
           setTimeout(() => setSuccess(''), 3000);
-          fetchInvitations(1);
-          fetchInviters();
+          void fetchInvitations(1);
+          void fetchInviters();
         }}
       />
     </div>

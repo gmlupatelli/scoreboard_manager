@@ -59,7 +59,7 @@ export function useDynamicPricing(): UseDynamicPricingReturn {
       setIsLoading(false);
     };
 
-    loadPrices();
+    void loadPrices();
 
     return () => {
       isMounted = false;

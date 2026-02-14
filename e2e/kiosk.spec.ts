@@ -180,7 +180,7 @@ test.describe('Kiosk Settings', () => {
 
     if (await durationSelect.isVisible()) {
       await durationSelect.selectOption('15').catch(() => {
-        durationSelect.selectOption({ index: 2 });
+        void durationSelect.selectOption({ index: 2 });
       });
 
       const selectedValue = await durationSelect.inputValue();
@@ -194,9 +194,11 @@ test.describe('Kiosk Settings', () => {
       const scoreboardSlide = page
         .locator('[data-testid="scoreboard-slide"]')
         .or(page.locator('text=Scoreboard').first());
-      await expect(scoreboardSlide).toBeVisible({ timeout: 5000 }).catch(() => {
-        // Scoreboard slide may be in different position — non-fatal
-      });
+      await expect(scoreboardSlide)
+        .toBeVisible({ timeout: 5000 })
+        .catch(() => {
+          // Scoreboard slide may be in different position — non-fatal
+        });
     }
   });
 
@@ -211,7 +213,7 @@ test.describe('Kiosk Settings', () => {
     // Upload an image
     const fileInput = page.locator('input[type="file"]');
 
-    if (await fileInput.count() > 0) {
+    if ((await fileInput.count()) > 0) {
       await fileInput.setInputFiles(testImagePath);
 
       // Wait for the slide thumbnail to appear
@@ -224,8 +226,7 @@ test.describe('Kiosk Settings', () => {
       expect(count).toBeGreaterThanOrEqual(1);
 
       // Verify thumbnails have valid src
-      const thumbnails = page
-        .locator('img[src*="kiosk-slides"]');
+      const thumbnails = page.locator('img[src*="kiosk-slides"]');
 
       const thumbCount = await thumbnails.count();
       if (thumbCount > 0) {
@@ -254,16 +255,13 @@ test.describe('Kiosk Settings', () => {
     const deleteCount = await deleteButtons.count();
 
     if (deleteCount > 0) {
-      const slides = page
-        .locator('[data-testid="kiosk-slide-item"]');
+      const slides = page.locator('[data-testid="kiosk-slide-item"]');
       const initialCount = await slides.count();
 
       await deleteButtons.first().click();
 
       // Handle confirmation dialog if it appears
-      const confirmButton = page
-        .locator('button')
-        .filter({ hasText: /confirm|yes|delete/i });
+      const confirmButton = page.locator('button').filter({ hasText: /confirm|yes|delete/i });
       try {
         await confirmButton.waitFor({ state: 'visible', timeout: 2000 });
         await confirmButton.click();
@@ -337,9 +335,7 @@ test.describe('Kiosk View', () => {
 
     await openKioskView(page, scoreboardId!);
 
-    const kioskContainer = page
-      .locator('[data-testid="kiosk-container"]')
-      .or(page.locator('main'));
+    const kioskContainer = page.locator('[data-testid="kiosk-container"]').or(page.locator('main'));
     await expect(kioskContainer).toBeVisible({ timeout: 10000 });
 
     // Verify keyboard controls work without errors
@@ -577,9 +573,7 @@ test.describe('Kiosk Display', () => {
 
     await openKioskView(page, scoreboardId!);
 
-    const kioskContainer = page
-      .locator('[data-testid="kiosk-container"]')
-      .or(page.locator('main'));
+    const kioskContainer = page.locator('[data-testid="kiosk-container"]').or(page.locator('main'));
     await expect(kioskContainer).toBeVisible({ timeout: 10000 });
 
     // If there are image slides, they should have img elements
@@ -709,9 +703,7 @@ test.describe('Non-Supporter Access', () => {
           await kioskToggle.click();
 
           // Should show supporter feature lock, not the enable checkbox
-          const supporterLock = page
-            .locator('text=/supporter|upgrade|subscription/i')
-            .first();
+          const supporterLock = page.locator('text=/supporter|upgrade|subscription/i').first();
           await expect(supporterLock).toBeVisible({ timeout: 5000 });
         }
       }

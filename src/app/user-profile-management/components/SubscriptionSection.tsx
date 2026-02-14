@@ -89,7 +89,7 @@ export default function SubscriptionSection() {
       setIsLoading(false);
     };
 
-    loadSubscription();
+    void loadSubscription();
   }, [user?.id]);
 
   // Redirect to dashboard on successful checkout

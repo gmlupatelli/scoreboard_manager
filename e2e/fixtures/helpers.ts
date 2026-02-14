@@ -39,7 +39,8 @@ export async function safeGoto(
       }
       return;
     } catch {
-      if (attempt === maxRetries) throw new Error(`Failed to navigate to ${url} after ${maxRetries} attempts`);
+      if (attempt === maxRetries)
+        throw new Error(`Failed to navigate to ${url} after ${maxRetries} attempts`);
     }
   }
 }

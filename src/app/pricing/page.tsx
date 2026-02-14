@@ -192,7 +192,7 @@ function PricingContent() {
       };
 
       // Small delay to ensure everything is ready
-      setTimeout(doCheckout, 300);
+      setTimeout(() => void doCheckout(), 300);
     } else if (shouldCheckout && !user && !authLoading) {
       // User not logged in but checkout=true - clear the state
       setAutoCheckoutPending(false);

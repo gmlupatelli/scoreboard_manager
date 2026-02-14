@@ -215,7 +215,7 @@ test.describe('Supporter Preferences', () => {
 
     // Fill in display name
     const displayNameInput = page.locator(
-      'input[placeholder="Leave blank to use your account name"]',
+      'input[placeholder="Leave blank to use your account name"]'
     );
     await displayNameInput.waitFor({ state: 'visible', timeout: 5000 });
     await displayNameInput.fill('TestDisplayName');
@@ -225,9 +225,7 @@ test.describe('Supporter Preferences', () => {
     await saveButton.click();
 
     // Wait for the save to complete by checking the button reverts or a success indicator
-    await expect
-      .poll(() => apiCalled, { timeout: 10000, intervals: [500] })
-      .toBe(true);
+    await expect.poll(() => apiCalled, { timeout: 10000, intervals: [500] }).toBe(true);
   });
 });
 
@@ -245,8 +243,6 @@ test.describe('Public Supporters Page', () => {
     const emptyState = page.locator('text=/Be the first supporter/i');
 
     // One of these should be visible
-    await expect(
-      supportersList.or(emptyState).first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(supportersList.or(emptyState).first()).toBeVisible({ timeout: 15000 });
   });
 });

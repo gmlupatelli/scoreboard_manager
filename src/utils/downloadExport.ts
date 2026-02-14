@@ -8,7 +8,7 @@
  */
 export async function downloadScoreboardCSV(
   scoreboardId: string,
-  getAuthHeaders: () => Promise<Record<string, string>>
+  getAuthHeaders: () => Record<string, string> | Promise<Record<string, string>>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const headers = await getAuthHeaders();

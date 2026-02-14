@@ -177,7 +177,15 @@ test.describe('Regular User - Admin Pages Restriction', () => {
 });
 
 test.describe('Public Pages - Smoke', () => {
-  const publicPages = ['/', '/about', '/public-scoreboard-list', '/privacy', '/terms', '/cookies', '/contact'];
+  const publicPages = [
+    '/',
+    '/about',
+    '/public-scoreboard-list',
+    '/privacy',
+    '/terms',
+    '/cookies',
+    '/contact',
+  ];
 
   for (const path of publicPages) {
     test(`${path} responds with 200`, async ({ request }) => {
@@ -186,4 +194,3 @@ test.describe('Public Pages - Smoke', () => {
     });
   }
 });
-

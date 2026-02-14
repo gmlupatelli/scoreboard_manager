@@ -48,7 +48,7 @@ export default function SystemAdminSettingsPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await execute(
         '/api/settings',
         {
@@ -79,7 +79,7 @@ export default function SystemAdminSettingsPage() {
     setLoadingOrphans(true);
     setError('');
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await execute(
         `/api/admin/orphan-files?older_than_minutes=${orphanMinutes}`,
         {
@@ -121,7 +121,7 @@ export default function SystemAdminSettingsPage() {
     setCleaningOrphans(true);
     setError('');
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await fetch(`/api/admin/orphan-files?older_than_minutes=${orphanMinutes}`, {
         method: 'DELETE',
         credentials: 'include',
@@ -154,7 +154,7 @@ export default function SystemAdminSettingsPage() {
 
   useEffect(() => {
     if (isAuthorized) {
-      fetchSettings().finally(() => {
+      void fetchSettings().finally(() => {
         if (isMounted()) {
           setLoading(false);
         }
@@ -174,7 +174,7 @@ export default function SystemAdminSettingsPage() {
     const newValue = !settings[field];
 
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await fetch('/api/settings', {
         method: 'PUT',
         headers: {

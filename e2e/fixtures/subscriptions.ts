@@ -223,10 +223,7 @@ export const seedSubscription = async (
       .update({ downgrade_notice_seen_at: new Date().toISOString() })
       .eq('id', userId);
 
-    await client
-      .from('scoreboards')
-      .update({ is_locked: false })
-      .eq('owner_id', userId);
+    await client.from('scoreboards').update({ is_locked: false }).eq('owner_id', userId);
   }
 
   return { success: true, subscriptionId: data?.id };
@@ -450,9 +447,7 @@ export const SARAH_SUPPORTER_EMAIL = SUPPORTER_1_EMAIL;
  * Get a scoreboard ID directly from the database for a given user email.
  * Avoids slow UI navigation (the old getScoreboardId helper opened 4 pages).
  */
-export const getScoreboardIdFromDb = async (
-  userEmail: string
-): Promise<string | null> => {
+export const getScoreboardIdFromDb = async (userEmail: string): Promise<string | null> => {
   const client = getServiceClient();
 
   const userId = await getUserIdByEmail(userEmail);

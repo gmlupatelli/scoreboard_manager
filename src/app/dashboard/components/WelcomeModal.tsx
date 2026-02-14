@@ -48,7 +48,7 @@ export default function WelcomeModal({
     setError(null);
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const response = await fetch('/api/user/supporter-preferences', {
         method: 'PATCH',
         headers: {

@@ -106,7 +106,7 @@ export default function SubscriptionsInteractive() {
 
   useEffect(() => {
     if (isAuthorized) {
-      fetchUsers();
+      void fetchUsers();
     }
   }, [isAuthorized, fetchUsers]);
 
@@ -123,7 +123,7 @@ export default function SubscriptionsInteractive() {
   };
 
   const handleRefresh = () => {
-    fetchUsers();
+    void fetchUsers();
   };
 
   const handleLinkSuccess = () => {
@@ -131,7 +131,7 @@ export default function SubscriptionsInteractive() {
     setSelectedUser(null);
     setSuccessMessage('Subscription linked successfully');
     refreshAuditLog();
-    fetchUsers();
+    void fetchUsers();
   };
 
   const handleGiftSuccess = () => {
@@ -139,7 +139,7 @@ export default function SubscriptionsInteractive() {
     setSelectedUser(null);
     setSuccessMessage('Appreciation tier gifted successfully');
     refreshAuditLog();
-    fetchUsers();
+    void fetchUsers();
   };
 
   const handleCancelSuccess = () => {
@@ -147,13 +147,13 @@ export default function SubscriptionsInteractive() {
     setSelectedUser(null);
     setSuccessMessage('Subscription cancelled successfully');
     refreshAuditLog();
-    fetchUsers();
+    void fetchUsers();
   };
 
   const handleRemoveGiftSuccess = () => {
     setSuccessMessage('Appreciation tier removed successfully');
     refreshAuditLog();
-    fetchUsers();
+    void fetchUsers();
   };
 
   const handleRefetchSubscription = async (userId: string) => {

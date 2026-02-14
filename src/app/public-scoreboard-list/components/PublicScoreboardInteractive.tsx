@@ -103,12 +103,12 @@ const PublicScoreboardInteractive = () => {
 
   // Load scoreboards when debounced search or sortBy changes
   useEffect(() => {
-    loadPublicScoreboards(true, debouncedSearch, sortBy);
+    void loadPublicScoreboards(true, debouncedSearch, sortBy);
   }, [debouncedSearch, sortBy, loadPublicScoreboards]);
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadPublicScoreboards(false, debouncedSearch, sortBy);
+      void loadPublicScoreboards(false, debouncedSearch, sortBy);
     }
   }, [loadingMore, hasMore, debouncedSearch, sortBy, loadPublicScoreboards]);
 

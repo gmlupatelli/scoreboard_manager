@@ -60,7 +60,7 @@ function RegisterContent() {
       }
     };
 
-    checkSettings();
+    void checkSettings();
   }, []);
 
   const checkInvitation = async (emailToCheck: string) => {
@@ -88,7 +88,7 @@ function RegisterContent() {
   useEffect(() => {
     if (!isPublicRegistrationAllowed && email) {
       const timeoutId = setTimeout(() => {
-        checkInvitation(email);
+        void checkInvitation(email);
       }, 500);
       return () => clearTimeout(timeoutId);
     }

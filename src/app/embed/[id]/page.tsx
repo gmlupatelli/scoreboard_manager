@@ -104,11 +104,11 @@ export default function EmbedScoreboardPage() {
       return;
     }
 
-    loadScoreboardData();
+    void loadScoreboardData();
 
     const unsubscribe = scoreboardService.subscribeToScoreboardChanges(scoreboardId, {
-      onScoreboardChange: () => loadScoreboardData(),
-      onEntriesChange: () => loadEntriesOnly(),
+      onScoreboardChange: () => void loadScoreboardData(),
+      onEntriesChange: () => void loadEntriesOnly(),
     });
 
     return () => unsubscribe();

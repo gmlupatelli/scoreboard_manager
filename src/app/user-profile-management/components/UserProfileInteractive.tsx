@@ -61,7 +61,7 @@ export default function UserProfileInteractive() {
     };
 
     if (user?.id) {
-      loadProfile();
+      void loadProfile();
     }
     // Only re-run when user.id changes, not when other user properties change
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -28,10 +28,7 @@ async function getPublicRegToggle(page: import('@playwright/test').Page) {
   return toggle;
 }
 
-async function setPublicRegistration(
-  page: import('@playwright/test').Page,
-  enabled: boolean
-) {
+async function setPublicRegistration(page: import('@playwright/test').Page, enabled: boolean) {
   const toggle = await getPublicRegToggle(page);
   const isOn = (await toggle.getAttribute('aria-checked')) === 'true';
 
@@ -87,10 +84,17 @@ test.describe('Invitation Feature Toggle & Enforcement', () => {
 
     // Use expect.poll to wait for the settings API to resolve and the UI to update
     await expect
-      .poll(async () => invitationMessage.first().isVisible().catch(() => false), {
-        timeout: 15000,
-        intervals: [500, 1000, 1000, 2000],
-      })
+      .poll(
+        async () =>
+          invitationMessage
+            .first()
+            .isVisible()
+            .catch(() => false),
+        {
+          timeout: 15000,
+          intervals: [500, 1000, 1000, 2000],
+        }
+      )
       .toBeTruthy();
   });
 
@@ -109,7 +113,7 @@ test.describe('Invitation Feature Toggle & Enforcement', () => {
 
     // Wait for the loading spinner to disappear (settings API call)
     await page
-      .locator('text=/^Loading\.\.\.$/')
+      .locator('text=/^Loading\\.\\.\\.$/')
       .waitFor({ state: 'hidden', timeout: 15000 })
       .catch(() => {});
 

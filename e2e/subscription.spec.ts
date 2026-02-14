@@ -9,11 +9,7 @@
  */
 
 import { test, expect, TEST_USERS } from './fixtures/auth';
-import {
-  seedSubscription,
-  removeSubscription,
-  SUPPORTER_2_EMAIL,
-} from './fixtures/subscriptions';
+import { seedSubscription, removeSubscription, SUPPORTER_2_EMAIL } from './fixtures/subscriptions';
 import { navigateToSubscription } from './fixtures/helpers';
 
 // Force serial: all tests share morgan@example.com and mutate subscription state
@@ -242,7 +238,10 @@ test.describe('Gifted Subscription', () => {
 // =============================================================================
 
 test.describe('Dashboard Warnings', () => {
-  test('should show warning when subscription is cancelled with grace period', async ({ page, loginAs }) => {
+  test('should show warning when subscription is cancelled with grace period', async ({
+    page,
+    loginAs,
+  }) => {
     // Seed cancelled_grace_period state to trigger the "Subscription Cancelled" warning banner
     // The dashboard shows a warning when status === 'cancelled' and ends_at is in the future
     await seedSubscription(SUPPORTER_2_EMAIL, 'cancelled_grace_period');

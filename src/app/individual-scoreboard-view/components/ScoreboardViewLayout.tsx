@@ -60,15 +60,15 @@ export default function ScoreboardViewLayout() {
       setIsLoading(false);
     };
 
-    loadInitialData();
+    void loadInitialData();
 
     // Set up single real-time subscription for both scoreboard and entries
     const unsubscribe = scoreboardService.subscribeToScoreboardChanges(scoreboardId, {
       onScoreboardChange: () => {
-        loadScoreboard();
+        void loadScoreboard();
       },
       onEntriesChange: () => {
-        loadEntries();
+        void loadEntries();
       },
     });
 

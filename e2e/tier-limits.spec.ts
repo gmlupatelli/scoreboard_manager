@@ -39,7 +39,10 @@ async function dismissDowngradeModal(page: import('@playwright/test').Page) {
   try {
     await dismissButton.waitFor({ state: 'visible', timeout: 5000 });
     await dismissButton.click();
-    await page.locator('text=Your plan has ended').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    await page
+      .locator('text=Your plan has ended')
+      .waitFor({ state: 'hidden', timeout: 5000 })
+      .catch(() => {});
   } catch {
     // Modal didn't appear — continue
   }
@@ -55,7 +58,9 @@ test.describe('Free Tier Limits', () => {
     await safeGoto(page, '/dashboard');
 
     // Wait for dashboard content to load
-    await page.locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1').first()
+    await page
+      .locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1')
+      .first()
       .waitFor({ state: 'visible', timeout: 20000 });
 
     // Free users should see usage counter (e.g., "2 of 2 public scoreboards")
@@ -67,7 +72,9 @@ test.describe('Free Tier Limits', () => {
     await loginAs(TEST_USERS.user7);
     await safeGoto(page, '/dashboard');
 
-    await page.locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1').first()
+    await page
+      .locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1')
+      .first()
       .waitFor({ state: 'visible', timeout: 20000 });
 
     // Open create modal
@@ -87,9 +94,24 @@ test.describe('Free Tier Limits', () => {
     let hasWarning = false;
     let hasUsage = false;
     let hasSupporterLock = false;
-    try { await limitWarning.waitFor({ state: 'visible', timeout: 3000 }); hasWarning = true; } catch { /* not visible */ }
-    try { await usageText.waitFor({ state: 'visible', timeout: 3000 }); hasUsage = true; } catch { /* not visible */ }
-    try { await supporterLabel.first().waitFor({ state: 'visible', timeout: 3000 }); hasSupporterLock = true; } catch { /* not visible */ }
+    try {
+      await limitWarning.waitFor({ state: 'visible', timeout: 3000 });
+      hasWarning = true;
+    } catch {
+      /* not visible */
+    }
+    try {
+      await usageText.waitFor({ state: 'visible', timeout: 3000 });
+      hasUsage = true;
+    } catch {
+      /* not visible */
+    }
+    try {
+      await supporterLabel.first().waitFor({ state: 'visible', timeout: 3000 });
+      hasSupporterLock = true;
+    } catch {
+      /* not visible */
+    }
 
     // Free user create modal should show at least one limit indicator
     expect(hasWarning || hasUsage || hasSupporterLock).toBeTruthy();
@@ -102,16 +124,17 @@ test.describe('Free Tier Limits', () => {
     await safeGoto(page, '/dashboard');
 
     // Wait for scoreboard cards to load
-    const manageButton = page
-      .locator('[data-testid="scoreboard-card-manage"]')
-      .first();
+    const manageButton = page.locator('[data-testid="scoreboard-card-manage"]').first();
 
     await manageButton.waitFor({ state: 'visible', timeout: 20000 });
     await manageButton.click();
     await page.waitForURL(/\/scoreboard-management/, { timeout: 15000 });
 
     // Wait for management page data to load
-    await page.locator('h1, h2, [data-testid]').first().waitFor({ state: 'visible', timeout: 10000 });
+    await page
+      .locator('h1, h2, [data-testid]')
+      .first()
+      .waitFor({ state: 'visible', timeout: 10000 });
 
     // Free users see entry usage counter
     const entryCounter = page.locator('text=/\\d+.*of.*\\d+.*entries/i');
@@ -137,7 +160,9 @@ test.describe('Supporter Benefits', () => {
     await safeGoto(page, '/dashboard');
 
     // Wait for dashboard content
-    await page.locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1').first()
+    await page
+      .locator('[data-testid="scoreboard-card"], [data-testid="empty-dashboard"], h1')
+      .first()
       .waitFor({ state: 'visible', timeout: 20000 });
 
     // Supporters should NOT see the free-tier "X of 2 public scoreboards" counter
@@ -150,16 +175,17 @@ test.describe('Supporter Benefits', () => {
     await safeGoto(page, '/dashboard');
 
     // Navigate to scoreboard management
-    const manageButton = page
-      .locator('[data-testid="scoreboard-card-manage"]')
-      .first();
+    const manageButton = page.locator('[data-testid="scoreboard-card-manage"]').first();
 
     await manageButton.waitFor({ state: 'visible', timeout: 20000 });
     await manageButton.click();
     await page.waitForURL(/\/scoreboard-management/, { timeout: 15000 });
 
     // Wait for management page to load
-    await page.locator('h1, h2, [data-testid]').first().waitFor({ state: 'visible', timeout: 10000 });
+    await page
+      .locator('h1, h2, [data-testid]')
+      .first()
+      .waitFor({ state: 'visible', timeout: 10000 });
 
     // Supporters should NOT see the free-tier "X of 50 entries" counter
     const freeTierEntryCounter = page.locator('text=/\\d+.*of.*50.*entries/i');
@@ -180,7 +206,10 @@ test.describe('Downgrade Flow', () => {
     await markDowngradeNoticeSeen(SUPPORTER_6_EMAIL);
   });
 
-  test('should show downgrade notice modal on first login after expiry', async ({ page, loginAs }) => {
+  test('should show downgrade notice modal on first login after expiry', async ({
+    page,
+    loginAs,
+  }) => {
     // Seed expired subscription and clear notice before login to avoid state drift
     await seedSubscription(SUPPORTER_6_EMAIL, 'expired');
     await lockAllScoreboards(SUPPORTER_6_EMAIL);
@@ -246,7 +275,9 @@ test.describe('Downgrade Flow', () => {
     await dismissDowngradeModal(page);
 
     // Wait for scoreboard cards to load
-    await page.locator('[data-testid="scoreboard-card-title"]').first()
+    await page
+      .locator('[data-testid="scoreboard-card-title"]')
+      .first()
       .waitFor({ state: 'visible', timeout: 20000 });
 
     // All scoreboards should show "Read-only" badge
@@ -271,19 +302,22 @@ test.describe('Downgrade Flow', () => {
     await dismissDowngradeModal(page);
 
     // Wait for cards, then navigate to manage a locked scoreboard
-    await page.locator('[data-testid="scoreboard-card-title"]').first()
+    await page
+      .locator('[data-testid="scoreboard-card-title"]')
+      .first()
       .waitFor({ state: 'visible', timeout: 20000 });
 
-    const manageButton = page
-      .locator('[data-testid="scoreboard-card-manage"]')
-      .first();
+    const manageButton = page.locator('[data-testid="scoreboard-card-manage"]').first();
 
     await expect(manageButton).toBeVisible({ timeout: 5000 });
     await manageButton.click();
     await page.waitForURL(/\/scoreboard-management/, { timeout: 15000 });
 
     // Wait for management page to load
-    await page.locator('h1, h2, [data-testid]').first().waitFor({ state: 'visible', timeout: 10000 });
+    await page
+      .locator('h1, h2, [data-testid]')
+      .first()
+      .waitFor({ state: 'visible', timeout: 10000 });
 
     // Should see the read-only mode banner
     const readOnlyBanner = page.locator('text=/Read-only mode/i');

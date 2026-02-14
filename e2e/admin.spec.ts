@@ -56,7 +56,10 @@ test.describe('System Admin - Settings Management', () => {
 
     await expect(
       page.getByRole('heading', { name: /system settings/i }).or(
-        page.locator('h1').filter({ hasText: /settings/i }).first()
+        page
+          .locator('h1')
+          .filter({ hasText: /settings/i })
+          .first()
       )
     ).toBeVisible();
   });
@@ -104,8 +107,8 @@ test.describe('System Admin - Invitations Oversight', () => {
     await safeGoto(page, '/system-admin/invitations');
 
     await page
-      .locator('text=/^Loading\.\.\.$/')
-      .waitFor({ state: 'hidden', timeout: 15000 })
+      .locator('text=/^Loading\\.\\.\\.$/')
+      .waitFor({ state: 'hidden', timeout: 5000 })
       .catch(() => {});
 
     const inviterFilter = page
@@ -136,9 +139,9 @@ test.describe('System Admin - Scoreboard Access', () => {
     await loginAs(TEST_USERS.admin1);
     await safeGoto(page, '/dashboard');
 
-    await expect(
-      page.locator('[data-testid="scoreboard-card-title"]').first()
-    ).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('[data-testid="scoreboard-card-title"]').first()).toBeVisible({
+      timeout: 30000,
+    });
 
     const manageButton = page.locator('[data-testid="scoreboard-card-manage"]').first();
     await expect(manageButton).toBeVisible({ timeout: 10000 });
@@ -167,4 +170,3 @@ test.describe('System Admin - Navigation', () => {
     await expect(settingsButton.first()).toBeVisible({ timeout: 10000 });
   });
 });
-

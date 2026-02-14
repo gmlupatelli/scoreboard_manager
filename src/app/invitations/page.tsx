@@ -34,7 +34,7 @@ export default function InvitationsPage() {
   useEffect(() => {
     const pendingCancels = pendingCancelsRef.current;
     return () => {
-      pendingCancels.forEach(async ({ timerId }) => {
+      pendingCancels.forEach(({ timerId }) => {
         clearTimeout(timerId);
         // The API call would have been made in the timeout, so nothing to do here
       });
@@ -44,7 +44,7 @@ export default function InvitationsPage() {
 
   const fetchInvitations = useCallback(async () => {
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await execute(
         '/api/invitations',
         {
@@ -67,11 +67,11 @@ export default function InvitationsPage() {
 
   useEffect(() => {
     if (isAuthorized) {
-      fetchInvitations();
+      void fetchInvitations();
     }
   }, [isAuthorized, fetchInvitations]);
 
-  const handleCancelInvitation = async (invitationId: string) => {
+  const handleCancelInvitation = (invitationId: string) => {
     const invitation = invitations.find((inv) => inv.id === invitationId);
     if (!invitation || invitation.status !== 'pending') return;
 
@@ -84,32 +84,34 @@ export default function InvitationsPage() {
     );
 
     // Set up delayed API call (5 seconds)
-    const timerId = setTimeout(async () => {
+    const timerId = setTimeout(() => {
       pendingCancelsRef.current.delete(cancelId);
-      try {
-        const authHeaders = await getAuthHeaders();
-        const response = await execute(
-          `/api/invitations/${invitationId}`,
-          {
-            method: 'DELETE',
-            credentials: 'include',
-            headers: authHeaders,
-          },
-          cancelId
-        );
+      void (async () => {
+        try {
+          const authHeaders = getAuthHeaders();
+          const response = await execute(
+            `/api/invitations/${invitationId}`,
+            {
+              method: 'DELETE',
+              credentials: 'include',
+              headers: authHeaders,
+            },
+            cancelId
+          );
 
-        if (!response || !response.ok) {
-          // Restore on error
+          if (!response || !response.ok) {
+            setInvitations((prev) =>
+              prev.map((inv) =>
+                inv.id === invitationId ? { ...inv, status: originalStatus } : inv
+              )
+            );
+          }
+        } catch {
           setInvitations((prev) =>
             prev.map((inv) => (inv.id === invitationId ? { ...inv, status: originalStatus } : inv))
           );
         }
-      } catch {
-        // Restore on error
-        setInvitations((prev) =>
-          prev.map((inv) => (inv.id === invitationId ? { ...inv, status: originalStatus } : inv))
-        );
-      }
+      })();
     }, 5000);
 
     // Track pending cancel
@@ -120,7 +122,7 @@ export default function InvitationsPage() {
       id: cancelId,
       message: `Cancelled invitation to ${invitation.invitee_email}`,
       timestamp: Date.now(),
-      undo: async () => {
+      undo: () => {
         // Cancel the pending API call
         const pending = pendingCancelsRef.current.get(cancelId);
         if (pending) {

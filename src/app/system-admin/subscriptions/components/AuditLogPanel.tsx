@@ -57,7 +57,7 @@ export default function AuditLogPanel({ isOpen, onToggle, refreshKey }: AuditLog
 
   useEffect(() => {
     if (isOpen) {
-      loadLogs();
+      void loadLogs();
     }
   }, [isOpen, loadLogs, refreshKey]);
 

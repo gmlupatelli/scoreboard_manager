@@ -25,7 +25,7 @@ interface UseAuthGuardResult {
   /** The user's profile with role information */
   userProfile: ReturnType<typeof useAuth>['userProfile'];
   /** Helper to get authorization headers for API calls */
-  getAuthHeaders: () => Promise<Record<string, string>>;
+  getAuthHeaders: () => Record<string, string>;
 }
 
 /**
@@ -61,7 +61,7 @@ export function useAuthGuard(options: UseAuthGuardOptions = {}): UseAuthGuardRes
   const isMountedRef = useRef(true);
 
   // Helper to get auth headers for API calls
-  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
+  const getAuthHeaders = useCallback((): Record<string, string> => {
     if (session?.access_token) {
       return { Authorization: `Bearer ${session.access_token}` };
     }

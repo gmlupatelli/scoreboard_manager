@@ -129,7 +129,7 @@ export const scoreboardService = {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   },
 

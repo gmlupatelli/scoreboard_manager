@@ -37,7 +37,7 @@ function buildTestUser(
   n: number,
   fallbackEmail: string,
   fallbackPassword: string,
-  fallbackName: string,
+  fallbackName: string
 ): TestUser {
   return {
     email: process.env[`AUTOMATED_TEST_${role}_${n}_EMAIL`] || fallbackEmail,
@@ -64,10 +64,22 @@ const USER_7 = buildTestUser('USER', 7, 'user7@example.com', 'test123', 'User Se
 // Supporters
 const SUPPORTER_1 = buildTestUser('SUPPORTER', 1, 'sarah@example.com', 'test123', 'Sarah Smith');
 const SUPPORTER_2 = buildTestUser('SUPPORTER', 2, 'morgan@example.com', 'test123', 'Morgan Blake');
-const SUPPORTER_3 = buildTestUser('SUPPORTER', 3, 'supporter3@example.com', 'test123', 'Supporter Three');
+const SUPPORTER_3 = buildTestUser(
+  'SUPPORTER',
+  3,
+  'supporter3@example.com',
+  'test123',
+  'Supporter Three'
+);
 const SUPPORTER_5 = buildTestUser('SUPPORTER', 5, 'taylor@example.com', 'test123', 'Taylor Chen');
 const SUPPORTER_6 = buildTestUser('SUPPORTER', 6, 'riley@example.com', 'test123', 'Riley Brooks');
-const SUPPORTER_7 = buildTestUser('SUPPORTER', 7, 'supporter7@example.com', 'test123', 'Supporter Seven');
+const SUPPORTER_7 = buildTestUser(
+  'SUPPORTER',
+  7,
+  'supporter7@example.com',
+  'test123',
+  'Supporter Seven'
+);
 
 async function login(page: Page, user: TestUser) {
   await page.goto(`${BASE_URL}/login`);
@@ -158,9 +170,23 @@ async function globalSetup(_config: FullConfig) {
   // Step 2: Verify all 17 test users via Supabase Auth API (fast, no browser)
   console.log('\n👤 Verifying test users via API...');
   const users = [
-    ADMIN_1, ADMIN_2, ADMIN_3, ADMIN_4,
-    USER_1, USER_2, USER_3, USER_4, USER_5, USER_6, USER_7,
-    SUPPORTER_1, SUPPORTER_2, SUPPORTER_3, SUPPORTER_5, SUPPORTER_6, SUPPORTER_7,
+    ADMIN_1,
+    ADMIN_2,
+    ADMIN_3,
+    ADMIN_4,
+    USER_1,
+    USER_2,
+    USER_3,
+    USER_4,
+    USER_5,
+    USER_6,
+    USER_7,
+    SUPPORTER_1,
+    SUPPORTER_2,
+    SUPPORTER_3,
+    SUPPORTER_5,
+    SUPPORTER_6,
+    SUPPORTER_7,
   ];
 
   const results = await Promise.all(users.map(verifyUserViaApi));
@@ -170,7 +196,9 @@ async function globalSetup(_config: FullConfig) {
   if (allPassed) {
     console.log(`\n✅ All ${users.length} test users verified!\n`);
   } else {
-    console.log(`\n⚠️  ${passedCount}/${users.length} users verified. Some users could not be verified. Continuing with existing data...\n`);
+    console.log(
+      `\n⚠️  ${passedCount}/${users.length} users verified. Some users could not be verified. Continuing with existing data...\n`
+    );
   }
 }
 

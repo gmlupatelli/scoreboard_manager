@@ -110,12 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        loadUserProfile(session.user.id);
-        loadSubscriptionTier(session.user.id);
+        void loadUserProfile(session.user.id);
+        void loadSubscriptionTier(session.user.id);
       } else {
         setSubscriptionLoading(false);
         setLoading(false);
@@ -133,8 +133,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        loadUserProfile(session.user.id);
-        loadSubscriptionTier(session.user.id);
+        void loadUserProfile(session.user.id);
+        void loadSubscriptionTier(session.user.id);
       } else {
         setUserProfile(null);
         setSubscriptionTier(null);

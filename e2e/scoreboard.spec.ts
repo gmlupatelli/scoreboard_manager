@@ -19,9 +19,7 @@ test.describe('Scoreboard CRUD', () => {
     const scoreboardCards = page.locator('[data-testid="scoreboard-card-title"]');
     const emptyState = page.locator('text=/no scoreboards|create your first/i');
 
-    await expect(
-      scoreboardCards.first().or(emptyState.first())
-    ).toBeVisible({ timeout: 10000 });
+    await expect(scoreboardCards.first().or(emptyState.first())).toBeVisible({ timeout: 10000 });
 
     const cardCount = await scoreboardCards.count();
     const hasEmptyState = await emptyState.isVisible().catch(() => false);
@@ -50,9 +48,7 @@ test.describe('Scoreboard CRUD', () => {
     await loginAs(TEST_USERS.user1);
     await safeGoto(page, `${BASE_URL}/dashboard`);
 
-    const manageButton = page
-      .locator('[data-testid="scoreboard-card-manage"]')
-      .first();
+    const manageButton = page.locator('[data-testid="scoreboard-card-manage"]').first();
 
     const hasManageButton = await manageButton
       .waitFor({ state: 'visible', timeout: 10000 })
@@ -278,7 +274,10 @@ test.describe('Scoreboard Search', () => {
       .or(page.locator('input[placeholder*="Search"]'))
       .or(page.locator('input[type="search"]'));
 
-    const hasSearch = await searchInput.first().isVisible().catch(() => false);
+    const hasSearch = await searchInput
+      .first()
+      .isVisible()
+      .catch(() => false);
     test.skip(!hasSearch, 'No search input on scoreboard detail page');
 
     await searchInput.first().fill('a');
@@ -351,7 +350,7 @@ test.describe('Cross-User Visibility', () => {
     await safeGoto(page, `${BASE_URL}/dashboard`);
 
     // Admin should see the owner filter dropdown
-    const ownerFilter = page
+    const _ownerFilter = page
       .locator('text=Filter by Owner')
       .or(page.locator('[placeholder*="Filter by owner"]'))
       .or(page.locator('select, [role="combobox"]').filter({ hasText: /owner/i }));

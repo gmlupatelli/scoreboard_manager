@@ -36,9 +36,9 @@ test.describe('Visual Regression', () => {
     await safeGoto(page, '/public-scoreboard-list');
 
     // Wait for scoreboard cards or empty state
-    await expect(
-      page.locator('[data-testid="scoreboard-card"], h1, h2').first()
-    ).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('[data-testid="scoreboard-card"], h1, h2').first()).toBeVisible({
+      timeout: 10000,
+    });
 
     await expect(page).toHaveScreenshot('public-scoreboard-list.png', {
       fullPage: true,
@@ -50,9 +50,9 @@ test.describe('Visual Regression', () => {
     await safeGoto(page, '/dashboard');
 
     // Wait for dashboard content to load
-    await expect(
-      page.locator('[data-testid="scoreboard-card-title"]').first()
-    ).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('[data-testid="scoreboard-card-title"]').first()).toBeVisible({
+      timeout: 15000,
+    });
 
     await expect(page).toHaveScreenshot('dashboard.png', {
       fullPage: true,
@@ -77,10 +77,7 @@ test.describe('Visual Regression', () => {
 
     await expect(page).toHaveScreenshot('scoreboard-management.png', {
       fullPage: true,
-      mask: [
-        page.locator('time'),
-        page.locator('[data-testid="entry-timestamp"]'),
-      ],
+      mask: [page.locator('time'), page.locator('[data-testid="entry-timestamp"]')],
     });
   });
 

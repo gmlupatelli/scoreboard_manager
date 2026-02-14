@@ -64,7 +64,7 @@ export default function SupportersList() {
       }
     };
 
-    fetchSupporters();
+    void fetchSupporters();
   }, []);
 
   if (isLoading) {

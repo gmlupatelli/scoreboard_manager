@@ -195,7 +195,7 @@ export default function KioskSettingsSection({
         setIsLoading(true);
       }
       try {
-        const authHeaders = await getAuthHeaders();
+        const authHeaders = getAuthHeaders();
         const response = await fetch(`/api/kiosk/${scoreboardId}`, {
           headers: authHeaders,
           signal: controller.signal,
@@ -223,7 +223,7 @@ export default function KioskSettingsSection({
 
           // Auto-add scoreboard slide if no slides exist
           if (loadedSlides.length === 0) {
-            addInitialScoreboardSlide(authHeaders);
+            void addInitialScoreboardSlide(authHeaders);
           }
         }
       } catch (_error) {
@@ -272,62 +272,64 @@ export default function KioskSettingsSection({
           table: 'kiosk_slides',
           filter: `kiosk_config_id=eq.${config.id}`,
         },
-        async (payload) => {
-          const newSlide = payload.new as KioskSlide;
+        (payload) => {
+          void (async () => {
+            const newSlide = payload.new as KioskSlide;
 
-          // If image slide, sign URLs before adding to state
-          let slideToAdd = newSlide;
-          if (newSlide.slide_type === 'image' && (newSlide.image_url || newSlide.thumbnail_url)) {
-            try {
-              const headers = await getAuthHeadersRef.current();
-              const pathsToSign: string[] = [];
+            // If image slide, sign URLs before adding to state
+            let slideToAdd = newSlide;
+            if (newSlide.slide_type === 'image' && (newSlide.image_url || newSlide.thumbnail_url)) {
+              try {
+                const headers = getAuthHeadersRef.current();
+                const pathsToSign: string[] = [];
 
-              if (newSlide.image_url) pathsToSign.push(newSlide.image_url);
-              if (newSlide.thumbnail_url) pathsToSign.push(newSlide.thumbnail_url);
+                if (newSlide.image_url) pathsToSign.push(newSlide.image_url);
+                if (newSlide.thumbnail_url) pathsToSign.push(newSlide.thumbnail_url);
 
-              const response = await fetch(`/api/kiosk/${scoreboardId}/sign-urls`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ paths: pathsToSign }),
-              });
+                const response = await fetch(`/api/kiosk/${scoreboardId}/sign-urls`, {
+                  method: 'POST',
+                  headers,
+                  body: JSON.stringify({ paths: pathsToSign }),
+                });
 
-              if (response.ok) {
-                const { signedUrls } = await response.json();
-                slideToAdd = {
-                  ...newSlide,
-                  image_url:
-                    (newSlide.image_url && signedUrls[newSlide.image_url]) || newSlide.image_url,
-                  thumbnail_url:
-                    (newSlide.thumbnail_url && signedUrls[newSlide.thumbnail_url]) ||
-                    newSlide.thumbnail_url,
-                };
+                if (response.ok) {
+                  const { signedUrls } = await response.json();
+                  slideToAdd = {
+                    ...newSlide,
+                    image_url:
+                      (newSlide.image_url && signedUrls[newSlide.image_url]) || newSlide.image_url,
+                    thumbnail_url:
+                      (newSlide.thumbnail_url && signedUrls[newSlide.thumbnail_url]) ||
+                      newSlide.thumbnail_url,
+                  };
+                }
+              } catch (error) {
+                // Log but continue with unsigned URLs
+                console.error('Failed to sign slide URLs:', error);
+                // Keep original slide with unsigned paths; periodic refresh will update them
               }
-            } catch (error) {
-              // Log but continue with unsigned URLs
-              console.error('Failed to sign slide URLs:', error);
-              // Keep original slide with unsigned paths; periodic refresh will update them
             }
-          }
 
-          setSlides((prev) => {
-            // Check if slide already exists (avoid duplicates from optimistic UI)
-            if (prev.some((s) => s.id === slideToAdd.id)) {
-              return prev;
-            }
-            const updated = [...prev, slideToAdd];
-            updated.sort((a, b) => a.position - b.position);
-            return updated;
-          });
-          // Update lastFetchTime to prevent stale-check from triggering a GET
-          setLastFetchTime(Date.now());
-          // Clear failed images to allow retry if signed URLs were obtained
-          setFailedImages((prev) => {
-            const updated = new Set(prev);
-            if (slideToAdd.thumbnail_url && slideToAdd.thumbnail_url.includes('token=')) {
-              updated.delete(slideToAdd.id);
-            }
-            return updated;
-          });
+            setSlides((prev) => {
+              // Check if slide already exists (avoid duplicates from optimistic UI)
+              if (prev.some((s) => s.id === slideToAdd.id)) {
+                return prev;
+              }
+              const updated = [...prev, slideToAdd];
+              updated.sort((a, b) => a.position - b.position);
+              return updated;
+            });
+            // Update lastFetchTime to prevent stale-check from triggering a GET
+            setLastFetchTime(Date.now());
+            // Clear failed images to allow retry if signed URLs were obtained
+            setFailedImages((prev) => {
+              const updated = new Set(prev);
+              if (slideToAdd.thumbnail_url && slideToAdd.thumbnail_url.includes('token=')) {
+                updated.delete(slideToAdd.id);
+              }
+              return updated;
+            });
+          })();
         }
       )
       .on(
@@ -426,7 +428,7 @@ export default function KioskSettingsSection({
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
       // Clear any pending debounce timer
       if (updateDebounceRef.current) {
         clearTimeout(updateDebounceRef.current);
@@ -452,7 +454,7 @@ export default function KioskSettingsSection({
       Date.now() - lastFetchTimeRef.current > STALE_THRESHOLD_MS;
 
     if (shouldRefresh && loadKioskDataRef.current) {
-      loadKioskDataRef.current();
+      void loadKioskDataRef.current();
       // Revalidation to overcome read replica lag is now handled in the
       // realtime subscription callback after SUBSCRIBED status is confirmed
     }
@@ -481,7 +483,7 @@ export default function KioskSettingsSection({
 
     const loadEnabledStatus = async () => {
       try {
-        const authHeaders = await getAuthHeadersRef.current();
+        const authHeaders = getAuthHeadersRef.current();
         const response = await fetch(`/api/kiosk/${scoreboardId}`, {
           headers: authHeaders,
         });
@@ -497,7 +499,7 @@ export default function KioskSettingsSection({
         // Silent fail - badge just won't show until section is expanded
       }
     };
-    loadEnabledStatus();
+    void loadEnabledStatus();
   }, [scoreboardId]);
 
   // Subscribe to realtime changes for kiosk_configs (enabled status)
@@ -526,7 +528,7 @@ export default function KioskSettingsSection({
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [scoreboardId]);
 
@@ -541,7 +543,7 @@ export default function KioskSettingsSection({
 
     setIsSaving(true);
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
 
       // Save config settings
       const response = await fetch(`/api/kiosk/${scoreboardId}`, {
@@ -577,7 +579,7 @@ export default function KioskSettingsSection({
     setEnabled(newEnabled);
 
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await fetch(`/api/kiosk/${scoreboardId}`, {
         method: 'PUT',
         headers: {
@@ -674,7 +676,7 @@ export default function KioskSettingsSection({
     setUploadProgress({ current: 0, total: 0, status: 'loading', message: 'Loading PDF...' });
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
 
       // Convert PDF pages to images
       const { images, error } = await convertPdfToImages(file, (progress) => {
@@ -804,7 +806,7 @@ export default function KioskSettingsSection({
     });
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const slide = await uploadImageFile(file, headers);
 
       if (slide) {
@@ -862,7 +864,7 @@ export default function KioskSettingsSection({
     }
 
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
         method: 'POST',
         headers: {
@@ -892,7 +894,7 @@ export default function KioskSettingsSection({
     setSlides((prev) => prev.filter((s) => s.id !== slideId));
 
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const response = await fetch(`/api/kiosk/${scoreboardId}/slides/${slideId}`, {
         method: 'DELETE',
         headers: authHeaders,
@@ -907,7 +909,7 @@ export default function KioskSettingsSection({
       onShowToast('Slide deleted', 'success');
     } catch (error) {
       // Revert on error - reload from server
-      loadKioskData({ showLoader: false });
+      void loadKioskData({ showLoader: false });
       onShowToast(error instanceof Error ? error.message : 'Failed to delete slide', 'error');
     }
   };
@@ -952,7 +954,7 @@ export default function KioskSettingsSection({
 
     // Save reordering to server
     try {
-      const authHeaders = await getAuthHeaders();
+      const authHeaders = getAuthHeaders();
       const orderResponse = await fetch(`/api/kiosk/${scoreboardId}/slides`, {
         method: 'PUT',
         headers: {
@@ -974,7 +976,7 @@ export default function KioskSettingsSection({
       onShowToast('Slide order updated', 'success');
     } catch (error) {
       // Revert on error - reload from server
-      loadKioskData({ showLoader: false });
+      void loadKioskData({ showLoader: false });
       onShowToast(error instanceof Error ? error.message : 'Failed to save order', 'error');
     }
   };

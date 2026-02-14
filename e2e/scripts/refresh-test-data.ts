@@ -110,7 +110,8 @@ function getAutomatedTestUsers(): TestUserConfig[] {
     const email = process.env[`AUTOMATED_TEST_SUPPORTER_${i}_EMAIL`];
     const password = process.env[`AUTOMATED_TEST_SUPPORTER_${i}_PASSWORD`];
     if (email && password) {
-      const tier = (process.env[`AUTOMATED_TEST_SUPPORTER_${i}_TIER`] || 'supporter') as AppreciationTier;
+      const tier = (process.env[`AUTOMATED_TEST_SUPPORTER_${i}_TIER`] ||
+        'supporter') as AppreciationTier;
       users.push({
         email,
         password,
@@ -425,8 +426,14 @@ async function deleteUserData(supabase: SupabaseServiceClient, userId: string, u
     // Step 7: Delete admin audit log entries referencing this user
     // admin_id has NOT NULL + ON DELETE SET NULL conflict, so we must delete rows manually
     // Table not in generated Database types, so cast as never
-    await supabase.from('admin_audit_log' as never).delete().eq('admin_id', userId);
-    await supabase.from('admin_audit_log' as never).delete().eq('target_user_id', userId);
+    await supabase
+      .from('admin_audit_log' as never)
+      .delete()
+      .eq('admin_id', userId);
+    await supabase
+      .from('admin_audit_log' as never)
+      .delete()
+      .eq('target_user_id', userId);
 
     console.log(
       `  ✓ Deleted ${deletedEntries} entries, ${deletedScoreboards} scoreboards, ${deletedInvitations} invitations`
@@ -706,10 +713,15 @@ async function seedSupporterSubscription(
 
   // Determine amount based on tier
   const amountCents =
-    tier === 'appreciation' ? 0 :
-    tier === 'supporter' ? 400 :
-    tier === 'champion' ? 800 :
-    tier === 'legend' ? 2300 : 4800;
+    tier === 'appreciation'
+      ? 0
+      : tier === 'supporter'
+        ? 400
+        : tier === 'champion'
+          ? 800
+          : tier === 'legend'
+            ? 2300
+            : 4800;
 
   const isGifted = tier === 'appreciation';
 
@@ -1061,4 +1073,4 @@ async function main() {
   }
 }
 
-main();
+void main();

@@ -129,7 +129,7 @@ export default function SupporterPlanInteractive() {
       setIsLoading(false);
     };
 
-    loadSubscription();
+    void loadSubscription();
   }, [user?.id]);
 
   // Redirect to dashboard on successful checkout
@@ -227,16 +227,17 @@ export default function SupporterPlanInteractive() {
     // Also refresh from database to ensure consistency (for other fields)
     if (user?.id) {
       // Small delay to ensure database has been updated
-      setTimeout(async () => {
-        const { data: newSubscription } = await subscriptionService.getSubscription(user.id);
-        if (newSubscription) {
-          setSubscription(newSubscription);
-        }
+      setTimeout(() => {
+        void subscriptionService.getSubscription(user.id).then(({ data: newSubscription }) => {
+          if (newSubscription) {
+            setSubscription(newSubscription);
+          }
+        });
       }, 500);
     }
 
     if (refreshSubscription) {
-      refreshSubscription();
+      void refreshSubscription();
     }
 
     setIsSubmitting(false);
@@ -268,16 +269,17 @@ export default function SupporterPlanInteractive() {
 
     // Refresh subscription data
     if (user?.id) {
-      setTimeout(async () => {
-        const { data: newSubscription } = await subscriptionService.getSubscription(user.id);
-        if (newSubscription) {
-          setSubscription(newSubscription);
-        }
+      setTimeout(() => {
+        void subscriptionService.getSubscription(user.id).then(({ data: newSubscription }) => {
+          if (newSubscription) {
+            setSubscription(newSubscription);
+          }
+        });
       }, 500);
     }
 
     if (refreshSubscription) {
-      refreshSubscription();
+      void refreshSubscription();
     }
 
     setIsSubmitting(false);
@@ -353,16 +355,17 @@ export default function SupporterPlanInteractive() {
 
     // Refresh subscription data
     if (user?.id) {
-      setTimeout(async () => {
-        const { data: newSubscription } = await subscriptionService.getSubscription(user.id);
-        if (newSubscription) {
-          setSubscription(newSubscription);
-        }
+      setTimeout(() => {
+        void subscriptionService.getSubscription(user.id).then(({ data: newSubscription }) => {
+          if (newSubscription) {
+            setSubscription(newSubscription);
+          }
+        });
       }, 500);
     }
 
     if (refreshSubscription) {
-      refreshSubscription();
+      void refreshSubscription();
     }
 
     setIsCancelling(false);

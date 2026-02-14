@@ -124,7 +124,7 @@ const AdminDashboardInteractive = () => {
 
         // If still no tier after refresh and we haven't exceeded retries, try again
         if (attempts < 3) {
-          setTimeout(() => refreshWithRetry(attempts + 1), 2000);
+          setTimeout(() => void refreshWithRetry(attempts + 1), 2000);
         } else {
           // After retries complete, show welcome modal
           setIsWelcomeModalOpen(true);
@@ -132,7 +132,7 @@ const AdminDashboardInteractive = () => {
       };
 
       // Start refresh after a short delay to allow webhook processing
-      setTimeout(() => refreshWithRetry(), 1000);
+      setTimeout(() => void refreshWithRetry(), 1000);
     }
   }, [searchParams, user, router, refreshSubscription]);
 
@@ -140,13 +140,9 @@ const AdminDashboardInteractive = () => {
   useEffect(() => {
     const pendingDeletes = pendingDeletesRef.current;
     return () => {
-      pendingDeletes.forEach(async ({ scoreboard, timerId }) => {
+      pendingDeletes.forEach(({ scoreboard, timerId }) => {
         clearTimeout(timerId);
-        try {
-          await scoreboardService.deleteScoreboard(scoreboard.id);
-        } catch {
-          // Silent failure on unmount
-        }
+        void scoreboardService.deleteScoreboard(scoreboard.id);
       });
       pendingDeletes.clear();
     };
@@ -155,7 +151,7 @@ const AdminDashboardInteractive = () => {
   // Load owners for system admin dropdown
   useEffect(() => {
     if (isAuthorized && user && userProfile && isAdmin) {
-      loadOwners();
+      void loadOwners();
     }
   }, [isAuthorized, user, userProfile, isAdmin]);
 
@@ -195,7 +191,7 @@ const AdminDashboardInteractive = () => {
   }, [user?.id, subscriptionTier]);
 
   useEffect(() => {
-    loadPublicUsage();
+    void loadPublicUsage();
   }, [loadPublicUsage, scoreboards.length]);
 
   // Load scoreboards function - uses isAdmin and user from closure
@@ -293,7 +289,7 @@ const AdminDashboardInteractive = () => {
       }
       hasLoadedRef.current = true;
       // Always fetch with default sort (date desc), sorting is done client-side
-      loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
+      void loadScoreboards(true, debouncedSearch, selectedOwnerId, 0, 'date', 'desc');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthorized, user, userProfile, debouncedSearch, selectedOwnerId]);
@@ -301,7 +297,7 @@ const AdminDashboardInteractive = () => {
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
       // Always fetch with default sort (date desc), sorting is done client-side
-      loadScoreboards(false, debouncedSearch, selectedOwnerId, offset, 'date', 'desc');
+      void loadScoreboards(false, debouncedSearch, selectedOwnerId, offset, 'date', 'desc');
     }
   }, [loadingMore, hasMore, offset, debouncedSearch, selectedOwnerId, loadScoreboards]);
 
@@ -426,7 +422,7 @@ const AdminDashboardInteractive = () => {
 
     // Refresh subscription data
     if (refreshSubscription) {
-      refreshSubscription();
+      void refreshSubscription();
     }
 
     setIsReactivating(false);
@@ -510,22 +506,22 @@ const AdminDashboardInteractive = () => {
     setTotalCount((prev) => prev - 1);
 
     // Set up delayed API delete (5 seconds)
-    const timerId = setTimeout(async () => {
+    const timerId = setTimeout(() => {
       pendingDeletesRef.current.delete(deleteId);
-      try {
-        const { error } = await scoreboardService.deleteScoreboard(scoreboard.id);
-        if (error) {
-          // Restore on error
+      void scoreboardService
+        .deleteScoreboard(scoreboard.id)
+        .then(({ error }) => {
+          if (error) {
+            setScoreboards((prev) => [...prev, scoreboard]);
+            setTotalCount((prev) => prev + 1);
+            showToast('Failed to delete scoreboard', 'error');
+          }
+        })
+        .catch(() => {
           setScoreboards((prev) => [...prev, scoreboard]);
           setTotalCount((prev) => prev + 1);
           showToast('Failed to delete scoreboard', 'error');
-        }
-      } catch {
-        // Restore on error
-        setScoreboards((prev) => [...prev, scoreboard]);
-        setTotalCount((prev) => prev + 1);
-        showToast('Failed to delete scoreboard', 'error');
-      }
+        });
     }, 5000);
 
     // Track pending delete
@@ -536,7 +532,7 @@ const AdminDashboardInteractive = () => {
       id: deleteId,
       message: `Deleted "${scoreboard.title}"`,
       timestamp: Date.now(),
-      undo: async () => {
+      undo: () => {
         // Cancel the pending delete
         const pending = pendingDeletesRef.current.get(deleteId);
         if (pending) {

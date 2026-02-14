@@ -1,23 +1,55 @@
 import js from '@eslint/js';
-import nextPlugin from '@next/eslint-plugin-next';
-import reactPlugin from 'eslint-plugin-react';
-import reactHooksPlugin from 'eslint-plugin-react-hooks';
-import jsxA11yPlugin from 'eslint-plugin-jsx-a11y';
+import nextConfig from 'eslint-config-next/core-web-vitals';
+import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import prettierPlugin from 'eslint-plugin-prettier';
 
-const jsxA11yRecommended = jsxA11yPlugin.configs.recommended;
-const jsxFiles = ['**/*.{js,jsx,ts,tsx}'];
+// --- Shared constants ---
+
+const jsxFiles = ['**/*.{js,jsx,mjs,ts,tsx}'];
+
 const baseGlobals = {
   ...globals.browser,
   ...globals.node,
   ...globals.es2021,
 };
+
 const jestGlobals = {
   ...globals.jest,
 };
+
+const a11yOverrides = {
+  'jsx-a11y/click-events-have-key-events': 'off',
+  'jsx-a11y/no-static-element-interactions': 'off',
+  'jsx-a11y/no-noninteractive-element-interactions': 'off',
+  'jsx-a11y/label-has-associated-control': 'off',
+  'jsx-a11y/no-autofocus': 'off',
+};
+
+const reactHooksOverrides = {
+  'react-hooks/set-state-in-effect': 'off',
+  'react-hooks/preserve-manual-memoization': 'off',
+};
+
+const tsUnusedVarsRule = {
+  '@typescript-eslint/no-unused-vars': [
+    'warn',
+    {
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      caughtErrorsIgnorePattern: '^_',
+    },
+  ],
+};
+
+const tsCustomRules = {
+  ...tsUnusedVarsRule,
+  '@typescript-eslint/no-explicit-any': 'warn',
+};
+
+// --- Config ---
 
 const config = [
   // Ignore patterns
@@ -34,6 +66,7 @@ const config = [
     ],
   },
 
+  // Global language options
   {
     languageOptions: {
       ecmaVersion: 'latest',
@@ -42,36 +75,19 @@ const config = [
     },
   },
 
+  // Base JS recommended rules
   js.configs.recommended,
 
+  // Next.js core-web-vitals (includes react, react-hooks, jsx-a11y, @next/next, @typescript-eslint)
+  ...nextConfig,
+
+  // Global a11y + react-hooks overrides
   {
-    ...reactPlugin.configs.flat.recommended,
     files: jsxFiles,
-    settings: {
-      react: {
-        version: 'detect',
-      },
+    rules: {
+      ...a11yOverrides,
+      ...reactHooksOverrides,
     },
-  },
-  {
-    ...reactPlugin.configs.flat['jsx-runtime'],
-    files: jsxFiles,
-  },
-  {
-    ...reactHooksPlugin.configs.flat.recommended,
-    files: jsxFiles,
-  },
-  {
-    ...nextPlugin.configs['core-web-vitals'],
-    files: jsxFiles,
-  },
-  {
-    files: jsxFiles,
-    plugins: {
-      'jsx-a11y': jsxA11yPlugin,
-    },
-    rules: jsxA11yRecommended.rules,
-    settings: jsxA11yRecommended.settings ?? {},
   },
 
   // TypeScript and custom rules (main app)
@@ -83,6 +99,7 @@ const config = [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
+        project: './tsconfig.json',
       },
       globals: baseGlobals,
     },
@@ -94,33 +111,15 @@ const config = [
       'react/no-unescaped-entities': 'off',
       'no-undef': 'off',
       'no-unused-vars': 'off',
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'jsx-a11y/click-events-have-key-events': 'off',
-      'jsx-a11y/no-static-element-interactions': 'off',
-      'jsx-a11y/no-noninteractive-element-interactions': 'off',
-      'jsx-a11y/label-has-associated-control': 'off',
-      'jsx-a11y/no-autofocus': 'off',
-      'prettier/prettier': [
+      ...tsCustomRules,
+      'prettier/prettier': 'error',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-misused-promises': [
         'error',
-        {
-          endOfLine: 'auto',
-          singleQuote: true,
-          semi: true,
-          tabWidth: 2,
-          printWidth: 100,
-          trailingComma: 'es5',
-        },
+        { checksVoidReturn: { attributes: false } },
       ],
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/await-thenable': 'warn',
+      '@typescript-eslint/require-await': 'warn',
       'no-console': [
         'warn',
         {
@@ -130,7 +129,7 @@ const config = [
     },
   },
 
-  // E2E test files - include prettier, allow console, disable React hooks (Playwright's 'use' is not a React hook)
+  // E2E test files (Playwright's 'use' is not a React hook)
   {
     files: ['e2e/**/*.ts'],
     languageOptions: {
@@ -138,10 +137,9 @@ const config = [
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
+        project: './tsconfig.e2e.json',
       },
-      globals: {
-        ...baseGlobals,
-      },
+      globals: baseGlobals,
     },
     plugins: {
       '@typescript-eslint': typescriptPlugin,
@@ -149,37 +147,18 @@ const config = [
     },
     rules: {
       'react-hooks/rules-of-hooks': 'off',
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'jsx-a11y/click-events-have-key-events': 'off',
-      'jsx-a11y/no-static-element-interactions': 'off',
-      'jsx-a11y/no-noninteractive-element-interactions': 'off',
-      'jsx-a11y/label-has-associated-control': 'off',
-      'jsx-a11y/no-autofocus': 'off',
       'no-undef': 'off',
       'no-unused-vars': 'off',
+      // Playwright destructuring patterns like ({}, use) and wrapped try/catch
       'no-empty-pattern': 'off',
       'no-useless-catch': 'off',
-      'prettier/prettier': [
+      ...tsCustomRules,
+      'prettier/prettier': 'error',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-misused-promises': [
         'error',
-        {
-          endOfLine: 'auto',
-          singleQuote: true,
-          semi: true,
-          tabWidth: 2,
-          printWidth: 100,
-          trailingComma: 'es5',
-        },
+        { checksVoidReturn: { attributes: false } },
       ],
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        {
-          argsIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
-          caughtErrorsIgnorePattern: '^_',
-        },
-      ],
-      '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': 'off',
     },
   },
@@ -195,12 +174,6 @@ const config = [
     },
     rules: {
       'no-undef': 'off',
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'jsx-a11y/click-events-have-key-events': 'off',
-      'jsx-a11y/no-static-element-interactions': 'off',
-      'jsx-a11y/no-noninteractive-element-interactions': 'off',
-      'jsx-a11y/label-has-associated-control': 'off',
     },
   },
 
@@ -216,24 +189,7 @@ const config = [
       prettier: prettierPlugin,
     },
     rules: {
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'jsx-a11y/click-events-have-key-events': 'off',
-      'jsx-a11y/no-static-element-interactions': 'off',
-      'jsx-a11y/no-noninteractive-element-interactions': 'off',
-      'jsx-a11y/label-has-associated-control': 'off',
-      'jsx-a11y/no-autofocus': 'off',
-      'prettier/prettier': [
-        'error',
-        {
-          endOfLine: 'auto',
-          singleQuote: true,
-          semi: true,
-          tabWidth: 2,
-          printWidth: 100,
-          trailingComma: 'es5',
-        },
-      ],
+      'prettier/prettier': 'error',
       'no-console': [
         'warn',
         {
@@ -242,6 +198,9 @@ const config = [
       ],
     },
   },
+
+  // eslint-config-prettier must be last to disable conflicting rules
+  prettierConfig,
 ];
 
 export default config;

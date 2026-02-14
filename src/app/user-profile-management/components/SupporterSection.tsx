@@ -50,7 +50,7 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
     };
 
     if (user?.id) {
-      loadSubscription();
+      void loadSubscription();
     }
   }, [user?.id]);
 
@@ -88,7 +88,7 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
     setIsSaving(true);
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const response = await fetch('/api/user/supporter-preferences', {
         method: 'PATCH',
         headers: {
@@ -132,7 +132,7 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
     setIsTogglingVisibility(true);
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const response = await fetch('/api/user/supporter-preferences', {
         method: 'PATCH',
         headers: {
@@ -196,7 +196,7 @@ export default function SupporterSection({ onToast }: SupporterSectionProps) {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !isSaving) {
                     e.preventDefault();
-                    handleSave();
+                    void handleSave();
                   } else if (e.key === 'Escape') {
                     handleCancel();
                   }

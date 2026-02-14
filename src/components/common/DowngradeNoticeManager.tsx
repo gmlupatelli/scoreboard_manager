@@ -21,7 +21,7 @@ export default function DowngradeNoticeManager() {
 
     if (subscriptionStatus === 'expired' && !hasLockedRef.current) {
       hasLockedRef.current = true;
-      scoreboardService.lockAllScoreboards();
+      void scoreboardService.lockAllScoreboards();
     }
 
     if (subscriptionStatus === 'active' || subscriptionStatus === 'trialing') {
@@ -55,7 +55,7 @@ export default function DowngradeNoticeManager() {
       isUpdatingRef.current = false;
     };
 
-    resetNotice();
+    void resetNotice();
   }, [
     subscriptionStatus,
     subscriptionLoading,

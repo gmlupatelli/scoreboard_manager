@@ -73,7 +73,7 @@ function AcceptInviteContent() {
       }
     };
 
-    handleInviteFlow();
+    void handleInviteFlow();
   }, [isMounted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
